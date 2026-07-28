@@ -1,0 +1,34 @@
+/* ====================================
+   NAVBAR BORDER TRANSPARENCY FIX
+   ==================================== */
+
+/* Remover bordas da navbar e deixar transparente */
+.navbar {
+    border: none !important;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2) !important;
+}
+
+.nav-container {
+    border: none !important;
+}
+
+.nav-links {
+    border: none !important;
+}
+
+.logo {
+    border: none !important;
+}
+
+/* Garantir que não há bordas extras */
+nav {
+    border: none !important;
+}
+
+nav::before {
+    border: none !important;
+}
+
+nav::after {
+    border: none !important;
+}

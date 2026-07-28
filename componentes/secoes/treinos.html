@@ -1,0 +1,367 @@
+﻿                    <div class="treino-container">
+                        <div id="section-treinos" class="main-section" role="tabpanel">
+                            
+                            <!-- Sub-abas internas da seção Treinos -->
+                            <div class="treino-tabs-section section-subtabs">
+                                <nav class="treino-tab-nav" role="tablist">
+                                    <button class="t-tab-btn active" data-tab="exercicios" role="tab" aria-selected="true" id="tabBtnExercicios">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/><circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/></svg>
+                                        EXERCÍCIOS
+                                    </button>
+                                    <button class="t-tab-btn" data-tab="montar" role="tab" aria-selected="false" id="tabBtnMontar">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+                                        MONTAR FICHA
+                                    </button>
+                                </nav>
+                            </div>
+
+                <!-- ========== TAB: EXERCÍCIOS ========== -->
+                <div id="tab-exercicios" class="t-tab active" role="tabpanel">
+                    <!-- Sub-navbar (Clash Royale style) -->
+                    <div class="sub-navbar">
+                        <button class="sub-nav-btn active" data-subtab="exercicios-lista" title="Exercícios">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="3" y="3" width="14" height="14" rx="2"/><rect x="7" y="7" width="14" height="14" rx="2"/></svg>
+                        </button>
+                        <button class="sub-nav-btn" data-subtab="itens-magicos" title="Itens Mágicos">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M12 2l9 10-9 10-9-10z"/></svg>
+                        </button>
+                        <button class="sub-nav-btn" data-subtab="emotes" title="Emotes">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </button>
+                        <button class="sub-nav-btn" data-subtab="torres" title="Skins de Torre">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 20v-2a4 4 0 0 0-3-3.87V7l-2-2-2 2v2l-2-2-2 2v2l-2-2-2 2v7.13A4 4 0 0 0 3 18v2"/></svg>
+                        </button>
+                        <button class="sub-nav-btn" data-subtab="estandartes" title="Estandartes">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                        </button>
+                        <button class="sub-nav-btn" data-subtab="maestrias" title="Maestrias">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></polygon></svg>
+                        </button>
+                    </div>
+
+                    <!-- Sub-tab Contents -->
+                    <div class="sub-tab-content active" id="subtab-exercicios-lista">
+                        <div class="ex-toolbar premium-toolbar">
+                            <!-- Busca Expansível -->
+                            <div class="ex-search-box collapsible" id="exSearchContainer">
+                                <span class="ex-search-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                </span>
+                                <input type="text" id="searchInput" placeholder="Buscar exercício..." class="ex-search-input" autocomplete="off">
+                            </div>
+
+                            <div class="toolbar-actions">
+                                <!-- Menu de Filtros Estilo Clash Royale -->
+                                <div class="filter-dropdown-container" tabindex="0">
+                                    <button class="icon-btn" title="Filtros">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                                    </button>
+                                    <div class="cr-dropdown-menu">
+                                        <div class="cr-dropdown-header">Filtro</div>
+                                        <div class="cr-dropdown-body" id="grupoFilters">
+                                            <div class="g-chip cr-dropdown-item active" data-grupo="all">
+                                                <div class="cr-checkbox"></div><span class="cr-label">Todos</span>
+                                            </div>
+                                            <div class="g-chip cr-dropdown-item" data-grupo="Peito">
+                                                <div class="cr-checkbox"></div><span class="cr-label">Peito</span>
+                                            </div>
+                                            <div class="g-chip cr-dropdown-item" data-grupo="Costas">
+                                                <div class="cr-checkbox"></div><span class="cr-label">Costas</span>
+                                            </div>
+                                            <div class="g-chip cr-dropdown-item" data-grupo="Pernas">
+                                                <div class="cr-checkbox"></div><span class="cr-label">Pernas</span>
+                                            </div>
+                                            <div class="g-chip cr-dropdown-item" data-grupo="Ombros">
+                                                <div class="cr-checkbox"></div><span class="cr-label">Ombros</span>
+                                            </div>
+                                            <div class="g-chip cr-dropdown-item" data-grupo="Bíceps">
+                                                <div class="cr-checkbox"></div><span class="cr-label">Bíceps</span>
+                                            </div>
+                                            <div class="g-chip cr-dropdown-item" data-grupo="Tríceps">
+                                                <div class="cr-checkbox"></div><span class="cr-label">Tríceps</span>
+                                            </div>
+                                            <div class="g-chip cr-dropdown-item" data-grupo="Core">
+                                                <div class="cr-checkbox"></div><span class="cr-label">Core</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Alternadores de Visualização -->
+                                <div class="view-selector">
+                                    <button class="view-btn" id="btnExViewGrid" title="Modo Grid">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                    </button>
+                                    <button class="view-btn active" id="btnExViewColecao" title="Modo Coleção">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><rect x="2" y="5" width="14" height="17" rx="2"/><path d="M6 2h12a2 2 0 012 2v14"/></svg>
+                                    </button>
+                                </div>
+
+                                <!-- Botão Novo Exercício Minimizado -->
+                                <button class="icon-btn btn-novo-ex-min" id="btnNovoExercicio" title="Novo Exercício">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="exercicios-grid" id="exerciciosGrid">
+                            <!-- Preenchido pelo JS -->
+                        </div>
+
+                        <div class="ex-empty-state" id="exEmpty" style="display:none">
+                            <div class="empty-icon">🔍</div>
+                            <p>Nenhum exercício encontrado.</p>
+                        </div>
+                    </div>
+
+                    <!-- Sub-aba: Itens Mágicos (ex-Banner / Cartão de Visita) -->
+                    <div class="sub-tab-content" id="subtab-itens-magicos" style="display:none;">
+                        <div class="theme-section theme-roxo"><div class="theme-bg"></div><div class="theme-content">
+                            <div class="profile-section-title">Itens Mágicos</div>
+                            <p style="font-size:0.72rem;color:var(--text-tertiary);margin-bottom:12px;">Escolha o banner de fundo do seu cartão de visita.</p>
+                            <div class="banner-grid" id="bannerGrid"></div>
+                        </div></div>
+                    </div>
+
+                    <!-- Sub-aba: Emotes (ex-Progresso: Barras de XP + Skin do Cronômetro) -->
+                    <div class="sub-tab-content" id="subtab-emotes" style="display:none;">
+                        <div class="theme-section theme-cinza-castelo"><div class="theme-bg"></div><div class="theme-content">
+                            <div class="profile-section-title">Estilo das Barras de Progresso</div>
+                            <div class="bar-skin-grid" id="barSkinGrid"></div>
+
+                            <div class="profile-section-title" style="margin-top: 24px;">Estilo do Cronômetro</div>
+                            <div class="bar-skin-grid" id="timerSkinGrid"></div>
+                        </div></div>
+                    </div>
+
+                    <!-- Sub-aba: Skins de Torre (ex-Cards: Skin dos Cards de Exercício) -->
+                    <div class="sub-tab-content" id="subtab-torres" style="display:none;">
+                        <div class="theme-section theme-cinza-castelo"><div class="theme-bg"></div><div class="theme-content">
+                            <div class="profile-section-title">Skin dos Cards</div>
+                            <div class="card-skin-grid" id="cardSkinGrid"></div>
+                        </div></div>
+                    </div>
+
+                    <!-- Sub-aba: Estandartes (ex-Emblemas do Perfil) -->
+                    <div class="sub-tab-content" id="subtab-estandartes" style="display:none;">
+                        <div class="theme-section theme-ouro"><div class="theme-bg"></div><div class="theme-content">
+                            <div class="profile-section-title">Estandartes do Perfil</div>
+                            <p style="font-size:0.72rem;color:var(--text-tertiary);margin-bottom:12px;">Selecione até 3 emblemas para exibir no seu cartão.</p>
+                            <div class="emblem-gallery" id="emblemGallery"></div>
+                        </div></div>
+                    </div>
+
+                    <!-- Sub-aba: Maestrias (ex-Emblemas: Identificação + Moldura) -->
+                    <div class="sub-tab-content" id="subtab-maestrias" style="display:none;">
+                        <div class="theme-section theme-cinza-castelo"><div class="theme-bg"></div><div class="theme-content">
+                            <div class="profile-section-title">Emblema de Identificação</div>
+
+                            <div class="emblem-picker-container">
+                                <div class="emblem-picker__preview-panel">
+                                    <div class="emblem-preview-bento" id="identityEmblemPreview">
+                                        <!-- Injetado dinamicamente via JS -->
+                                    </div>
+                                </div>
+
+                                <div class="emblem-picker__grid-panel">
+                                    <div class="emblem-picker__grid-header">
+                                        <h3 class="emblem-picker__grid-title" style="margin: 0;">Ícone Legado do Prestígio</h3>
+                                        <div class="emblem-picker__grid-controls" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                            <label class="pulse-toggle-label" style="margin-bottom: 0;">
+                                                <span>Pulsar</span>
+                                                <div class="pulse-toggle-switch" id="pulseToggleBg">
+                                                    <input type="checkbox" id="pulseToggle" checked>
+                                                    <span class="pulse-toggle-dot" id="pulseToggleDot"></span>
+                                                </div>
+                                            </label>
+                                            <span class="emblem-filter-text" style="font-size: 0.65rem; font-weight: 700; color: var(--text-tertiary); letter-spacing: 0.5px; text-transform: uppercase;">Filtra: <span style="color: #c084fc; cursor: pointer;">Todas</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="identity-emblems-grid" id="identityEmblemGrid">
+                                        <!-- Injetado dinamicamente via JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="profile-section-title" style="margin-top:24px;">Moldura de Avatar</div>
+                            <div class="frame-grid" id="frameGrid"></div>
+                        </div></div>
+                    </div>
+                </div>
+
+
+                <!-- ========== TAB: MONTAR TREINO (DECK BUILDER STYLE) — sub-aba de Treinos ========== -->
+                <div id="tab-montar" class="t-tab" role="tabpanel">
+
+
+                    <div class="deck-builder-container">
+                        <!-- Header with Project-style Selectors (Three-column Layout) -->
+                        <div class="deck-header">
+                            <div class="deck-header-top">
+                                <div class="header-left">
+                                    <button class="sel-btn" id="btnDeckMenu" title="Menu">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                                            <line x1="3" y1="12" x2="21" y2="12"/>
+                                            <line x1="3" y1="6" x2="21" y2="6"/>
+                                            <line x1="3" y1="18" x2="21" y2="18"/>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div class="header-center">
+                                    <div class="treino-selector" id="deckLetterTabs">
+                                        <button class="sel-btn active" data-letra="A">A</button>
+                                        <button class="sel-btn" data-letra="B">B</button>
+                                        <button class="sel-btn" data-letra="C">C</button>
+                                        <button class="sel-btn" data-letra="D">D</button>
+                                        <button class="sel-btn" data-letra="E">E</button>
+                                        <button class="sel-btn" data-letra="F" style="display:none">F</button>
+                                        <button class="sel-btn" data-letra="G" style="display:none">G</button>
+                                        <button class="sel-btn" data-letra="H" style="display:none">H</button>
+                                        <button class="sel-btn" data-letra="I" style="display:none">I</button>
+                                        <button class="sel-btn" data-letra="J" style="display:none">J</button>
+                                    </div>
+                                    <div class="treino-selector-actions">
+                                        <button class="sel-btn-switch" id="btnSwitchDeckPage" title="Alternar Páginas">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M4 17h16M20 17l-4-4M20 17l-4 4M20 7H4M4 7l4-4M4 7l4 4" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="header-right">
+                                    <span class="switch-label"></span>
+                                    <div class="view-selector">
+                                        <button class="view-btn active" id="btnDeckGridView" title="Grid View">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                        </button>
+                                        <button class="view-btn" id="btnDeckListView" title="List View">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Active Area: The 8-Slot Grid (Always Top) -->
+                        <div class="deck-active-area" id="deckActiveArea">
+                            <div class="deck-active-grid" id="deckActiveGrid">
+                                <!-- JS Populated: 8 Slots -->
+                            </div>
+                        </div>
+
+                        <!-- Footer for the Active Area -->
+                        <div class="deck-footer">
+                            <div class="footer-stat">
+                                <div class="deck-volume">
+                                    <div class="volume-drop"></div>
+                                    <span class="volume-val" id="deckAvgVolume">0.0</span>
+                                </div>
+                                <div class="footer-stat-label">VOLUME MÉDIO DE CARGA</div>
+                            </div>
+
+                            <div class="footer-stat clickable" id="btnMaestriaGeral" title="Maestria dos Exercícios">
+                                <div class="deck-maestria-widget">
+                                    <div class="maestria-widget-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    </div>
+                                    <div class="maestria-widget-info">
+                                        <span class="maestria-widget-count" id="deckMaestriaCount">0/0</span>
+                                        <span class="maestria-widget-sub">Emblemas</span>
+                                    </div>
+                                </div>
+                                <div class="footer-stat-label">MAESTRIA</div>
+                            </div>
+
+                            <div class="footer-stat clickable" id="btnEditAerobico">
+                                <div class="deck-cardio">
+                                    <div class="cardio-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                    </div>
+                                    <div class="cardio-info">
+                                        <span class="cardio-val" id="deckCardioMain">--</span>
+                                        <span class="cardio-sub" id="deckCardioSub">Configurar Cardio</span>
+                                    </div>
+                                </div>
+                                <div class="footer-stat-label">CARDIO CONFIGURADO</div>
+                            </div>
+                        </div>
+
+                        <!-- Collection Area (Always below) -->
+                        <div class="collection-area" id="deckCollectionArea">
+                            <div class="collection-header">
+                                <h3>MINHA COLEÇÃO</h3>
+                                <div style="display: flex; gap: 15px;">
+                                    <input type="text" id="deckCollectionSearch" placeholder="Filtrar exercícios..."
+                                        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; padding: 8px 15px; font-size: 0.85rem; outline: none; width: 200px;">
+                                    <div
+                                        style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <span id="deckCollectionCount"
+                                            style="color: var(--primary-light); font-size: 0.9rem; font-weight: 800;">0/0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="collection-grid" id="deckCollectionGrid">
+                                <!-- JS Populated: All exercises -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Quick Actions -->
+                    <div class="timer-settings" style="margin-top: 25px; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                        <h3 style="font-size: 0.85rem; letter-spacing: 2px; color: var(--primary-light); margin-bottom: 15px; opacity: 0.8;">SELECIONE SUA CLASSE</h3>
+                        <div class="templates-grid" id="templatesGrid">
+                            <button class="btn-template" data-template="hipertrofia_iniciante">
+                                <span class="tpl-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                </span>
+                                <span class="tpl-name">Hipertrofia (Iniciante)</span>
+                                <span class="tpl-desc">Foco em adaptação e técnica básica</span>
+                            </button>
+                            <button class="btn-template" data-template="perda_ponderal">
+                                <span class="tpl-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M12 2a9 9 0 00-9 9c0 4.17 2.84 7.67 6.69 8.69L12 22l2.31-2.31C18.16 18.67 21 15.17 21 11a9 9 0 00-9-9z"/><path d="M12 6v6l3 3"/></svg>
+                                </span>
+                                <span class="tpl-name">Perda de Peso (Iniciante)</span>
+                                <span class="tpl-desc">Intensidade para máxima queima calórica</span>
+                            </button>
+                            <button class="btn-template" data-template="sup_inf">
+                                <span class="tpl-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><line x1="12" y1="2" x2="12" y2="22"/><path d="M2 12h20M4 6l4 6-4 6M20 6l-4 6 4 6"/></svg>
+                                </span>
+                                <span class="tpl-name">Sup/Inf (Iniciante)</span>
+                                <span class="tpl-desc">Divisão equilibrada de membros superiores e inferiores</span>
+                            </button>
+                            <button class="btn-template" data-template="push_pull">
+                                <span class="tpl-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M5 12h14M12 5l7 7-7 7"/><path d="M19 12H5M12 19l-7-7 7-7" opacity=".4"/></svg>
+                                </span>
+                                <span class="tpl-name">Push/Pull (Iniciante)</span>
+                                <span class="tpl-desc">Foco em movimentos de empurrar e puxar</span>
+                            </button>
+                            <button class="btn-template tpl-tonificar" data-template="tonificar">
+                                <span class="tpl-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </span>
+                                <span class="tpl-name">Tonificar (Iniciante)</span>
+                                <span class="tpl-desc">Protocolo avançado para definição (3x15)</span>
+                            </button>
+                            <button class="btn-template" data-template="hipertrofia_medio">
+                                <span class="tpl-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                                </span>
+                                <span class="tpl-name">Hipertrofia (Médio)</span>
+                                <span class="tpl-desc">8 exercícios por treino para progressão</span>
+                            </button>
+                            <button class="btn-template" data-template="perda_ponderal_media">
+                                <span class="tpl-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/><circle cx="12" cy="12" r="10"/></svg>
+                                </span>
+                                <span class="tpl-name">Perda Ponderal (Médio)</span>
+                                <span class="tpl-desc">8 exercícios + aeróbico para queima calórica</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                </div><!-- /section-treinos -->
+                </div><!-- /treino-container -->

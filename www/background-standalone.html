@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CR Dynamic Background - Standalone</title>
+    <style>
+        /* ============================================
+           CR DYNAMIC BACKGROUND - STANDALONE
+           Versão: 3.2.0
+           
+           Sistema de background animado com:
+           - Efeito Ken Burns (zoom/pan suave)
+           - Partículas CSS (streaks de luz)
+           - Overlay com gradiente e blur
+           - Sistema de temas por seção
+           - Estado blur para modais
+           
+           Autor: CR Academy
+           Licença: Livre para uso
+           ============================================ */
+
+        /* Reset */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            min-height: 100vh;
+            background: #0a0a0c;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* ============================================
+           1. CONTAINER PRINCIPAL
+           ============================================ */
+        .cr-bg-container {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -10;
+            overflow: hidden;
+            pointer-events: none;
+            background-color: #000;
+        }
+
+        /* ============================================
+           2. CAMADA DE IMAGEM COM KEN BURNS
+           ============================================ */
+        .cr-bg-layer {
+            position: absolute;
+            inset: -5%;
+            width: 110%;
+            height: 110%;
+            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            animation: crKenBurns 30s infinite alternate ease-in-out;
+            filter: saturate(0) brightness(0.6) contrast(1.1);
+        }
+
+        @keyframes crKenBurns {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.08) translate(-1%, -1%); }
+        }
+
+        /* ============================================
+           3. OVERLAY COM GRADIENTE E BLUR
+           ============================================ */
+        .cr-bg-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(20, 20, 22, 0.85) 0%,
+                rgba(20, 20, 22, 0.45) 40%,
+                rgba(20, 20, 22, 0.7) 100%
+            );
+            backdrop-filter: blur(3px);
+            z-index: 1;
+        }
+
+        /* ============================================
+           4. SISTEMA DE PARTÍCULAS CSS
+           ============================================ */
+        .cr-bg-particles {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .cr-particle {
+            position: absolute;
+            bottom: -20vh;
+            border-radius: 10px;
+            mix-blend-mode: screen;
+            opacity: 0;
+            background: linear-gradient(
+                to top,
+                transparent 0%,
+                rgba(255, 255, 255, 0.9) 50%,
+                transparent 100%
+            );
+            box-shadow: 0 0 15px 2px rgba(255, 255, 255, 0.35);
+        }
+
+        /* Variações de cada partícula */
+        .cr-p1 {
+            left: 10%;
+            width: 2px;
+            height: 15vh;
+            animation: crLightStreak 9s infinite ease-in;
+            animation-delay: 0s;
+            filter: blur(0px);
+        }
+
+        .cr-p2 {
+            left: 40%;
+            width: 4px;
+            height: 30vh;
+            animation: crLightStreak 14s infinite ease-in;
+            animation-delay: 3s;
+            filter: blur(2px);
+            opacity: 0.7;
+        }
+
+        .cr-p3 {
+            left: 70%;
+            width: 1px;
+            height: 10vh;
+            animation: crLightStreak 7s infinite ease-in;
+            animation-delay: 5s;
+            filter: blur(0.5px);
+        }
+
+        .cr-p4 {
+            left: 85%;
+            width: 3px;
+            height: 20vh;
+            animation: crLightStreak 11s infinite ease-in;
+            animation-delay: 2s;
+            filter: blur(1px);
+        }
+
+        .cr-p5 {
+            left: 25%;
+            width: 2px;
+            height: 25vh;
+            animation: crLightStreak 16s infinite ease-in;
+            animation-delay: 6s;
+            filter: blur(0px);
+            box-shadow: 0 0 20px 4px rgba(255, 255, 255, 0.45);
+        }
+
+        @keyframes crLightStreak {
+            0% {
+                transform: rotate(25deg) translateY(0);
+                opacity: 0;
+            }
+            15% {
+                opacity: 0.8;
+            }
+            85% {
+                opacity: 0.2;
+            }
+            100% {
+                transform: rotate(25deg) translateY(-150vh);
+                opacity: 0;
+            }
+        }
+
+        /* ============================================
+           5. ESTADO BLUR (PARA MODAIS)
+           ============================================ */
+        .bg-blurred .cr-bg-layer {
+            filter: blur(8px) saturate(80%);
+            transform: scale(1.1) !important;
+            transition: filter 0.4s ease, transform 0.4s ease;
+        }
+
+        .bg-blurred .cr-bg-overlay {
+            background: rgba(0, 0, 0, 0.6);
+            transition: background 0.4s ease;
+        }
+
+        /* ============================================
+           6. SISTEMA DE TEMAS POR SEÇÃO
+           ============================================ */
+        .theme-section {
+            position: relative;
+            margin: 0 -24px;
+            padding: 24px;
+            overflow: hidden;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+            box-shadow: inset 0 10px 20px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .theme-section:last-child {
+            border-bottom: none;
+        }
+
+        .theme-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80');
+            background-size: cover;
+            background-position: top center;
+            background-attachment: local;
+            z-index: -1;
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+        }
+
+        .theme-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Variações de cor via hue-rotate */
+        .theme-roxo .theme-bg { filter: none; }
+        .theme-turquesa .theme-bg { filter: hue-rotate(265deg) saturate(1.2) brightness(1.1); }
+        .theme-carmesim .theme-bg { filter: hue-rotate(75deg) saturate(1.2) brightness(1.1); }
+        .theme-verde-selva .theme-bg { filter: hue-rotate(205deg) saturate(1.2) brightness(1.1); }
+        .theme-azul-pico .theme-bg { filter: hue-rotate(295deg) saturate(1.2) brightness(1.1); }
+        .theme-ouro .theme-bg { filter: hue-rotate(130deg) saturate(1.5) brightness(1.2); }
+        .theme-marrom-terra .theme-bg { filter: hue-rotate(120deg) saturate(0.5) brightness(0.9); }
+        .theme-laranja-lava .theme-bg { filter: hue-rotate(115deg) saturate(1.5) brightness(1.1); }
+        .theme-cinza-castelo .theme-bg { filter: saturate(0) brightness(0.8); }
+
+        /* ============================================
+           7. HERO SECTION
+           ============================================ */
+        .hero-section {
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.25) 0%, transparent 80%),
+                linear-gradient(to bottom, rgba(18, 18, 20, 0.95) 0%, rgba(18, 18, 20, 0.6) 60%, transparent 100%);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ============================================
+           CONTEÚDO DE EXEMPLO
+           ============================================ */
+        .content-wrapper {
+            position: relative;
+            z-index: 5;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        .hero-section {
+            padding: 120px 24px 80px;
+            text-align: center;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: #fff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-left: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .demo-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            color: #8b5cf6;
+        }
+
+        .demo-card p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .theme-card {
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .theme-card h4 {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Cores dos cards de tema */
+        .theme-card.t-roxo { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+        .theme-card.t-turquesa { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .theme-card.t-carmesim { background: linear-gradient(135deg, #dc2626, #991b1b); }
+        .theme-card.t-verde { background: linear-gradient(135deg, #10b981, #047857); }
+        .theme-card.t-azul { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .theme-card.t-ouro { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .theme-card.t-laranja { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .theme-card.t-cinza { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    </style>
+</head>
+<body>
+    <!-- ============================================
+         BACKGROUND ANIMADO - COLE ESTE BLOCO NO SEU HTML
+         ============================================ -->
+    <div id="cr-dynamic-bg" class="cr-bg-container">
+        <div class="cr-bg-layer"></div>
+        <div class="cr-bg-particles">
+            <div class="cr-particle cr-p1"></div>
+            <div class="cr-particle cr-p2"></div>
+            <div class="cr-particle cr-p3"></div>
+            <div class="cr-particle cr-p4"></div>
+            <div class="cr-particle cr-p5"></div>
+        </div>
+        <div class="cr-bg-overlay"></div>
+    </div>
+
+    <!-- ============================================
+         CONTEÚDO DE EXEMPLO
+         ============================================ -->
+    <section class="hero-section">
+        <h1>CR Dynamic Background</h1>
+        <p>Sistema de background animado com Ken Burns, partículas CSS e overlay dinâmico. 100% CSS, sem JavaScript.</p>
+        <button class="btn btn-primary" onclick="toggleBlur()">Toggle Blur (Modal)</button>
+        <button class="btn btn-secondary" onclick="changeImage()">Trocar Imagem</button>
+    </section>
+
+    <div class="content-wrapper">
+        <div class="demo-card">
+            <h3>Como Usar</h3>
+            <p>Copie o bloco HTML do background e o CSS correspondente para seu projeto. Troque a imagem de fundo alterando a propriedade <code>background-image</code> em <code>.cr-bg-layer</code>.</p>
+        </div>
+
+        <div class="demo-card">
+            <h3>Sistema de Temas</h3>
+            <p>Adicione a classe <code>theme-section</code> e uma variante de cor (ex: <code>theme-turquesa</code>) para aplicar filtros hue-rotate不同的背景。</p>
+        </div>
+
+        <h3 style="margin-top: 40px; margin-bottom: 20px;">Temas Disponíveis</h3>
+        <div class="theme-grid">
+            <div class="theme-card t-roxo"><h4>Roxo</h4></div>
+            <div class="theme-card t-turquesa"><h4>Turquesa</h4></div>
+            <div class="theme-card t-carmesim"><h4>Carmesim</h4></div>
+            <div class="theme-card t-verde"><h4>Verde Selva</h4></div>
+            <div class="theme-card t-azul"><h4>Azul Pico</h4></div>
+            <div class="theme-card t-ouro"><h4>Ouro</h4></div>
+            <div class="theme-card t-laranja"><h4>Laranja Lava</h4></div>
+            <div class="theme-card t-cinza"><h4>Cinza Castelo</h4></div>
+        </div>
+
+        <div class="demo-card" style="margin-top: 40px;">
+            <h3>Personalização</h3>
+            <p><strong>Imagem:</strong> Altere a URL em <code>.cr-bg-layer</code><br>
+            <strong>Velocidade Ken Burns:</strong> Ajuste <code>animation: crKenBurns 30s</code><br>
+            <strong>Intensidade do Overlay:</strong> Modifique as cores/alpha no <code>linear-gradient</code><br>
+            <strong>Partículas:</strong> Adicione/remova divs <code>.cr-particle</code> e ajuste suas propriedades</p>
+        </div>
+    </div>
+
+    <script>
+        // Função para toggle do estado blur (modal)
+        function toggleBlur() {
+            document.getElementById('cr-dynamic-bg').classList.toggle('bg-blurred');
+        }
+
+        // Função para trocar imagem de fundo (demo)
+        const images = [
+            'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80',
+            'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1920&q=80',
+            'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920&q=80',
+            'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1920&q=80'
+        ];
+        let currentImage = 0;
+
+        function changeImage() {
+            currentImage = (currentImage + 1) % images.length;
+            document.querySelector('.cr-bg-layer').style.backgroundImage = `url('${images[currentImage]}')`;
+        }
+    </script>
+</body>
+</html>

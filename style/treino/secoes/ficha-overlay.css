@@ -1,0 +1,125 @@
+/* ==========================================================================
+   FICHA OVERLAY (Interface fullscreen com fade — v3.2.0+)
+   ==========================================================================
+   Converte a antiga seção Ficha (slide 0 do Swipe Viewport) em um overlay
+   modal fullscreen, acionado exclusivamente pelo botão "PRÓXIMO PASSO" do
+   Dashboard. Sem header fixo (decisão: full-bleed imersivo, com o hero
+   original servindo como cabeçalho visual). Z-index 600 (mesmo do Perfil,
+   abaixo do news-overlay).
+   ========================================================================== */
+
+/* --- Container raiz do overlay --- */
+.ficha-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+    display: none;
+    flex-direction: column;
+    background: #0a0514;
+    overflow: hidden;
+    animation: fichaOverlayFadeIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ficha-overlay.is-closing {
+    animation: fichaOverlayFadeOut 0.24s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes fichaOverlayFadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fichaOverlayFadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(1.01); }
+}
+
+/* --- Wrapper rolável do conteúdo --- */
+.ficha-overlay__scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+.ficha-overlay__scroll::-webkit-scrollbar { width: 6px; }
+.ficha-overlay__scroll::-webkit-scrollbar-track { background: transparent; }
+.ficha-overlay__scroll::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 3px;
+}
+
+/* --- Ajustes para o conteúdo da ficha dentro do overlay --- */
+.ficha-overlay__scroll .treino-container {
+    padding-top: 0;
+    padding-bottom: 32px;
+}
+
+/* O hero original já é o "cabeçalho visual" do overlay (sem header fixo).
+   Garante que ele não gere espaço extra no topo do overlay. */
+.ficha-overlay__scroll .treino-hero {
+    margin-top: 0;
+}
+
+/* Garante que o body não role quando overlay está ativo */
+body.ficha-overlay-open {
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* --- Botão de fechar (v3.3.2+) ---
+   Pequeno ícone X no canto superior esquerdo do overlay fullscreen da
+   Ficha. Discreto/glassmorphism (não destrutivo, apenas "voltar ao
+   Dashboard"). Ao clicar, abre o modalEncerrarTreino como confirmação
+   (mesmo se o treino já estiver concluído). */
+.ficha-overlay-close {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    border-radius: 12px;
+    color: var(--text-secondary, #cccccc);
+    cursor: pointer;
+    z-index: 2;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.ficha-overlay-close:hover {
+    background: rgba(139, 92, 246, 0.28);
+    border-color: var(--primary-light, #c084fc);
+    color: #fff;
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 6px 14px rgba(139, 92, 246, 0.35);
+}
+
+.ficha-overlay-close:active {
+    transform: scale(0.96);
+}
+
+.ficha-overlay-close svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    display: block;
+}
+
+@media (max-width: 480px) {
+    .ficha-overlay-close {
+        top: 12px;
+        left: 12px;
+        width: 36px;
+        height: 36px;
+    }
+    .ficha-overlay-close svg { width: 18px; height: 18px; }
+}

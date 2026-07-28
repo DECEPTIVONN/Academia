@@ -1,0 +1,149 @@
+﻿                <div class="treino-container">
+                <div id="section-progresso" class="main-section" role="tabpanel">
+                    <div id="tab-progresso" class="t-tab active" role="tabpanel">
+
+                        <!-- Ciclo de Treino -->
+                        <div class="p-card cycle-card">
+                            <div class="p-card-header">
+                                <h3>Ciclo de Treino Atual</h3>
+                                <span class="p-card-meta">Objetivo: 30 Treinos</span>
+                            </div>
+                            <div class="cycle-progress-wrap">
+                                <div class="cycle-info">
+                                    <div class="cycle-count"><span id="cycleDone">0</span><small>/30</small></div>
+                                    <div class="cycle-status" id="cycleStatus">EM ANDAMENTO</div>
+                                </div>
+                                <div class="cycle-xp-bar">
+                                    <div class="cycle-xp-fill" id="cycleFill"></div>
+                                    <div class="cycle-xp-glow"></div>
+                                </div>
+                                <div class="cycle-breakdown" id="cycleBreakdown"></div>
+                                <p class="cycle-msg">Complete 30 treinos para finalizar este ciclo, arquivar sua ficha atual e ganhar uma insígnia de mestre.</p>
+                            </div>
+                        </div>
+
+                        <div class="progresso-grid">
+                            <div class="p-card streak-card">
+                                <div class="streak-icon" style="display:flex; align-items:center; justify-content:center; background:rgba(249,115,22,0.1); border-radius:50%; width:40px; height:40px; color:#f97316;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                                        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                                    </svg>
+                                </div>
+                                <div class="streak-info">
+                                    <h3><span id="progStreakVal">0</span> Dias Seguidos!</h3>
+                                    <p>Continue treinando para não perder sua ofensiva.</p>
+                                </div>
+                            </div>
+                            <div class="p-card weekly-summary-card">
+                                <div class="ws-header">
+                                    <h3>Sua Semana</h3>
+                                    <div class="ws-badge"><span id="weekTrainedCount">0</span> dias treinados</div>
+                                </div>
+                                <div class="ws-days" id="weekDaysGrid"></div>
+                            </div>
+                            <div class="calendar-view-toggle">
+                                <button class="cal-toggle-btn active" data-view="monthly" id="btnMonthlyView">Mensal (Grid)</button>
+                                <button class="cal-toggle-btn" data-view="weekly" id="btnWeeklyView">Semanal (Planner)</button>
+                            </div>
+                            <div class="p-card month-calendar-card" id="monthlyCalendarCard">
+                                <div class="month-header">
+                                    <button class="cal-nav-btn" id="prevMonth" aria-label="Mês anterior">❮</button>
+                                    <h3 id="calendarMonthName">MÊS</h3>
+                                    <button class="cal-nav-btn" id="nextMonth" aria-label="Próximo mês">❯</button>
+                                </div>
+                                <div class="month-grid-header"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
+                                <div class="month-grid" id="monthCalendar"></div>
+                            </div>
+                            <div class="p-card weekly-planner-card" id="weeklyPlannerCard" style="display:none">
+                                <div class="planner-header">
+                                    <button class="cal-nav-btn" id="prevWeekMonth" aria-label="Mês anterior">❮</button>
+                                    <h3 id="plannerMonthName">MAIO</h3>
+                                    <button class="cal-nav-btn" id="nextWeekMonth" aria-label="Próximo mês">❯</button>
+                                </div>
+                                <div class="planner-weeks" id="weeklyPlanner"></div>
+                            </div>
+                            <div class="p-card stats-card">
+                                <div class="stat-item">
+                                    <div class="stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                                            <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/>
+                                            <circle cx="4" cy="12" r="1.5"/>
+                                            <circle cx="20" cy="12" r="1.5"/>
+                                        </svg>
+                                    </div>
+                                    <div class="stat-texts"><h4>Total de Treinos</h4><span id="progTotalTreinos">0</span></div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                        </svg>
+                                    </div>
+                                    <div class="stat-texts"><h4>Treinos no Mês</h4><span id="progMesTreinos">0</span></div>
+                                </div>
+                            </div>
+                            <div class="p-card volume-card">
+                                <div class="p-card-header" style="flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;">
+                                    <h3 style="display:flex; align-items:center; gap:8px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="color:var(--primary);">
+                                            <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/>
+                                            <circle cx="4" cy="12" r="1.5"/>
+                                            <circle cx="20" cy="12" r="1.5"/>
+                                        </svg>
+                                        Volume de Carga
+                                    </h3>
+                                    <select id="filterVolume" style="padding:4px 28px 4px 12px;font-size:.75rem;border-radius:12px;background-color:#111;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 8px center;background-size:12px;color:#ffffff;border:1px solid var(--card-border);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;">
+                                        <option value="7" style="background:#1a1a1a; color:#ffffff;">Últimos 7 dias</option>
+                                        <option value="30" style="background:#1a1a1a; color:#ffffff;">Últimos 30 dias</option>
+                                        <option value="all" style="background:#1a1a1a; color:#ffffff;">Total da Vida</option>
+                                    </select>
+                                </div>
+                                <div class="volume-chart" id="volumeChart"></div>
+                                <p style="font-size:.75rem;color:var(--text-tertiary);margin-top:15px;text-align:center;">Total kg levantados por grupo muscular.</p>
+                            </div>
+                            <div class="p-card radar-card">
+                                <div class="p-card-header" style="flex-wrap:wrap;gap:10px;">
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <h3>Atributos de Performance</h3>
+                                        <button onclick="openModal('modalRadarGuide')" style="background:rgba(255,255,255,.1);border:none;color:var(--text-secondary);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;cursor:pointer;transition:.3s;font-weight:bold;" onmouseover="this.style.background='var(--primary)';this.style.color='#000';" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='var(--text-secondary)';">?</button>
+                                    </div>
+                                    <div style="display:flex;gap:5px;background:rgba(255,255,255,.05);padding:4px;border-radius:8px;">
+                                        <button class="btn btn-sm active" id="btnRadarMensal" style="padding:4px 12px;font-size:.7rem;border-radius:6px;background:var(--primary);color:#000;border:none;font-weight:800;cursor:pointer;transition:.3s;">MENSAL</button>
+                                        <button class="btn btn-sm" id="btnRadarTotal" style="padding:4px 12px;font-size:.7rem;border-radius:6px;background:transparent;color:var(--text-secondary);border:none;font-weight:800;cursor:pointer;transition:.3s;">TOTAL</button>
+                                    </div>
+                                </div>
+                                <div id="radarChartContainer" style="width:100%;min-height:300px;display:flex;align-items:center;justify-content:center;margin-top:20px;"></div>
+                                <p style="font-size:.75rem;color:var(--text-tertiary);margin-top:15px;text-align:center;">Baseado na variedade, intensidade e consistência do seu treino.</p>
+                                <div id="radarShareBtnContainer" style="text-align:center;margin-top:15px;">
+                                    <button class="btn btn-sm" onclick="shareRadar()" style="border:1px solid var(--primary);color:var(--primary-light);background:rgba(255,255,255,.05);padding:6px 16px;border-radius:20px;font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:.8rem;transition:.3s;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="margin-right: 4px;">
+                                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                                            <polyline points="16 6 12 2 8 6"/>
+                                            <line x1="12" y1="2" x2="12" y2="15"/>
+                                        </svg> COMPARTILHAR RADAR
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="p-card calculator-card">
+                                <div class="p-card-header">
+                                    <h3>Calculadora de 1RM</h3>
+                                    <span class="p-card-meta">Estimativa</span>
+                                </div>
+                                <p style="font-size:.85rem;margin-bottom:15px;">Calcule o peso máximo que você conseguiria levantar para 1 repetição.</p>
+                                <div class="calc-row">
+                                    <div class="form-group"><label>Carga (kg)</label><input type="number" id="calcWeight" placeholder="Ex: 80"></div>
+                                    <div class="form-group"><label>Reps</label><input type="number" id="calcReps" placeholder="Ex: 10"></div>
+                                </div>
+                                <div class="calc-result" id="calcResult">
+                                    <div class="res-val">--</div>
+                                    <div class="res-lbl">kg Estimados</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /tab-progresso -->
+                </div><!-- /section-progresso -->
+                </div><!-- /treino-container -->

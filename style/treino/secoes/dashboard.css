@@ -1,0 +1,1703 @@
+/* style/treino/secoes/dashboard.css */
+
+.section-slide[data-section="dashboard"] {
+  overflow: hidden;
+  background: transparent;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Overlay roxo sutil — não sobrecarregar o cr-bg-overlay global */
+.section-slide[data-section="dashboard"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 2, 20, 0.2) 0%,
+    rgba(18, 5, 35, 0.1) 50%,
+    rgba(10, 2, 20, 0.2) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.section-slide[data-section="dashboard"] .dash-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 18px calc(84px + env(safe-area-inset-bottom));
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   HEADER ROW 1: Profile Banner Card + Action Buttons
+   ========================================================================== */
+.dash-header-row-1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+/* Profile Banner Card (Checkered Pattern) */
+.dash-profile-banner-card {
+  flex: 1;
+  max-width: 220px;
+  height: 58px;
+  margin-right: 12px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  background: #2b114d;
+}
+
+.dash-banner-checkers {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(135deg, rgba(14, 3, 26, 0.6) 25%, transparent 25%), 
+    linear-gradient(225deg, rgba(14, 3, 26, 0.6) 25%, transparent 25%), 
+    linear-gradient(45deg, rgba(14, 3, 26, 0.6) 25%, transparent 25%), 
+    linear-gradient(315deg, rgba(14, 3, 26, 0.6) 25%, #2b114d 25%);
+  background-position: 8px 0, 8px 0, 0 0, 0 0;
+  background-size: 16px 16px;
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+.dash-profile-banner-card[data-banner] .dash-banner-checkers {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Top Right Actions (Group, Calendar, Menu) */
+.dash-top-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dash-action-circle-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(30, 24, 46, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s, transform 0.2s, color 0.2s;
+}
+
+.dash-action-circle-btn:hover {
+  background: rgba(45, 36, 68, 0.8);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+.dash-action-circle-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Red Notification Dot for Calendar Button */
+.dash-action-circle-btn.has-notification::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  background-color: #f43f5e;
+  border-radius: 50%;
+  border: 1.5px solid #1e182e;
+}
+
+/* ==========================================================================
+   HEADER ROW 2: Nickname/Trophies + Missions Widget
+   ========================================================================== */
+.dash-header-row-2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+/* Nickname + Welcome Message */
+.dash-user-trophy-display {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-welcome-text {
+  color: rgba(255, 255, 255, 0.55);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dash-nickname-text {
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dash-trophy-emoji {
+  font-size: 1.15rem;
+}
+
+.dash-trophy-count {
+  color: #fde047;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   UNIFIED MISSIONS + CYCLE WIDGET (Clash Royale style)
+   ========================================================================== */
+
+/* Outer wrapper — aligns to the right of the header row */
+.dash-unified-missions-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  cursor: pointer;
+  position: relative;
+  /* Right margin so the ribbon (which overhangs) doesn't clip the screen edge */
+  margin-right: 14px;
+}
+
+/* "MISSÕES" brown-gold tag above the card body */
+.dash-missions-header-tag {
+  background: linear-gradient(180deg, #92400e 0%, #78350f 100%);
+  border: 1.5px solid #b45309;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 2px 10px 3px;
+  /* Push tag left so it sits over the golden card, not the ribbon */
+  margin-right: 38px;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.35);
+  align-self: flex-start;
+  /* align left-edge of tag to start of body card */
+  align-self: auto;
+  position: relative;
+  left: 0;
+}
+
+.dash-missions-tag-text {
+  color: #fde047;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Main golden pill / body card */
+.dash-missions-body-card {
+  height: 46px;
+  min-width: 160px;
+  background: linear-gradient(180deg, #f59e0b 0%, #b45309 100%);
+  border: 2px solid #fef08a;
+  border-radius: 12px;
+  box-shadow:
+    0 6px 14px rgba(180, 83, 9, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  padding: 4px 0 4px 0;
+  gap: 0;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  /* Right padding = ribbon width (44px) - overhang offset (16px) + gap (12px) = 40px */
+  padding-right: 44px;
+  overflow: visible;
+}
+
+.dash-unified-missions-widget:hover .dash-missions-body-card {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(180, 83, 9, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Left: rotated diamond badge */
+.dash-missions-diamond-badge {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Bleed slightly over the left border to mimic the reference */
+  margin-left: -2px;
+  margin-right: 8px;
+}
+
+.dash-missions-diamond-inner {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 55%, #92400e 100%);
+  border: 2px solid #fef08a;
+  border-radius: 5px;
+  transform: rotate(45deg);
+  box-shadow:
+    0 3px 8px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-missions-diamond-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 55%);
+  border-radius: 3px;
+}
+
+/* Cycle arrow icon — counter-rotated to appear upright */
+.dash-missions-diamond-arrow {
+  width: 14px;
+  height: 14px;
+  transform: rotate(-45deg);
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.55));
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -7px;
+  margin-left: -7px;
+  z-index: 1;
+}
+
+/* Small crown in bottom-right corner of diamond */
+.dash-missions-diamond-crown {
+  width: 10px;
+  height: 10px;
+  transform: rotate(-45deg);
+  color: rgba(120, 53, 15, 0.9);
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  z-index: 1;
+}
+
+/* Center: progress area — text on top, bar below (like reference image) */
+.dash-missions-progress-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding-right: 4px;
+}
+
+/* Value text: "3/30" — large, prominent above the bar */
+.dash-missions-progress-text {
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.dash-missions-progress-track {
+  width: 100%;
+  height: 10px;
+  background: rgba(100, 40, 5, 0.65);
+  border: 1px solid rgba(160, 70, 9, 0.8);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.45);
+}
+
+.dash-missions-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #fde047 0%, #fbbf24 60%, #f59e0b 100%);
+  border-radius: 20px;
+  box-shadow: 0 0 6px rgba(253, 224, 71, 0.75);
+  transition: width 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-missions-progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.35) 50%, transparent 80%);
+  transform: translateX(-100%);
+  animation: dashMissionsShimmer 2s linear infinite;
+}
+
+@keyframes dashMissionsShimmer {
+  to { transform: translateX(200%); }
+}
+
+/* Right: blue ribbon / shield — overhangs to the right of the card */
+.dash-missions-blue-ribbon {
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 54px;
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 58%, #1e3a8a 100%);
+  border: 2px solid #93c5fd;
+  /* Classic shield / pentagon shape */
+  clip-path: polygon(0% 0%, 100% 0%, 100% 76%, 50% 100%, 0% 76%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 6px 16px rgba(37, 99, 235, 0.55),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.dash-unified-missions-widget:hover .dash-missions-blue-ribbon {
+  transform: translateY(calc(-50% - 2px));
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.75);
+}
+
+.dash-missions-ribbon-crown {
+  width: 20px;
+  height: 20px;
+  color: #fff;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+  margin-top: -5px;
+}
+
+
+
+/* ==========================================================================
+   CENTER SECTION: Unified Arena Card (Forge)
+   ========================================================================== */
+.dash-arena-card {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(27, 10, 43, 0.8) 0%, rgba(13, 4, 22, 0.95) 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.25);
+  border-radius: 24px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+.dash-arena-content {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 16px 8px;
+  background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+}
+
+.dash-arena-glow {
+  position: absolute;
+  inset: 10%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(168, 85, 247, 0) 70%);
+  filter: blur(24px);
+  pointer-events: none;
+}
+
+.dash-arena-img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6));
+  z-index: 1;
+  transform: translateY(16px); /* Desce a imagem central um pouco */
+}
+
+.dash-radar-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.dash-radar-header h3 {
+  margin: 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.dash-radar-toggle {
+  display: flex;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.dash-radar-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+}
+
+.dash-radar-container .radar-wrapper {
+  width: 100%;
+  max-width: 280px;
+}
+
+.dash-radar-container .radar-wrapper svg {
+  width: 100%;
+  height: auto;
+}
+
+/* Arena Card Footer: Trophy Button + Level Progress Bar */
+.dash-arena-footer {
+  background: rgba(10, 5, 20, 0.65);
+  border-top: 1px solid rgba(139, 92, 246, 0.15);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Golden Square Trophy Button */
+.dash-arena-trophy-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  border: 1.5px solid #fef08a;
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dash-arena-trophy-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+}
+
+.dash-arena-trophy-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Progress Bar Container */
+.dash-arena-progress-container {
+  flex-grow: 1;
+  height: 22px;
+  background: #0f0a18;
+  border: 1.5px solid #2b1444;
+  border-radius: 20px;
+  padding: 3px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-arena-progress-track {
+  height: 100%;
+  width: 100%;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-arena-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #93c5fd 100%);
+  border-radius: 20px;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.7), 0 0 4px rgba(96, 165, 250, 0.4);
+  position: relative;
+  overflow: hidden;
+  transition: width 0.5s ease-out;
+}
+
+.dash-progress-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.25) 50%, transparent 80%);
+  transform: translateX(-100%);
+  animation: dashShimmer 2.2s linear infinite;
+}
+
+/* ==========================================================================
+   BOTTOM SECTION: SUGGESTED WORKOUT CARD
+   ========================================================================== */
+.dash-suggested-workout-wrapper {
+  position: relative;
+  width: 100%;
+  margin-top: 90px;
+  z-index: 2;
+}
+
+.dash-suggested-workout-card {
+  width: 100%;
+  background: linear-gradient(180deg, #12091d 0%, #08030e 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
+  padding: 7px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Left Card: Workout suggestion details */
+.dash-workout-exercise-card {
+  width: 76px;
+  height: 88px;
+  background: linear-gradient(180deg, #221438 0%, #0d0618 100%);
+  border: 1.5px solid #8b5cf6;
+  border-radius: 12px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s, border-color 0.2s;
+  text-align: left;
+}
+
+.dash-workout-exercise-card:hover {
+  transform: translateY(-2px);
+  border-color: #a78bfa;
+}
+
+.dash-workout-img-container {
+  height: 50px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.dash-workout-img-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dash-workout-letter-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 20px;
+  height: 20px;
+  background: #a855f7;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.dash-workout-letter-badge span {
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 800;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.dash-workout-card-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2px 4px 0;
+  gap: 1px;
+}
+
+.dash-workout-label {
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.dash-workout-ex-count {
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+/* Center: Metallic Textured "PRÓXIMO PASSO" button */
+.dash-next-step-btn {
+  flex-grow: 1;
+  height: 88px;
+  background: linear-gradient(180deg, #37333f 0%, #1a181f 100%);
+  border: 1.5px solid #4a1d82;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.dash-next-step-btn:hover {
+  background: linear-gradient(180deg, #423d4b 0%, #201d26 100%);
+  transform: scale(1.02);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+}
+
+.dash-next-step-btn .btn-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
+  position: relative;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+/* Vertical neon pills on left/right borders of the button */
+.dash-next-step-btn .neon-glow-left-pill,
+.dash-next-step-btn .neon-glow-right-pill {
+  position: absolute;
+  top: 10%;
+  height: 80%;
+  width: 4px;
+  background: #d8b4fe;
+  border-radius: 4px;
+  box-shadow: 0 0 10px #c084fc, 0 0 4px #c084fc;
+  z-index: 1;
+}
+
+.dash-next-step-btn .neon-glow-left-pill {
+  left: 3px;
+}
+
+.dash-next-step-btn .neon-glow-right-pill {
+  right: 3px;
+}
+
+/* Right: Cycle progress card */
+.dash-cycle-progress-card {
+  width: 68px;
+  height: 88px;
+  background: linear-gradient(180deg, #221438 0%, #0d0618 100%);
+  border: 1.5px solid #8b5cf6;
+  border-radius: 12px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.dash-cycle-progress-card:hover {
+  transform: translateY(-2px);
+  border-color: #a78bfa;
+}
+
+.dash-cycle-trophy-icon {
+  color: #fde047;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(253, 224, 71, 0.3));
+}
+
+.dash-cycle-value {
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  margin-top: 4px;
+  line-height: 1;
+}
+
+.dash-cycle-label {
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+@keyframes dashShimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (Media Queries)
+   ========================================================================== */
+@media (max-width: 480px) {
+  .section-slide[data-section="dashboard"] .dash-container {
+    padding: 10px 14px calc(80px + env(safe-area-inset-bottom));
+    gap: 6px;
+  }
+
+  .dash-header-row-1 {
+    margin-top: 2px;
+  }
+
+  .dash-arena-card {
+    margin-top: 2px;
+  }
+
+  .dash-arena-content {
+    padding: 10px 12px 6px;
+  }
+
+  .dash-radar-header h3 {
+    font-size: 0.85rem;
+  }
+
+  .dash-radar-container {
+    min-height: 180px;
+  }
+
+  .dash-nickname-text {
+    font-size: 1.15rem;
+  }
+
+  .dash-trophy-count {
+    font-size: 1.15rem;
+  }
+
+  .dash-welcome-text {
+    font-size: 0.75rem;
+  }
+
+  .dash-profile-banner-card {
+    height: 50px;
+    margin-right: 8px;
+  }
+
+  .dash-action-circle-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+  }
+
+  .dash-action-circle-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Unified missions widget responsive */
+  .dash-missions-header-tag {
+    margin-right: 38px;
+    padding: 2px 8px 3px;
+  }
+
+  .dash-missions-tag-text {
+    font-size: 0.58rem;
+  }
+
+  .dash-missions-body-card {
+    height: 38px;
+  }
+
+  .dash-missions-diamond-badge {
+    width: 38px;
+    height: 38px;
+  }
+
+  .dash-missions-diamond-inner {
+    width: 30px;
+    height: 30px;
+  }
+
+  .dash-missions-diamond-arrow {
+    width: 12px;
+    height: 12px;
+    top: 3px;
+    left: 3px;
+  }
+
+  .dash-missions-diamond-crown {
+    width: 10px;
+    height: 10px;
+  }
+
+  .dash-missions-progress-track {
+    height: 10px;
+  }
+
+  .dash-missions-progress-text {
+    font-size: 0.88rem;
+  }
+
+  .dash-missions-blue-ribbon {
+    width: 40px;
+    height: 48px;
+    right: -12px;
+  }
+
+  .dash-missions-ribbon-crown {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dash-arena-progress-container {
+    height: 18px;
+  }
+
+  .dash-suggested-workout-card {
+    gap: 8px;
+    padding: 6px;
+  }
+
+  .dash-workout-exercise-card {
+    width: 68px;
+    height: 82px;
+  }
+
+  .dash-workout-img-container {
+    height: 44px;
+  }
+
+  .dash-workout-ex-count {
+    font-size: 0.8rem;
+  }
+
+  .dash-next-step-btn {
+    height: 82px;
+    padding: 0 10px;
+  }
+
+  .dash-next-step-btn .btn-text {
+    font-size: 1.1rem;
+  }
+
+  .dash-cycle-progress-card {
+    width: 60px;
+    height: 82px;
+  }
+
+  .dash-cycle-value {
+    font-size: 0.9rem;
+  }
+
+  .dash-suggested-workout-wrapper {
+    margin-top: 54px;
+  }
+
+  .dash-arena-img {
+    transform: translateY(12px);
+  }
+}
+
+/* ==========================================================================
+   MINI DECK BUILDER MODAL (Dashboard Workout Selector)
+   Compact replica of the Montar Ficha tab — Cyber-Glass aesthetic
+   ========================================================================== */
+
+/* Container */
+.dash-mini-deck {
+  width: 94%;
+  max-width: 520px;
+  margin: auto;
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0e0d1a 0%, #07060d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+  animation: dashMiniDeckIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+
+@keyframes dashMiniDeckIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Close Button */
+.dash-mini-deck__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 100;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dash-mini-deck__close:hover {
+  background: rgba(139, 92, 246, 0.3);
+  color: #fff;
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: scale(1.08);
+}
+
+/* Header Elements: Hamburger + Tabs + Swap + View Toggle */
+.dash-mini-deck__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.dash-mini-deck__menu-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.dash-mini-deck__menu-btn:hover {
+  color: #a78bfa;
+}
+
+.dash-mini-deck__swap-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(21, 20, 40, 0.75);
+  border: 1px solid #23223f;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+.dash-mini-deck__swap-btn:hover {
+  color: #ffffff;
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.dash-mini-deck__tabs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-mini-deck__tab {
+  position: relative;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.dash-mini-deck__tab:hover {
+  color: #a78bfa;
+}
+
+.dash-mini-deck__tab.active {
+  color: #ffffff;
+  width: 50px;
+  height: 57px;
+}
+
+.dash-mini-deck__tab-shield {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));
+  z-index: 1;
+}
+
+.dash-mini-deck__tab-letter {
+  position: relative;
+  z-index: 2;
+  font-size: 1.25rem;
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+/* View Toggle */
+.dash-mini-deck__view-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dash-mini-deck__view-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.dash-mini-deck__view-btn:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dash-mini-deck__view-btn.active {
+  background: rgba(139, 92, 246, 0.35);
+  color: #ffffff;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+}
+
+/* Body Section */
+.dash-mini-deck__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom Scrollbar */
+.dash-mini-deck__body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dash-mini-deck__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dash-mini-deck__body::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 4px;
+}
+
+/* 4-Column Royale Grid */
+.dash-mini-deck__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* High Fidelity Royale Card Sizing */
+.dash-mini-deck__grid .deck-card {
+  background: rgba(21, 20, 40, 0.85);
+  border: 1.5px solid #23223f;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  cursor: default;
+}
+
+.dash-mini-deck__grid .deck-card:hover {
+  transform: translateY(-5px) scale(1.03);
+  border-color: #8b5cf6;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+}
+
+/* Colored top borders matching screenshot */
+.dash-mini-deck__grid .deck-card.card-peito { border-top: 4.5px solid #ef4444; }
+.dash-mini-deck__grid .deck-card.card-ombros { border-top: 4.5px solid #f97316; }
+.dash-mini-deck__grid .deck-card.card-pernas { border-top: 4.5px solid #3b82f6; }
+.dash-mini-deck__grid .deck-card.card-tríceps { border-top: 4.5px solid #a855f7; }
+.dash-mini-deck__grid .deck-card.card-core { border-top: 4.5px solid #475569; }
+.dash-mini-deck__grid .deck-card.card-costas { border-top: 4.5px solid #10b981; }
+.dash-mini-deck__grid .deck-card.card-bíceps { border-top: 4.5px solid #ec4899; }
+.dash-mini-deck__grid .deck-card.card-aeróbico { border-top: 4.5px solid #06b6d4; }
+
+.dash-mini-deck__grid .deck-card-header {
+  background: #151428;
+  color: #ffffff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.dash-mini-deck__grid .deck-card-img {
+  background: #ffffff;
+  aspect-ratio: 1.25 / 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  overflow: hidden;
+  border-bottom: 1.5px solid #23223f;
+  position: relative;
+}
+
+.dash-mini-deck__grid .deck-card-img img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.dash-mini-deck__grid .deck-card-info {
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.dash-mini-deck__grid .deck-card-name {
+  color: #ffffff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.dash-mini-deck__grid .deck-card-level {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* Cardio Row */
+.dash-mini-deck__cardio-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 12px;
+  color: #4ade80;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.dash-mini-deck__cardio-row svg {
+  flex-shrink: 0;
+  stroke: #4ade80;
+}
+
+/* Empty State */
+.dash-mini-deck__empty {
+  padding: 50px 20px;
+  text-align: center;
+  color: #64748b;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Footer Section: High Fidelity Stats Widgets */
+.dash-mini-deck__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 20px;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.dash-mini-deck__stat-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.dash-mini-deck__stat-widget {
+  background: rgba(21, 20, 40, 0.75);
+  border: 1.5px solid #23223f;
+  border-radius: 16px;
+  height: 58px;
+  width: 100%;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dash-mini-deck__stat-icon.elixir {
+  filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.5));
+}
+
+.dash-mini-deck__stat-icon.star {
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
+}
+
+.dash-mini-deck__stat-icon.pulse {
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.5));
+}
+
+.dash-mini-deck__stat-val {
+  color: #ffffff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.5px;
+}
+
+.dash-mini-deck__widget-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dash-mini-deck__stat-sub {
+  color: #64748b;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.dash-mini-deck__stat-label {
+  color: #64748b;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 6px;
+}
+
+/* Responsive Styles */
+@media (max-width: 480px) {
+  .dash-mini-deck {
+    width: 96%;
+    max-height: 82vh;
+    border-radius: 20px;
+  }
+
+  .dash-mini-deck__header {
+    padding: 12px 14px;
+  }
+
+  .dash-mini-deck__tabs {
+    gap: 8px;
+  }
+
+  .dash-mini-deck__tab {
+    width: 36px;
+    height: 36px;
+    font-size: 1.05rem;
+  }
+
+  .dash-mini-deck__tab.active {
+    width: 42px;
+    height: 48px;
+  }
+
+  .dash-mini-deck__tab-letter {
+    font-size: 1.1rem;
+  }
+
+  .dash-mini-deck__body {
+    padding: 12px;
+  }
+
+  .dash-mini-deck__grid {
+    gap: 8px;
+  }
+
+  .dash-mini-deck__grid .deck-card {
+    border-radius: 12px;
+  }
+
+  .dash-mini-deck__grid .deck-card-header {
+    font-size: 0.55rem;
+    padding: 4px 0;
+  }
+
+  .dash-mini-deck__grid .deck-card-name {
+    font-size: 0.65rem;
+  }
+
+  .dash-mini-deck__grid .deck-card-level {
+    font-size: 0.58rem;
+  }
+
+  .dash-mini-deck__footer {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .dash-mini-deck__stat-widget {
+    height: 52px;
+    padding: 0 8px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+
+  .dash-mini-deck__stat-val {
+    font-size: 1.15rem;
+  }
+
+  .dash-mini-deck__stat-sub {
+    font-size: 0.55rem;
+  }
+
+  .dash-mini-deck__stat-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* ==========================================================================
+   NEW PREMIUM HEADER (NovaDash.html Style)
+   ========================================================================== */
+.dash-header-calling-card.dash-profile-banner-card {
+  flex: none !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 200px !important;
+  margin-left: -18px !important;
+  margin-right: -18px !important;
+  margin-top: -14px !important;
+  margin-bottom: 12px !important;
+  padding: 24px 18px 24px 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-bottom: 2px solid rgba(139, 92, 246, 0.25) !important;
+  border-radius: 0 0 24px 24px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 480px) {
+  .dash-header-calling-card.dash-profile-banner-card {
+    margin-left: -14px !important;
+    margin-right: -14px !important;
+    margin-top: -10px !important;
+    padding: 20px 14px 20px 14px !important;
+  }
+}
+
+/* Override profile avatar in dashboard context */
+.dash-profile-avatar.profile-avatar {
+  width: 112px !important;
+  height: 112px !important;
+  border-radius: 1.25rem !important; /* rounded-3xl */
+  border: 2px solid #eab308 !important; /* border-prestige-gold */
+  box-shadow: 0 0 20px rgba(253, 224, 71, 0.5) !important;
+  padding: 4px !important;
+  background: #1c1b1b !important; /* bg-surface-container-low */
+  overflow: hidden;
+  margin: 0 !important;
+}
+
+.dash-profile-avatar.profile-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  border-radius: 14px !important;
+}
+
+.dash-profile-avatar.profile-avatar .profile-avatar__emblem-wrapper {
+  border-radius: 14px !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Avatar Frame Squircles for Dashboard */
+.dash-profile-avatar.profile-avatar[data-frame="bronze"] img,
+.dash-profile-avatar.profile-avatar[data-frame="bronze"] svg,
+.dash-profile-avatar.profile-avatar[data-frame="bronze"] .profile-avatar__emblem-wrapper {
+  outline: 2px solid #f97316 !important;
+  outline-offset: 2px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 0 10px rgba(249,115,22,0.5) !important;
+}
+
+.dash-profile-avatar.profile-avatar[data-frame="prata"] img,
+.dash-profile-avatar.profile-avatar[data-frame="prata"] svg,
+.dash-profile-avatar.profile-avatar[data-frame="prata"] .profile-avatar__emblem-wrapper {
+  outline: 2px solid #94a3b8 !important;
+  outline-offset: 2px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 0 10px rgba(148,163,184,0.5) !important;
+}
+
+.dash-profile-avatar.profile-avatar[data-frame="ouro"] img,
+.dash-profile-avatar.profile-avatar[data-frame="ouro"] svg,
+.dash-profile-avatar.profile-avatar[data-frame="ouro"] .profile-avatar__emblem-wrapper {
+  outline: 2px solid #fbbf24 !important;
+  outline-offset: 2px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 0 14px rgba(251,191,36,0.6) !important;
+}
+
+.dash-profile-avatar.profile-avatar[data-frame="elite"] img,
+.dash-profile-avatar.profile-avatar[data-frame="elite"] svg,
+.dash-profile-avatar.profile-avatar[data-frame="elite"] .profile-avatar__emblem-wrapper {
+  outline: 2px solid transparent !important;
+  outline-offset: 2px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 0 0 2px var(--primary), 0 0 18px var(--primary) !important;
+}
+
+/* Custom sizes for top buttons */
+.dash-header-btn {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+.dash-header-btn span {
+  font-size: 24px !important;
+}
+
+.dash-header-btn .notification-dot {
+  top: 12px !important;
+  right: 12px !important;
+}
+
+/* Custom sizes for new pill missions widget */
+.dash-missions-pill {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  padding-left: 8px !important;
+  padding-right: 20px !important;
+  border-width: 1.5px !important;
+}
+
+.dash-missions-hexagon {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.dash-missions-hexagon span {
+  font-size: 18px !important;
+}
+
+.dash-missions-val {
+  font-size: 0.85rem !important;
+}
+
+.dash-missions-progress-bar {
+  width: 128px !important;
+  height: 12px !important;
+}
+
+@media (max-width: 480px) {
+  /* Shrink avatar on mobile */
+  .dash-profile-avatar.profile-avatar {
+    width: 96px !important;
+    height: 96px !important;
+    border-radius: 1rem !important; /* rounded-2xl */
+  }
+
+  .dash-profile-avatar.profile-avatar img {
+    border-radius: 12px !important;
+  }
+
+  .dash-profile-avatar.profile-avatar .profile-avatar__emblem-wrapper {
+    border-radius: 12px !important;
+  }
+
+  /* Shrink frames on mobile */
+  .dash-profile-avatar.profile-avatar[data-frame="bronze"] img,
+  .dash-profile-avatar.profile-avatar[data-frame="bronze"] svg,
+  .dash-profile-avatar.profile-avatar[data-frame="bronze"] .profile-avatar__emblem-wrapper,
+  .dash-profile-avatar.profile-avatar[data-frame="prata"] img,
+  .dash-profile-avatar.profile-avatar[data-frame="prata"] svg,
+  .dash-profile-avatar.profile-avatar[data-frame="prata"] .profile-avatar__emblem-wrapper,
+  .dash-profile-avatar.profile-avatar[data-frame="ouro"] img,
+  .dash-profile-avatar.profile-avatar[data-frame="ouro"] svg,
+  .dash-profile-avatar.profile-avatar[data-frame="ouro"] .profile-avatar__emblem-wrapper,
+  .dash-profile-avatar.profile-avatar[data-frame="elite"] img,
+  .dash-profile-avatar.profile-avatar[data-frame="elite"] svg,
+  .dash-profile-avatar.profile-avatar[data-frame="elite"] .profile-avatar__emblem-wrapper {
+    border-radius: 12px !important;
+  }
+
+  /* Shrink top buttons on mobile */
+  .dash-header-btn {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 10px !important;
+  }
+
+  .dash-header-btn span {
+    font-size: 20px !important;
+  }
+
+  .dash-header-btn .notification-dot {
+    top: 9px !important;
+    right: 9px !important;
+  }
+
+  /* Shrink missions widget on mobile */
+  .dash-missions-pill {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    padding-left: 6px !important;
+    padding-right: 16px !important;
+  }
+  
+  .dash-missions-hexagon {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  
+  .dash-missions-hexagon span {
+    font-size: 16px !important;
+  }
+  
+  .dash-missions-val {
+    font-size: 0.75rem !important;
+  }
+  
+  .dash-missions-progress-bar {
+    width: 96px !important;
+    height: 10px !important;
+  }
+}
+
+/* Hexagon for Crown Mission Badge */
+.hexagon {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)
+}

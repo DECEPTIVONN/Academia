@@ -1,0 +1,154 @@
+                <!-- Hero vive DENTRO do slide da Ficha: desliza junto naturalmente -->
+                <section class="treino-hero">
+                    <div class="hero-orb orb-1"></div>
+                    <div class="hero-orb orb-2"></div>
+                    <div class="treino-hero-content">
+                        <div class="treino-badge-label">🏋️ ACADEMIA</div>
+                        <h1 class="treino-hero-title">Fichas de <span class="gradient-text">Treino</span></h1>
+                        <p class="treino-hero-sub">Treine com foco. Marque seus exercícios. Evolua todo dia.</p>
+                        <div class="treino-hero-stats">
+                            <div class="h-stat">
+                                <div class="h-stat-val" id="statTotalEx">0</div>
+                                <div class="h-stat-lbl">Exercícios</div>
+                            </div>
+                            <div class="h-stat-div"></div>
+                            <div class="h-stat">
+                                <div class="h-stat-val" id="statFichas">A + B</div>
+                                <div class="h-stat-lbl">Fichas</div>
+                            </div>
+                            <div class="h-stat-div"></div>
+                            <div class="h-stat">
+                                <div class="h-stat-val" id="statStreak">0🔥</div>
+                                <div class="h-stat-lbl">Dias Seguidos</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="treino-container">
+                <!-- ========== SEÇÃO 1: FICHA DO DIA ========== -->
+                <div id="section-ficha" class="main-section" role="tabpanel">
+                <div id="tab-ficha" class="t-tab active" role="tabpanel">
+
+                    <div class="ficha-header-bar">
+                        <div class="ficha-left">
+                            <div class="ficha-treino-badge" id="fichaTreinoBadge">TREINO A</div>
+                            <div class="ficha-date" id="fichaDate">Carregando...</div>
+                        </div>
+                        <div class="ficha-right">
+                            <button class="btn-start-workout" id="btnStartWorkout">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                INICIAR TREINO
+                            </button>
+                            <div class="v-divider"></div>
+                            <div class="view-selector">
+                                <button class="view-btn active" data-view="table" id="viewBtnTable" title="Visualização em Tabela">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+                                </button>
+                                <button class="view-btn" data-view="grid" id="viewBtnGrid" title="Visualização em Grid">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                </button>
+                                <button class="view-btn" data-view="deck" id="viewBtnDeck" title="Modo Coleção">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="2" y="5" width="14" height="17" rx="2"/><path d="M6 2h12a2 2 0 012 2v14"/></svg>
+                                </button>
+                            </div>
+                            <div class="v-divider"></div>
+                            <span class="switch-label">Treino:</span>
+                            <div class="treino-selector">
+                                <button class="sel-btn active" data-treino="A" id="selBtnA">A</button>
+                                <button class="sel-btn" data-treino="B" id="selBtnB">B</button>
+                                <button class="sel-btn" data-treino="C" id="selBtnC">C</button>
+                                <button class="sel-btn" data-treino="D" id="selBtnD">D</button>
+                                <button class="sel-btn" data-treino="E" id="selBtnE">E</button>
+                                <button class="sel-btn" data-treino="F" id="selBtnF">F</button>
+                                <button class="sel-btn" data-treino="G" id="selBtnG">G</button>
+                                <button class="sel-btn" data-treino="H" id="selBtnH">H</button>
+                                <button class="sel-btn" data-treino="I" id="selBtnI">I</button>
+                                <button class="sel-btn" data-treino="J" id="selBtnJ">J</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="global-timer" id="globalWorkoutTimer" style="display: none;">
+                        <div class="gt-icon"><i class="fas fa-stopwatch"></i></div>
+                        <div class="gt-content">
+                            <span class="gt-label">Duração do Treino</span>
+                            <span class="gt-time" id="gtTime">00:00:00</span>
+                        </div>
+                    </div>
+
+                    <div class="ficha-suggestion" id="fichaSuggestion" style="display:none">
+                        <div class="suggestion-content">
+                            <span class="suggestion-icon">💡</span>
+                            <span id="suggestionText">Último treino: A (10/05). Hoje sugerimos o Treino B.</span>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Progresso -->
+                    <div class="progress-wrapper">
+                        <div class="progress-meta">
+                            <span class="progress-label">Progresso do treino</span>
+                            <span class="progress-nums">
+                                <span id="progressDone">0</span> / <span id="progressTotal">0</span> exercícios
+                            </span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Floating Action Button: Iniciar Treino Foco -->
+                    <button class="fab-focus" id="btnStartFocus" title="Iniciar Treino Foco">
+                        <div class="fab-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                        </div>
+                        <div class="fab-text">FOCO</div>
+                    </button>
+
+                    <!-- Tabela de Treino -->
+                    <div class="table-scroll-wrap">
+                        <table class="workout-table" id="workoutTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-n">#</th>
+                                    <th class="col-ex">Exercício / Aparelho</th>
+                                    <th class="col-img">Imagem</th>
+                                    <th class="col-vol">Volume</th>
+                                    <th class="col-chk">✓</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workoutTableBody">
+                                <!-- Preenchido pelo JS -->
+                            </tbody>
+                        </table>
+                        <div class="table-empty-state" id="tableEmpty" style="display:none">
+                            <div class="empty-icon">🏋️</div>
+                            <p>Nenhum exercício nesta ficha ainda.</p>
+                            <p>Vá em <strong>Montar Ficha</strong> para adicionar exercícios.</p>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Treino (Novo Modo) -->
+                    <div id="workoutGrid" class="workout-deck-grid" style="display:none">
+                        <!-- Preenchido pelo JS -->
+                    </div>
+
+                    <!-- Novo Modo Deck na Ficha do Dia -->
+                    <div id="workoutDeck" class="workout-deck-grid" style="display:none; margin-top: 20px;">
+                        <!-- Preenchido pelo JS -->
+                    </div>
+
+                    <div class="ficha-actions" id="fichaDoneActions" style="display:none; margin-top: 30px;">
+                        <button class="btn btn-primary"
+                            style="width: 100%; padding: 16px; font-weight: 800; letter-spacing: 1px; display:flex; align-items:center; justify-content:center; gap:8px;"
+                            onclick="openShareCard(loadDB())">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                            ÚLTIMO TREINO
+                        </button>
+                    </div>
+
+                </div>
+                </div><!-- /section-ficha -->
+                </div><!-- /treino-container -->

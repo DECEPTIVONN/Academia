@@ -1,0 +1,24 @@
+{
+  "appId": "com.academia.workout",
+  "appName": "Academia Workout Tracker",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false,
+    "allowNavigation": ["*"]
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#121212",
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 2000,
+      "backgroundColor": "#121212",
+      "showSpinner": false
+    }
+  }
+}

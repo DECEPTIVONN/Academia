@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR" style="">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ARENA ELITE - Notícias</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&amp;family=Outfit:wght@300;400;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#ffdcbb",
+                        "primary": "#d0bcff",
+                        "surface-dim": "#131313",
+                        "on-primary-fixed-variant": "#5516be",
+                        "card-bg": "rgba(10, 5, 20, 0.6)",
+                        "inverse-on-surface": "#313030",
+                        "elixir-dark": "#6d28d9",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#3f2300",
+                        "inverse-primary": "#6d3bd7",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-container": "#ca801e",
+                        "tertiary": "#ffb869",
+                        "surface-bright": "#393939",
+                        "surface-container-low": "#1c1b1b",
+                        "neon-purple-glow": "#c084fc",
+                        "outline": "#958ea0",
+                        "on-background": "#e5e2e1",
+                        "primary-fixed": "#e9ddff",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-primary": "#3c0091",
+                        "outline-variant": "#494454",
+                        "on-tertiary": "#482900",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-secondary-fixed-variant": "#005321",
+                        "on-primary-container": "#340080",
+                        "primary-container": "#a078ff",
+                        "surface-tint": "#d0bcff",
+                        "deep-void": "#0a0514",
+                        "gym-green-glow": "rgba(34, 197, 94, 0.3)",
+                        "secondary": "#4ae176",
+                        "on-primary-fixed": "#23005c",
+                        "on-secondary-container": "#004119",
+                        "on-secondary": "#003915",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "surface-container-highest": "#353534",
+                        "secondary-fixed": "#6bff8f",
+                        "inverse-surface": "#e5e2e1",
+                        "error-container": "#93000a",
+                        "background": "#131313",
+                        "surface-container-high": "#2a2a2a",
+                        "primary-fixed-dim": "#d0bcff",
+                        "surface-variant": "#353534",
+                        "secondary-container": "#00b954",
+                        "on-error-container": "#ffdad6",
+                        "accent-pink": "#f5a6d3",
+                        "surface": "#131313",
+                        "card-border": "rgba(139, 92, 246, 0.25)",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "secondary-fixed-dim": "#4ae176",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container": "#201f1f",
+                        "on-secondary-fixed": "#002109",
+                        "error": "#ffb4ab"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Rajdhani"],
+                        "body-lg": ["Outfit"],
+                        "headline-xl": ["Rajdhani"],
+                        "card-level": ["Rajdhani"],
+                        "headline-md": ["Rajdhani"],
+                        "label-caps": ["Rajdhani"],
+                        "headline-lg-mobile": ["Rajdhani"],
+                        "body-md": ["Outfit"]
+                    },
+                }
+            }
+        }
+    </script>
+    <style class="">
+        /* Dynamic Background Styles */
+        .arena-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background-color: #0a0514;
+            background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKNhRMaQRBLOVDBSB6Y9zT6KeBJWTqJPEV8J2oYo-rVytUTbwYxpbDvv-oFgvbcL0s3HZbx1u2-zE3dDusALTGWv-XHMJdBgB0kiQwjuObalYwkuGE9k0A3vWLlVUrOE67rOuoNJdIB9eVlCueLZKfBEj3IpCPqqMP0o5L0gZ_19_XyZExy3782vyuqY73W9URvgrTuhkjTY38O8rbMIf4kAWswYgRs_pn8sxUNv-yo-1VEGJcSTiCeoved-e8aoZjOr84kvHd7gY');
+            background-repeat: repeat;
+            animation: bgScroll 60s linear infinite;
+        }
+
+        @keyframes bgScroll {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 500px 1000px;
+            }
+        }
+
+        .cr-bg-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(10, 5, 20, 0.3) 0%, rgba(10, 5, 20, 0.8) 100%);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+        }
+
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            background: rgba(10, 5, 20, 0.7);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.1);
+        }
+
+        .premium-placeholder {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-placeholder::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 40%, rgba(139, 92, 246, 0.2) 50%, transparent 60%);
+            animation: shimmerDiagonal 3s infinite linear;
+        }
+
+        .premium-placeholder span.material-symbols-outlined {
+            animation: floatingIcon 3s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        @keyframes shimmerDiagonal {
+            0% {
+                transform: translate(-100%, -100%);
+            }
+
+            100% {
+                transform: translate(100%, 100%);
+            }
+        }
+
+        @keyframes floatingIcon {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .active-tab-shield {
+            background: linear-gradient(180deg, #6d3bd7 0%, #340080 100%);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 85%, 50% 100%, 0% 85%);
+            border-bottom: 2px solid #d0bcff;
+        }
+
+        .social-square {
+            position: relative;
+            background: rgba(10, 5, 20, 0.4);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Detail View Transitions */
+        .detail-view {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background-color: #0a0514;
+            overflow-y: auto;
+            visibility: hidden;
+        }
+
+        .detail-view.active {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        #main-view {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+
+        #main-view.hidden-view {
+            transform: translateX(-30%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .glass-card {
+            backdrop-filter: blur(12px);
+            background: rgba(10, 5, 20, 0.7);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 10px rgba(192, 132, 252, 0.5);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-deep-void text-on-surface font-body-md selection:bg-primary selection:text-on-primary-container overflow-x-hidden">
+    <!-- Dynamic Background -->
+    <div class="arena-bg" id="cr-dynamic-bg">
+        <div class="cr-bg-overlay"
+            style="background: linear-gradient(rgba(10, 5, 20, 0.15) 0%, rgba(10, 5, 20, 0.5) 100%); backdrop-filter: blur(0.5px);">
+        </div>
+    </div>
+    <!-- Main List View -->
+    <div class="w-full relative z-10 flex flex-col" id="main-view" style="min-height: auto !important; height: auto !important;">
+        <!-- Top Navigation Header -->
+        <header class="fixed top-0 left-0 w-full z-50 bg-[#131313]/90 backdrop-blur-md px-4">
+            <div class="flex items-center justify-center h-20 relative max-w-lg mx-auto">
+                <div class="flex items-center justify-between w-full gap-2">
+                    <div class="flex items-center gap-2 flex-grow">
+                        <div class="relative flex-1 flex flex-col items-center justify-center nav-tab cursor-pointer opacity-100"
+                            data-target="noticias">
+                            <div
+                                class="rounded-2xl px-6 py-2 flex flex-col items-center justify-center relative mb-2 tab-bg transition-all bg-[#8b5cf6] shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+                                <svg class="text-white tab-icon drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" fill="none"
+                                    height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" viewbox="0 0 24 24" width="24">
+                                    <rect height="18" rx="3" width="18" x="3" y="3"></rect>
+                                    <line x1="9" x2="15" y1="9" y2="9"></line>
+                                    <line x1="9" x2="15" y1="13" y2="13"></line>
+                                    <line x1="9" x2="12" y1="17" y2="17"></line>
+                                </svg>
+                                <span
+                                    class="font-['Rajdhani'] text-[11px] tracking-wider text-white mt-1 tab-text font-bold">NOTÍCIAS</span>
+                                <div
+                                    class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] tab-arrow border-t-[#8b5cf6]">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative flex-1 flex flex-col items-center justify-center nav-tab cursor-pointer hover:opacity-100 transition-opacity opacity-40"
+                            data-target="atualizacoes">
+                            <div
+                                class="rounded-2xl px-6 py-2 flex flex-col items-center justify-center relative mb-2 tab-bg transition-all">
+                                <svg class="text-white tab-icon" fill="none" height="24" stroke="currentColor"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"
+                                    width="24">
+                                    <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"></path>
+                                    <circle cx="4" cy="12" r="1.5"></circle>
+                                    <circle cx="20" cy="12" r="1.5"></circle>
+                                </svg>
+                                <span
+                                    class="font-['Rajdhani'] text-[11px] tracking-wider text-white mt-1 tab-text font-medium">ATUALIZAÇÕES</span>
+                                <div
+                                    class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] tab-arrow hidden border-t-transparent">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative flex-1 flex flex-col items-center justify-center nav-tab cursor-pointer hover:opacity-100 transition-opacity opacity-40"
+                            data-target="guias">
+                            <div
+                                class="rounded-2xl px-6 py-2 flex flex-col items-center justify-center relative mb-2 tab-bg transition-all">
+                                <svg class="text-white tab-icon" fill="none" height="24" stroke="currentColor"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"
+                                    width="24">
+                                    <line x1="8" x2="21" y1="6" y2="6"></line>
+                                    <line x1="8" x2="21" y1="12" y2="12"></line>
+                                    <line x1="8" x2="21" y1="18" y2="18"></line>
+                                    <line x1="3" x2="3.01" y1="6" y2="6"></line>
+                                    <line x1="3" x2="3.01" y1="12" y2="12"></line>
+                                    <line x1="3" x2="3.01" y1="18" y2="18"></line>
+                                </svg>
+                                <span
+                                    class="font-['Rajdhani'] text-[11px] tracking-wider text-white mt-1 tab-text font-medium">GUIAS</span>
+                                <div
+                                    class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] tab-arrow hidden border-t-transparent">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 pl-2 border-l border-white/20 h-10 ml-2">
+                        <button
+                            class="w-10 h-10 flex items-center justify-center bg-red-500/20 rounded-lg hover:bg-red-500 transition-colors group">
+                            <svg class="text-white" fill="none" height="18" stroke="currentColor" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="18">
+                                <line x1="18" x2="6" y1="6" y2="18"></line>
+                                <line x1="6" x2="18" y1="6" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- Main Content Area -->
+        <main class="pt-24 pb-4 relative flex flex-col px-margin-mobile" style="min-height: auto !important; height: auto !important;">
+            <div class="w-full">
+                <!-- Noticias Section -->
+                <section class="tab-content mb-4 active space-y-6" id="noticias">
+                    <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-2xl transition-all hover:border-primary/50"
+                        onclick="openDetailView('news-detail-view', 0)">
+                        <div class="aspect-video w-full relative premium-placeholder flex items-center justify-center">
+                            <div class="flex flex-col items-center gap-2 relative z-10 float-animation">
+                                <span class="material-symbols-outlined text-primary/60 text-6xl"
+                                    style='font-variation-settings: "FILL" 1;'>description</span>
+                                <p class="font-headline-md text-primary/60 text-xs tracking-widest uppercase">Notícias
+                                </p>
+                            </div>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent opacity-60">
+                            </div>
+                        </div>
+                        <div class="p-6 relative bg-gradient-to-b from-transparent to-[#0a0514]">
+                            <p class="font-label-caps text-neon-purple-glow text-xs mb-2">NOTÍCIAS</p>
+                            <h1 class="font-headline-md text-headline-md text-white mb-4 leading-tight">NOVA TEMPORADA:
+                                ENTERRADAS ENCLAUSURANTES</h1>
+                            <p class="font-label-caps text-on-surface-variant/70 text-[10px]">4 DE MAIO DE 2026</p>
+                        </div>
+                        <div class="absolute inset-0 border border-primary/10 rounded-xl pointer-events-none"></div>
+                    </div>
+                    <div class="hidden-news hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-2xl transition-all hover:border-primary/50"
+                        onclick="openDetailView('news-detail-view', 1)">
+                        <div class="aspect-video w-full relative premium-placeholder flex items-center justify-center">
+                            <div class="flex flex-col items-center gap-2 relative z-10 float-animation">
+                                <span class="material-symbols-outlined text-primary/60 text-6xl"
+                                    style='font-variation-settings: "FILL" 1;'>military_tech</span>
+                            </div>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent opacity-60">
+                            </div>
+                        </div>
+                        <div class="p-6 relative bg-gradient-to-b from-transparent to-[#0a0514]">
+                            <p class="font-label-caps text-neon-purple-glow text-xs mb-2">NOTÍCIAS</p>
+                            <h1 class="font-headline-md text-headline-md text-white mb-4 leading-tight">NOVO CAMPEÃO: O
+                                GUARDIÃO ETERNO</h1>
+                            <p class="font-label-caps text-on-surface-variant/70 text-[10px]">12 DE JUNHO DE 2026</p>
+                        </div>
+                    </div>
+                    <div class="hidden-news hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-2xl transition-all hover:border-primary/50"
+                        onclick="openDetailView('news-detail-view', 2)">
+                        <div class="aspect-video w-full relative premium-placeholder flex items-center justify-center">
+                            <div class="flex flex-col items-center gap-2 relative z-10 float-animation">
+                                <span class="material-symbols-outlined text-primary/60 text-6xl"
+                                    style='font-variation-settings: "FILL" 1;'>route</span>
+                            </div>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent opacity-60">
+                            </div>
+                        </div>
+                        <div class="p-6 relative bg-gradient-to-b from-transparent to-[#0a0514]">
+                            <p class="font-label-caps text-neon-purple-glow text-xs mb-2">NOTÍCIAS</p>
+                            <h1 class="font-headline-md text-headline-md text-white mb-4 leading-tight">REFORMULAÇÃO DO
+                                CAMINHO DAS LENDAS</h1>
+                            <p class="font-label-caps text-on-surface-variant/70 text-[10px]">28 DE MAIO DE 2026</p>
+                        </div>
+                    </div>
+                    <div class="hidden-news hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-2xl transition-all hover:border-primary/50"
+                        onclick="openDetailView('news-detail-view', 3)">
+                        <div class="aspect-video w-full relative premium-placeholder flex items-center justify-center">
+                            <div class="flex flex-col items-center gap-2 relative z-10 float-animation">
+                                <span class="material-symbols-outlined text-primary/60 text-6xl"
+                                    style='font-variation-settings: "FILL" 1;'>beach_access</span>
+                            </div>
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent opacity-60">
+                            </div>
+                        </div>
+                        <div class="p-6 relative bg-gradient-to-b from-transparent to-[#0a0514]">
+                            <p class="font-label-caps text-neon-purple-glow text-xs mb-2">NOTÍCIAS</p>
+                            <h1 class="font-headline-md text-headline-md text-white mb-4 leading-tight">EVENTO DE VERÃO:
+                                ARENA TROPICAL</h1>
+                            <p class="font-label-caps text-on-surface-variant/70 text-[10px]">15 DE MAIO DE 2026</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-center mt-6">
+                        <button
+                            class="btn-show-more px-12 py-3 rounded-full bg-surface-container-highest/80 border border-card-border backdrop-blur-md font-label-caps text-white tracking-widest hover:bg-primary hover:text-deep-void transition-all duration-300 active:scale-95 shadow-xl">MOSTRAR
+                            MAIS</button>
+                    </div>
+                </section>
+                <!-- Atualizacoes Section -->
+                <section class="tab-content space-y-6" id="atualizacoes">
+                    <!-- Version 2.4.0 -->
+                    <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30"
+                        onclick="openDetailView('update-detail-view', 0)">
+                        <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                            <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                <span class="material-symbols-outlined text-primary text-2xl">system_update_alt</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p
+                                    class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">
+                                    Versão 2.4.0</p>
+                                <h2 class="font-headline-md text-white text-lg truncate">Otimização de performance e
+                                    correção de bugs</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Version 2.3.5 -->
+                    <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30"
+                        onclick="openDetailView('update-detail-view', 1)">
+                        <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                            <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                <span class="material-symbols-outlined text-primary text-2xl">security</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p
+                                    class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">
+                                    Versão 2.3.5</p>
+                                <h2 class="font-headline-md text-white text-lg truncate">Novos protocolos de segurança
+                                    implementados</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Balanceamento de Maio -->
+                    <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30"
+                        onclick="openDetailView('update-detail-view', 2)">
+                        <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                            <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                <span class="material-symbols-outlined text-primary text-2xl">balance</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p
+                                    class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">
+                                    5 DE MAIO DE 2026</p>
+                                <h2 class="font-headline-md text-white text-lg truncate">Balanceamento de Maio</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Versão 2.3.0 -->
+                    <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30"
+                        onclick="openDetailView('update-detail-view', 3)">
+                        <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                            <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                <span class="material-symbols-outlined text-primary text-2xl">build</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p
+                                    class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">
+                                    Versão 2.3.0</p>
+                                <h2 class="font-headline-md text-white text-lg truncate">Notas da Versão 2.3.0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden-updates hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30"
+                        onclick="openDetailView('update-detail-view', 4)">
+                        <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                            <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                <span class="material-symbols-outlined text-primary text-2xl">article</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p
+                                    class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">
+                                    10 DE ABRIL DE 2026</p>
+                                <h2 class="font-headline-md text-white text-lg truncate">NOTAS DA ATUALIZAÇÃO - VERSÃO
+                                    2.2.0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden-updates hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30"
+                        onclick="openDetailView('update-detail-view', 5)">
+                        <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                            <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                <span class="material-symbols-outlined text-primary text-2xl">article</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p
+                                    class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">
+                                    22 DE MARÇO DE 2026</p>
+                                <h2 class="font-headline-md text-white text-lg truncate">NOTAS DA ATUALIZAÇÃO - VERSÃO
+                                    2.1.5</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden-updates hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30"
+                        onclick="openDetailView('update-detail-view', 6)">
+                        <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                            <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                <span class="material-symbols-outlined text-primary text-2xl">balance</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p
+                                    class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">
+                                    05 DE FEVEREIRO DE 2026</p>
+                                <h2 class="font-headline-md text-white text-lg truncate">AJUSTES DE EQUILÍBRIO -
+                                    FEVEREIRO</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center mt-6">
+                        <button
+                            class="btn-show-more px-12 py-3 rounded-full bg-surface-container-highest/80 border border-card-border backdrop-blur-md font-label-caps text-white tracking-widest hover:bg-primary hover:text-deep-void transition-all duration-300 active:scale-95 shadow-xl">
+                            MOSTRAR MAIS
+                        </button>
+                    </div>
+                </section>
+                <!-- Guias Section -->
+                <section class="tab-content mb-4 text-center py-20" id="guias">
+                    <span class="material-symbols-outlined text-primary/40 text-6xl mb-4">menu_book</span>
+                    <h2 class="font-headline-md text-white/60 text-xl">Guias em breve</h2>
+                </section>
+            </div>
+            <!-- Footer / Social Section -->
+            <footer class="bg-cover bg-center relative py-4 mt-8">
+                <div class="flex flex-col items-center">
+                    <div class="w-full max-w-4xl mx-auto">
+                        <img alt="Fique Conectado" class="w-full h-auto block"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQzwaASBNPTo-9eL0o5rhFiuAk41ei4Yu2OfSsZGqtbE2yMwIcveCHdc_47Zql7TZKRFoOziWz3lununcWk0Vrpy2HYJ6S5wmu5OHBa89nFMYJej5u_Yr4I_nUeRCHp9wnff1ETFKHXmow4chrMqmhc01M5jonvt3FvshT9DAFtddINuUmQh6DlLSLpv-444RxdK_fBf0tvw92XHjsKNZ2EOqA3a_WZQNVWEsnsUDO44Hv6aETNfs9CA-wJKemolVS1Gg1UOpHSPc" />
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+    <!-- Detail View - News -->
+    <div class="detail-view" id="news-detail-view">
+        <!-- Top Bar -->
+        <header
+            class="fixed top-0 left-0 w-full z-[110] bg-[#131313]/90 backdrop-blur-md h-20 flex items-center px-4 border-b border-outline-variant/30">
+            <div class="flex items-center gap-3 justify-between w-full max-w-lg mx-auto">
+                <button
+                    class="flex items-center justify-center w-10 h-10 text-primary hover:bg-white/10 rounded-full transition-colors"
+                    onclick="closeDetailView('news-detail-view')">
+                    <span class="material-symbols-outlined text-[24px]">arrow_back</span>
+                </button>
+                <div class="w-[1px] h-6 bg-white/20"></div>
+                <button
+                    class="w-10 h-10 flex items-center justify-center bg-red-500/20 rounded-lg hover:bg-red-500 transition-colors group text-white"
+                    onclick="closeDetailView('news-detail-view')">
+                    <span class="material-symbols-outlined text-[24px]">close</span>
+                </button>
+            </div>
+        </header>
+        <main class="w-full max-w-4xl mx-auto pt-28 pb-12 px-2 flex flex-col min-h-screen">
+            <div class="glass-card rounded-xl overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-deep-void/60 flex-grow"
+                style="transition: opacity 0.2s, transform 0.2s; opacity: 1; transform: translateY(0px);">
+                <!-- Hero Header Image -->
+                <div class="relative w-full h-[240px] md:h-[400px] shrink-0 overflow-hidden">
+                    <div class="w-full h-full premium-placeholder flex items-center justify-center">
+                        <span
+                            class="material-symbols-outlined text-[80px] text-primary/40 animate-bounce news-icon">newspaper</span>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 right-6">
+                        <span
+                            class="inline-block bg-primary text-on-primary font-label-caps text-[10px] px-2 py-1 rounded mb-2 news-tag">NOTÍCIAS</span>
+                        <h1
+                            class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-glow text-white uppercase tracking-tight news-title">
+                            NOVA TEMPORADA: ENTERRADAS ENCLAUSURANTES</h1>
+                        <p class="font-label-caps text-label-caps text-primary-fixed-dim/80 news-date">4 DE MAIO DE 2026
+                        </p>
+                    </div>
+                </div>
+                <div class="px-6 md:px-12 py-8 space-y-10 flex-grow flex flex-col">
+                    <!-- Intro Section -->
+                    <section class="space-y-4 flex-grow news-content">
+                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Nesta temporada, a
+                            corte do Rei se transformou na quadra do Lançador, com um novo aliado pronto para avançar e
+                            causar o máximo de dano à torre! Veja todas as informações:</p>
+                        <ul class="space-y-2 mt-4 font-body-md text-on-surface-variant">
+                            <li class="flex items-center gap-2"><span
+                                    class="w-1.5 h-1.5 rounded-full bg-primary"></span>Novos heróis: Príncipe das Trevas
+                                e Lançador</li>
+                            <li class="flex items-center gap-2"><span
+                                    class="w-1.5 h-1.5 rounded-full bg-primary"></span>Evento do álbum</li>
+                        </ul>
+                    </section>
+                    <hr class="border-outline-variant/20 border-t-2 border-tertiary-fixed-dim/50" />
+                    <!-- Action Footer -->
+                    <div class="pt-8 border-t-[6px] border-tertiary-fixed-dim/80 flex justify-center gap-4">
+                        <button
+                            class="btn-prev px-4 py-2 bg-gradient-to-b from-white/90 to-white/70 text-black font-label-caps text-[12px] uppercase rounded border border-black/20 shadow-md hover:bg-white transition-colors flex items-center gap-2 opacity-30 pointer-events-none">
+                            <span class="material-symbols-outlined text-[16px]">chevron_left</span> Mais Recentes
+                        </button>
+                        <button
+                            class="btn-next px-4 py-2 bg-gradient-to-b from-white/90 to-white/70 text-black font-label-caps text-[12px] uppercase rounded border border-black/20 shadow-md hover:bg-white transition-colors flex items-center gap-2">
+                            Mais Antigos <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer / Social Section -->
+            <footer class="bg-cover bg-center relative py-4 mt-8">
+                <div class="flex flex-col items-center">
+                    <div class="w-full max-w-4xl mx-auto">
+                        <img alt="Fique Conectado" class="w-full h-auto block"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQzwaASBNPTo-9eL0o5rhFiuAk41ei4Yu2OfSsZGqtbE2yMwIcveCHdc_47Zql7TZKRFoOziWz3lununcWk0Vrpy2HYJ6S5wmu5OHBa89nFMYJej5u_Yr4I_nUeRCHp9wnff1ETFKHXmow4chrMqmhc01M5jonvt3FvshT9DAFtddINuUmQh6DlLSLpv-444RxdK_fBf0tvw92XHjsKNZ2EOqA3a_WZQNVWEsnsUDO44Hv6aETNfs9CA-wJKemolVS1Gg1UOpHSPc" />
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+    <!-- Detail View - Updates -->
+    <div class="detail-view" id="update-detail-view">
+        <!-- Top Bar -->
+        <header
+            class="fixed top-0 left-0 w-full z-[110] bg-[#131313]/90 backdrop-blur-md h-20 flex items-center px-4 border-b border-outline-variant/30">
+            <div class="flex items-center gap-3 justify-between w-full max-w-lg mx-auto">
+                <button
+                    class="flex items-center justify-center w-10 h-10 text-primary hover:bg-white/10 rounded-full transition-colors"
+                    onclick="closeDetailView('update-detail-view')">
+                    <span class="material-symbols-outlined text-[24px]">arrow_back</span>
+                </button>
+                <div class="w-[1px] h-6 bg-white/20"></div>
+                <button
+                    class="w-10 h-10 flex items-center justify-center bg-red-500/20 rounded-lg hover:bg-red-500 transition-colors group text-white"
+                    onclick="closeDetailView('update-detail-view')">
+                    <span class="material-symbols-outlined text-[24px]">close</span>
+                </button>
+            </div>
+        </header>
+        <main class="w-full max-w-4xl mx-auto pt-28 pb-12 px-2 flex flex-col min-h-screen">
+            <div class="glass-card rounded-xl overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-deep-void/60 flex-grow"
+                style="transition: opacity 0.2s, transform 0.2s; opacity: 1; transform: translateY(0px);">
+                <!-- Hero Header Image -->
+                <div class="relative w-full h-[240px] md:h-[400px] shrink-0 overflow-hidden">
+                    <div class="w-full h-full premium-placeholder flex items-center justify-center">
+                        <span
+                            class="material-symbols-outlined text-[80px] text-primary/40 animate-bounce update-icon">security</span>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 right-6">
+                        <span
+                            class="inline-block bg-[#8b5cf6] text-white font-label-caps text-[10px] px-2 py-1 rounded mb-2 update-tag">ATUALIZAÇÃO</span>
+                        <h1
+                            class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-glow text-white uppercase tracking-tight update-title">
+                            Versão 2.3.5</h1>
+                        <p class="font-label-caps text-label-caps text-primary-fixed-dim/80 update-date">20 DE ABRIL DE
+                            2026</p>
+                    </div>
+                </div>
+                <div class="px-6 md:px-12 py-8 space-y-10 flex-grow flex flex-col">
+                    <!-- Intro Section -->
+                    <section class="space-y-4 flex-grow update-content">
+                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Novos protocolos de
+                            segurança implementados para proteger as contas dos jogadores e evitar trapaças.</p>
+                    </section>
+                    <hr class="border-outline-variant/20 border-t-2 border-tertiary-fixed-dim/50" />
+                    <!-- Action Footer -->
+                    <div class="pt-8 border-t-[6px] border-tertiary-fixed-dim/80 flex justify-center gap-4">
+                        <button
+                            class="btn-prev px-4 py-2 bg-gradient-to-b from-white/90 to-white/70 text-black font-label-caps text-[12px] uppercase rounded border border-black/20 shadow-md hover:bg-white transition-colors flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[16px]">chevron_left</span> Mais Recentes
+                        </button>
+                        <button
+                            class="btn-next px-4 py-2 bg-gradient-to-b from-white/90 to-white/70 text-black font-label-caps text-[12px] uppercase rounded border border-black/20 shadow-md hover:bg-white transition-colors flex items-center gap-2 opacity-30 pointer-events-none">
+                            Mais Antigos <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer / Social Section -->
+            <footer class="bg-cover bg-center relative py-4 mt-8">
+                <div class="flex flex-col items-center">
+                    <div class="w-full max-w-4xl mx-auto">
+                        <img alt="Fique Conectado" class="w-full h-auto block"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQzwaASBNPTo-9eL0o5rhFiuAk41ei4Yu2OfSsZGqtbE2yMwIcveCHdc_47Zql7TZKRFoOziWz3lununcWk0Vrpy2HYJ6S5wmu5OHBa89nFMYJej5u_Yr4I_nUeRCHp9wnff1ETFKHXmow4chrMqmhc01M5jonvt3FvshT9DAFtddINuUmQh6DlLSLpv-444RxdK_fBf0tvw92XHjsKNZ2EOqA3a_WZQNVWEsnsUDO44Hv6aETNfs9CA-wJKemolVS1Gg1UOpHSPc" />
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+    <script>
+        // Tab switching logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetId = tab.getAttribute('data-target');
+
+                    // Update tabs visual state
+                    tabs.forEach(t => {
+                        t.classList.add('opacity-40');
+                        t.classList.remove('opacity-100');
+
+                        const bg = t.querySelector('.tab-bg');
+                        bg.classList.remove('bg-[#8b5cf6]', 'shadow-[0_0_15px_rgba(139,92,246,0.5)]');
+
+                        const icon = t.querySelector('.tab-icon');
+                        icon.classList.remove('drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]');
+
+                        const text = t.querySelector('.tab-text');
+                        text.classList.remove('font-bold');
+                        text.classList.add('font-medium');
+
+                        const arrow = t.querySelector('.tab-arrow');
+                        arrow.classList.add('hidden');
+                        arrow.classList.remove('border-t-[#8b5cf6]');
+                        arrow.classList.add('border-t-transparent');
+                    });
+
+                    // Set active tab
+                    tab.classList.remove('opacity-40');
+                    tab.classList.add('opacity-100');
+
+                    const activeBg = tab.querySelector('.tab-bg');
+                    activeBg.classList.add('bg-[#8b5cf6]', 'shadow-[0_0_15px_rgba(139,92,246,0.5)]');
+
+                    const activeIcon = tab.querySelector('.tab-icon');
+                    activeIcon.classList.add('drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]');
+
+                    const activeText = tab.querySelector('.tab-text');
+                    activeText.classList.remove('font-medium');
+                    activeText.classList.add('font-bold');
+
+                    const activeArrow = tab.querySelector('.tab-arrow');
+                    activeArrow.classList.remove('hidden', 'border-t-transparent');
+                    activeArrow.classList.add('border-t-[#8b5cf6]');
+
+                    // Switch content
+                    contents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+
+            // Show More Button Logic
+            const showMoreBtns = document.querySelectorAll('.btn-show-more');
+            showMoreBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const activeSection = e.target.closest('.tab-content');
+                    let hiddenItems = [];
+                    if (activeSection.id === 'noticias') {
+                        hiddenItems = activeSection.querySelectorAll('.hidden-news');
+                    } else if (activeSection.id === 'atualizacoes') {
+                        hiddenItems = activeSection.querySelectorAll('.hidden-updates');
+                    }
+
+                    hiddenItems.forEach(item => {
+                        item.classList.remove('hidden');
+                    });
+
+                    e.target.closest('div').style.display = 'none'; // Hide the button
+                });
+            });
+        });
+
+        // Micro-interaction for social squares
+        document.querySelectorAll('.social-square').forEach(btn => {
+            btn.addEventListener('mousedown', () => btn.style.transform = 'scale(0.9) translateY(-2px)');
+            btn.addEventListener('mouseup', () => btn.style.transform = 'scale(1) translateY(-2px)');
+        });
+    </script>
+    <script>
+        const newsData = [
+            {
+                title: 'NOVA TEMPORADA: ENTERRADAS ENCLAUSURANTES',
+                date: '4 DE MAIO DE 2026',
+                tag: 'NOTÍCIAS',
+                icon: 'newspaper',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Nesta temporada, a corte do Rei se transformou na quadra do Lançador, com um novo aliado pronto para avançar e causar o máximo de dano à torre! Veja todas as informações:</p><ul class="space-y-2 mt-4 font-body-md text-on-surface-variant"><li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>Novos heróis: Príncipe das Trevas e Lançador</li><li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>Evento do álbum</li></ul>`
+            },
+            {
+                title: 'NOVO CAMPEÃO: O GUARDIÃO ETERNO',
+                date: '12 DE JUNHO DE 2026',
+                tag: 'NOTÍCIAS',
+                icon: 'military_tech',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Um novo campeão chega à arena. O Guardião Eterno traz habilidades defensivas únicas para proteger suas torres.</p>`
+            },
+            {
+                title: 'REFORMULAÇÃO DO CAMINHO DAS LENDAS',
+                date: '28 DE MAIO DE 2026',
+                tag: 'NOTÍCIAS',
+                icon: 'route',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">O Caminho das Lendas foi atualizado com novas recompensas e um sistema de progressão melhorado para a próxima temporada.</p>`
+            },
+            {
+                title: 'EVENTO DE VERÃO: ARENA TROPICAL',
+                date: '15 DE MAIO DE 2026',
+                tag: 'NOTÍCIAS',
+                icon: 'beach_access',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Prepare-se para o calor! O evento Arena Tropical trará modos de jogo por tempo limitado e cosméticos exclusivos.</p>`
+            }
+        ];
+
+        const updatesData = [
+            {
+                title: 'Versão 2.4.0',
+                date: '15 DE MAIO DE 2026',
+                tag: 'ATUALIZAÇÃO',
+                icon: 'system_update_alt',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Esta atualização traz diversas melhorias de performance e correções de bugs, focando na estabilidade geral do jogo e na experiência do usuário.</p><ul class="space-y-2 mt-4 font-body-md text-on-surface-variant"><li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>Otimização no carregamento de texturas, reduzindo o tempo de entrada em partidas em 15%.</li></ul>`
+            },
+            {
+                title: 'Versão 2.3.5',
+                date: '20 DE ABRIL DE 2026',
+                tag: 'ATUALIZAÇÃO',
+                icon: 'security',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Novos protocolos de segurança implementados para proteger as contas dos jogadores e evitar trapaças.</p>`
+            },
+            {
+                title: 'Balanceamento de Maio',
+                date: '5 DE MAIO DE 2026',
+                tag: 'ATUALIZAÇÃO',
+                icon: 'balance',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Ajustes nas estatísticas de várias cartas para melhorar o equilíbrio do jogo e oferecer novas opções de estratégia.</p>`
+            },
+            {
+                title: 'Notas da Versão 2.3.0',
+                date: '10 DE MARÇO DE 2026',
+                tag: 'ATUALIZAÇÃO',
+                icon: 'build',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Grandes mudanças estruturais no motor do jogo e novas funcionalidades de interface para aprimorar a usabilidade.</p>`
+            },
+            {
+                title: 'NOTAS DA ATUALIZAÇÃO - VERSÃO 2.2.0',
+                date: '10 DE ABRIL DE 2026',
+                tag: 'ATUALIZAÇÃO',
+                icon: 'article',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Adicionamos o novo modo de torneio e reformulamos a interface do clã.</p>`
+            },
+            {
+                title: 'NOTAS DA ATUALIZAÇÃO - VERSÃO 2.1.5',
+                date: '22 DE MARÇO DE 2026',
+                tag: 'ATUALIZAÇÃO',
+                icon: 'article',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Pequenas correções de interface e otimizações de bateria para dispositivos móveis.</p>`
+            },
+            {
+                title: 'AJUSTES DE EQUILÍBRIO - FEVEREIRO',
+                date: '05 DE FEVEREIRO DE 2026',
+                tag: 'ATUALIZAÇÃO',
+                icon: 'balance',
+                content: `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Mudanças cruciais no meta. Nerf no Cavaleiro e buff na Mosqueteira.</p>`
+            }
+        ];
+
+        const dataMap = {
+            'news-detail-view': newsData,
+            'update-detail-view': updatesData
+        };
+
+        let currentIndices = {
+            'news-detail-view': 0,
+            'update-detail-view': 0
+        };
+
+        function openDetailView(viewId, index = 0) {
+            currentIndices[viewId] = index;
+            updateDetailContent(viewId, index, false);
+
+            document.getElementById('main-view').classList.add('hidden-view');
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closeDetailView(viewId) {
+            document.getElementById(viewId).classList.remove('active');
+            document.getElementById('main-view').classList.remove('hidden-view');
+        }
+
+        function updateDetailContent(viewId, index, animate = true) {
+            const view = document.getElementById(viewId);
+            const dataArray = dataMap[viewId];
+            const data = dataArray[index];
+            const container = view.querySelector('.glass-card');
+            const isNews = viewId === 'news-detail-view';
+
+            const prefix = isNews ? 'news' : 'update';
+
+            const updateDOM = () => {
+                view.querySelector(`.${prefix}-title`).textContent = data.title;
+                view.querySelector(`.${prefix}-date`).textContent = data.date;
+                view.querySelector(`.${prefix}-icon`).textContent = data.icon;
+                view.querySelector(`.${prefix}-tag`).textContent = data.tag;
+                view.querySelector(`.${prefix}-content`).innerHTML = data.content;
+
+                // Update button states
+                const btnPrev = view.querySelector('.btn-prev'); // Mais Recentes (Newer = index - 1)
+                const btnNext = view.querySelector('.btn-next'); // Mais Antigos (Older = index + 1)
+
+                if (index === 0) {
+                    btnPrev.classList.add('opacity-30', 'pointer-events-none');
+                } else {
+                    btnPrev.classList.remove('opacity-30', 'pointer-events-none');
+                }
+
+                if (index === dataArray.length - 1) {
+                    btnNext.classList.add('opacity-30', 'pointer-events-none');
+                } else {
+                    btnNext.classList.remove('opacity-30', 'pointer-events-none');
+                }
+
+                if (animate) {
+                    container.style.opacity = '1';
+                    container.style.transform = 'translateY(0)';
+                }
+            };
+
+            if (animate) {
+                container.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+                container.style.opacity = '0';
+                container.style.transform = 'translateY(10px)';
+                setTimeout(updateDOM, 200);
+            } else {
+                updateDOM();
+            }
+        }
+
+        // Attach listeners to navigation buttons
+        document.querySelectorAll('.detail-view').forEach(view => {
+            const viewId = view.id;
+            const btnPrev = view.querySelector('.btn-prev');
+            const btnNext = view.querySelector('.btn-next');
+
+            if (btnPrev && btnNext) {
+                // Mais Recentes (Previous in index, index - 1)
+                btnPrev.addEventListener('click', () => {
+                    if (currentIndices[viewId] > 0) {
+                        currentIndices[viewId]--;
+                        updateDetailContent(viewId, currentIndices[viewId]);
+                    }
+                });
+
+                // Mais Antigos (Next in index, index + 1)
+                btnNext.addEventListener('click', () => {
+                    if (currentIndices[viewId] < dataMap[viewId].length - 1) {
+                        currentIndices[viewId]++;
+                        updateDetailContent(viewId, currentIndices[viewId]);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

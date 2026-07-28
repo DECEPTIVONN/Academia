@@ -1,0 +1,1031 @@
+<!-- ====== MODAL: CONCLUSÃO DE TREINO ====== -->
+    <div class="modal-overlay" id="modalConclusao" style="display:none">
+        <div class="modal-conclusao">
+            <div class="conclusao-confetti" id="confettiContainer"></div>
+            <div class="conclusao-trophy" style="display:flex; justify-content:center; margin-bottom:10px; color:var(--primary);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                    <path d="M4 22h16"/>
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+                </svg>
+            </div>
+            <h2 class="conclusao-title">TREINO CONCLUÍDO!</h2>
+            <p class="conclusao-sub" id="conclusaoSub">Você completou todos os exercícios hoje!</p>
+            <div class="conclusao-stats" id="conclusaoStats">
+                <!-- Preenchido pelo JS -->
+            </div>
+            <div class="conclusao-actions"
+                style="display:flex; flex-direction:column; gap:10px; margin-top:20px; width: 100%;">
+                <button class="btn btn-primary conclusao-btn" id="btnShareWorkoutModal"
+                    onclick="openShareCard(loadDB())" style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                        <polyline points="16 6 12 2 8 6"/>
+                        <line x1="12" y1="2" x2="12" y2="15"/>
+                    </svg> COMPARTILHAR TREINO
+                </button>
+                <button class="btn btn-secondary conclusao-btn" id="btnFecharConclusao" style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg> INCRÍVEL!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: NOVO EXERCÍCIO ====== -->
+    <div class="modal-overlay" id="modalExercicio" style="display:none">
+        <div class="modal-form">
+            <div class="modal-form-header">
+                <h3 id="modalExTitulo">Novo Exercício</h3>
+                <button class="modal-close-btn" id="btnFecharExercicio" aria-label="Fechar">✕</button>
+            </div>
+            <form id="formExercicio" novalidate>
+                <!-- Upload de imagem -->
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="uploadInput" accept="image/*" style="display:none">
+                    <div class="upload-placeholder" id="uploadPlaceholder">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">Clique para adicionar foto do aparelho</div>
+                        <div class="upload-hint">JPG, PNG ou WEBP — máx. 2MB</div>
+                    </div>
+                    <img id="uploadPreview" class="upload-preview" src="" alt="Preview" style="display:none">
+                    <button type="button" class="upload-remove" id="btnRemoveImg" style="display:none">✕ Remover
+                        foto</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputNome">Nome do Exercício *</label>
+                    <input type="text" id="inputNome" placeholder="Ex: Supino Articulado" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Grupo Muscular *</label>
+                    <input type="hidden" id="inputGrupo" value="" required>
+                    <div class="tags-selector" id="inputGrupoChips" style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <label class="tag-chip">
+                            <input type="radio" name="grupoMuscularRadio" value="Peito" onchange="document.getElementById('inputGrupo').value = this.value">
+                            <span style="display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                    <path d="M12 20V10M6 20V14M18 20V8"/>
+                                    <path d="M3 6c3-2 6-2 9 0s6 2 9 0"/>
+                                </svg>
+                                Peito
+                            </span>
+                        </label>
+                        <label class="tag-chip">
+                            <input type="radio" name="grupoMuscularRadio" value="Costas" onchange="document.getElementById('inputGrupo').value = this.value">
+                            <span style="display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                    <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/>
+                                    <circle cx="4" cy="12" r="1.5"/>
+                                    <circle cx="20" cy="12" r="1.5"/>
+                                </svg>
+                                Costas
+                            </span>
+                        </label>
+                        <label class="tag-chip">
+                            <input type="radio" name="grupoMuscularRadio" value="Pernas" onchange="document.getElementById('inputGrupo').value = this.value">
+                            <span style="display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                    <path d="M12 2v10M12 12l-4 8M12 12l4 8M8 6H5a1 1 0 00-1 1v1a1 1 0 001 1h3"/>
+                                </svg>
+                                Pernas
+                            </span>
+                        </label>
+                        <label class="tag-chip">
+                            <input type="radio" name="grupoMuscularRadio" value="Ombros" onchange="document.getElementById('inputGrupo').value = this.value">
+                            <span style="display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                    <path d="M2 12c0-5.5 10-8 10-8s10 2.5 10 8"/>
+                                    <path d="M12 4v16"/>
+                                </svg>
+                                Ombros
+                            </span>
+                        </label>
+                        <label class="tag-chip">
+                            <input type="radio" name="grupoMuscularRadio" value="Bíceps" onchange="document.getElementById('inputGrupo').value = this.value">
+                            <span style="display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                    <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/>
+                                    <circle cx="4" cy="12" r="1.5"/>
+                                    <circle cx="20" cy="12" r="1.5"/>
+                                </svg>
+                                Bíceps
+                            </span>
+                        </label>
+                        <label class="tag-chip">
+                            <input type="radio" name="grupoMuscularRadio" value="Tríceps" onchange="document.getElementById('inputGrupo').value = this.value">
+                            <span style="display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                    <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/>
+                                    <circle cx="4" cy="12" r="1.5"/>
+                                    <circle cx="20" cy="12" r="1.5"/>
+                                </svg>
+                                Tríceps
+                            </span>
+                        </label>
+                        <label class="tag-chip">
+                            <input type="radio" name="grupoMuscularRadio" value="Core" onchange="document.getElementById('inputGrupo').value = this.value">
+                            <span style="display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                                Core
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Movimento / Foco (Tags)</label>
+                    <div class="tags-selector" id="inputTags">
+                        <label class="tag-chip"><input type="checkbox" value="Isolador"><span>Isolador</span></label>
+                        <label class="tag-chip"><input type="checkbox"
+                                value="Multiarticular"><span>Multiarticular</span></label>
+                        <label class="tag-chip"><input type="checkbox" value="Livre"><span>Livre / Halter</span></label>
+                        <label class="tag-chip"><input type="checkbox"
+                                value="Unilateral"><span>Unilateral</span></label>
+                        <label class="tag-chip"><input type="checkbox" value="Máquina"><span>Máquina /
+                                Cabo</span></label>
+                        <label class="tag-chip"><input type="checkbox" value="Explosão"><span>Explosão /
+                                Salto</span></label>
+                        <label class="tag-chip"><input type="checkbox"
+                                value="Mobilidade"><span>Mobilidade</span></label>
+                        <label class="tag-chip"><input type="checkbox" value="Peso do Corpo"><span>Peso do
+                                Corpo</span></label>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px; margin-bottom: 20px;">
+                    <label class="custom-checkbox"
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid var(--card-border); transition: 0.3s;">
+                        <input type="checkbox" id="inputPorLado"
+                            style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Esta carga é <b>por lado</b> (ex:
+                            halteres)</span>
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inputSeries">Séries</label>
+                        <input type="number" id="inputSeries" value="3" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputReps">Repetições</label>
+                        <input type="text" id="inputReps" value="10" placeholder="Ex: 10 ou 8-12">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputCarga">Carga</label>
+                        <input type="text" id="inputCarga" placeholder="Ex: 40kg">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputDescanso">Descanso (s)</label>
+                        <input type="number" id="inputDescanso" value="30" min="0" max="300"
+                            placeholder="0 = desativado">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputAnotacoes">Anotações e Dicas de Execução</label>
+                    <textarea id="inputAnotacoes" rows="3"
+                        placeholder="Ex: Altura do banco, tipo de pegada, ajuste do aparelho..."></textarea>
+                    <div class="note-quick-tags">
+                        <button type="button" class="q-tag" data-tag="[BANCO] " style="display:inline-flex; align-items:center; gap:4px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                <path d="M19 9h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2M5 9H3a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2M12 2v7M5 9h14v9H5z"/>
+                            </svg>
+                            Banco
+                        </button>
+                        <button type="button" class="q-tag" data-tag="[PEGADA] " style="display:inline-flex; align-items:center; gap:4px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.7-6-2.2L2 16.5a1.5 1.5 0 0 1 0-2.1l1-1a1.5 1.5 0 0 1 2.1 0L7 15V4a2 2 0 0 1 4 0v7a1 1 0 0 0 2 0V5a2 2 0 1 1 4 0v6a1 1 0 0 0 2 0V8z"/>
+                            </svg>
+                            Pegada
+                        </button>
+                        <button type="button" class="q-tag" data-tag="[DICA] " style="display:inline-flex; align-items:center; gap:4px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+                                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .6 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
+                                <path d="M9 18h6M10 22h4"/>
+                            </svg>
+                            Dica
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Evolução de Força (Carga) -->
+                <div class="ex-chart-container" id="exChartContainer" style="display:none;">
+                    <h4>📈 Evolução de Força (Carga)</h4>
+                    <div class="ex-chart" id="exChart">
+                        <!-- Gerado via JS -->
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="btnCancelarEx">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSalvarEx">Salvar Exercício</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: SELETOR DE EXERCÍCIOS (Montar Ficha) ====== -->
+    <div class="modal-overlay" id="modalPicker" style="display:none">
+        <div class="modal-picker">
+            <div class="modal-form-header">
+                <h3>Adicionar ao Treino <span id="pickerLabel">A</span></h3>
+                <button class="modal-close-btn" id="btnFecharPicker" aria-label="Fechar">✕</button>
+            </div>
+            <div class="picker-search-wrap">
+                <input type="text" id="pickerSearch" placeholder="Buscar exercício..." class="ex-search-input"
+                    autocomplete="off">
+            </div>
+            <div class="picker-list" id="pickerList">
+                <!-- Preenchido pelo JS -->
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalSeletorFichas" style="display:none;">
+        <div class="dash-mini-deck">
+            <!-- Close Button -->
+            <button class="modal-close-btn dash-mini-deck__close" id="btnFecharSeletorFichas" aria-label="Fechar">✕</button>
+
+            <!-- Header: Hamburger + Tabs + Swap + View Toggle -->
+            <div class="dash-mini-deck__header">
+                <button class="dash-mini-deck__menu-btn" id="dashMiniMenuBtn" title="Menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+                        <line x1="4" y1="12" x2="20" y2="12" stroke-linecap="round" />
+                        <line x1="4" y1="6" x2="20" y2="6" stroke-linecap="round" />
+                        <line x1="4" y1="18" x2="20" y2="18" stroke-linecap="round" />
+                    </svg>
+                </button>
+                
+                <div class="dash-mini-deck__tabs" id="dashSheetTabs">
+                    <!-- JS Populated: workout letter tabs -->
+                </div>
+
+                <button class="dash-mini-deck__swap-btn" id="dashMiniSwapBtn" title="Alternar Ficha">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+                        <path d="M4 8h16M16 4l4 4-4 4M20 16H4M8 12l-4 4 4 4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+
+                <div class="dash-mini-deck__view-toggle">
+                    <button class="dash-mini-deck__view-btn active" id="dashMiniViewGrid" title="Grid View">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                        </svg>
+                    </button>
+                    <button class="dash-mini-deck__view-btn" id="dashMiniViewList" title="List View">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+                            <line x1="8" y1="6" x2="21" y2="6" stroke-linecap="round" />
+                            <line x1="8" y1="12" x2="21" y2="12" stroke-linecap="round" />
+                            <line x1="8" y1="18" x2="21" y2="18" stroke-linecap="round" />
+                            <line x1="3" y1="6" x2="3.01" y2="6" stroke-linecap="round" />
+                            <line x1="3" y1="12" x2="3.01" y2="12" stroke-linecap="round" />
+                            <line x1="3" y1="18" x2="3.01" y2="18" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body: Royale 4-column Exercise Grid -->
+            <div class="dash-mini-deck__body" id="dashSheetBody">
+                <!-- JS Populated: exercise cards (deck-card format) -->
+            </div>
+
+            <!-- Footer: Volume / Maestria / Cardio -->
+            <div class="dash-mini-deck__footer" id="dashSheetFooter">
+                <div class="dash-mini-deck__stat-container">
+                    <div class="dash-mini-deck__stat-widget">
+                        <svg class="dash-mini-deck__stat-icon elixir" viewBox="0 0 24 24" fill="url(#elixirGrad)" width="22" height="22">
+                            <defs>
+                                <linearGradient id="elixirGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#ec4899" />
+                                    <stop offset="100%" stop-color="#a855f7" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M12 21a6 6 0 006-6c0-4-6-11-6-11s-6 7-6 11a6 6 0 006 6z" />
+                        </svg>
+                        <span class="dash-mini-deck__stat-val" id="dashMiniVolume">0.0</span>
+                    </div>
+                    <span class="dash-mini-deck__stat-label">VOLUME MÉDIO DE CARGA</span>
+                </div>
+                <div class="dash-mini-deck__stat-container">
+                    <div class="dash-mini-deck__stat-widget">
+                        <svg class="dash-mini-deck__stat-icon star" viewBox="0 0 24 24" fill="#fbbf24" width="22" height="22">
+                            <path d="M12 2l3.09 6.26 6.91.97-5 4.89 1.18 6.88L12 17.77l-6.18 3.25L7 14.12 2 9.23l6.91-.97L12 2z" />
+                        </svg>
+                        <div class="dash-mini-deck__widget-text">
+                            <span class="dash-mini-deck__stat-val" style="color: #fbbf24;" id="dashMiniMaestria">0/30</span>
+                            <span class="dash-mini-deck__stat-sub">EMBLEMAS</span>
+                        </div>
+                    </div>
+                    <span class="dash-mini-deck__stat-label">MAESTRIA</span>
+                </div>
+                <div class="dash-mini-deck__stat-container">
+                    <div class="dash-mini-deck__stat-widget">
+                        <svg class="dash-mini-deck__stat-icon pulse" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
+                        <div class="dash-mini-deck__widget-text">
+                            <span class="dash-mini-deck__stat-val" id="dashMiniCardio">--</span>
+                            <span class="dash-mini-deck__stat-sub" id="dashMiniCardioSub">Configurar Cardio</span>
+                        </div>
+                    </div>
+                    <span class="dash-mini-deck__stat-label">CARDIO CONFIGURADO</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: CONFIRMAR EXCLUSÃO ====== -->
+    <div class="modal-overlay" id="modalConfirm" style="display:none">
+        <div class="modal-confirm">
+            <div class="confirm-icon">⚠️</div>
+            <h3 id="confirmTitle">Confirmar exclusão?</h3>
+            <p id="confirmMsg">Esta ação não pode ser desfeita.</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" id="btnConfirmNo">Cancelar</button>
+                <button class="btn btn-danger" id="btnConfirmYes">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: ENCERRAR TREINO / SAIR DA FICHA ====== -->
+    <div class="modal-overlay" id="modalEncerrarTreino" style="display:none">
+        <div class="modal-confirm">
+            <div class="confirm-icon">⏹</div>
+            <h3>Sair da Ficha?</h3>
+            <p>O cronômetro será parado e você voltará para a tela Início. As séries marcadas serão mantidas para sua referência.</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" id="btnEncerrarCancelar">CONTINUAR TREINO</button>
+                <button class="btn btn-danger" id="btnEncerrarConfirmar">SIM, ENCERRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: VISUALIZAR IMAGEM ====== -->
+    <div class="modal-overlay" id="modalImage" style="display:none">
+        <div class="modal-image-container">
+            <button class="modal-close-btn image-close-btn" id="btnFecharImage" aria-label="Fechar">✕</button>
+            <img id="enlargedImage" src="" alt="Ampliada" class="enlarged-img">
+        </div>
+    </div>
+
+    <!-- ====== MODAL: HISTÓRICO DO DIA ====== -->
+    <div class="modal-overlay" id="modalDayHist" style="display:none">
+        <div class="modal-form" style="max-width:400px; padding:24px;">
+            <div class="modal-form-header" style="margin-bottom:16px;">
+                <h3 id="dayHistTitle">Treinos do Dia</h3>
+                <button class="modal-close-btn" id="btnFecharDayHist" aria-label="Fechar">✕</button>
+            </div>
+            <div id="dayHistContent"
+                style="color:var(--text-secondary); font-size:0.95rem; line-height:1.5; max-height: 50vh; overflow-y: auto;">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Cronômetro Flutuante -->
+    <div class="rest-timer" id="restTimer" style="display: none;">
+        <button class="rt-close" id="rtClose" aria-label="Fechar Cronômetro">✕</button>
+        <div class="rt-visuals" id="rtVisuals">
+            <!-- Preenchido via JS -->
+        </div>
+        <div class="rt-time" id="rtTime">01:00</div>
+    </div>
+
+    <!-- Toast de notificação -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ====== MODAL: TREINO FOCO ====== -->
+    <div class="modal-overlay" id="modalFocus" style="display:none">
+        <div class="focus-container">
+            <button class="focus-close-btn" id="btnCloseFocus">✕ Sair do Modo Foco</button>
+
+            <div class="focus-header">
+                <div class="focus-progress-step" id="focusStep">EXERCÍCIO 1 / 8</div>
+                <h2 class="focus-ex-name" id="focusExName">Supino Articulado</h2>
+                <div class="focus-ex-badge" id="focusExBadge">PEITO</div>
+            </div>
+
+            <div class="focus-main">
+                <div class="focus-visual">
+                    <img id="focusImg" src="" alt="Execução">
+                </div>
+
+                <div class="focus-info">
+                    <div class="focus-vol">
+                        <div class="f-vol-item">
+                            <span class="f-vol-val" id="focusSeries">3</span>
+                            <span class="f-vol-lbl">SÉRIES</span>
+                        </div>
+                        <div class="f-vol-item">
+                            <span class="f-vol-val" id="focusReps">10</span>
+                            <span class="f-vol-lbl">REPS</span>
+                        </div>
+                        <div class="f-vol-item">
+                            <span class="f-vol-val" id="focusCarga">40kg</span>
+                            <span class="f-vol-lbl">CARGA</span>
+                        </div>
+                    </div>
+
+                    <div class="focus-notes" id="focusNotes">
+                        <!-- Anotações aqui -->
+                    </div>
+
+                    <div class="focus-timer-area">
+                        <div class="f-timer-display" id="focusTimerVal">DESCANSAR</div>
+                        <button class="btn btn-primary f-btn-check" id="btnFocusCheck">CONCLUIR EXERCÍCIO ✓</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="focus-footer">
+                <button class="f-nav-btn" id="btnFocusPrev">⬅ Anterior</button>
+                <div class="focus-next-info">
+                    <span class="f-next-lbl">PRÓXIMO:</span>
+                    <span class="f-next-name" id="focusNextName">Fly Máquina</span>
+                </div>
+                <button class="f-nav-btn" id="btnFocusNext">Próximo ➡</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ====== MODAL: SHARE CARD ====== -->
+    <div class="modal-overlay" id="modalShare" style="display:none">
+        <div class="share-modal-container">
+            <div class="share-card" id="shareCard">
+                <div class="share-card-header">
+                    <div class="share-app-name">ACADEMIA<span>PRO</span></div>
+                    <div class="share-date" id="shareDate">10 DE MAIO, 2024</div>
+                </div>
+
+                <div class="share-card-main">
+                    <div class="share-badge">TREINO CONCLUÍDO!</div>
+                    <h2 class="share-title" id="shareTitle">TREINO A: PEITO E OMBRO</h2>
+
+                    <div class="share-stats-grid">
+                        <div class="s-stat-item">
+                            <span class="s-stat-val" id="shareExCount">8</span>
+                            <span class="s-stat-lbl">EXERCÍCIOS</span>
+                        </div>
+                        <div class="s-stat-item">
+                            <span class="s-stat-val" id="shareVol">12.450</span>
+                            <span class="s-stat-lbl">KG TOTAIS</span>
+                        </div>
+                        <div class="s-stat-item">
+                            <span class="s-stat-val" id="shareAvgVol">0.0</span>
+                            <span class="s-stat-lbl">VOL. MÉDIO</span>
+                        </div>
+                        <div class="s-stat-item">
+                            <span class="s-stat-val" id="shareStreak">15🔥</span>
+                            <span class="s-stat-lbl">OFENSIVA</span>
+                        </div>
+                        <div class="s-stat-item">
+                            <span class="s-stat-val" id="shareTime">00:00</span>
+                            <span class="s-stat-lbl">DURAÇÃO</span>
+                        </div>
+                    </div>
+
+                    <div class="share-highlights">
+                        <div class="sh-title">DESTAQUES DO DIA</div>
+                        <div class="sh-list" id="shareHighlightsList">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="share-card-footer">
+                    <p class="share-quote">"O único treino ruim é aquele que não aconteceu."</p>
+                </div>
+            </div>
+
+            <!-- Card para Conquistas -->
+            <div class="share-card share-card-achievement" id="shareCardBadge"
+                style="display:none; flex-direction: column; justify-content: space-between;">
+                <div class="share-card-header">
+                    <div class="share-app-name">ACADEMIA<span>PRO</span></div>
+                    <div class="share-date" id="shareBadgeDate">10 DE MAIO, 2024</div>
+                </div>
+                <div class="share-card-main"
+                    style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; flex: 1;">
+                    <div class="share-badge">NOVA CONQUISTA!</div>
+                    <div class="share-badge-icon" id="shareBadgeIcon"
+                        style="font-size: 8rem; margin: 20px 0; filter: drop-shadow(0 0 20px var(--primary));">🏆</div>
+                    <h2 class="share-title" id="shareBadgeName"
+                        style="font-size: 2.2rem; margin-bottom: 10px; line-height: 1.1;">VETERANO</h2>
+                    <p class="share-badge-desc" id="shareBadgeDesc"
+                        style="color: var(--text-secondary); font-size: 1.1rem; max-width: 80%; line-height: 1.4;">30
+                        treinos concluídos com sucesso!</p>
+                </div>
+                <div class="share-card-footer">
+                    <p class="share-quote">"O sucesso é a soma de pequenos esforços repetidos dia após dia."</p>
+                </div>
+            </div>
+
+            <!-- Card para Radar -->
+            <div class="share-card share-card-radar" id="shareCardRadar"
+                style="display:none; flex-direction: column; justify-content: space-between;">
+                <div class="share-card-header">
+                    <div class="share-app-name">ACADEMIA<span>PRO</span></div>
+                    <div class="share-date" id="shareRadarDate">10 DE MAIO, 2024</div>
+                </div>
+                <div class="share-card-main" style="text-align: center; flex: 1;">
+                    <div class="share-badge" id="shareRadarMode">RADAR MENSAL</div>
+                    <div id="shareRadarCloneContainer"
+                        style="margin-top: 15px; display: flex; justify-content: center; align-items: center; width: 100%;">
+                        <!-- SVG Cloned via JS -->
+                    </div>
+                </div>
+                <div class="share-card-footer">
+                    <p class="share-quote">"A disciplina é a ponte entre metas e realizações."</p>
+                </div>
+            </div>
+
+            <div class="share-actions"
+                style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 350px;">
+                <button class="btn btn-primary" id="btnShareNow" style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                        <polyline points="16 6 12 2 8 6"/>
+                        <line x1="12" y1="2" x2="12" y2="15"/>
+                    </svg> COMPARTILHAR
+                </button>
+                <button class="btn btn-secondary" id="btnDownloadImage" style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg> BAIXAR IMAGEM
+                </button>
+                <button class="btn btn-secondary" style="background: transparent; border: none; opacity: 0.6;"
+                    id="btnFecharShare">FECHAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: VOLUME DETALHES ====== -->
+    <div class="modal-overlay" id="modalVolumeDetails" style="display:none">
+        <div class="modal-content"
+            style="max-width: 450px; background: #111827; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding: 20px 24px;">
+                <h3 id="volDetGroup"
+                    style="font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; letter-spacing: 1px; color: #fff;">
+                    Grupo Muscular</h3>
+                <button class="btn-close" onclick="closeModal('modalVolumeDetails')"
+                    style="background: rgba(255,255,255,0.05); color: #fff; width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center;">×</button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div class="p-card"
+                        style="padding: 15px; text-align: left; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        <div
+                            style="font-size: 0.65rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-weight: 600;">
+                            Volume Total</div>
+                        <div id="volDetTotal"
+                            style="font-size: 1.8rem; font-weight: 800; color: var(--primary); font-family: 'Rajdhani', sans-serif; line-height: 1; text-shadow: 0 0 15px rgba(var(--primary-rgb), 0.3);">
+                            0 kg</div>
+                    </div>
+                    <div class="p-card"
+                        style="padding: 15px; text-align: left; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        <div
+                            style="font-size: 0.65rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-weight: 600;">
+                            Tendência</div>
+                        <div id="volDetTrend"
+                            style="font-size: 1.1rem; font-weight: 700; margin-top: 5px; display: flex; align-items: center; gap: 5px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%); border-radius: 16px; padding: 20px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                        <h4
+                            style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600;">
+                            Evolução de Carga</h4>
+                        <span id="volDetAvg"
+                            style="font-size: 0.65rem; color: var(--primary-light); background: rgba(var(--primary-rgb), 0.1); padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(var(--primary-rgb), 0.2); font-weight: 700;">Média:
+                            0kg</span>
+                    </div>
+                    <div id="volDetChartContainer"
+                        style="width: 100%; height: 160px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));">
+                        <!-- SVG Gerado via JS -->
+                    </div>
+                </div>
+
+                <h4
+                    style="margin-bottom: 15px; font-size: 0.75rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1.2px; display: flex; align-items: center; gap: 10px; font-weight: 600;">
+                    <span
+                        style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);"></span>
+                    Distribuição por Exercício
+                </h4>
+                <div id="volDetList"
+                    style="display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; padding-right: 8px;"
+                    class="custom-scroll">
+                    <!-- JS populated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="componentes/thememanager.js"></script>
+    <script src="componentes/theme-integration.js"></script>
+    <script src="componentes/footer.js"></script>
+    <script src="componentes/scroll-animations.js"></script>
+    <!-- ====== MODAL: GUIA RADAR ====== -->
+    <div class="modal-overlay" id="modalRadarGuide" style="display:none">
+        <div class="modal-content"
+            style="max-width: 450px; background: #111827; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 0; overflow: hidden;">
+            <div class="modal-header"
+                style="padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);">
+                <h3 style="font-family: 'Rajdhani', sans-serif; font-size: 1.4rem; letter-spacing: 1px;">COMO SÃO
+                    CALCULADOS?</h3>
+                <button class="btn-close" onclick="closeModal('modalRadarGuide')"
+                    style="background: rgba(255,255,255,0.05); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;">×</button>
+            </div>
+            <div class="modal-body" style="padding: 24px; display: flex; flex-direction: column; gap: 15px;">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">O <b>Radar Fit</b>
+                    analisa seus treinos dos últimos 30 dias (Mensal) ou todo o histórico (Total) para gerar seu perfil
+                    de atleta:</p>
+
+                <div class="guide-item"
+                    style="display: flex; gap: 12px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 1.5rem;">🏋️</div>
+                    <div>
+                        <h4 style="font-size: 0.9rem; color: var(--primary-light); margin-bottom: 4px;">FORÇA</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-tertiary);">Baseada na carga média por repetição
+                            em todos os exercícios. Quanto mais peso você levanta por repetição, maior sua pontuação.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="guide-item"
+                    style="display: flex; gap: 12px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 1.5rem;">🔋</div>
+                    <div>
+                        <h4 style="font-size: 0.9rem; color: var(--primary-light); margin-bottom: 4px;">RESISTÊNCIA</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-tertiary);">Calculada pelo volume total de
+                            repetições + tempo acumulado em exercícios aeróbicos. Treinos volumosos e cardio são a
+                            chave.</p>
+                    </div>
+                </div>
+
+                <div class="guide-item"
+                    style="display: flex; gap: 12px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                    <div style="display:flex; align-items:center; justify-content:center; width:24px; height:24px; color:#f97316;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 0.9rem; color: var(--primary-light); margin-bottom: 4px;">INTENSIDADE</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-tertiary);">Mede sua dedicação e constância. É
+                            baseada no XP total acumulado no período. Não falte aos treinos para manter 100%.</p>
+                    </div>
+                </div>
+
+                <div class="guide-item"
+                    style="display: flex; gap: 12px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 1.5rem;">⚖️</div>
+                    <div>
+                        <h4 style="font-size: 0.9rem; color: var(--primary-light); margin-bottom: 4px;">SIMETRIA</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-tertiary);">Avalia se você treina todos os 7
+                            grupos musculares de forma equilibrada. Evite focar apenas em um músculo.</p>
+                    </div>
+                </div>
+
+                <div class="guide-item"
+                    style="display: flex; gap: 12px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 1.5rem;">🧘</div>
+                    <div>
+                        <h4 style="font-size: 0.9rem; color: var(--primary-light); margin-bottom: 4px;">EQUILÍBRIO</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-tertiary);">Mede a variedade técnica. Exercícios
+                            unilaterais, livres ou de mobilidade aumentam este atributo.</p>
+                    </div>
+                </div>
+
+                <div class="guide-item"
+                    style="display: flex; gap: 12px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 1.5rem;">⚡</div>
+                    <div>
+                        <h4 style="font-size: 0.9rem; color: var(--primary-light); margin-bottom: 4px;">POTÊNCIA</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-tertiary);">Calculada por exercícios de
+                            explosão, saltos ou exercícios multiarticulares pesados de pernas.</p>
+                    </div>
+                </div>
+
+                <div
+                    style="background: var(--primary); color: #000; padding: 12px; border-radius: 12px; text-align: center; font-weight: 800; font-size: 0.7rem; letter-spacing: 1px; margin-top: 10px;">
+                    DICA: Ao atingir 95+ em todos os atributos, você sobe de TIER (Bronze, Prata, Ouro...) e a
+                    dificuldade aumenta!
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Scripts Modulares (ES Modules) -->
+    <script type="module" src="JS/treino/app.js?v=1.8"></script>
+
+    <!-- ====== MODAL: MAESTRIA GERAL ====== -->
+    <div class="modal-overlay" id="modalMaestriaGeral" style="display:none">
+        <div class="maestria-geral-container">
+            <div class="maestria-geral-header">
+                <div class="maestria-geral-title" style="display:flex; align-items:center; gap:8px;">
+                    <span class="mg-title-icon" style="display:flex; align-items:center;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="color:var(--primary);">
+                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                            <path d="M4 22h16"/>
+                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+                        </svg>
+                    </span>
+                    <h2>Maestria de Exercícios</h2>
+                </div>
+                <button class="modal-close-btn" id="btnFecharMaestriaGeral">✕</button>
+            </div>
+            <p class="maestria-geral-sub">Complete desafios para evoluir a maestria de cada exercício e ganhar emblemas!</p>
+            
+            <div class="colecao-athletic-stats" style="margin: 0 40px 20px 40px; border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; background: rgba(0,0,0,0.2);">
+                <div class="athletic-level-info">
+                    <span class="athletic-rank-label" id="athleticRankMG">PRATICANTE</span>
+                    <span class="athletic-level-val" id="athleticLevelMG">Maestria Nível 1</span>
+                </div>
+                <div class="athletic-progress-container">
+                    <div class="athletic-progress-bar">
+                        <div class="athletic-progress-fill" id="athleticProgressMG" style="width: 15%"></div>
+                        <div class="athletic-shine"></div>
+                    </div>
+                    <span class="athletic-xp-text" id="athleticXPMG">15 / 100 PTS</span>
+                </div>
+            </div>
+
+            <div class="maestria-geral-grid" id="maestriaGeralGrid">
+                <!-- Populado pelo JS -->
+            </div>
+            <div class="maestria-geral-footer" style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                <span class="mg-footer-icon" style="display:flex; align-items:center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="color:var(--primary-light);">
+                        <polyline points="17 11 12 6 7 11"/>
+                        <polyline points="17 18 12 13 7 18"/>
+                    </svg>
+                </span>
+                <span>Cada desafio completado melhora o emblema de maestria do exercício!</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: COLEÇÃO DE EXERCÍCIOS (FIDELIDADE TOTAL) ====== -->
+    <div class="modal-overlay" id="modalColecaoExercicios" style="display:none">
+        <div class="colecao-full-container">
+            <div class="colecao-header-main">
+                <div class="colecao-title-side">
+                    <h2>MINHA COLEÇÃO</h2>
+                </div>
+                <div class="colecao-actions-side">
+                    <div class="colecao-search-box">
+                        <input type="text" id="colecaoSearch" placeholder="Filtrar exercícios...">
+                    </div>
+                    <div class="colecao-count-box" id="colecaoCount">23/23</div>
+                    <button class="colecao-close-btn" id="btnFecharColecao">✕</button>
+                </div>
+            </div>
+            
+            <div class="colecao-athletic-stats">
+                <div class="athletic-level-info">
+                    <span class="athletic-rank-label" id="athleticRank">PRATICANTE</span>
+                    <span class="athletic-level-val" id="athleticLevel">Maestria Nível 1</span>
+                </div>
+                <div class="athletic-progress-container">
+                    <div class="athletic-progress-bar">
+                        <div class="athletic-progress-fill" id="athleticProgress" style="width: 15%"></div>
+                        <div class="athletic-shine"></div>
+                    </div>
+                    <span class="athletic-xp-text" id="athleticXP">15 / 100 PTS</span>
+                </div>
+            </div>
+
+            <div class="colecao-grid-scroll">
+                <div class="colecao-grid-fidelity" id="colecaoGrid">
+                    <!-- Populado pelo JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: DETALHES DE VOLUME ====== -->
+    <div class="modal-overlay" id="modalVolumeDetails" style="display:none">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Volume: <span id="volDetGroup"></span></h2>
+                <button class="close-modal" onclick="closeModal('modalVolumeDetails')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: 800; font-family: 'Rajdhani', sans-serif;" id="volDetTotal">0kg</div>
+                        <div style="font-size: 0.75rem; color: var(--text-tertiary);" id="volDetAvg">Média: 0kg</div>
+                    </div>
+                    <div id="volDetTrend" style="font-size: 0.9rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; display: none;"></div>
+                </div>
+                
+                <!-- Container do Gráfico -->
+                <div id="volDetChartContainer" style="height: 160px; margin-bottom: 20px;"></div>
+                
+                <!-- Lista de Exercícios -->
+                <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--text-secondary);">Exercícios do Grupo</h3>
+                <div id="volDetList" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 5px;" class="custom-scroll">
+                    <!-- Preenchido pelo JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: MAESTRIA INDIVIDUAL ====== -->
+    <div class="modal-overlay" id="modalMaestriaEx" style="display:none">
+        <div class="maestria-ex-container">
+            <!-- Decoração superior (Ícone Elite Premium) -->
+            <div class="maestria-ex-top-decor">
+                <div class="royale-mastery-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L4 5V11C4 16.19 7.41 21.05 12 22.5C16.59 21.05 20 16.19 20 11V5L12 2Z" fill="url(#gradGold)" stroke="#fbbf24" stroke-width="1.5"/>
+                        <path d="M12 7L13.25 9.75L16 11L13.25 12.25L12 15L10.75 12.25L8 11L10.75 9.75L12 7Z" fill="white">
+                            <animateTransform attributeName="transform" type="scale" values="1;1.2;1" dur="2s" repeatCount="indefinite" additive="sum" />
+                        </path>
+                        <defs>
+                            <linearGradient id="gradGold" x1="4" y1="2" x2="20" y2="22.5" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#fbbf24" />
+                                <stop offset="100%" stop-color="#d97706" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Banner Principal -->
+            <div class="maestria-ex-header">
+                <h2>Maestria de Exercícios</h2>
+                <button class="modal-close-btn-royale" id="btnFecharMaestriaEx">✕</button>
+            </div>
+
+            <div class="maestria-ex-body">
+                <div class="maestria-ex-badge-area" id="maestriaExBadgeArea">
+                    <!-- Badge e Estrelas renderizados pelo JS -->
+                </div>
+                
+                <div class="maestria-ex-challenges" id="maestriaExChallenges">
+                    <!-- Desafios renderizados pelo JS -->
+                </div>
+            </div>
+
+            <div class="maestria-ex-footer">
+                <button class="footer-shield-arrow" onclick="closeModal('modalMaestriaEx'); openColecaoExercicios(loadDB())" title="Ver Coleção" style="background:none; border:none; padding:0; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#4ade80; transition: transform .25s ease;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="14" height="17" rx="2"/>
+                        <path d="M6 2h12a2 2 0 0 1 2 2v14"/>
+                    </svg>
+                </button>
+                <p>Cada tarefa de domínio completada garante uma melhoria no emblema de domínio!</p>
+                <div class="footer-info-btn" style="display:flex; align-items:center; justify-content:center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4"/>
+                        <path d="M12 8h.01"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ====== MODAL: CONFIGURAR CARDIO (AERÓBICO) ====== -->
+    <div class="modal-overlay" id="modalAerobico" style="display:none">
+        <div class="modal-form">
+            <div class="modal-form-header">
+                <h3 id="modalAeTitulo">Configurar Cardio</h3>
+                <button class="modal-close-btn" onclick="closeModal('modalAerobico')" aria-label="Fechar">✕</button>
+            </div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label for="inputAeTipo">Tipo de Exercício *</label>
+                <select id="inputAeTipo" style="width: 100%; padding: 12px; border-radius: 12px; background: #111; color: #fff; border: 1px solid rgba(255,255,255,0.1); outline: none; appearance: none;">
+                    <option value="">Selecione...</option>
+                    <option value="Esteira">Esteira</option>
+                    <option value="Bicicleta">Bicicleta</option>
+                    <option value="Elíptico">Elíptico</option>
+                    <option value="Corda">Pular Corda</option>
+                    <option value="Escada">Escada</option>
+                    <option value="Corrida de Rua">Corrida de Rua</option>
+                    <option value="Remo">Remo Ergométrico</option>
+                    <option value="Outro">Outro Cardio</option>
+                </select>
+            </div>
+            <div class="form-row" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label for="inputAeTempo">Duração (min) *</label>
+                    <input type="number" id="inputAeTempo" placeholder="Ex: 20" min="1" max="180">
+                </div>
+                <div class="form-group">
+                    <label for="inputAeVel">Velocidade Média (km/h)</label>
+                    <input type="text" id="inputAeVel" placeholder="Ex: 8.5">
+                </div>
+            </div>
+            <div class="form-actions" style="margin-top: 25px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modalAerobico')">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarAerobico">Salvar Cardio</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: CLASH ROYALE STYLE DETAILS ====== -->
+    <div class="modal-overlay" id="modalCRDetails" style="display:none">
+        <div class="cr-card-details">
+            <!-- Close Button -->
+            <button class="cr-close" onclick="closeModal('modalCRDetails')" aria-label="Fechar">✕</button>
+            
+            <!-- Header Section -->
+            <div class="cr-card-header">
+                <div class="cr-top-main">
+                    <!-- Miniature Card -->
+                    <div class="cr-card-miniature">
+                        <div class="cr-card-level-badge">Lvl <span id="crExLevel">1</span></div>
+                        <img id="crExCardImg" src="" alt="Imagem do Exercício">
+                    </div>
+                    <!-- Header Info -->
+                    <div class="cr-header-info">
+                        <h2 id="crExName">Nome do Exercício</h2>
+                        <div class="cr-ex-level-text">Nível <span id="crExLevelLabel">1</span></div>
+                        
+                        <div class="cr-rarity-type-wrap" style="display: flex; gap: 10px; align-items: center;">
+                            <!-- Maestria Shortcut -->
+                            <button class="cr-maestria-shortcut" id="crExMaestriaIcon" title="Ver Maestria">
+                                🏆
+                            </button>
+                            <!-- Info Box 1 -->
+                            <div class="cr-info-box">
+                                <span class="cr-info-label">Músculo</span>
+                                <span class="cr-info-val" id="crExGrupo">Peito</span>
+                            </div>
+                            <!-- Info Box 2 -->
+                            <div class="cr-info-box">
+                                <span class="cr-info-label">Tipo</span>
+                                <span class="cr-info-val" id="crExClasse">Aparelho</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card Body with Tabs -->
+            <div class="cr-card-body">
+                <div class="cr-tabs-container" style="position: relative; width: 100%; height: 100%;">
+                    <!-- Tab 1: Info/Descrição -->
+                    <div class="cr-tab-pane active">
+                        <div class="cr-description-box" id="crExDescription">
+                            Descrição e anotações do exercício.
+                        </div>
+                    </div>
+                    
+                    <!-- Tab 2: Stats Grid -->
+                    <div class="cr-tab-pane">
+                        <div class="cr-stats-grid" id="crStatsGrid">
+                            <!-- Preenchido dinamicamente via JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Tab 3: Ilustração/GIF -->
+                    <div class="cr-tab-pane">
+                        <div class="cr-illustration-frame">
+                            <img id="crExIllustration" src="" alt="Demonstração">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer (Swipe Navigation Dots) -->
+            <div class="cr-card-footer" style="text-align: center;">
+                <div class="cr-dots-indicator" style="display: inline-flex; gap: 8px; justify-content: center; margin-bottom: 20px;">
+                    <span class="cr-dot active" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); display: inline-block; cursor: pointer; transition: 0.3s;"></span>
+                    <span class="cr-dot" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); display: inline-block; cursor: pointer; transition: 0.3s;"></span>
+                    <span class="cr-dot" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); display: inline-block; cursor: pointer; transition: 0.3s;"></span>
+                </div>
+                <div class="cr-footer-actions">
+                    <button class="btn btn-secondary cr-btn-upgrade" id="crExEditBtn" style="width: 100%; font-weight: 700;">
+                        <span class="cr-btn-text">✏️ EDITAR EXERCÍCIO</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>

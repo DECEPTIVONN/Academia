@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fichas de Treino — Academia</title>
+    <meta name="description"
+        content="Sistema de fichas de treino para academia. Gerencie exercícios, acompanhe progresso diário e receba confirmação ao concluir o treino.">
+    <link rel="icon" type="image/x-icon" href="./Assets/Images/LogoItens/D.jpg">
+    <link rel="stylesheet" href="./vendor/fonts.css">
+    <link rel="stylesheet" href="Style/main.css">
+    <link rel="stylesheet" href="Style/footer.css">
+    <link rel="stylesheet" href="Style/treino.css?v=2.2">
+    <link rel="stylesheet" href="./vendor/fontawesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+    <link rel="stylesheet" href="./vendor/tailwind.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed": "#ffdcbb",
+                        "primary": "#d0bcff",
+                        "surface-dim": "#131313",
+                        "on-primary-fixed-variant": "#5516be",
+                        "card-bg": "rgba(10, 5, 20, 0.6)",
+                        "inverse-on-surface": "#313030",
+                        "elixir-dark": "#6d28d9",
+                        "on-error": "#690005",
+                        "on-tertiary-container": "#3f2300",
+                        "inverse-primary": "#6d3bd7",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-container": "#ca801e",
+                        "tertiary": "#ffb869",
+                        "surface-bright": "#393939",
+                        "surface-container-low": "#1c1b1b",
+                        "neon-purple-glow": "#c084fc",
+                        "outline": "#958ea0",
+                        "on-background": "#e5e2e1",
+                        "primary-fixed": "#e9ddff",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-primary": "#3c0091",
+                        "outline-variant": "#494454",
+                        "on-tertiary": "#482900",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-secondary-fixed-variant": "#005321",
+                        "on-primary-container": "#340080",
+                        "primary-container": "#a078ff",
+                        "surface-tint": "#d0bcff",
+                        "deep-void": "#0a0514",
+                        "gym-green-glow": "rgba(34, 197, 94, 0.3)",
+                        "secondary": "#4ae176",
+                        "on-primary-fixed": "#23005c",
+                        "on-secondary-container": "#004119",
+                        "on-secondary": "#003915",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "surface-container-highest": "#353534",
+                        "secondary-fixed": "#6bff8f",
+                        "inverse-surface": "#e5e2e1",
+                        "error-container": "#93000a",
+                        "background": "#131313",
+                        "surface-container-high": "#2a2a2a",
+                        "primary-fixed-dim": "#d0bcff",
+                        "surface-variant": "#353534",
+                        "secondary-container": "#00b954",
+                        "on-error-container": "#ffdad6",
+                        "accent-pink": "#f5a6d3",
+                        "surface": "#131313",
+                        "card-border": "rgba(139, 92, 246, 0.25)",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "secondary-fixed-dim": "#4ae176",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container": "#201f1f",
+                        "on-secondary-fixed": "#002109",
+                        "error": "#ffb4ab"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Rajdhani"],
+                        "body-lg": ["Outfit"],
+                        "headline-xl": ["Rajdhani"],
+                        "card-level": ["Rajdhani"],
+                        "headline-md": ["Rajdhani"],
+                        "label-caps": ["Rajdhani"],
+                        "headline-lg-mobile": ["Rajdhani"],
+                        "body-md": ["Outfit"]
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#8b5cf6">
+</head>
+
+<body>
+    <!-- ✨ Splash Screen Personalizada (Feature 9) -->
+    <div id="splashScreen" class="splash-screen">
+      <div class="splash-screen__bg" id="splashBg"></div>
+      <div class="splash-screen__content">
+        <div class="splash-screen__logo">
+          <span class="splash-screen__logo-text">ACADEMIA</span>
+          <span class="splash-screen__logo-sub">WORKOUT TRACKER</span>
+        </div>
+        <div class="splash-screen__user" id="splashUser"></div>
+        <div class="splash-screen__bar-wrap">
+          <div class="splash-screen__bar">
+            <div class="splash-screen__fill" id="splashFill"></div>
+          </div>
+          <span class="splash-screen__loading-text">Carregando...</span>
+        </div>
+      </div>
+    </div>
+    <!-- Script inline: aplica banner do splash ANTES do DOMContentLoaded -->
+    <script>
+      try {
+        const _raw = localStorage.getItem('academia_treino');
+        if (_raw) {
+          const _d = JSON.parse(_raw);
+          const _b = _d.profileCustomization?.banner || 'roxo-neon';
+          const _n = _d.profileCustomization?.nome || '';
+          document.getElementById('splashBg')?.setAttribute('data-banner', _b);
+          if (_n) {
+            document.getElementById('splashUser').innerHTML =
+              `<span class="splash-screen__user-name">${_n}</span><span class="splash-screen__user-sub">BEM-VINDO DE VOLTA</span>`;
+          }
+        }
+      } catch(e) {}
+    </script>
+
+    <!-- CR Dynamic Background System -->
+    <div id="cr-dynamic-bg" class="cr-bg-container">
+        <div class="cr-bg-layer"></div>
+        <div class="cr-bg-particles">
+            <div class="cr-particle cr-p1"></div>
+            <div class="cr-particle cr-p2"></div>
+            <div class="cr-particle cr-p3"></div>
+            <div class="cr-particle cr-p4"></div>
+            <div class="cr-particle cr-p5"></div>
+        </div>
+        <div class="cr-bg-overlay"></div>
+    </div>
+
+    <div id="navbar-container"></div>
+
+    <main class="treino-page">
+
+        <!-- ====== VIEWPORT + STRIP (Clash Royale Slide System) ====== -->
+        <div class="section-viewport">
+            <div class="section-strip">
+
+                <!-- ========== SLIDE 0 (REMOVIDO v3.2.0): FICHA ==========
+                     A antiga seção Ficha (slide 0) foi convertida em um
+                     overlay fullscreen acionado exclusivamente pelo botão
+                     "PRÓXIMO PASSO" do Dashboard. O conteúdo é carregado
+                     por loader.js em #fichaOverlayScroll abaixo. -->
+
+                <!-- ========== SLIDE 1: PROGRESSO ========== -->
+                <div class="section-slide" data-section="progresso">
+                    <!-- Carregado por loader.js → componentes/secoes/progresso.html -->
+                </div>
+
+                <!-- ========== SLIDE 2: TREINOS ========== -->
+                <div class="section-slide" data-section="treinos">
+                    <!-- Carregado por loader.js → componentes/secoes/treinos.html -->
+                </div>
+
+                <!-- ========== SLIDE 3: DASHBOARD ========== -->
+                <div class="section-slide" data-section="dashboard">
+                    <!-- Carregado por loader.js → componentes/secoes/dashboard.html -->
+                </div>
+
+                <!-- ========== SLIDE 4: PERFIL (REMOVIDO) ==========
+                     A antiga seção Perfil (slide 4) foi convertida em um overlay
+                     fullscreen acionado pelo cartão de visitas do dashboard.
+                     O conteúdo é carregado por loader.js em #perfil-overlay abaixo. -->
+
+                <!-- ========== SLIDE 4: SOCIAL ========== -->
+                <div class="section-slide" data-section="social">
+                <div class="treino-container">
+                <div id="section-social" class="main-section" role="tabpanel">
+                    <div class="section-coming-soon">
+                        <div class="cs-icon">💬</div>
+                        <h2 class="cs-title">SOCIAL</h2>
+                        <p class="cs-sub">Em breve! Conecte-se com amigos, compare progresso e desafie outros atletas.</p>
+                    </div>
+                </div><!-- /section-social -->
+                </div><!-- /treino-container -->
+                </div><!-- /section-slide social -->
+
+                <!-- ========== SLIDE 5: LOJA ========== -->
+                <div class="section-slide" data-section="loja">
+                <div class="treino-container">
+                <div id="section-loja" class="main-section" role="tabpanel">
+                    <div class="section-coming-soon">
+                        <div class="cs-icon">🛒</div>
+                        <h2 class="cs-title">LOJA</h2>
+                        <p class="cs-sub">Em breve! Itens, skins e upgrades exclusivos para sua jornada.</p>
+                    </div>
+                </div><!-- /section-loja -->
+                </div><!-- /treino-container -->
+                </div><!-- /section-slide loja -->
+
+            </div><!-- /section-strip -->
+        </div><!-- /section-viewport -->
+    </main>
+
+    <!-- ====== BARRA DE NAVEGAÇÃO INFERIOR ====== -->
+    <nav class="bottom-nav" id="bottomNav" role="navigation" aria-label="Navegação principal">
+        <button class="bnav-btn" data-section="progresso" id="bnavProgresso" aria-label="Progresso">
+            <div class="bnav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <span class="bnav-label">Progresso</span>
+            <div class="bnav-active-dot"></div>
+        </button>
+        <button class="bnav-btn" data-section="treinos" id="bnavTreinos" aria-label="Treinos">
+            <div class="bnav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/><circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/></svg>
+            </div>
+            <span class="bnav-label">Treinos</span>
+            <div class="bnav-active-dot"></div>
+        </button>
+        <button class="bnav-btn active" data-section="dashboard" id="bnavDashboard" aria-label="Início">
+            <div class="bnav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+            </div>
+            <span class="bnav-label">Início</span>
+            <div class="bnav-active-dot"></div>
+        </button>
+        <button class="bnav-btn" data-section="social" id="bnavSocial" aria-label="Social">
+            <div class="bnav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <span class="bnav-label">Social</span>
+            <div class="bnav-active-dot"></div>
+        </button>
+        <button class="bnav-btn" data-section="loja" id="bnavLoja" aria-label="Loja">
+            <div class="bnav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            </div>
+            <span class="bnav-label">Loja</span>
+            <div class="bnav-active-dot"></div>
+        </button>
+    </nav>
+
+
+
+    <div id="footer-container"></div>
+
+    <!-- Container para modais carregados dinamicamente -->
+    <div id="modais-container">
+        <!-- Carregado por loader.js → componentes/secoes/modais.html -->
+    </div>
+
+    <!-- ====== PERFIL OVERLAY (Interface fullscreen) ======
+         A antiga seção Perfil (slide 4) virou este overlay acionado
+         pelo cartão de visitas do dashboard. loader.js injeta o conteúdo
+         de componentes/secoes/perfil.html dentro de .perfil-overlay__scroll -->
+    <div id="perfil-overlay" class="perfil-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Perfil do usuário">
+        <header class="perfil-overlay__header">
+            <div class="perfil-overlay__title">
+                <span class="perfil-overlay__title-main">Meu Perfil</span>
+                <span class="perfil-overlay__title-sub">Personalize sua jornada</span>
+            </div>
+            <button class="perfil-overlay-close" id="perfilOverlayClose" type="button" aria-label="Fechar perfil e voltar para o Início">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </header>
+        <div class="perfil-overlay__scroll" id="perfilOverlayScroll">
+            <!-- Conteúdo de componentes/secoes/perfil.html injetado aqui -->
+        </div>
+    </div>
+
+    <!-- ====== FICHA OVERLAY (Interface fullscreen) ======
+         A antiga seção Ficha (slide 0) virou este overlay acionado
+         exclusivamente pelo botão "PRÓXIMO PASSO" do Dashboard. loader.js
+         injeta o conteúdo de componentes/secoes/ficha.html dentro de
+         .ficha-overlay__scroll. Sem header fixo (decisão v3.2.0: full-bleed
+         imersivo). Fechamento (ESC/programático): se workout_start_time
+         estiver ativo, abre modalEncerrarTreino; senão, volta ao Dashboard. -->
+    <div id="ficha-overlay" class="ficha-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Ficha de treino ativa">
+        <button class="ficha-overlay-close" id="btnFecharFicha" type="button" aria-label="Fechar Ficha e voltar ao Dashboard" title="Sair da Ficha">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="6" y1="6" x2="18" y2="18"/>
+                <line x1="6" y1="18" x2="18" y2="6"/>
+            </svg>
+        </button>
+        <div class="ficha-overlay__scroll" id="fichaOverlayScroll">
+            <!-- Conteúdo de componentes/secoes/ficha.html injetado aqui -->
+        </div>
+    </div>
+
+    <!-- ====== NEWS OVERLAY (Notícias Modal) ====== -->
+    <div id="news-overlay" class="news-overlay" style="display: none;">
+        <style>
+            .news-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                overflow-y: auto;
+                overflow-x: hidden;
+                color: #e5e2e1;
+                background-color: #0a0514;
+            }
+            .news-overlay .arena-bg {
+                background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKNhRMaQRBLOVDBSB6Y9zT6KeBJWTqJPEV8J2oYo-rVytUTbwYxpbDvv-oFgvbcL0s3HZbx1u2-zE3dDusALTGWv-XHMJdBgB0kiQwjuObalYwkuGE9k0A3vWLlVUrOE67rOuoNJdIB9eVlCueLZKfBEj3IpCPqqMP0o5L0gZ_19_XyZExy3782vyuqY73W9URvgrTuhkjTY38O8rbMIf4kAWswYgRs_pn8sxUNv-yo-1VEGJcSTiCeoved-e8aoZjOr84kvHd7gY');
+                background-repeat: repeat;
+                animation: bgScroll 60s linear infinite;
+            }
+            @keyframes bgScroll {
+                from { background-position: 0 0; }
+                to { background-position: 500px 1000px; }
+            }
+            .news-overlay .detail-view {
+                transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+                transform: translateX(100%);
+                opacity: 0;
+                pointer-events: none;
+                position: fixed;
+                inset: 0;
+                z-index: 100;
+                overflow-y: auto;
+                background-color: #0a0514;
+                visibility: hidden;
+            }
+            .news-overlay #news-footer-container,
+            .news-overlay .detail-view .detail-footer-wrap {
+                width: 100%;
+            }
+            .news-overlay #news-footer-container footer,
+            .news-overlay .detail-view .detail-footer-wrap footer {
+                margin: 0;
+                border-radius: 0;
+                padding: 20px 20px 40px;
+            }
+            .news-overlay .detail-view.active {
+                transform: translateX(0);
+                opacity: 1;
+                pointer-events: auto;
+                visibility: visible;
+            }
+            .news-overlay #news-main-view {
+                transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            }
+            .news-overlay #news-main-view.hidden-view {
+                transform: translateX(-30%);
+                opacity: 0;
+                pointer-events: none;
+            }
+            .news-overlay .tab-content {
+                display: none;
+            }
+            .news-overlay .tab-content.active {
+                display: block;
+                animation: newsFadeIn 0.3s ease-in-out;
+            }
+            @keyframes newsFadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .news-overlay .glass-panel {
+                backdrop-filter: blur(12px);
+                background: rgba(10, 5, 20, 0.7);
+                border: 1px solid rgba(139, 92, 246, 0.3);
+                box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.1);
+            }
+            .news-overlay .premium-placeholder {
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+                position: relative;
+                overflow: hidden;
+            }
+            .news-overlay .premium-placeholder::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, transparent 40%, rgba(139, 92, 246, 0.2) 50%, transparent 60%);
+                animation: newsShimmer 3s infinite linear;
+            }
+            @keyframes newsShimmer {
+                0% { transform: translate(-100%, -100%); }
+                100% { transform: translate(100%, 100%); }
+            }
+            .news-overlay .premium-placeholder span.material-symbols-outlined {
+                animation: newsFloat 3s ease-in-out infinite;
+                display: inline-block;
+            }
+            @keyframes newsFloat {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+            .news-overlay .glass-card {
+                backdrop-filter: blur(12px);
+                background: rgba(10, 5, 20, 0.7);
+                border: 1px solid rgba(139, 92, 246, 0.2);
+            }
+            .news-overlay .text-glow {
+                text-shadow: 0 0 10px rgba(192, 132, 252, 0.5);
+            }
+            .news-overlay .active-tab-shield {
+                background: linear-gradient(180deg, #6d3bd7 0%, #340080 100%);
+                clip-path: polygon(0% 0%, 100% 0%, 100% 85%, 50% 100%, 0% 85%);
+                border-bottom: 2px solid #d0bcff;
+            }
+        </style>
+
+        <!-- Main List View -->
+        <div class="w-full relative z-10 flex flex-col" id="news-main-view" style="min-height: auto !important; height: auto !important;">
+            <!-- Top Navigation Header -->
+            <header class="fixed top-0 left-0 w-full z-50 bg-[#131313]/90 backdrop-blur-md px-4">
+                <div class="flex items-center justify-center h-20 relative max-w-lg mx-auto">
+                    <div class="flex items-center justify-between w-full gap-2">
+                        <div class="flex items-center gap-2 flex-grow">
+                            <div class="relative flex-1 flex flex-col items-center justify-center nav-tab cursor-pointer opacity-100" data-target="noticias">
+                                <div class="rounded-2xl px-6 py-2 flex flex-col items-center justify-center relative mb-2 tab-bg transition-all bg-[#8b5cf6] shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+                                    <svg class="text-white tab-icon drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24">
+                                        <rect height="18" rx="3" width="18" x="3" y="3"></rect>
+                                        <line x1="9" x2="15" y1="9" y2="9"></line>
+                                        <line x1="9" x2="15" y1="13" y2="13"></line>
+                                        <line x1="9" x2="12" y1="17" y2="17"></line>
+                                    </svg>
+                                    <span class="font-['Rajdhani'] text-[11px] tracking-wider text-white mt-1 tab-text font-bold">NOTÍCIAS</span>
+                                    <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] tab-arrow border-t-[#8b5cf6]"></div>
+                                </div>
+                            </div>
+                            <div class="relative flex-1 flex flex-col items-center justify-center nav-tab cursor-pointer hover:opacity-100 transition-opacity opacity-40" data-target="atualizacoes">
+                                <div class="rounded-2xl px-6 py-2 flex flex-col items-center justify-center relative mb-2 tab-bg transition-all">
+                                    <svg class="text-white tab-icon" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24">
+                                        <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"></path>
+                                        <circle cx="4" cy="12" r="1.5"></circle>
+                                        <circle cx="20" cy="12" r="1.5"></circle>
+                                    </svg>
+                                    <span class="font-['Rajdhani'] text-[11px] tracking-wider text-white mt-1 tab-text font-medium">ATUALIZAÇÕES</span>
+                                    <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] tab-arrow hidden border-t-transparent"></div>
+                                </div>
+                            </div>
+                            <div class="relative flex-1 flex flex-col items-center justify-center nav-tab cursor-pointer hover:opacity-100 transition-opacity opacity-40" data-target="guias">
+                                <div class="rounded-2xl px-6 py-2 flex flex-col items-center justify-center relative mb-2 tab-bg transition-all">
+                                    <svg class="text-white tab-icon" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24">
+                                        <line x1="8" x2="21" y1="6" y2="6"></line>
+                                        <line x1="8" x2="21" y1="12" y2="12"></line>
+                                        <line x1="8" x2="21" y1="18" y2="18"></line>
+                                        <line x1="3" x2="3.01" y1="6" y2="6"></line>
+                                        <line x1="3" x2="3.01" y1="12" y2="12"></line>
+                                        <line x1="3" x2="3.01" y1="18" y2="18"></line>
+                                    </svg>
+                                    <span class="font-['Rajdhani'] text-[11px] tracking-wider text-white mt-1 tab-text font-medium">GUIAS</span>
+                                    <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] tab-arrow hidden border-t-transparent"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 pl-2 border-l border-white/20 h-10 ml-2">
+                            <button class="w-10 h-10 flex items-center justify-center bg-red-500/20 rounded-lg hover:bg-red-500 transition-colors group" onclick="closeNewsOverlay()">
+                                <svg class="text-white" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18">
+                                    <line x1="18" x2="6" y1="6" y2="18"></line>
+                                    <line x1="6" x2="18" y1="6" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <!-- Main Content Area -->
+            <main class="pt-24 relative arena-bg" style="min-height: auto !important; height: auto !important;">
+                <div class="max-w-lg mx-auto w-full px-4">
+                    <!-- Noticias Section -->
+                    <section class="tab-content mb-4 active space-y-6" id="noticias">
+                        <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-2xl transition-all hover:border-primary/50" onclick="openDetailView('news-detail-view', 0)">
+                            <div class="aspect-video w-full relative premium-placeholder flex items-center justify-center">
+                                <div class="flex flex-col items-center gap-2 relative z-10 float-animation">
+                                    <span class="material-symbols-outlined text-primary/60 text-6xl" style='font-variation-settings: "FILL" 1;'>description</span>
+                                    <p class="font-headline-md text-primary/60 text-xs tracking-widest uppercase">Notícias</p>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent opacity-60"></div>
+                            </div>
+                            <div class="p-6 relative bg-gradient-to-b from-transparent to-[#0a0514]">
+                                <p class="font-label-caps text-neon-purple-glow text-xs mb-2">NOTÍCIAS</p>
+                                <h1 class="font-headline-md text-headline-md text-white mb-4 leading-tight">NOVA TEMPORADA: ENTERRADAS ENCLAUSURANTES</h1>
+                                <p class="font-label-caps text-on-surface-variant/70 text-[10px]">4 DE MAIO DE 2026</p>
+                            </div>
+                            <div class="absolute inset-0 border border-primary/10 rounded-xl pointer-events-none"></div>
+                        </div>
+                        <div class="hidden-news hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-2xl transition-all hover:border-primary/50" onclick="openDetailView('news-detail-view', 1)">
+                            <div class="aspect-video w-full relative premium-placeholder flex items-center justify-center">
+                                <div class="flex flex-col items-center gap-2 relative z-10 float-animation">
+                                    <span class="material-symbols-outlined text-primary/60 text-6xl" style='font-variation-settings: "FILL" 1;'>military_tech</span>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent opacity-60"></div>
+                            </div>
+                            <div class="p-6 relative bg-gradient-to-b from-transparent to-[#0a0514]">
+                                <p class="font-label-caps text-neon-purple-glow text-xs mb-2">NOTÍCIAS</p>
+                                <h1 class="font-headline-md text-headline-md text-white mb-4 leading-tight">NOVO CAMPEÃO: O GUARDIÃO ETERNO</h1>
+                                <p class="font-label-caps text-on-surface-variant/70 text-[10px]">12 DE JUNHO DE 2026</p>
+                            </div>
+                        </div>
+                        <div class="hidden-news hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-2xl transition-all hover:border-primary/50" onclick="openDetailView('news-detail-view', 2)">
+                            <div class="aspect-video w-full relative premium-placeholder flex items-center justify-center">
+                                <div class="flex flex-col items-center gap-2 relative z-10 float-animation">
+                                    <span class="material-symbols-outlined text-primary/60 text-6xl" style='font-variation-settings: "FILL" 1;'>route</span>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent opacity-60"></div>
+                            </div>
+                            <div class="p-6 relative bg-gradient-to-b from-transparent to-[#0a0514]">
+                                <p class="font-label-caps text-neon-purple-glow text-xs mb-2">NOTÍCIAS</p>
+                                <h1 class="font-headline-md text-headline-md text-white mb-4 leading-tight">REFORMULAÇÃO DO CAMINHO DAS LENDAS</h1>
+                                <p class="font-label-caps text-on-surface-variant/70 text-[10px]">28 DE MAIO DE 2026</p>
+                            </div>
+                        </div>
+                        <div class="hidden-news hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-2xl transition-all hover:border-primary/50" onclick="openDetailView('news-detail-view', 3)">
+                            <div class="aspect-video w-full relative premium-placeholder flex items-center justify-center">
+                                <div class="flex flex-col items-center gap-2 relative z-10 float-animation">
+                                    <span class="material-symbols-outlined text-primary/60 text-6xl" style='font-variation-settings: "FILL" 1;'>beach_access</span>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent opacity-60"></div>
+                            </div>
+                            <div class="p-6 relative bg-gradient-to-b from-transparent to-[#0a0514]">
+                                <p class="font-label-caps text-neon-purple-glow text-xs mb-2">NOTÍCIAS</p>
+                                <h1 class="font-headline-md text-headline-md text-white mb-4 leading-tight">EVENTO DE VERÃO: ARENA TROPICAL</h1>
+                                <p class="font-label-caps text-on-surface-variant/70 text-[10px]">15 DE MAIO DE 2026</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-6">
+                            <button class="btn-show-more px-12 py-3 rounded-full bg-surface-container-highest/80 border border-card-border backdrop-blur-md font-label-caps text-white tracking-widest hover:bg-primary hover:text-deep-void transition-all duration-300 active:scale-95 shadow-xl">MOSTRAR MAIS</button>
+                        </div>
+                    </section>
+                    <!-- Atualizacoes Section -->
+                    <section class="tab-content space-y-6" id="atualizacoes">
+                        <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30" onclick="openDetailView('update-detail-view', 0)">
+                            <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                                <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary text-2xl">system_update_alt</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">Versão 2.4.0</p>
+                                    <h2 class="font-headline-md text-white text-lg truncate">Otimização de performance e correção de bugs</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30" onclick="openDetailView('update-detail-view', 1)">
+                            <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                                <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary text-2xl">security</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">Versão 2.3.5</p>
+                                    <h2 class="font-headline-md text-white text-lg truncate">Novos protocolos de segurança implementados</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30" onclick="openDetailView('update-detail-view', 2)">
+                            <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                                <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary text-2xl">balance</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">5 DE MAIO DE 2026</p>
+                                    <h2 class="font-headline-md text-white text-lg truncate">Balanceamento de Maio</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30" onclick="openDetailView('update-detail-view', 3)">
+                            <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                                <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary text-2xl">build</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">Versão 2.3.0</p>
+                                    <h2 class="font-headline-md text-white text-lg truncate">Notas da Versão 2.3.0</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hidden-updates hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30" onclick="openDetailView('update-detail-view', 4)">
+                            <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                                <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary text-2xl">article</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">10 DE ABRIL DE 2026</p>
+                                    <h2 class="font-headline-md text-white text-lg truncate">NOTAS DA ATUALIZAÇÃO - VERSÃO 2.2.0</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hidden-updates hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30" onclick="openDetailView('update-detail-view', 5)">
+                            <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                                <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary text-2xl">article</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">22 DE MARÇO DE 2026</p>
+                                    <h2 class="font-headline-md text-white text-lg truncate">NOTAS DA ATUALIZAÇÃO - VERSÃO 2.1.5</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hidden-updates hidden relative rounded-xl overflow-hidden glass-panel group cursor-pointer border border-card-border shadow-lg transition-all hover:border-primary/30" onclick="openDetailView('update-detail-view', 6)">
+                            <div class="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
+                                <div class="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary text-2xl">balance</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">05 DE FEVEREIRO DE 2026</p>
+                                    <h2 class="font-headline-md text-white text-lg truncate">AJUSTES DE EQUILÍBRIO - FEVEREIRO</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-6">
+                            <button class="btn-show-more px-12 py-3 rounded-full bg-surface-container-highest/80 border border-card-border backdrop-blur-md font-label-caps text-white tracking-widest hover:bg-primary hover:text-deep-void transition-all duration-300 active:scale-95 shadow-xl">MOSTRAR MAIS</button>
+                        </div>
+                    </section>
+                    <!-- Guias Section -->
+                    <section class="tab-content mb-4 text-center py-20" id="guias">
+                        <span class="material-symbols-outlined text-primary/40 text-6xl mb-4">menu_book</span>
+                        <h2 class="font-headline-md text-white/60 text-xl">Guias em breve</h2>
+                    </section>
+                </div>
+            </main>
+            <!-- Footer -->
+            <div id="news-footer-container"></div>
+        </div>
+
+        <!-- Detail View - News -->
+        <div class="detail-view" id="news-detail-view">
+            <header class="fixed top-0 left-0 w-full z-[110] bg-[#131313]/90 backdrop-blur-md h-16 flex items-center border-b border-outline-variant/30">
+                <div class="flex items-center gap-2 justify-between w-full max-w-lg mx-auto px-2">
+                    <button class="flex items-center justify-center w-10 h-10 text-primary hover:bg-white/10 rounded-full transition-colors" onclick="closeDetailView('news-detail-view')">
+                        <span class="material-symbols-outlined text-[24px]">arrow_back</span>
+                    </button>
+                    <div class="w-[1px] h-6 bg-white/20"></div>
+                    <button class="w-10 h-10 flex items-center justify-center bg-red-500/20 rounded-lg hover:bg-red-500 transition-colors group text-white" onclick="closeNewsOverlay()">
+                        <span class="material-symbols-outlined text-[24px]">close</span>
+                    </button>
+                </div>
+            </header>
+            <main class="pt-24 flex flex-col min-h-screen arena-bg">
+                <div class="max-w-lg mx-auto w-full px-2 flex-1 flex flex-col">
+                    <div class="glass-card rounded-xl overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-deep-void/60 flex-grow" style="transition: opacity 0.2s, transform 0.2s; opacity: 1; transform: translateY(0px);">
+                        <div class="relative w-full h-[240px] md:h-[400px] shrink-0 overflow-hidden">
+                            <div class="w-full h-full premium-placeholder flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[80px] text-primary/40 animate-bounce news-icon">newspaper</span>
+                            </div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent"></div>
+                            <div class="absolute bottom-6 left-6 right-6">
+                                <span class="inline-block bg-primary text-on-primary font-label-caps text-[10px] px-2 py-1 rounded mb-2 news-tag">NOTÍCIAS</span>
+                                <h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-glow text-white uppercase tracking-tight news-title">NOVA TEMPORADA: ENTERRADAS ENCLAUSURANTES</h1>
+                                <p class="font-label-caps text-label-caps text-primary-fixed-dim/80 news-date">4 DE MAIO DE 2026</p>
+                            </div>
+                        </div>
+                        <div class="px-6 md:px-12 py-8 space-y-10 flex-grow flex flex-col">
+                            <section class="space-y-4 flex-grow news-content">
+                                <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Nesta temporada, a corte do Rei se transformou na quadra do Lançador, com um novo aliado pronto para avançar e causar o máximo de dano à torre! Veja todas as informações:</p>
+                                <ul class="space-y-2 mt-4 font-body-md text-on-surface-variant">
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>Novos heróis: Príncipe das Trevas e Lançador</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>Evento do álbum</li>
+                                </ul>
+                            </section>
+                            <hr class="border-outline-variant/20 border-t-2 border-tertiary-fixed-dim/50">
+                            <div class="pt-8 border-t-[6px] border-tertiary-fixed-dim/80 flex justify-center gap-4">
+                                <button class="btn-prev px-4 py-2 bg-gradient-to-b from-white/90 to-white/70 text-black font-label-caps text-[12px] uppercase rounded border border-black/20 shadow-md hover:bg-white transition-colors flex items-center gap-2 opacity-30 pointer-events-none">
+                                    <span class="material-symbols-outlined text-[16px]">chevron_left</span> Mais Recentes
+                                </button>
+                                <button class="btn-next px-4 py-2 bg-gradient-to-b from-white/90 to-white/70 text-black font-label-caps text-[12px] uppercase rounded border border-black/20 shadow-md hover:bg-white transition-colors flex items-center gap-2">
+                                    Mais Antigos <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-footer-wrap"><div id="news-detail-footer-container"></div></div>
+            </main>
+        </div>
+
+        <!-- Detail View - Updates -->
+        <div class="detail-view" id="update-detail-view">
+            <header class="fixed top-0 left-0 w-full z-[110] bg-[#131313]/90 backdrop-blur-md h-16 flex items-center border-b border-outline-variant/30">
+                <div class="flex items-center gap-2 justify-between w-full max-w-lg mx-auto px-2">
+                    <button class="flex items-center justify-center w-10 h-10 text-primary hover:bg-white/10 rounded-full transition-colors" onclick="closeDetailView('update-detail-view')">
+                        <span class="material-symbols-outlined text-[24px]">arrow_back</span>
+                    </button>
+                    <div class="w-[1px] h-6 bg-white/20"></div>
+                    <button class="w-10 h-10 flex items-center justify-center bg-red-500/20 rounded-lg hover:bg-red-500 transition-colors group text-white" onclick="closeNewsOverlay()">
+                        <span class="material-symbols-outlined text-[24px]">close</span>
+                    </button>
+                </div>
+            </header>
+            <main class="pt-24 flex flex-col min-h-screen arena-bg">
+                <div class="max-w-lg mx-auto w-full px-2 flex-1 flex flex-col">
+                    <div class="glass-card rounded-xl overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-deep-void/60 flex-grow" style="transition: opacity 0.2s, transform 0.2s; opacity: 1; transform: translateY(0px);">
+                        <div class="relative w-full h-[240px] md:h-[400px] shrink-0 overflow-hidden">
+                            <div class="w-full h-full premium-placeholder flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[80px] text-primary/40 animate-bounce update-icon">security</span>
+                            </div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent"></div>
+                            <div class="absolute bottom-6 left-6 right-6">
+                                <span class="inline-block bg-[#8b5cf6] text-white font-label-caps text-[10px] px-2 py-1 rounded mb-2 update-tag">ATUALIZAÇÃO</span>
+                                <h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-glow text-white uppercase tracking-tight update-title">Versão 2.3.5</h1>
+                                <p class="font-label-caps text-label-caps text-primary-fixed-dim/80 update-date">20 DE ABRIL DE 2026</p>
+                            </div>
+                        </div>
+                        <div class="px-6 md:px-12 py-8 space-y-10 flex-grow flex flex-col">
+                            <section class="space-y-4 flex-grow update-content">
+                                <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Novos protocolos de segurança implementados para proteger as contas dos jogadores e evitar trapaças.</p>
+                            </section>
+                            <hr class="border-outline-variant/20 border-t-2 border-tertiary-fixed-dim/50">
+                            <div class="pt-8 border-t-[6px] border-tertiary-fixed-dim/80 flex justify-center gap-4">
+                                <button class="btn-prev px-4 py-2 bg-gradient-to-b from-white/90 to-white/70 text-black font-label-caps text-[12px] uppercase rounded border border-black/20 shadow-md hover:bg-white transition-colors flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[16px]">chevron_left</span> Mais Recentes
+                                </button>
+                                <button class="btn-next px-4 py-2 bg-gradient-to-b from-white/90 to-white/70 text-black font-label-caps text-[12px] uppercase rounded border border-black/20 shadow-md hover:bg-white transition-colors flex items-center gap-2 opacity-30 pointer-events-none">
+                                    Mais Antigos <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-footer-wrap"><div id="update-detail-footer-container"></div></div>
+            </main>
+        </div>
+
+    </div>
+
+    <script>
+        // ===== NEWS OVERLAY - DATA =====
+        const newsData = [
+            { title: 'NOVA TEMPORADA: ENTERRADAS ENCLAUSURANTES', date: '4 DE MAIO DE 2026', tag: 'NOTÍCIAS', icon: 'newspaper', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Nesta temporada, a corte do Rei se transformou na quadra do Lançador, com um novo aliado pronto para avançar e causar o máximo de dano à torre! Veja todas as informações:</p><ul class="space-y-2 mt-4 font-body-md text-on-surface-variant"><li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>Novos heróis: Príncipe das Trevas e Lançador</li><li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>Evento do álbum</li></ul>' },
+            { title: 'NOVO CAMPEÃO: O GUARDIÃO ETERNO', date: '12 DE JUNHO DE 2026', tag: 'NOTÍCIAS', icon: 'military_tech', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Um novo campeão chega à arena. O Guardião Eterno traz habilidades defensivas únicas para proteger suas torres.</p>' },
+            { title: 'REFORMULAÇÃO DO CAMINHO DAS LENDAS', date: '28 DE MAIO DE 2026', tag: 'NOTÍCIAS', icon: 'route', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">O Caminho das Lendas foi atualizado com novas recompensas e um sistema de progressão melhorado para a próxima temporada.</p>' },
+            { title: 'EVENTO DE VERÃO: ARENA TROPICAL', date: '15 DE MAIO DE 2026', tag: 'NOTÍCIAS', icon: 'beach_access', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Prepare-se para o calor! O evento Arena Tropical trará modos de jogo por tempo limitado e cosméticos exclusivos.</p>' }
+        ];
+        const updatesData = [
+            { title: 'Versão 2.4.0', date: '15 DE MAIO DE 2026', tag: 'ATUALIZAÇÃO', icon: 'system_update_alt', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Esta atualização traz diversas melhorias de performance e correções de bugs, focando na estabilidade geral do jogo e na experiência do usuário.</p><ul class="space-y-2 mt-4 font-body-md text-on-surface-variant"><li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>Otimização no carregamento de texturas, reduzindo o tempo de entrada em partidas em 15%.</li></ul>' },
+            { title: 'Versão 2.3.5', date: '20 DE ABRIL DE 2026', tag: 'ATUALIZAÇÃO', icon: 'security', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Novos protocolos de segurança implementados para proteger as contas dos jogadores e evitar trapaças.</p>' },
+            { title: 'Balanceamento de Maio', date: '5 DE MAIO DE 2026', tag: 'ATUALIZAÇÃO', icon: 'balance', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Ajustes nas estatísticas de várias cartas para melhorar o equilíbrio do jogo e oferecer novas opções de estratégia.</p>' },
+            { title: 'Notas da Versão 2.3.0', date: '10 DE MARÇO DE 2026', tag: 'ATUALIZAÇÃO', icon: 'build', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Grandes mudanças estruturais no motor do jogo e novas funcionalidades de interface para aprimorar a usabilidade.</p>' },
+            { title: 'NOTAS DA ATUALIZAÇÃO - VERSÃO 2.2.0', date: '10 DE ABRIL DE 2026', tag: 'ATUALIZAÇÃO', icon: 'article', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Adicionamos o novo modo de torneio e reformulamos a interface do clã.</p>' },
+            { title: 'NOTAS DA ATUALIZAÇÃO - VERSÃO 2.1.5', date: '22 DE MARÇO DE 2026', tag: 'ATUALIZAÇÃO', icon: 'article', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Pequenas correções de interface e otimizações de bateria para dispositivos móveis.</p>' },
+            { title: 'AJUSTES DE EQUILÍBRIO - FEVEREIRO', date: '05 DE FEVEREIRO DE 2026', tag: 'ATUALIZAÇÃO', icon: 'balance', content: '<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">Mudanças cruciais no meta. Nerf no Cavaleiro e Buff na Mosqueteira.</p>' }
+        ];
+        const dataMap = { 'news-detail-view': newsData, 'update-detail-view': updatesData };
+        let currentIndices = { 'news-detail-view': 0, 'update-detail-view': 0 };
+
+        function openDetailView(viewId, index) {
+            currentIndices[viewId] = index;
+            updateDetailContent(viewId, index, false);
+            document.getElementById('news-main-view').classList.add('hidden-view');
+            document.getElementById(viewId).classList.add('active');
+            document.getElementById('news-overlay').scrollTop = 0;
+        }
+
+        function closeDetailView(viewId) {
+            document.getElementById(viewId).classList.remove('active');
+            document.getElementById('news-main-view').classList.remove('hidden-view');
+        }
+
+        function updateDetailContent(viewId, index, animate) {
+            const view = document.getElementById(viewId);
+            const dataArray = dataMap[viewId];
+            const data = dataArray[index];
+            const container = view.querySelector('.glass-card');
+            const isNews = viewId === 'news-detail-view';
+            const prefix = isNews ? 'news' : 'update';
+            const updateDOM = function() {
+                view.querySelector('.' + prefix + '-title').textContent = data.title;
+                view.querySelector('.' + prefix + '-date').textContent = data.date;
+                view.querySelector('.' + prefix + '-icon').textContent = data.icon;
+                view.querySelector('.' + prefix + '-tag').textContent = data.tag;
+                view.querySelector('.' + prefix + '-content').innerHTML = data.content;
+                var btnPrev = view.querySelector('.btn-prev');
+                var btnNext = view.querySelector('.btn-next');
+                if (index === 0) {
+                    btnPrev.classList.add('opacity-30', 'pointer-events-none');
+                } else {
+                    btnPrev.classList.remove('opacity-30', 'pointer-events-none');
+                }
+                if (index === dataArray.length - 1) {
+                    btnNext.classList.add('opacity-30', 'pointer-events-none');
+                } else {
+                    btnNext.classList.remove('opacity-30', 'pointer-events-none');
+                }
+                if (animate) {
+                    container.style.opacity = '1';
+                    container.style.transform = 'translateY(0)';
+                }
+            };
+            if (animate) {
+                container.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+                container.style.opacity = '0';
+                container.style.transform = 'translateY(10px)';
+                setTimeout(updateDOM, 200);
+            } else {
+                updateDOM();
+            }
+        }
+
+        function openNewsOverlay() {
+            var overlay = document.getElementById('news-overlay');
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            // Inject footer into overlay footer containers
+            var footerHtml = document.querySelector('#footer-container')?.innerHTML || '';
+            var containers = ['news-footer-container', 'news-detail-footer-container', 'update-detail-footer-container'];
+            containers.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.innerHTML = footerHtml;
+            });
+        }
+
+        function closeNewsOverlay() {
+            var overlay = document.getElementById('news-overlay');
+            // Reset detail views
+            document.getElementById('news-detail-view').classList.remove('active');
+            document.getElementById('update-detail-view').classList.remove('active');
+            document.getElementById('news-main-view').classList.remove('hidden-view');
+            overlay.style.display = 'none';
+            document.body.style.overflow = '';
+            // Navigate back to dashboard using the app's built-in transition
+            if (window._transitionTo) {
+                window._transitionTo('dashboard');
+            }
+        }
+
+        // Init: tab switching + show more (runs on overlay open via event delegation)
+        document.addEventListener('click', function(e) {
+            // Tab switching
+            var tab = e.target.closest('.nav-tab');
+            if (tab && tab.closest('#news-overlay')) {
+                var overlay = tab.closest('#news-overlay');
+                var targetId = tab.getAttribute('data-target');
+                var tabs = overlay.querySelectorAll('.nav-tab');
+                var contents = overlay.querySelectorAll('.tab-content');
+                tabs.forEach(function(t) {
+                    t.classList.add('opacity-40');
+                    t.classList.remove('opacity-100');
+                    var bg = t.querySelector('.tab-bg');
+                    if (bg) bg.classList.remove('bg-[#8b5cf6]', 'shadow-[0_0_15px_rgba(139,92,246,0.5)]');
+                    var icon = t.querySelector('.tab-icon');
+                    if (icon) icon.classList.remove('drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]');
+                    var txt = t.querySelector('.tab-text');
+                    if (txt) { txt.classList.remove('font-bold'); txt.classList.add('font-medium'); }
+                    var arrow = t.querySelector('.tab-arrow');
+                    if (arrow) { arrow.classList.add('hidden'); arrow.classList.remove('border-t-[#8b5cf6]'); arrow.classList.add('border-t-transparent'); }
+                });
+                tab.classList.remove('opacity-40');
+                tab.classList.add('opacity-100');
+                var abg = tab.querySelector('.tab-bg');
+                if (abg) abg.classList.add('bg-[#8b5cf6]', 'shadow-[0_0_15px_rgba(139,92,246,0.5)]');
+                var aicon = tab.querySelector('.tab-icon');
+                if (aicon) aicon.classList.add('drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]');
+                var atxt = tab.querySelector('.tab-text');
+                if (atxt) { atxt.classList.remove('font-medium'); atxt.classList.add('font-bold'); }
+                var aarrow = tab.querySelector('.tab-arrow');
+                if (aarrow) { aarrow.classList.remove('hidden', 'border-t-transparent'); aarrow.classList.add('border-t-[#8b5cf6]'); }
+                contents.forEach(function(c) { c.classList.remove('active'); });
+                var targetContent = overlay.querySelector('#' + targetId);
+                if (targetContent) targetContent.classList.add('active');
+                return;
+            }
+            // Show More buttons
+            var showBtn = e.target.closest('.btn-show-more');
+            if (showBtn && showBtn.closest('#news-overlay')) {
+                var activeSection = showBtn.closest('.tab-content');
+                var hiddenItems = [];
+                if (activeSection && activeSection.id === 'noticias') {
+                    hiddenItems = activeSection.querySelectorAll('.hidden-news');
+                } else if (activeSection && activeSection.id === 'atualizacoes') {
+                    hiddenItems = activeSection.querySelectorAll('.hidden-updates');
+                }
+                hiddenItems.forEach(function(item) { item.classList.remove('hidden'); });
+                var wrapper = showBtn.closest('div');
+                if (wrapper) wrapper.style.display = 'none';
+                return;
+            }
+        });
+
+        // Attach nav button listeners for detail views (delegated)
+        document.addEventListener('click', function(e) {
+            var btnPrev = e.target.closest('.btn-prev');
+            var btnNext = e.target.closest('.btn-next');
+            if (!btnPrev && !btnNext) return;
+            var view = (btnPrev || btnNext).closest('.detail-view');
+            if (!view || !view.closest('#news-overlay')) return;
+            var viewId = view.id;
+            if (btnPrev && currentIndices[viewId] > 0) {
+                currentIndices[viewId]--;
+                updateDetailContent(viewId, currentIndices[viewId]);
+            }
+            if (btnNext && currentIndices[viewId] < dataMap[viewId].length - 1) {
+                currentIndices[viewId]++;
+                updateDetailContent(viewId, currentIndices[viewId]);
+            }
+        });
+    </script>
+
+    <!-- ====== MISSIONS OVERLAY (Missões Modal) ====== -->
+    <div id="missions-overlay" class="missions-overlay" style="display: none;">
+        <style>
+            .missions-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                overflow-y: auto;
+                overflow-x: hidden;
+                color: #e5e2e1;
+                background-color: #0a0514;
+            }
+            .missions-overlay .arena-bg {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: -1;
+                background-color: #0a0514;
+                background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKNhRMaQRBLOVDBSB6Y9zT6KeBJWTqJPEV8J2oYo-rVytUTbwYxpbDvv-oFgvbcL0s3HZbx1u2-zE3dDusALTGWv-XHMJdBgB0kiQwjuObalYwkuGE9k0A3vWLlVUrOE67rOuoNJdIB9eVlCueLZKfBEj3IpCPqqMP0o5L0gZ_19_XyZExy3782vyuqY73W9URvgrTuhkjTY38O8rbMIf4kAWswYgRs_pn8sxUNv-yo-1VEGJcSTiCeoved-e8aoZjOr84kvHd7gY');
+                background-repeat: repeat;
+                animation: msBgScroll 60s linear infinite;
+            }
+            @keyframes msBgScroll {
+                from { background-position: 0 0; }
+                to { background-position: 500px 1000px; }
+            }
+            .missions-overlay .ms-bg-overlay {
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(to bottom, rgba(10,5,20,0.15) 0%, rgba(10,5,20,0.5) 100%);
+                backdrop-filter: blur(0.5px);
+                -webkit-backdrop-filter: blur(0.5px);
+            }
+            /* Hide scrollbar */
+            .missions-overlay::-webkit-scrollbar { display: none; }
+            .missions-overlay { -ms-overflow-style: none; scrollbar-width: none; }
+
+            /* Tab active/inactive states */
+            .missions-overlay .ms-tab-btn {
+                padding: 12px 16px;
+                font-family: 'Rajdhani', sans-serif;
+                font-weight: 700;
+                font-size: 14px;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                position: relative;
+                transition: all 0.25s ease;
+                cursor: pointer;
+                border: none;
+                background: transparent;
+                color: rgba(203, 195, 215, 0.7);
+            }
+            .missions-overlay .ms-tab-btn.active {
+                background: #a078ff;
+                color: #340080;
+                border-radius: 12px 12px 0 0;
+                box-shadow: 0 -4px 15px rgba(160, 120, 255, 0.3);
+            }
+            .missions-overlay .ms-tab-btn:hover:not(.active) {
+                color: #d0bcff;
+            }
+            .missions-overlay .ms-tab-indicator {
+                position: absolute;
+                bottom: -1px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 32px;
+                height: 2px;
+                background: white;
+                box-shadow: 0 0 8px #fff;
+                display: none;
+            }
+            .missions-overlay .ms-tab-btn.active .ms-tab-indicator {
+                display: block;
+            }
+
+            /* Hover lift for mission cards */
+            .missions-overlay .ms-hover-lift {
+                transition: all 0.3s ease;
+            }
+            .missions-overlay .ms-hover-lift:hover {
+                transform: scale(1.02);
+                box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
+                border-color: rgba(192, 132, 252, 0.5);
+            }
+
+            /* Progress bar shimmer */
+            @keyframes msShimmer {
+                100% { transform: translateX(100%); }
+            }
+            /* Fade in */
+            @keyframes msFadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            /* Float */
+            @keyframes msFloat {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+            }
+            /* Clock rotation */
+            @keyframes msClockRotation {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            .missions-overlay .ms-animate-clock {
+                animation: msClockRotation 2s linear infinite;
+            }
+            .missions-overlay .ms-content-area > div {
+                display: none;
+            }
+            .missions-overlay .ms-content-area > div.ms-active {
+                display: flex;
+                flex-direction: column;
+                animation: msFadeIn 0.3s ease-out;
+            }
+
+            /* Mission card title — padrão tipográfico do site (Rajdhani 700 uppercase) */
+            .missions-overlay .ms-mission-title {
+                font-family: 'Rajdhani', sans-serif;
+                font-weight: 700;
+                font-size: 18px;
+                line-height: 1.3;
+                letter-spacing: 0.05em;
+                color: #fff;
+                text-transform: uppercase;
+                margin-bottom: 8px;
+            }
+        </style>
+
+        <!-- Dynamic Background -->
+        <div class="arena-bg">
+            <div class="ms-bg-overlay"></div>
+        </div>
+
+        <!-- Full-screen Container -->
+        <div style="width: 100%; max-width: 420px; margin: 0 auto; min-height: 100vh; position: relative; display: flex; flex-direction: column; overflow: hidden; background: transparent;">
+
+            <!-- Custom Top Bar (Modal Style) -->
+            <header style="position: relative; z-index: 20; display: flex; justify-content: space-between; align-items: flex-end; padding: 32px 16px 0 16px; background: rgba(42, 42, 42, 0.4); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(139, 92, 246, 0.25); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <!-- Tabs Area -->
+                <div style="display: flex; gap: 8px;">
+                    <button class="ms-tab-btn active" id="ms-tab-daily" onclick="msSwitchTab('daily')">
+                        <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect height="4" rx="1" ry="1" width="8" x="8" y="2"></rect></svg>
+                        DIÁRIAS
+                        <div class="ms-tab-indicator"></div>
+                    </button>
+                    <button class="ms-tab-btn" id="ms-tab-weekly" onclick="msSwitchTab('weekly')">
+                        <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><rect height="18" rx="2" ry="2" width="18" x="3" y="4"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
+                        SEMANAIS
+                    </button>
+                    <button class="ms-tab-btn" id="ms-tab-guides" onclick="msSwitchTab('guides')">
+                        <span class="material-symbols-outlined" style="font-size:20px; font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;">list</span>
+                        GUIAS
+                    </button>
+                </div>
+                <!-- Close Action -->
+                <button onclick="closeMissionsOverlay()" style="margin-bottom: 12px; width: 40px; height: 40px; background: rgba(147, 0, 10, 0.2); color: #ffb4ab; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid rgba(255,180,171,0.3); cursor: pointer; transition: background 0.2s; backdrop-filter: blur(8px);" onmouseover="this.style.background='rgba(147,0,10,0.4)'" onmouseout="this.style.background='rgba(147,0,10,0.2)'">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </header>
+
+            <!-- Main Scrollable Content -->
+            <main style="position: relative; z-index: 10; flex: 1; overflow-y: auto; padding: 16px 20px 48px 20px; display: flex; flex-direction: column; gap: 24px;">
+
+                <!-- Persistent Monthly Mission -->
+                <section style="background: rgba(10, 5, 20, 0.6); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.6); position: relative; overflow: hidden;">
+                    <!-- Decorative Glow -->
+                    <div style="position: absolute; top: -50%; right: -20%; width: 256px; height: 256px; background: rgba(160, 120, 255, 0.2); filter: blur(48px); border-radius: 50%; pointer-events: none;"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 10;">
+                        <h2 style="font-family: 'Rajdhani', sans-serif; font-weight: 900; letter-spacing: 1.5px; font-size: 28px; line-height: 1.2; color: white; text-transform: uppercase;">MISSÃO DE MAIO</h2>
+                        <div style="display: flex; align-items: center; gap: 4px; color: white; background: rgba(42, 42, 42, 0.8); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(73, 68, 84, 0.5);">
+                            <svg style="width:16px;height:16px;" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"></circle>
+                                <circle cx="12" cy="12" fill="currentColor" r="1"></circle>
+                                <g style="transform-origin: 12px 12px;">
+                                    <line stroke="currentColor" stroke-linecap="round" stroke-width="2" x1="12" x2="12" y1="12" y2="7"></line>
+                                </g>
+                            </svg>
+                            <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em;">3 DIAS</span>
+                        </div>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div style="position: relative; width: 100%; background: #353534; height: 16px; margin-bottom: 12px; overflow: hidden; border: 1px solid rgba(73, 68, 84, 0.5); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); border-radius: 9999px;">
+                        <!-- Progress Fill -->
+                        <div class="progress-fill" style="position: absolute; top: 0; left: 0; height: 100%; background: #ec4899; box-shadow: 0 0 12px rgba(236, 72, 153, 0.6); width: 65%; border-radius: 9999px; overflow: hidden;">
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transform: translateX(-100%); animation: msShimmer 2s infinite;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 10;">
+                        <p style="font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.6; color: rgba(203, 195, 215, 0.8);">Ganhe 40 pontos de missão</p>
+                        <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: white; background: #201f1f; padding: 2px 8px; border-radius: 4px;">26 / 40</span>
+                    </div>
+                </section>
+
+                <!-- Tab Contents Container -->
+                <div class="ms-content-area">
+
+                    <!-- DAILY MISSIONS (Active by default) -->
+                    <div class="ms-active" id="ms-content-daily" style="gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding-left: 4px;">
+                            <h3 style="font-family: 'Rajdhani', sans-serif; font-weight: 900; letter-spacing: 1.5px; font-size: 24px; line-height: 1.3; color: white; text-transform: uppercase; opacity: 0.9;">MISSÕES DO DIA</h3>
+                            <div style="display: flex; align-items: center; gap: 4px; color: rgba(203, 195, 215, 0.7);">
+                                <svg style="width:16px;height:16px;" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"></circle>
+                                    <circle cx="12" cy="12" fill="currentColor" r="1"></circle>
+                                    <g class="ms-animate-clock" style="transform-origin: 12px 12px;">
+                                        <line stroke="currentColor" stroke-linecap="round" stroke-width="2" x1="12" x2="12" y1="12" y2="7"></line>
+                                    </g>
+                                </svg>
+                                <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em;">9H 15M</span>
+                            </div>
+                        </div>
+
+                        <!-- Daily Mission 1 -->
+                        <article class="ms-hover-lift" style="background: rgba(10, 5, 20, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden; cursor: pointer;">
+                            <div style="flex: 1; position: relative; z-index: 10;">
+                                <h4 class="ms-mission-title">Ganhe 10 XP</h4>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="position: relative; width: 100%; background: #353534; height: 6px; overflow: hidden; border: 1px solid rgba(0,0,0,0.2); border-radius: 9999px;">
+                                        <div class="progress-fill" style="position: absolute; top: 0; left: 0; height: 100%; background: #ec4899; box-shadow: 0 0 8px rgba(236, 72, 153, 0.5); width: 0%; border-radius: 9999px;"></div>
+                                    </div>
+                                    <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: rgba(203, 195, 215, 1); white-space: nowrap; font-variant-numeric: tabular-nums;">0 / 10</span>
+                                </div>
+                            </div>
+                            <div style="width: 64px; height: 64px; position: relative; flex-shrink: 0; z-index: 10;">
+                                <img alt="Wooden Chest" style="width: 100%; height: 100%; object-fit: contain; border: 2px solid #8b5cf6; border-radius: 8px; filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));" src="https://lh3.googleusercontent.com/aida/ADBb0uiupILeCoAq9yrWKx6sVhOsj-f5vrFle_xSuBDM_EX5I3HD2AT2erF5OhS-MNhwfbo8FZ9qY2jH96_BJYlqdralRquP0RbBeXMwynfxskv9i17dIH1dGizu4LiCkueO-_yOysWkxF4zBdI8k8wx6KMp1qU7kR6tqHye-S-rjwdZGulk_2dzLdTNGcpAUMDHeejf-OezDOmrmMU6dZKdJV18GQG-9wGbeWEbltxzjvra8HC5Pl-7Oo3GfFE" />
+                            </div>
+                        </article>
+
+                        <!-- Daily Mission 2 -->
+                        <article class="ms-hover-lift" style="background: rgba(10, 5, 20, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden; cursor: pointer;">
+                            <div style="flex: 1; position: relative; z-index: 10;">
+                                <h4 class="ms-mission-title">Faça 2 lições</h4>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="position: relative; width: 100%; background: #353534; height: 6px; overflow: hidden; border: 1px solid rgba(0,0,0,0.2); border-radius: 9999px;">
+                                        <div class="progress-fill" style="position: absolute; top: 0; left: 0; height: 100%; background: #ec4899; box-shadow: 0 0 8px rgba(236, 72, 153, 0.5); width: 0%; border-radius: 9999px;"></div>
+                                    </div>
+                                    <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: rgba(203, 195, 215, 1); white-space: nowrap; font-variant-numeric: tabular-nums;">0 / 2</span>
+                                </div>
+                            </div>
+                            <div style="width: 64px; height: 64px; position: relative; flex-shrink: 0; z-index: 10;">
+                                <img alt="Silver Chest" style="width: 100%; height: 100%; object-fit: contain; border: 2px solid #8b5cf6; border-radius: 8px; filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));" src="https://lh3.googleusercontent.com/aida/ADBb0uggKdm2zATVGAhsTnRGZOZRwhr1J46mIlb6gUliOn2nmRDkzia1p_NHA-kkRJhJmNHC2sNNUESiTqVO9nuc_189iPzSC3JDvm2PSo2LE1dD0NgFXEbDCTAMRllx0Kr4DEFq8Z1UK8DzdorHHpu-6kw6fjqnVEOQi8FKbyRC3lBLRYnqE5CXzbSOaQItJK8gq-xGaigCkRK-xGUTsCiH0dT_MADovJxvij3nIe0LgFG7Ey5hyAbzczOwXTw" />
+                            </div>
+                        </article>
+
+                        <!-- Daily Mission 3 -->
+                        <article class="ms-hover-lift" style="background: rgba(10, 5, 20, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden; cursor: pointer;">
+                            <div style="flex: 1; position: relative; z-index: 10;">
+                                <h4 class="ms-mission-title">Vença uma partida de xadrez</h4>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="position: relative; width: 100%; background: #353534; height: 6px; overflow: hidden; border: 1px solid rgba(0,0,0,0.2); border-radius: 9999px;">
+                                        <div class="progress-fill" style="position: absolute; top: 0; left: 0; height: 100%; background: #ec4899; box-shadow: 0 0 8px rgba(236, 72, 153, 0.5); width: 0%; border-radius: 9999px;"></div>
+                                    </div>
+                                    <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: rgba(203, 195, 215, 1); white-space: nowrap; font-variant-numeric: tabular-nums;">0 / 1</span>
+                                </div>
+                            </div>
+                            <div style="width: 64px; height: 64px; position: relative; flex-shrink: 0; z-index: 10;">
+                                <img alt="Gold Chest" style="width: 100%; height: 100%; object-fit: contain; border: 2px solid #8b5cf6; border-radius: 8px; filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));" src="https://lh3.googleusercontent.com/aida/ADBb0uiXLnHc-8e6E4-2Mf5zstmSfnMGbOE248AroAlmh8ifaWceJ7fF80I2d8V4VacgF_uix_-zVn8qmskJdcVp39yh-i3cO1bBvqhyPEy9krEVfhvav0K98y64k7g_CXAoKD1GwXkt8Np8l-meMoBsfjKnGxRl5hovXAWIksYZ7YoP7IBotu1EUgXUqwKiQebz_DnXVNK0b2HY5ooOeO4NiUaMRjJzKG8OFHqHr_-K7Bfb82tJh7pkVy-DkLw" />
+                            </div>
+                        </article>
+
+                        <div style="margin-top: 16px; padding-top: 8px; border-top: 1px solid rgba(139, 92, 246, 0.075); text-align: center;">
+                            <p style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.2em; color: rgba(203, 195, 215, 0.5); text-transform: uppercase;">Volte todos os dias para mais missões</p>
+                        </div>
+                    </div>
+
+                    <!-- WEEKLY MISSIONS (Hidden by default) -->
+                    <div id="ms-content-weekly" style="gap: 12px;">
+                        <h3 style="font-family: 'Rajdhani', sans-serif; font-weight: 900; letter-spacing: 1.5px; font-size: 24px; line-height: 1.3; color: white; text-transform: uppercase; opacity: 0.9; padding-left: 4px;">MISSÕES DA SEMANA</h3>
+
+                        <!-- Weekly Mission 1 -->
+                        <article class="ms-hover-lift" style="background: rgba(10, 5, 20, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden; cursor: pointer;">
+                            <div style="flex: 1; position: relative; z-index: 10;">
+                                <h4 class="ms-mission-title">Complete 5 treinos</h4>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="position: relative; width: 100%; background: #353534; height: 6px; overflow: hidden; border: 1px solid rgba(0,0,0,0.2); border-radius: 9999px;">
+                                        <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, #00b954, #4ae176); box-shadow: 0 0 8px rgba(74, 225, 118, 0.5); width: 0%; border-radius: 9999px;"></div>
+                                    </div>
+                                    <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: rgba(203, 195, 215, 1); white-space: nowrap; font-variant-numeric: tabular-nums;">0 / 5</span>
+                                </div>
+                            </div>
+                            <div style="width: 64px; height: 64px; position: relative; flex-shrink: 0; z-index: 10;">
+                                <img alt="Giant Chest" style="width: 100%; height: 100%; object-fit: contain; border: 2px solid #8b5cf6; border-radius: 8px; filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));" src="https://lh3.googleusercontent.com/aida/ADBb0uiupILeCoAq9yrWKx6sVhOsj-f5vrFle_xSuBDM_EX5I3HD2AT2erF5OhS-MNhwfbo8FZ9qY2jH96_BJYlqdralRquP0RbBeXMwynfxskv9i17dIH1dGizu4LiCkueO-_yOysWkxF4zBdI8k8wx6KMp1qU7kR6tqHye-S-rjwdZGulk_2dzLdTNGcpAUMDHeejf-OezDOmrmMU6dZKdJV18GQG-9wGbeWEbltxzjvra8HC5Pl-7Oo3GfFE" />
+                            </div>
+                        </article>
+
+                        <!-- Weekly Mission 2 -->
+                        <article class="ms-hover-lift" style="background: rgba(10, 5, 20, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden; cursor: pointer;">
+                            <div style="flex: 1; position: relative; z-index: 10;">
+                                <h4 class="ms-mission-title">Ganhe 50 pontos de maestria</h4>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="position: relative; width: 100%; background: #353534; height: 6px; overflow: hidden; border: 1px solid rgba(0,0,0,0.2); border-radius: 9999px;">
+                                        <div class="progress-fill" style="position: absolute; top: 0; left: 0; height: 100%; background: #ec4899; box-shadow: 0 0 8px rgba(236, 72, 153, 0.5); width: 0%; border-radius: 9999px;"></div>
+                                    </div>
+                                    <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: rgba(203, 195, 215, 1); white-space: nowrap; font-variant-numeric: tabular-nums;">0 / 50</span>
+                                </div>
+                            </div>
+                            <div style="width: 64px; height: 64px; position: relative; flex-shrink: 0; z-index: 10;">
+                                <img alt="Magical Chest" style="width: 100%; height: 100%; object-fit: contain; border: 2px solid #8b5cf6; border-radius: 8px; filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));" src="https://lh3.googleusercontent.com/aida/ADBb0uggKdm2zATVGAhsTnRGZOZRwhr1J46mIlb6gUliOn2nmRDkzia1p_NHA-kkRJhJmNHC2sNNUESiTqVO9nuc_189iPzSC3JDvm2PSo2LE1dD0NgFXEbDCTAMRllx0Kr4DEFq8Z1UK8DzdorHHpu-6kw6fjqnVEOQi8FKbyRC3lBLRYnqE5CXzbSOaQItJK8gq-xGaigCkRK-xGUTsCiH0dT_MADovJxvij3nIe0LgFG7Ey5hyAbzczOwXTw" />
+                            </div>
+                        </article>
+
+                        <!-- Weekly Mission 3 -->
+                        <article class="ms-hover-lift" style="background: rgba(10, 5, 20, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden; cursor: pointer;">
+                            <div style="flex: 1; position: relative; z-index: 10;">
+                                <h4 class="ms-mission-title">Participe de 1 torneio</h4>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="position: relative; width: 100%; background: #353534; height: 6px; overflow: hidden; border: 1px solid rgba(0,0,0,0.2); border-radius: 9999px;">
+                                        <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, #ca801e, #ffb869); width: 0%; border-radius: 9999px;"></div>
+                                    </div>
+                                    <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: rgba(203, 195, 215, 1); white-space: nowrap; font-variant-numeric: tabular-nums;">0 / 1</span>
+                                </div>
+                            </div>
+                            <div style="width: 64px; height: 64px; position: relative; flex-shrink: 0; z-index: 10;">
+                                <img alt="Legendary Chest" style="width: 100%; height: 100%; object-fit: contain; border: 2px solid #8b5cf6; border-radius: 8px; filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));" src="https://lh3.googleusercontent.com/aida/ADBb0uiXLnHc-8e6E4-2Mf5zstmSfnMGbOE248AroAlmh8ifaWceJ7fF80I2d8V4VacgF_uix_-zVn8qmskJdcVp39yh-i3cO1bBvqhyPEy9krEVfhvav0K98y64k7g_CXAoKD1GwXkt8Np8l-meMoBsfjKnGxRl5hovXAWIksYZ7YoP7IBotu1EUgXUqwKiQebz_DnXVNK0b2HY5ooOeO4NiUaMRjJzKG8OFHqHr_-K7Bfb82tJh7pkVy-DkLw" />
+                            </div>
+                        </article>
+
+                        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(139, 92, 246, 0.075); display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                            <p style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: rgba(203, 195, 215, 0.6); text-align: center; text-transform: uppercase;">Conclua todas as missões semanais para ganhar um bônus</p>
+                            <div style="display: flex; align-items: center; gap: 12px; width: 100%; max-width: 200px;">
+                                <div style="position: relative; width: 100%; background: #353534; height: 6px; overflow: hidden; border: 1px solid rgba(0,0,0,0.2); border-radius: 9999px;">
+                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: #4ae176; box-shadow: 0 0 8px rgba(74, 225, 118, 0.4); width: 0%; border-radius: 9999px;"></div>
+                                </div>
+                                <span style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 10px; color: rgba(203, 195, 215, 0.7); letter-spacing: -0.05em;">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GUIDES (Hidden by default) -->
+                    <div id="ms-content-guides" style="align-items: center; justify-content: center; padding-top: 32px; padding-bottom: 16px;">
+                        <article style="background: rgba(10, 5, 20, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.6); animation: msFloat 4s ease-in-out infinite; width: 100%; text-align: center;">
+                            <div style="position: relative;">
+                                <div style="position: absolute; inset: 0; background: rgba(208, 188, 255, 0.2); filter: blur(32px); border-radius: 50%;"></div>
+                                <span class="material-symbols-outlined" style="font-size: 60px; color: #d0bcff; filter: drop-shadow(0 0 15px rgba(208, 188, 255, 0.6)); position: relative; z-index: 10; font-variation-settings: 'FILL' 1;">menu_book</span>
+                            </div>
+                            <h3 style="font-family: 'Rajdhani', sans-serif; font-weight: 900; letter-spacing: 1.5px; font-size: 24px; line-height: 1.3; color: white; text-transform: uppercase;">GUIAS CHEGANDO EM BREVE</h3>
+                        </article>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // ===== MISSIONS OVERLAY FUNCTIONS =====
+        function openMissionsOverlay() {
+            var overlay = document.getElementById('missions-overlay');
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            // Reset to daily tab
+            msSwitchTab('daily');
+        }
+
+        function closeMissionsOverlay() {
+            var overlay = document.getElementById('missions-overlay');
+            overlay.style.display = 'none';
+            document.body.style.overflow = '';
+            // Navigate back to dashboard using the app's built-in transition
+            if (window._transitionTo) {
+                window._transitionTo('dashboard');
+            }
+        }
+
+        function msSwitchTab(tabId) {
+            var overlay = document.getElementById('missions-overlay');
+            // Tab Buttons
+            var dailyBtn = overlay.querySelector('#ms-tab-daily');
+            var weeklyBtn = overlay.querySelector('#ms-tab-weekly');
+            var guidesBtn = overlay.querySelector('#ms-tab-guides');
+
+            // Tab Contents
+            var dailyContent = overlay.querySelector('#ms-content-daily');
+            var weeklyContent = overlay.querySelector('#ms-content-weekly');
+            var guidesContent = overlay.querySelector('#ms-content-guides');
+
+            // Reset all tabs
+            [dailyBtn, weeklyBtn, guidesBtn].forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+
+            // Hide all contents
+            [dailyContent, weeklyContent, guidesContent].forEach(function(content) {
+                content.classList.remove('ms-active');
+            });
+
+            // Set active tab
+            var activeBtn, activeContent;
+            if (tabId === 'daily') {
+                activeBtn = dailyBtn;
+                activeContent = dailyContent;
+            } else if (tabId === 'weekly') {
+                activeBtn = weeklyBtn;
+                activeContent = weeklyContent;
+            } else {
+                activeBtn = guidesBtn;
+                activeContent = guidesContent;
+            }
+
+            activeBtn.classList.add('active');
+            activeContent.classList.add('ms-active');
+        }
+    </script>
+
+    <!-- Cronômetro Flutuante -->
+    <div class="rest-timer" id="restTimer" style="display: none;">
+        <button class="rt-close" id="rtClose" aria-label="Fechar Cronômetro">✕</button>
+        <div class="rt-visuals" id="rtVisuals">
+            <!-- Preenchido via JS -->
+        </div>
+        <div class="rt-time" id="rtTime">01:00</div>
+    </div>
+
+    <!-- Toast de notificação -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="componentes/thememanager.js"></script>
+    <script src="componentes/theme-integration.js"></script>
+    <script src="componentes/footer.js"></script>
+    <script src="componentes/scroll-animations.js"></script>
+
+    <!-- Scripts Modulares (ES Modules) -->
+    <script type="module" src="JS/treino/app.js?v=2.1"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado com sucesso!'))
+                    .catch(err => console.error('Erro ao registrar Service Worker:', err));
+            });
+        }
+    </script>
+
+</body>
+
+</html>

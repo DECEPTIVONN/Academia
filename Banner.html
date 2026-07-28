@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>BANNERS DE PERFIL ANIMADOS</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&amp;family=Rajdhani:wght@600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#ffb869",
+                        "surface-container-high": "#2a2a2a",
+                        "secondary": "#4ae176",
+                        "on-tertiary-fixed": "#2c1700",
+                        "background": "#131313",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#3c0091",
+                        "on-tertiary-container": "#3f2300",
+                        "on-tertiary": "#482900",
+                        "deep-void": "#0a0514",
+                        "surface": "#131313",
+                        "secondary-fixed-dim": "#4ae176",
+                        "surface-container-low": "#1c1b1b",
+                        "accent-pink": "#f5a6d3",
+                        "inverse-surface": "#e5e2e1",
+                        "error-container": "#93000a",
+                        "on-primary-container": "#340080",
+                        "on-error": "#690005",
+                        "surface-container-highest": "#353534",
+                        "surface-dim": "#131313",
+                        "primary-fixed": "#e9ddff",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "on-surface-variant": "#cbc3d7",
+                        "inverse-on-surface": "#313030",
+                        "error": "#ffb4ab",
+                        "neon-purple-glow": "#c084fc",
+                        "outline": "#958ea0",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-fixed": "#23005c",
+                        "primary-container": "#a078ff",
+                        "tertiary-container": "#ca801e",
+                        "surface-container": "#201f1f",
+                        "on-primary-fixed-variant": "#5516be",
+                        "surface-variant": "#353534",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "outline-variant": "#494454",
+                        "primary-fixed-dim": "#d0bcff",
+                        "on-secondary-container": "#004119",
+                        "surface-tint": "#d0bcff",
+                        "secondary-fixed": "#6bff8f",
+                        "on-background": "#e5e2e1",
+                        "on-secondary-fixed-variant": "#005321",
+                        "secondary-container": "#00b954",
+                        "surface-bright": "#393939",
+                        "inverse-primary": "#6d3bd7",
+                        "card-bg": "rgba(10, 5, 20, 0.6)",
+                        "gym-green-glow": "rgba(34, 197, 94, 0.3)",
+                        "elixir-dark": "#6d28d9",
+                        "on-secondary-fixed": "#002109",
+                        "on-secondary": "#003915",
+                        "tertiary-fixed": "#ffdcbb",
+                        "on-surface": "#e5e2e1",
+                        "primary": "#d0bcff",
+                        "card-border": "rgba(139, 92, 246, 0.25)"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "16px",
+                        "card-gap": "12px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Rajdhani", "sans-serif"],
+                        "headline-lg": ["Rajdhani", "sans-serif"],
+                        "card-level": ["Rajdhani", "sans-serif"],
+                        "body-md": ["Outfit", "sans-serif"],
+                        "headline-xl": ["Rajdhani", "sans-serif"],
+                        "headline-md": ["Rajdhani", "sans-serif"],
+                        "headline-lg-mobile": ["Rajdhani", "sans-serif"],
+                        "body-lg": ["Outfit", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0514;
+            color: #e5e2e1;
+        }
+
+        /* Shared Properties */
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @property --glow-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        /* Keyframes */
+        @keyframes rotateAngle {
+            to {
+                --angle: 360deg;
+            }
+        }
+
+        @keyframes rotateGlowAngle {
+            to {
+                --glow-angle: 360deg;
+            }
+        }
+
+        @keyframes matrixScan {
+            0% {
+                transform: translateY(-100%);
+            }
+
+            100% {
+                transform: translateY(100%);
+            }
+        }
+
+        @keyframes frostSpread {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes goldFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes spiral {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes hazardPulse {
+            0% {
+                opacity: 0.1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 0.1;
+            }
+        }
+
+        /* New High-Fidelity Keyframes */
+        @keyframes lightningPulse {
+
+            0%,
+            100% {
+                opacity: 0.8;
+                filter: drop-shadow(0 0 10px #0ff);
+            }
+
+            50% {
+                opacity: 1;
+                filter: drop-shadow(0 0 20px #0ff);
+                transform: scaleY(1.02);
+            }
+
+            70%,
+            75% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes solarEruption {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.2) rotate(10deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1) rotate(-5deg);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes singularitySpin {
+            from {
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(180deg) scale(1.1);
+            }
+
+            to {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        @keyframes eventHorizon {
+
+            0%,
+            100% {
+                box-shadow: inset 0 0 50px #000, 0 0 30px #6d28d9, 0 0 80px #c084fc;
+            }
+
+            50% {
+                box-shadow: inset 0 0 80px #000, 0 0 50px #6d28d9, 0 0 120px #c084fc;
+            }
+        }
+
+        @keyframes toxicFumes {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: translate(-20px, -10px) scale(1.2);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translate(10px, -20px) scale(1);
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes pulseSymbol {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+
+        @keyframes vampiricHeartbeat {
+
+            0%,
+            100% {
+                background-color: #1a0505;
+            }
+
+            15% {
+                background-color: #3f0000;
+                box-shadow: inset 0 0 100px #7f0000;
+            }
+
+            30% {
+                background-color: #1a0505;
+            }
+
+            45% {
+                background-color: #4a0000;
+                box-shadow: inset 0 0 120px #990000;
+            }
+        }
+
+        @keyframes warpSpeed {
+            0% {
+                transform: scale(1);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        @keyframes rotateCosmic {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Thematic Additions */
+        @keyframes abyssalEye {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes tentacleWrithe {
+
+            0%,
+            100% {
+                transform: rotate(-5deg) translateY(0);
+            }
+
+            50% {
+                transform: rotate(5deg) translateY(-10px);
+            }
+        }
+
+        @keyframes viralPulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes dnaScroll {
+            to {
+                background-position: 100px 100px, 0 0;
+            }
+        }
+
+        /* New 5 Animations */
+        @keyframes lavaFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes risingEmbers {
+            0% {
+                transform: translateY(100%) scale(1);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateY(0%) scale(1.5);
+            }
+
+            100% {
+                transform: translateY(-100%) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes heatDistort {
+
+            0%,
+            100% {
+                filter: contrast(1.2);
+            }
+
+            50% {
+                filter: contrast(1.5) saturate(1.2);
+            }
+        }
+
+        @keyframes glitchTear {
+
+            0%,
+            100% {
+                clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+                transform: translate(0);
+            }
+
+            10% {
+                clip-path: polygon(0 15%, 100% 15%, 100% 30%, 0 30%);
+                transform: translate(-2px, 2px);
+            }
+
+            20% {
+                clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+                transform: translate(2px, -2px);
+            }
+
+            30% {
+                clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+                transform: translate(0);
+            }
+        }
+
+        @keyframes cyberPulseLines {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 0 100%;
+            }
+        }
+
+        @keyframes lightningStrike {
+
+            0%,
+            90%,
+            94%,
+            98%,
+            100% {
+                opacity: 0;
+            }
+
+            92%,
+            96% {
+                opacity: 1;
+                background: #fff;
+                filter: drop-shadow(0 0 20px #bfdbfe);
+            }
+        }
+
+        @keyframes stormClouds {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes singularityPull {
+            0% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            50% {
+                transform: scale(1.2) rotate(180deg);
+            }
+
+            100% {
+                transform: scale(1) rotate(360deg);
+            }
+        }
+
+        @keyframes particleSuck {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0) translate(50%, 50%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes dragonBlink {
+
+            0%,
+            95%,
+            100% {
+                transform: scaleY(1);
+                opacity: 0.8;
+            }
+
+            97% {
+                transform: scaleY(0.1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toxicMist {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: -200px 50px;
+            }
+        }
+
+        /* Master Tier Animations */
+        @keyframes blueFire {
+            0% {
+                background-position: 0% 100%;
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                background-position: 0% 0%;
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes smokeDrift {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translateY(-50px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes neonSlash {
+            0% {
+                transform: translateX(-150%) skewX(-45deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            30% {
+                transform: translateX(150%) skewX(-45deg);
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes staticGlitch {
+            0% {
+                opacity: 0.1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 0.1;
+            }
+        }
+
+        @keyframes pulseFluid {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes solarCorona {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.1) rotate(180deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes scanLine {
+            0% {
+                top: 0%;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+
+        @keyframes creepingFrost {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes ashFall {
+            0% {
+                transform: translateY(-10px) translateX(0);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translateY(100px) translateX(20px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes tunnelWarp {
+            0% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            100% {
+                transform: scale(2) rotate(360deg);
+            }
+        }
+
+        @keyframes runeGlow {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                text-shadow: 0 0 5px #f59e0b;
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 20px #f59e0b, 0 0 40px #f59e0b;
+            }
+        }
+
+
+        .arena-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 50%, rgba(10, 5, 20, 0.8) 0%, #0a0514 100%);
+            pointer-events: none;
+        }
+
+        .banner-base {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Themes --- */
+        /* 1. Roxo Neon */
+        .theme-roxo-neon {
+            background: linear-gradient(135deg, #2e1065 0%, #4c1d95 50%, #1e1b4b 100%);
+        }
+
+        .theme-roxo-neon::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(192, 132, 252, 0.2), transparent 50%);
+        }
+
+        /* 2. Plasma Cônicos */
+        .theme-plasma-conico {
+            background: conic-gradient(from var(--angle), #8b5cf6, #ec4899, #ef4444, #f59e0b, #22c55e, #06b6d4, #8b5cf6);
+            animation: rotateAngle 8s linear infinite;
+        }
+
+        /* 3. Lava Vulcão */
+        .theme-lava-vulcao {
+            background: #450a0a;
+        }
+
+        .theme-lava-vulcao::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, #b91c1c, transparent);
+            animation: hazardPulse 3s ease-in-out infinite;
+        }
+
+        /* 4. Matrix Grid */
+        .theme-matrix-grid {
+            background: #000a00;
+            background-image: linear-gradient(rgba(16, 185, 129, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .theme-matrix-grid::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(16, 185, 129, 0.3), transparent);
+            animation: matrixScan 4s linear infinite;
+        }
+
+        /* 5. Nebulosa */
+        .theme-nebulosa {
+            background: radial-gradient(circle at center, #1e1b4b, #000000);
+        }
+
+        .theme-nebulosa::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: radial-gradient(ellipse at center, rgba(192, 132, 252, 0.15), rgba(236, 72, 153, 0.1), transparent 70%);
+            animation: spiral 20s linear infinite;
+        }
+
+        /* 6. Titan Core (Reverted to original) */
+        .theme-titan-core {
+            background: #1c1917;
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='%23292524'/%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23444' stroke-width='1'/%3E%3C/svg%3E");
+        }
+
+        .theme-titan-core::after {
+            content: 'settings';
+            font-family: 'Material Symbols Outlined';
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            font-size: 120px;
+            color: rgba(255, 255, 255, 0.05);
+            animation: rotateAngle 15s linear infinite;
+        }
+
+        /* 7. Stealth Ops (Preserved) */
+        .theme-stealth-ops {
+            background: #0a0a0a;
+            background-image: radial-gradient(#14532d 0.5px, transparent 0.5px);
+            background-size: 15px 15px;
+        }
+
+        .theme-stealth-ops::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 20%;
+            width: 300%;
+            height: 300%;
+            transform: translate(-50%, -50%);
+            background: conic-gradient(from var(--angle), rgba(34, 197, 94, 0.3) 0deg, transparent 60deg);
+            animation: rotateAngle 4s linear infinite;
+        }
+
+        /* 8. Glacial (Preserved) */
+        .theme-glacial {
+            background: linear-gradient(135deg, #0c4a6e, #0ea5e9, #bae6fd);
+        }
+
+        .theme-glacial::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E");
+            opacity: 0.3;
+            mix-blend-mode: overlay;
+            animation: frostSpread 5s ease-in-out infinite;
+        }
+
+        /* 9. Cyber Pulse (Redesign High-Fidelity) */
+        .theme-cyber-pulse {
+            background: #000913;
+            position: relative;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .theme-cyber-pulse::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px) 0 0 / 20px 20px, linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px) 0 0 / 20px 20px;
+            z-index: 0;
+        }
+
+        .theme-cyber-pulse::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 30%;
+            width: 2px;
+            background: #0ff;
+            box-shadow: 0 0 15px 2px #0ff;
+            animation: lightningPulse 2s infinite;
+            z-index: 1;
+        }
+
+        /* 10. Gold Rush (Preserved) */
+        .theme-gold-rush {
+            background: linear-gradient(90deg, #451a03, #ca8a04, #fef08a, #ca8a04, #451a03);
+            background-size: 200% 100%;
+            animation: goldFlow 6s linear infinite;
+        }
+
+        /* 11. Solar Flare (Redesign High-Fidelity) */
+        .theme-solar-flare {
+            background: radial-gradient(circle at 80% 120%, #ff0000 0%, #ff6600 30%, #330000 80%, #000 100%);
+        }
+
+        .theme-solar-flare::before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            top: 50%;
+            left: 50%;
+            margin-top: -75%;
+            margin-left: -75%;
+            background: radial-gradient(circle, rgba(255, 200, 0, 0.4) 0%, transparent 60%);
+            animation: solarEruption 4s ease-in-out infinite;
+            mix-blend-mode: screen;
+        }
+
+        /* 12. Deep Void (Abyssal Watcher) */
+        .theme-deep-void {
+            background: #0a0014;
+            overflow: hidden;
+        }
+
+        .theme-deep-void::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 75% 40%, #fff 0px, transparent 8px), radial-gradient(circle at 75% 40%, #c084fc 0px, transparent 35px), radial-gradient(circle at 25% 60%, #fff 0px, transparent 6px), radial-gradient(circle at 25% 60%, #6d28d9 0px, transparent 25px);
+            background-size: 200px 200px;
+            animation: abyssalEye 5s ease-in-out infinite alternate;
+            opacity: 0.7;
+            mix-blend-mode: screen;
+            z-index: 0;
+        }
+
+        .theme-deep-void::after {
+            content: '';
+            position: absolute;
+            inset: -30%;
+            background: repeating-linear-gradient(60deg, transparent, transparent 30px, rgba(109, 40, 217, 0.15) 30px, rgba(109, 40, 217, 0.15) 60px);
+            filter: blur(8px);
+            animation: tentacleWrithe 8s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 13. Biohazard (Viral Infection) */
+        .theme-biohazard {
+            background: #1a1a1c;
+            overflow: hidden;
+        }
+
+        .theme-biohazard::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(30deg, transparent 40%, rgba(220, 38, 38, 0.15) 45%, rgba(220, 38, 38, 0.3) 50%, rgba(220, 38, 38, 0.15) 55%, transparent 60%), linear-gradient(-30deg, transparent 40%, rgba(220, 38, 38, 0.15) 45%, rgba(220, 38, 38, 0.3) 50%, rgba(220, 38, 38, 0.15) 55%, transparent 60%);
+            background-size: 80px 140px;
+            animation: viralPulse 3.5s ease-in-out infinite;
+            mix-blend-mode: color-dodge;
+            z-index: 0;
+        }
+
+        .theme-biohazard::after {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(239, 68, 68, 0.1) 20px, rgba(239, 68, 68, 0.1) 22px), repeating-linear-gradient(-45deg, transparent, transparent 30px, rgba(255, 100, 100, 0.08) 30px, rgba(255, 100, 100, 0.08) 32px);
+            animation: dnaScroll 12s linear infinite;
+            z-index: 0;
+        }
+
+        /* 14. Bloodline (Redesign High-Fidelity) */
+        .theme-bloodline {
+            background: #1a0505;
+            animation: vampiricHeartbeat 2.5s infinite;
+        }
+
+        .theme-bloodline::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.8) 100%);
+            z-index: 1;
+        }
+
+        /* 15. Starlight (Redesign High-Fidelity) */
+        .theme-starlight {
+            background: #010008;
+        }
+
+        .theme-starlight::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: radial-gradient(circle at 40% 60%, rgba(56, 189, 248, 0.2), transparent 50%), radial-gradient(circle at 80% 30%, rgba(192, 132, 252, 0.15), transparent 40%);
+            z-index: 0;
+        }
+
+        .theme-starlight::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(1px 1px at 10% 20%, #fff, transparent), radial-gradient(1px 1px at 30% 60%, #fff, transparent), radial-gradient(2px 2px at 70% 30%, #fff, transparent), radial-gradient(1px 1px at 90% 80%, #fff, transparent);
+            background-size: 100px 100px;
+            animation: warpSpeed 3s linear infinite;
+            z-index: 1;
+        }
+
+        /* --- 5 New Themes --- */
+        /* 16. Inferno Engine */
+        .theme-inferno-engine {
+            background: linear-gradient(45deg, #7f1d1d, #b91c1c, #dc2626, #ea580c);
+            background-size: 300% 300%;
+            animation: lavaFlow 8s ease infinite, heatDistort 3s infinite alternate;
+        }
+
+        .theme-inferno-engine::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 100%, rgba(253, 224, 71, 0.6) 1px, transparent 2px), radial-gradient(circle at 30% 100%, rgba(251, 146, 60, 0.6) 2px, transparent 3px), radial-gradient(circle at 70% 100%, rgba(254, 240, 138, 0.6) 1.5px, transparent 2.5px);
+            background-size: 50px 100px;
+            animation: risingEmbers 4s linear infinite;
+            mix-blend-mode: screen;
+        }
+
+        /* 17. Quantum Weaver */
+        .theme-quantum-weaver {
+            background: #083344;
+            position: relative;
+            animation: glitchTear 5s infinite;
+        }
+
+        .theme-quantum-weaver::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(6, 182, 212, 0.2) 10px, rgba(6, 182, 212, 0.2) 12px);
+            animation: cyberPulseLines 2s linear infinite;
+        }
+
+        .theme-quantum-weaver::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            box-shadow: inset 0 0 40px rgba(6, 182, 212, 0.5);
+        }
+
+        /* 18. Stormbringer */
+        .theme-stormbringer {
+            background: linear-gradient(135deg, #0f172a, #1e293b, #0f172a);
+            background-size: 200% 200%;
+            animation: stormClouds 10s ease-in-out infinite alternate;
+            position: relative;
+        }
+
+        .theme-stormbringer::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(255, 255, 255, 0.8) 0%, transparent 40%);
+            opacity: 0;
+            animation: lightningStrike 6s infinite;
+            mix-blend-mode: overlay;
+            z-index: 1;
+        }
+
+        /* 19. Void Reaver */
+        .theme-void-reaver {
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-void-reaver::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            height: 200px;
+            margin-top: -100px;
+            margin-left: -100px;
+            background: radial-gradient(circle, #000 20%, #4c1d95 60%, transparent 100%);
+            box-shadow: 0 0 50px #8b5cf6;
+            border-radius: 50%;
+            animation: singularityPull 4s linear infinite;
+            z-index: 0;
+        }
+
+        .theme-void-reaver::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(2px 2px at 20% 20%, #d8b4fe, transparent), radial-gradient(2px 2px at 80% 80%, #d8b4fe, transparent), radial-gradient(1px 1px at 30% 70%, #d8b4fe, transparent), radial-gradient(3px 3px at 70% 30%, #d8b4fe, transparent);
+            background-size: 100px 100px;
+            animation: particleSuck 3s ease-in infinite;
+            z-index: 0;
+        }
+
+        /* 20. Emerald Dragon */
+        .theme-emerald-dragon {
+            background: linear-gradient(135deg, #064e3b, #047857, #064e3b);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-emerald-dragon::before {
+            content: '';
+            position: absolute;
+            top: 30%;
+            right: 15%;
+            width: 24px;
+            height: 12px;
+            border-radius: 50%;
+            background: #a3e635;
+            box-shadow: 0 0 20px #bef264, -80px 0 0 #a3e635, -80px 0 20px #bef264;
+            animation: dragonBlink 6s infinite;
+            filter: blur(1px);
+        }
+
+        .theme-emerald-dragon::after {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: repeating-linear-gradient(45deg, rgba(167, 243, 208, 0.1), transparent 20px);
+            animation: toxicMist 10s linear infinite;
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+        /* --- Master Tier (10 New) --- */
+        /* 21. Dragon Breath */
+        .theme-dragon-breath {
+            background: linear-gradient(to top, #020617, #1e3a8a, #3b82f6);
+            background-size: 100% 200%;
+            animation: blueFire 5s infinite linear;
+            position: relative;
+        }
+
+        .theme-dragon-breath::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.4) 2px, transparent 4px);
+            background-size: 50px 50px;
+            animation: smokeDrift 4s infinite linear;
+            filter: blur(2px);
+            mix-blend-mode: screen;
+        }
+
+        /* 22. Neon Samurai */
+        .theme-neon-samurai {
+            background: #09090b;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-neon-samurai::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 300%;
+            height: 4px;
+            background: #ec4899;
+            box-shadow: 0 0 20px 5px #ec4899;
+            transform-origin: left center;
+            animation: neonSlash 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+        }
+
+        /* 23. Ghost Protocol */
+        .theme-ghost-protocol {
+            background: linear-gradient(135deg, #18181b, #27272a);
+            position: relative;
+        }
+
+        .theme-ghost-protocol::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            backdrop-filter: blur(5px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.05) 2px, rgba(255, 255, 255, 0.05) 4px);
+            animation: staticGlitch 0.2s infinite;
+        }
+
+        /* 24. Bloodline Pulse */
+        .theme-bloodline-pulse {
+            background: repeating-linear-gradient(45deg, #27272a, #27272a 10px, #18181b 10px, #18181b 20px);
+            position: relative;
+        }
+
+        .theme-bloodline-pulse::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.6), transparent);
+            animation: pulseFluid 2s infinite alternate ease-in-out;
+            mix-blend-mode: color-burn;
+        }
+
+        /* 25. Solar Eclipse */
+        .theme-solar-eclipse {
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-solar-eclipse::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 150px;
+            height: 150px;
+            margin-top: -75px;
+            margin-left: -75px;
+            background: #000;
+            border-radius: 50%;
+            box-shadow: 0 0 50px 20px #f59e0b, 0 0 100px 40px #ef4444;
+            z-index: 0;
+        }
+
+        .theme-solar-eclipse::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            height: 200px;
+            margin-top: -100px;
+            margin-left: -100px;
+            background: conic-gradient(from 0deg, transparent, rgba(253, 224, 71, 0.8), transparent);
+            animation: solarCorona 8s infinite linear;
+            mix-blend-mode: screen;
+            z-index: 1;
+        }
+
+        /* 26. Cyber Iris */
+        .theme-cyber-iris {
+            background: #020617;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #10b981;
+        }
+
+        .theme-cyber-iris::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            margin-top: -50px;
+            margin-left: -50px;
+            border: 2px solid #34d399;
+            border-radius: 50%;
+            background: radial-gradient(circle, #059669 20%, transparent 60%);
+            box-shadow: 0 0 20px #10b981;
+            animation: singularitySpin 10s infinite linear;
+            z-index: 0;
+        }
+
+        .theme-cyber-iris::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #6ee7b7;
+            box-shadow: 0 0 10px #6ee7b7;
+            animation: scanLine 3s infinite linear;
+            z-index: 1;
+        }
+
+        /* 27. Frozen Throne */
+        .theme-frozen-throne {
+            background: linear-gradient(to bottom, #0c4a6e, #e0f2fe);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-frozen-throne::before {
+            content: '';
+            position: absolute;
+            inset: -20%;
+            background-image: radial-gradient(ellipse at bottom, rgba(255, 255, 255, 0.8), transparent 70%);
+            filter: blur(5px);
+            animation: creepingFrost 6s infinite alternate ease-in-out;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 28. Nuclear Winter */
+        .theme-nuclear-winter {
+            background: #064e3b;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-nuclear-winter::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
+            animation: hazardPulse 4s infinite;
+        }
+
+        .theme-nuclear-winter::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(1px 1px at 50% 50%, #fff, transparent);
+            background-size: 20px 20px;
+            animation: ashFall 3s infinite linear;
+            opacity: 0.5;
+        }
+
+        /* 29. Dimension Warp */
+        .theme-dimension-warp {
+            background: #1e1b4b;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-dimension-warp::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-radial-gradient(circle, transparent, transparent 20px, rgba(139, 92, 246, 0.3) 20px, rgba(139, 92, 246, 0.3) 40px);
+            animation: tunnelWarp 15s infinite linear;
+            z-index: 0;
+        }
+
+        /* 30. Ancient Rune */
+        .theme-ancient-rune {
+            background: #1c1917;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-ancient-rune::before {
+            content: 'ᛟ ᚲ ᚫ ᚢ ᚱ';
+            font-family: monospace;
+            font-size: 64px;
+            color: #f59e0b;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            animation: runeGlow 4s infinite alternate;
+            opacity: 0.5;
+        }
+
+
+        /* UI Elements */
+        .glass-panel {
+            background: rgba(20, 20, 25, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+        }
+
+        .variant-btn {
+            background: rgba(10, 5, 20, 0.8);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .variant-btn:hover,
+        .variant-btn.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: #c084fc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .tab-btn {
+            color: #cbc3d7;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: #c084fc;
+            border-bottom-color: #c084fc;
+            background: rgba(139, 92, 246, 0.1);
+        }
+    </style>
+</head>
+
+<body class="font-body-md antialiased min-h-screen flex flex-col">
+    <div class="arena-bg"></div>
+    <!-- Top Navigation (Suppressed per logic, keeping focused layout) -->
+    <main class="flex-grow container mx-auto px-margin-mobile md:px-margin-desktop py-8 max-w-5xl flex flex-col">
+        <!-- Header -->
+        <header class="mb-8">
+            <p class="font-label-caps text-[14px] text-primary tracking-[0.1em] uppercase font-bold mb-2">COMPONENTS
+                PLAYGROUND</p>
+            <h1
+                class="font-headline-xl text-[48px] md:text-[64px] font-bold text-on-surface leading-tight tracking-tight uppercase mb-4">
+                BANNERS DE PERFIL ANIMADOS</h1>
+            <p class="text-on-surface-variant max-w-2xl text-body-md">Selecione variantes para testar os banners
+                baseados nas conquistas CoD-Style.</p>
+        </header>
+        <!-- Playground Area -->
+        <div class="glass-panel rounded-xl flex-grow flex flex-col">
+            <!-- Tabs -->
+            <div class="flex border-b border-card-border px-6 pt-4">
+                <button
+                    class="tab-btn active px-6 py-3 font-label-caps text-[14px] uppercase tracking-widest font-bold rounded-t-md">PREVIEW</button>
+                <button
+                    class="tab-btn px-6 py-3 font-label-caps text-[14px] uppercase tracking-widest font-bold rounded-t-md">HTML/CSS</button>
+            </div>
+            <!-- Preview Container -->
+            <div class="flex-grow flex flex-col items-center justify-center p-8 md:p-16 relative">
+                <!-- Main Preview Card -->
+                <div class="banner-base theme-roxo-neon w-full max-w-3xl h-[240px] md:h-[280px] rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.6)] flex items-end p-6 md:p-8 mb-12"
+                    id="previewCard">
+                    <div class="relative z-10 flex items-center gap-6 w-full">
+                        <!-- Avatar Placeholder -->
+                        <div
+                            class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/20 border-2 border-primary/50 backdrop-blur-sm shadow-[0_0_15px_rgba(208,188,255,0.4)] flex-shrink-0">
+                        </div>
+                        <!-- User Info -->
+                        <div class="flex flex-col drop-shadow-md">
+                            <h2
+                                class="font-headline-lg text-[28px] md:text-[32px] font-bold text-white uppercase tracking-wide leading-none mb-1">
+                                ATLETA ELITE</h2>
+                            <p
+                                class="font-label-caps text-[14px] text-primary-fixed uppercase tracking-widest font-bold">
+                                SARGENTO DE FERRO</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Variant Selectors -->
+                <div
+                    class="flex flex-wrap justify-center gap-4 w-full max-w-4xl max-h-[400px] overflow-y-auto p-4 custom-scrollbar">
+                    <button
+                        class="variant-btn active px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-roxo-neon">ROXO NEON</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-plasma-conico">PLASMA CÔNICO</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-lava-vulcao">LAVA VULCÃO</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-matrix-grid">MATRIX GRID</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-nebulosa">NEBULOSA</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-titan-core">TITAN CORE</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-stealth-ops">STEALTH OPS</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-glacial">GLACIAL</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-cyber-pulse">CYBER PULSE</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-gold-rush">GOLD RUSH</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-solar-flare">SOLAR FLARE</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-deep-void">DEEP VOID</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-biohazard">BIOHAZARD</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-bloodline">BLOODLINE</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-starlight">STARLIGHT</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-inferno-engine">INFERNO ENGINE</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-quantum-weaver">QUANTUM WEAVER</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-stormbringer">STORMBRINGER</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-void-reaver">VOID REAVER</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface"
+                        data-theme="theme-emerald-dragon">EMERALD DRAGON</button>
+                    <!-- Master Tier (10 New) -->
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-dragon-breath">DRAGON BREATH</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-neon-samurai">NEON SAMURAI</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-ghost-protocol">GHOST PROTOCOL</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-bloodline-pulse">BLOODLINE PULSE</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-solar-eclipse">SOLAR ECLIPSE</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-cyber-iris">CYBER IRIS</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-frozen-throne">FROZEN THRONE</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-nuclear-winter">NUCLEAR WINTER</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-dimension-warp">DIMENSION WARP</button>
+                    <button
+                        class="variant-btn px-6 py-3 rounded-lg font-label-caps text-[14px] uppercase tracking-widest font-bold text-on-surface border-tertiary shadow-[0_0_10px_rgba(255,184,105,0.2)]"
+                        data-theme="theme-ancient-rune">ANCIENT RUNE</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <style>
+        /* Custom Scrollbar for the variants container */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(10, 5, 20, 0.4);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.8);
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const previewCard = document.getElementById('previewCard');
+            const variantBtns = document.querySelectorAll('.variant-btn');
+
+            variantBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    variantBtns.forEach(b => b.classList.remove('active', 'text-primary'));
+                    // Add active class to clicked button
+                    btn.classList.add('active', 'text-primary');
+
+                    // Remove all theme classes from preview card
+                    previewCard.className = 'banner-base w-full max-w-3xl h-[240px] md:h-[280px] rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.6)] flex items-end p-6 md:p-8 mb-12';
+
+                    // Add selected theme class
+                    const theme = btn.getAttribute('data-theme');
+                    previewCard.classList.add(theme);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

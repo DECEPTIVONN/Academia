@@ -1,0 +1,154 @@
+<div class="dash-container">
+    <!-- TOP SECTION: Redesigned Header calling-card-bg style -->
+    <header class="profile-banner dash-header-calling-card dash-profile-banner-card" id="dashProfileCard" role="button" tabindex="0" aria-label="Abrir perfil do usuário" onclick="window.openPerfilOverlay && window.openPerfilOverlay()">
+        <div class="dash-header-overlay" style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(19, 19, 19, 0.1) 0%, rgba(19, 19, 19, 0.85) 100%); z-index: 1; pointer-events: none;"></div>
+        
+        <!-- Top bar: Avatar & Nav -->
+        <div class="flex justify-between items-start z-20 w-full mb-6">
+            <div class="relative -mt-2">
+                <!-- Dynamic avatar container (linked to profile-avatar for automatic customizacao.js updates) -->
+                <div class="profile-avatar dash-profile-avatar w-28 h-28 border-2 border-prestige-gold p-1 shadow-[0_0_20px_rgba(253,224,71,0.5)] bg-surface-container-low overflow-hidden rounded-2xl" id="dashAvatar" data-frame="">
+                    <!-- Injected via customizacao.js -->
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-end gap-3 mt-1">
+                <div class="flex items-center gap-2">
+                    <button class="dash-header-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all" id="dashBtnSocial" onclick="event.stopPropagation(); window._transitionTo('social')" aria-label="Social">
+                        <span class="material-symbols-outlined text-[24px]">person</span>
+                    </button>
+                    <button class="dash-header-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all relative" id="dashBtnNoticias" onclick="event.stopPropagation(); openNewsOverlay()" aria-label="Notícias">
+                        <span class="material-symbols-outlined text-[24px]">calendar_today</span>
+                        <span class="notification-dot absolute top-3 right-3 w-2 h-2 bg-chest-red rounded-full"></span>
+                    </button>
+                    <button class="dash-header-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all" id="dashBtnMenu" onclick="event.stopPropagation();" aria-label="Menu">
+                        <span class="material-symbols-outlined text-[24px]">menu</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Welcome text and missions -->
+        <div class="flex justify-between items-end z-20 w-full mt-auto">
+            <div>
+                <div class="flex items-center gap-2 mb-0.5">
+                    <span class="font-label-caps text-on-surface-variant text-xs tracking-widest uppercase">Bem vindo de volta,</span>
+                </div>
+                <h1 class="font-['Rajdhani'] font-bold text-3xl text-white uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]" id="dashUserName">ATLETA</h1>
+            </div>
+            
+            <div class="flex flex-col items-end gap-1 ml-4" id="dashBtnMissoes" onclick="event.stopPropagation(); openMissionsOverlay()" role="button">
+                <div class="font-label-caps text-[9px] bg-black/70 px-2 py-0.5 rounded text-white/90 uppercase whitespace-nowrap mb-0.5 mr-0">Missões</div>
+                <div class="dash-missions-pill flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-full py-2 pr-5 pl-2 border border-prestige-gold/40">
+                    <div class="dash-missions-hexagon w-8 h-8 bg-[#d97706] hexagon flex items-center justify-center shadow-[0_0_10px_rgba(217,119,6,0.6)]">
+                        <span class="material-symbols-outlined text-white text-[18px]">crown</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span class="dash-missions-val font-data-mono text-white text-sm" id="dashEmblemsValue">0/30</span>
+                            <div class="dash-missions-progress-bar w-32 h-3 bg-surface-variant rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-prestige-gold to-[#d97706] w-0 rounded-full shadow-[0_0_8px_rgba(253,224,71,0.5)] progress-fill" id="dashMissionsProgressFill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CENTER SECTION: Unified Arena Card (Tactical Radar) -->
+    <div class="dash-arena-card">
+        <div class="dash-arena-content">
+            <div class="dash-radar-header">
+                <h3>Atributos de Performance</h3>
+                <div class="dash-radar-toggle">
+                    <button class="btn btn-sm active" id="btnDashRadarMensal" style="padding:4px 12px;font-size:.7rem;border-radius:6px;background:var(--primary);color:#000;border:none;font-weight:800;cursor:pointer;transition:.3s;">MENSAL</button>
+                    <button class="btn btn-sm" id="btnDashRadarTotal" style="padding:4px 12px;font-size:.7rem;border-radius:6px;background:transparent;color:var(--text-secondary);border:none;font-weight:800;cursor:pointer;transition:.3s;">TOTAL</button>
+                </div>
+            </div>
+            <div id="dashRadarChartContainer" class="dash-radar-container"></div>
+        </div>
+        
+        <!-- Arena Card Footer: Trophy Button + Level Progress Bar -->
+        <div class="dash-arena-footer">
+            <!-- Golden Square Trophy Button -->
+            <button class="dash-arena-trophy-btn" id="dashBtnSeletorCrown" aria-label="Selecionar Ficha">
+                <!-- White trophy icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                    <path d="M4 22h16" />
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+                </svg>
+            </button>
+            
+            <!-- Progress Bar -->
+            <div class="dash-arena-progress-container">
+                <div class="dash-arena-progress-track">
+                    <div class="dash-arena-progress-fill progress-fill" id="dashProgressFill" style="width: 0%;">
+                        <div class="dash-progress-shimmer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUGGESTED WORKOUT CARD (Unified Bottom Bar Card) -->
+    <div class="dash-suggested-workout-wrapper">
+        <div class="dash-suggested-workout-card">
+            
+            <!-- Left Card: Workout suggestion details -->
+            <button class="dash-workout-exercise-card" id="dashWorkoutCard">
+                <div class="dash-workout-img-container">
+                    <img id="dashWorkoutThumb" src="./Assets/Arenas/Forja.png" alt="Exercício" />
+                    <!-- Badge inside bottom right of image container -->
+                    <div class="dash-workout-letter-badge">
+                        <span id="dashWorkoutLetter">A</span>
+                    </div>
+                </div>
+                <div class="dash-workout-card-details">
+                    <span class="dash-workout-label">TREINO</span>
+                    <span class="dash-workout-ex-count" id="dashWkDetail">8 ex</span>
+                </div>
+                <!-- Legacy/hidden element for ID compatibility -->
+                <span id="dashWorkoutName" style="display: none;"></span>
+                <span id="dashWkBadge" style="display: none;"></span>
+            </button>
+
+            <!-- Center: Metallic textured "PRÓXIMO PASSO" button with vertical glowing neon pills -->
+            <button class="dash-next-step-btn" id="dashBtnIniciar">
+                <span class="btn-text" id="dashBtnStartText">PRÓXIMO PASSO</span>
+                <span class="neon-glow-left-pill"></span>
+                <span class="neon-glow-right-pill"></span>
+            </button>
+
+            <!-- Right: Cycle progress card -->
+            <div class="dash-cycle-progress-card" onclick="window._transitionTo('progresso')">
+                <div class="dash-cycle-trophy-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                        <path d="M4 22h16" />
+                        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                        <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+                    </svg>
+                </div>
+                <span class="dash-cycle-value" id="dashCycleVal">2/30</span>
+                <span class="dash-cycle-label">CICLO</span>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Hidden elements for backward compatibility with JS code updates -->
+    <div style="display: none;" aria-hidden="true">
+        <img id="dashAvatarImg" src="" alt="Avatar" />
+        <span id="dashLiga"></span>
+        <span id="dashUserXp"></span>
+        <span id="dashLevel"></span>
+        <div id="dashProgressSegments"></div>
+    </div>
+</div>

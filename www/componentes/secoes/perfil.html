@@ -1,0 +1,545 @@
+                <div class="treino-container">
+                <div id="section-perfil" class="main-section" role="tabpanel">
+                    <div id="tab-perfil" class="t-tab active" role="tabpanel" style="padding:0;">
+                        <div class="theme-section theme-roxo"><div class="theme-bg"></div><div class="theme-content">
+                        <div class="profile-header" style="position:relative;">
+                            <!-- Botão de edição de perfil (CoD-style) -->
+                            <button class="profile-edit-btn" id="btnEditarPerfil" title="Personalizar Perfil">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <div class="profile-banner" data-banner="roxo-neon"></div>
+                            <div class="profile-avatar-wrap">
+                                <div class="profile-avatar" data-frame="">
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Deceptivon" alt="Avatar">
+                                </div>
+                                <div class="profile-user-info">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <h2 class="profile-name">DECEPTIVON</h2>
+                                        <span class="profile-archetype-badge" id="profileArchetype" style="display:none; font-size:0.6rem; padding:3px 6px; border-radius:12px; background:rgba(255,255,255,0.1); font-weight:800; letter-spacing:0.5px; border:1px solid rgba(255,255,255,0.2);"></span>
+                                    </div>
+                                    <div class="profile-titulo" style="display:none;"></div>
+                                    <span class="profile-handle">@deceptivon • AQUI DESDE 2024</span>
+                                    <span class="profile-assinatura" style="display:none;"></span>
+                                </div>
+                            </div>
+                            <div class="profile-stats-mini">
+                                <div class="p-mini-stat"><span class="p-mini-val">5</span><span class="p-mini-lbl">Segue</span></div>
+                                <div class="p-mini-stat"><span class="p-mini-val">5</span><span class="p-mini-lbl">Seguidores</span></div>
+                            </div>
+                            <div class="profile-emblems" id="profileEmblems">
+                                <div class="emblem-slot empty" data-slot="0"></div>
+                                <div class="emblem-slot empty" data-slot="1"></div>
+                                <div class="emblem-slot empty" data-slot="2"></div>
+                            </div>
+                            <!-- Vitrine de Conquistas (Feature 7) -->
+                            <div class="showcase-card" id="profileShowcase" style="display:none;"></div>
+                            <div class="profile-actions">
+                                <button class="profile-action-btn profile-action-btn--add" id="btnAdicionarAmigos">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <line x1="19" y1="8" x2="19" y2="14"/>
+                                        <line x1="22" y1="11" x2="16" y2="11"/>
+                                    </svg>
+                                    ADICIONAR AMIGOS
+                                </button>
+                                <button class="profile-action-btn profile-action-btn--add" id="btnVerColecao" onclick="openColecaoExercicios(loadDB())">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                                        <rect x="2" y="5" width="14" height="17" rx="2"/>
+                                        <path d="M6 2h12a2 2 0 0 1 2 2v14"/>
+                                    </svg>
+                                    VER COLEÇÃO
+                                </button>
+                            </div>
+                        </div>
+                        </div></div>
+
+                        <!-- ===== SISTEMA DE ABAS DO PERFIL ===== -->
+                        <div class="treino-tabs-section section-subtabs" style="position:sticky;top:0;z-index:50;">
+                            <nav class="treino-tab-nav" role="tablist" id="perfTabNav">
+                                <button class="t-tab-btn active" data-perftab="perfil" role="tab" aria-selected="true" id="perfTabBtnPerfil">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    PERFIL
+                                </button>
+                                <button class="t-tab-btn" data-perftab="progressao" role="tab" aria-selected="false" id="perfTabBtnProgressao">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                    PROGRESSÃO
+                                </button>
+                                <button class="t-tab-btn" data-perftab="personalizar" role="tab" aria-selected="false" id="perfTabBtnPersonalizar">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                    PERSONALIZAR
+                                </button>
+                                <button class="t-tab-btn" data-perftab="prefs" role="tab" aria-selected="false" id="perfTabBtnPrefs">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+                                    PREFERÊNCIAS
+                                </button>
+                            </nav>
+                        </div>
+
+                        <div class="perf-tab-content-wrapper">
+                        <!-- ========== ABA 1: PERFIL ========== -->
+                        <div id="perf-tab-perfil" class="perf-tab-content active">
+
+                            <div class="theme-section theme-turquesa"><div class="theme-bg"></div><div class="theme-content">
+                            <div class="profile-section-title">OFENSIVAS DOS AMIGOS</div>
+                            <div class="friends-streaks">
+                                <div class="friend-avatar">👨‍💻<span class="friend-streak-badge" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" style="color:#f97316;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> 616</span></div>
+                                <div class="friend-avatar">👳<span class="friend-streak-badge" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" style="color:#f97316;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> 82</span></div>
+                                <div class="friend-avatar">👵<span class="friend-streak-badge" style="display:inline-flex; align-items:center; gap:2px; padding:2px 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" style="color:#f97316;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> 12</span></div>
+                                <div class="friend-add-slot" style="display:flex; align-items:center; justify-content:center;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            </div></div>
+
+                            <div class="theme-section theme-ouro"><div class="theme-bg"></div><div class="theme-content">
+                            <div class="profile-section-title" style="display:flex; align-items:center; gap:6px;">
+                                MEDALHAS
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="opacity:0.6;">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </div>
+                            <div class="medals-preview">
+                                <div class="medal-item"><div class="medal-circle">🥇</div><span class="medal-name">Veterano</span></div>
+                                <div class="medal-item"><div class="medal-circle">🥈</div><span class="medal-name">Foco Total</span></div>
+                                <div class="medal-item"><div class="medal-circle">🥉</div><span class="medal-name">Madrugador</span></div>
+                                <div class="medal-item"><div class="medal-circle" style="opacity:.3;filter:grayscale(1);">🔒</div><span class="medal-name">Lendário</span></div>
+                            </div>
+                            </div></div>
+
+                        </div><!-- /perf-tab-perfil -->
+
+                        <!-- ========== ABA 2: PROGRESSÃO (com sub-abas) ========== -->
+                        <div id="perf-tab-progressao" class="perf-tab-content" style="display:none;">
+
+                            <!-- Modo Desenvolvedor Toggle -->
+                            <div class="pref-row" style="margin: 0 0 16px 0; background: rgba(139, 92, 246, 0.08); border: 1px dashed var(--primary-light); padding: 12px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 1.2rem; filter: drop-shadow(0 0 4px var(--primary-light));">🛠️</span>
+                                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                                        <span class="pref-label" style="font-family: 'Rajdhani', sans-serif; font-weight: 700; color: #fff; letter-spacing: 1px; font-size: 0.95rem;">MODO DESENVOLVEDOR</span>
+                                        <span style="font-size: 0.72rem; color: var(--text-tertiary);">Libera personalizações, conquistas e maestrias</span>
+                                    </div>
+                                </div>
+                                <label class="pref-switch" style="position: relative; display: inline-block; width: 46px; height: 24px; margin-bottom: 0;">
+                                    <input type="checkbox" id="devModeToggle">
+                                    <span class="pref-slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- Sub-navbar estilo Exercícios -->
+                            <div class="sub-navbar" id="perfProgressaoSubNav">
+                                <button class="sub-nav-btn active" data-perfsubtab="visao-geral" title="Visão Geral">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                </button>
+                                <button class="sub-nav-btn" data-perfsubtab="nivel-xp" title="Nível e XP">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                </button>
+                                <button class="sub-nav-btn" data-perfsubtab="conquistas" title="Conquistas">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- Sub-aba: Visão Geral -->
+                            <div class="perf-sub-content active" id="perf-subtab-visao-geral">
+                                <div class="theme-section theme-roxo"><div class="theme-bg"></div><div class="theme-content">
+                                <div class="profile-section-title">VISÃO GERAL</div>
+                                <div class="overview-grid">
+                                    <div class="overview-item">
+                                        <span class="ov-icon" style="display:flex; align-items:center; justify-content:center;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="color:#f97316;">
+                                                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                                            </svg>
+                                        </span>
+                                        <div class="ov-content"><span class="ov-val" id="profStreak">0 dias</span><span class="ov-lbl">Ofensiva</span></div>
+                                    </div>
+                                    <div class="overview-item">
+                                        <span class="ov-icon" style="display:flex; align-items:center; justify-content:center;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="color: #eab308;">
+                                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                            </svg>
+                                        </span>
+                                        <div class="ov-content"><span class="ov-val" id="profXp">0 XP</span><span class="ov-lbl">Total XP</span></div>
+                                    </div>
+                                    <div class="overview-item">
+                                        <span class="ov-icon" style="display:flex; align-items:center; justify-content:center;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="color:#94a3b8;">
+                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                            </svg>
+                                        </span>
+                                        <div class="ov-content"><span class="ov-val">Prata</span><span class="ov-lbl">Liga Atual</span></div>
+                                    </div>
+                                    <div class="overview-item">
+                                        <span class="ov-icon" style="display:flex; align-items:center; justify-content:center;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="color:#fbbf24;">
+                                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                                                <path d="M4 22h16"/>
+                                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+                                            </svg>
+                                        </span>
+                                        <div class="ov-content"><span class="ov-val">13 pódios</span><span class="ov-lbl">Conquistas</span></div>
+                                    </div>
+                                </div>
+                                </div></div>
+                            </div><!-- /perf-subtab-visao-geral -->
+
+                            <!-- Sub-aba: Nível e XP -->
+                            <div class="perf-sub-content" id="perf-subtab-nivel-xp" style="display:none;">
+                                <div class="theme-section theme-azul-pico"><div class="theme-bg"></div><div class="theme-content">
+                                <div class="profile-section-title">SEU NÍVEL</div>
+                                <div class="p-card xp-card">
+                                    <div class="p-card-header">
+                                        <h3>Seu Nível: <span class="gradient-text" id="progNivelName">Iniciante</span></h3>
+                                        <span class="p-card-meta">Nível <span id="progNivelVal">1</span></span>
+                                    </div>
+                                    <div class="xp-bar-wrap"><div class="xp-bar-fill" id="progXpFill" style="width:0%"></div></div>
+                                    <div class="xp-details"><span><span id="progXpAtual">0</span> XP</span><span>Próximo Nível: <span id="progXpNext">100</span> XP</span></div>
+                                </div>
+                                </div></div>
+                            </div><!-- /perf-subtab-nivel-xp -->
+
+                            <!-- Sub-aba: Conquistas -->
+                            <div class="perf-sub-content" id="perf-subtab-conquistas" style="display:none;">
+                                <div class="theme-section theme-ouro"><div class="theme-bg"></div><div class="theme-content">
+                                <div class="profile-section-title">SUAS CONQUISTAS <i class="fas fa-chevron-right"></i></div>
+                                <div class="p-card achievements-card"><div class="badges-grid" id="badgesGrid"></div></div>
+                                </div></div>
+                            </div><!-- /perf-subtab-conquistas -->
+
+                        </div><!-- /perf-tab-progressao -->
+
+                        <!-- ========== ABA 4: PREFERÊNCIAS (com sub-abas) ========== -->
+                        <div id="perf-tab-prefs" class="perf-tab-content" style="display:none;">
+
+                            <!-- Sub-navbar -->
+                            <div class="sub-navbar" id="perfPrefsSubNav">
+                                <button class="sub-nav-btn active" data-perfsubtab2="config" title="Configurações">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93A10 10 0 0 1 19.07 19.07"/><circle cx="12" cy="12" r="10"/></svg>
+                                </button>
+                                <button class="sub-nav-btn" data-perfsubtab2="geral" title="Geral">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+                                </button>
+                                <button class="sub-nav-btn" data-perfsubtab2="assinatura" title="Assinatura">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                </button>
+                                <button class="sub-nav-btn" data-perfsubtab2="seguranca" title="Segurança">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- Sub-aba: Configurações -->
+                            <div id="perf-subtab2-config" class="perf-sub-content active">
+                                <div class="theme-section theme-cinza-castelo"><div class="theme-bg"></div><div class="theme-content">
+                                <div class="profile-section-title">CONFIGURAÇÕES</div>
+                                <div class="timer-settings">
+                                    <h3>Configurações do Cronômetro</h3>
+                                    <div class="timer-options">
+                                        <label class="timer-option">
+                                            <input type="radio" name="timerStyle" value="radar" checked>
+                                            <span class="to-card">
+                                                <span class="to-icon" style="display:flex; align-items:center;">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                                                        <circle cx="12" cy="12" r="10"/>
+                                                        <polyline points="12 6 12 12 16 14"/>
+                                                    </svg>
+                                                </span>
+                                                <span class="to-lbl">Radar</span>
+                                            </span>
+                                        </label>
+                                        <label class="timer-option">
+                                            <input type="radio" name="timerStyle" value="hourglass">
+                                            <span class="to-card">
+                                                <span class="to-icon" style="display:flex; align-items:center;">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                                                        <path d="M5 2h14"/>
+                                                        <path d="M5 22h14"/>
+                                                        <path d="M17 2v4a5 5 0 0 1-5 5 5 5 0 0 1-5-5V2"/>
+                                                        <path d="M17 22v-4a5 5 0 0 0-5-5 5 5 0 0 0-5 5v4"/>
+                                                    </svg>
+                                                </span>
+                                                <span class="to-lbl">Ampulheta</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="timer-settings">
+                                    <h3>Cor de Energia (Tema)</h3>
+                                    <p style="font-size:.85rem;color:var(--text-tertiary);margin-bottom:12px;">Personalize a cor principal do seu aplicativo.</p>
+                                    <div class="theme-colors" id="themeColors">
+                                        <button class="t-color active" data-theme="purple" style="--c:#8b5cf6" title="Roxo"></button>
+                                        <button class="t-color" data-theme="green" style="--c:#22c55e" title="Verde"></button>
+                                        <button class="t-color" data-theme="blue" style="--c:#3b82f6" title="Azul"></button>
+                                        <button class="t-color" data-theme="orange" style="--c:#f97316" title="Laranja"></button>
+                                        <button class="t-color" data-theme="red" style="--c:#ef4444" title="Vermelho"></button>
+                                        <button class="t-color" data-theme="cyan" style="--c:#06b6d4" title="Ciano"></button>
+                                        <button class="t-color" data-theme="pink" style="--c:#ec4899" title="Rosa"></button>
+                                        <button class="t-color" data-theme="amarelo" style="--c:#facc15" title="Amarelo"></button>
+                                        <button class="t-color" data-theme="cinza" style="--c:#64748b" title="Cinza"></button>
+                                        <button class="t-color" data-theme="branco" style="--c:#ffffff" title="Branco"></button>
+                                        <button class="t-color" data-theme="prata" style="--c:#94a3b8" title="Prata"></button>
+                                        <button class="t-color" data-theme="dourado" style="--c:#fbbf24" title="Dourado"></button>
+                                    </div>
+                                </div>
+                                <div class="timer-settings">
+                                    <h3>Backup e Dados</h3>
+                                    <p style="font-size:.85rem;color:var(--text-tertiary);margin-bottom:16px;">Exporte seus treinos e histórico para um arquivo ou importe dados de outro dispositivo.</p>
+                                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                                        <button class="btn btn-secondary" data-action="export-data" style="flex:1;min-width:160px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                                                <polyline points="16 6 12 2 8 6"/>
+                                                <line x1="12" y1="2" x2="12" y2="15"/>
+                                            </svg> EXPORTAR DADOS
+                                        </button>
+                                        <button class="btn btn-secondary" data-action="import-data" style="flex:1;min-width:160px; display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                <polyline points="7 10 12 15 17 10"/>
+                                                <line x1="12" y1="15" x2="12" y2="3"/>
+                                            </svg> IMPORTAR DADOS
+                                        </button>
+                                        <input type="file" id="inputImportarJSON" style="display:none;" accept=".json">
+                                    </div>
+                                </div>
+                                </div></div>
+                            </div>
+
+                            <!-- Sub-aba: Geral -->
+                            <div class="perf-sub-content" id="perf-subtab2-geral" style="display:none;">
+                                <div class="theme-section theme-cinza-castelo"><div class="theme-bg"></div><div class="theme-content">
+                                <div class="profile-section-title">PREFERÊNCIAS GERAIS</div>
+                                <div class="timer-settings">
+                                    <div class="pref-toggle-list">
+                                        <div class="pref-toggle-item">
+                                            <div class="pref-toggle-info">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                                                <div>
+                                                    <span class="pref-toggle-label">Efeitos Sonoros</span>
+                                                    <span class="pref-toggle-desc">Sons ao marcar exercícios e conquistas</span>
+                                                </div>
+                                            </div>
+                                            <label class="pref-switch">
+                                                <input type="checkbox" id="prefSounds" checked>
+                                                <span class="pref-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="pref-toggle-item">
+                                            <div class="pref-toggle-info">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+                                                <div>
+                                                    <span class="pref-toggle-label">Vibração</span>
+                                                    <span class="pref-toggle-desc">Feedback háptico ao interagir</span>
+                                                </div>
+                                            </div>
+                                            <label class="pref-switch">
+                                                <input type="checkbox" id="prefVibration" checked>
+                                                <span class="pref-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="pref-toggle-item">
+                                            <div class="pref-toggle-info">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                                <div>
+                                                    <span class="pref-toggle-label">Mensagens Motivacionais</span>
+                                                    <span class="pref-toggle-desc">Frases de incentivo ao concluir treinos</span>
+                                                </div>
+                                            </div>
+                                            <label class="pref-switch">
+                                                <input type="checkbox" id="prefMessages" checked>
+                                                <span class="pref-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="pref-toggle-item">
+                                            <div class="pref-toggle-info">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                                <div>
+                                                    <span class="pref-toggle-label">Status Online</span>
+                                                    <span class="pref-toggle-desc">Mostrar sua atividade para amigos</span>
+                                                </div>
+                                            </div>
+                                            <label class="pref-switch">
+                                                <input type="checkbox" id="prefOnlineStatus">
+                                                <span class="pref-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div></div>
+                            </div><!-- /perf-subtab2-geral -->
+
+                            <!-- Sub-aba: Assinatura -->
+                            <div class="perf-sub-content" id="perf-subtab2-assinatura" style="display:none;">
+                                <div class="theme-section theme-ouro"><div class="theme-bg"></div><div class="theme-content">
+                                <div class="profile-section-title">ASSINATURA</div>
+                                <div class="timer-settings">
+                                    <div class="subscription-plans">
+                                        <div class="plan-card plan-free active-plan">
+                                            <div class="plan-badge">ATUAL</div>
+                                            <div class="plan-name">Gratuito</div>
+                                            <div class="plan-price">R$ 0<span>/mês</span></div>
+                                            <ul class="plan-features">
+                                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Fichas de treino ilimitadas</li>
+                                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Calendário de progresso</li>
+                                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Conquistas e badges</li>
+                                                <li style="opacity:0.4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Radar Fit avançado</li>
+                                                <li style="opacity:0.4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Exportação de dados</li>
+                                            </ul>
+                                        </div>
+                                        <div class="plan-card plan-pro">
+                                            <div class="plan-badge plan-badge--pro">PRO</div>
+                                            <div class="plan-name">Academia PRO</div>
+                                            <div class="plan-price">R$ 9<span>/mês</span></div>
+                                            <ul class="plan-features">
+                                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Tudo do gratuito</li>
+                                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Radar Fit avançado</li>
+                                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Exportação de relatórios</li>
+                                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Banners e emblemas exclusivos</li>
+                                                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Suporte prioritário</li>
+                                            </ul>
+                                            <button class="btn btn-primary" style="width:100%;margin-top:12px;font-weight:800;letter-spacing:1px;">EM BREVE</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div></div>
+                            </div><!-- /perf-subtab2-assinatura -->
+
+                            <!-- Sub-aba: Segurança -->
+                            <div class="perf-sub-content" id="perf-subtab2-seguranca" style="display:none;">
+                                <div class="theme-section theme-cinza-castelo"><div class="theme-bg"></div><div class="theme-content">
+                                <div class="profile-section-title">SEGURANÇA E CONTA</div>
+                                <div class="timer-settings">
+                                    <div class="security-form">
+                                        <div class="sec-field-group">
+                                            <label class="sec-label">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                                Nome de Exibição
+                                            </label>
+                                            <div class="sec-input-row">
+                                                <input type="text" class="sec-input" id="secNome" placeholder="Seu nome...">
+                                                <button class="sec-save-btn" id="btnSaveNome" title="Salvar Nome">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="sec-field-group">
+                                            <label class="sec-label">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                                Nome de Usuário (@handle)
+                                            </label>
+                                            <div class="sec-input-row">
+                                                <input type="text" class="sec-input" id="secHandle" placeholder="@usuario...">
+                                                <button class="sec-save-btn" id="btnSaveHandle" title="Salvar Handle">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="sec-field-group">
+                                            <label class="sec-label">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                                E-mail
+                                            </label>
+                                            <div class="sec-input-row">
+                                                <input type="email" class="sec-input" id="secEmail" placeholder="seu@email.com">
+                                                <button class="sec-save-btn" id="btnSaveEmail" title="Salvar E-mail">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="sec-field-group">
+                                            <label class="sec-label">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                                Senha
+                                            </label>
+                                            <div class="sec-input-row">
+                                                <input type="password" class="sec-input" id="secSenha" placeholder="Nova senha...">
+                                                <button class="sec-save-btn" id="btnSaveSenha" title="Salvar Senha">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+                                                </button>
+                                            </div>
+                                            <p style="font-size:0.75rem;color:var(--text-tertiary);margin-top:6px;opacity:0.7;">🔒 Armazenado localmente no dispositivo.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div></div>
+                            </div><!-- /perf-subtab2-seguranca -->
+
+                        </div><!-- /perf-tab-prefs -->
+                        
+                        <!-- ========== ABA 5: PERSONALIZAR (com sub-abas) ========== -->
+                        <div id="perf-tab-personalizar" class="perf-tab-content" style="display:none;">
+                            <!-- Sub-navbar -->
+                            <div class="sub-navbar" id="perfPersonalizarSubNav">
+                                <button class="sub-nav-btn active" data-perfsubtab3="identidade" title="Identidade">
+                                    Identidade
+                                </button>
+                                <button class="sub-nav-btn" data-perfsubtab3="frase" title="Frase de Assinatura">
+                                    Frase
+                                </button>
+                                <button class="sub-nav-btn" data-perfsubtab3="destaque" title="Em Destaque">
+                                    Destaque
+                                </button>
+                                <button class="sub-nav-btn" data-perfsubtab3="titulo" title="Título">
+                                    Título
+                                </button>
+                            </div>
+
+                            <!-- Sub-aba: Identidade (Nome + Handle) -->
+                            <div class="perf-sub-content3 active" id="perf-subtab3-identidade">
+                                <div class="theme-section theme-roxo"><div class="theme-bg"></div><div class="theme-content">
+                                    <div class="profile-section-title">Identidade</div>
+                                    <div style="display:flex;flex-direction:column;gap:10px;">
+                                      <div>
+                                        <label style="font-size:0.65rem;letter-spacing:1.5px;color:var(--text-secondary);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px;">Nome de Exibição</label>
+                                        <input id="inputCustomNome" class="profile-name-input" type="text" maxlength="18" placeholder="SEU NOME" style="width:100%;max-width:100%;">
+                                      </div>
+                                      <div>
+                                        <label style="font-size:0.65rem;letter-spacing:1.5px;color:var(--text-secondary);font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px;">Handle (@usuário)</label>
+                                        <input id="inputCustomHandle" class="profile-name-input" type="text" maxlength="20" placeholder="@handle" style="width:100%;max-width:100%;">
+                                      </div>
+                                    </div>
+                                </div></div>
+                            </div>
+
+                            <!-- Sub-aba: Frase de Assinatura -->
+                            <div class="perf-sub-content3" id="perf-subtab3-frase" style="display:none;">
+                                <div class="theme-section theme-roxo"><div class="theme-bg"></div><div class="theme-content">
+                                    <div class="profile-section-title">Frase de Assinatura</div>
+                                    <p style="font-size:0.72rem;color:var(--text-tertiary);margin-bottom:10px;">Exibida no seu Share Card e cartão de perfil.</p>
+                                    <input id="inputCustomAssinatura" class="profile-name-input" type="text" maxlength="60" placeholder="Sua frase motivacional..." style="width:100%;max-width:100%;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;text-transform:none;">
+                                    <div class="frases-preset" id="frasesPreset" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
+                                </div></div>
+                            </div>
+
+                            <!-- Sub-aba: Em Destaque -->
+                            <div class="perf-sub-content3" id="perf-subtab3-destaque" style="display:none;">
+                                <div class="theme-section theme-ouro"><div class="theme-bg"></div><div class="theme-content">
+                                    <div class="profile-section-title">Em Destaque no Perfil</div>
+                                    <p style="font-size:0.72rem;color:var(--text-tertiary);margin-bottom:12px;">Escolha 1 conquista para exibir no seu cartão.</p>
+                                    <div class="showcase-stat-list" id="showcaseStatList"></div>
+                                </div></div>
+                            </div>
+
+                            <!-- Sub-aba: Título -->
+                            <div class="perf-sub-content3" id="perf-subtab3-titulo" style="display:none;">
+                                <div class="theme-section theme-ouro"><div class="theme-bg"></div><div class="theme-content">
+                                    <div class="profile-section-title">Título</div>
+                                    <div class="titulo-list" id="tituloList"></div>
+                                </div></div>
+                            </div>
+
+                            <button class="customizacao-modal__save-btn" id="btnSalvarCustomizacaoTab" style="width:100%; margin-top:20px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+                                SALVAR ALTERAÇÕES
+                            </button>
+                        </div>
+                        </div><!-- /perf-tab-content-wrapper -->
+
+                    </div><!-- /tab-perfil -->
+                </div><!-- /section-perfil -->
+                </div><!-- /treino-container -->

@@ -1,0 +1,483 @@
+/* CARDS AND VIEW MODES */
+.deck-card {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.deck-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 15px var(--card-glow, transparent);
+    border-color: var(--card-glow, var(--primary-light));
+}
+
+.deck-card-header {
+    height: 32px;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Muscle Group Themes (Themed with Glows) */
+.card-Peito { --card-glow: #ef4444; border-top: 3px solid #ef4444; }
+.card-Costas { --card-glow: #22c55e; border-top: 3px solid #22c55e; }
+.card-Pernas { --card-glow: #3b82f6; border-top: 3px solid #3b82f6; }
+.card-Ombros { --card-glow: #f59e0b; border-top: 3px solid #f59e0b; }
+.card-Bíceps { --card-glow: #ec4899; border-top: 3px solid #ec4899; }
+.card-Tríceps { --card-glow: #8b5cf6; border-top: 3px solid #8b5cf6; }
+.card-Core { --card-glow: #64748b; border-top: 3px solid #64748b; }
+
+.deck-card-img {
+    flex: 1;
+    background: #000;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.deck-card-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, transparent 40%);
+}
+
+.deck-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.deck-card:hover .deck-card-img img {
+    transform: scale(1.15);
+}
+
+.deck-card-info {
+    padding: 12px 10px;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+}
+
+.deck-card-name {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.deck-card-level {
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+    font-weight: 700;
+}
+
+.deck-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 12px 12px;
+}
+
+.series-wrap-deck {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.series-wrap-deck .btn-set {
+    width: 26px;
+    height: 26px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+}
+
+.series-wrap-deck .btn-set.done {
+    background: var(--gradient);
+    border-color: var(--primary-light);
+    color: #fff;
+    box-shadow: 0 0 10px var(--shadow);
+}
+
+.deck-check-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.deck-card-vol {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--primary-light);
+    letter-spacing: 1px;
+    opacity: 0.8;
+}
+
+.deck-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.deck-card-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 5px;
+}
+
+.btn-note-toggle-deck {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-note-toggle-deck:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--primary-light);
+    border-color: var(--primary);
+}
+
+.btn-note-toggle-deck.has-note {
+    color: var(--primary-light);
+    border-color: var(--primary-light);
+    background: rgba(139, 92, 246, 0.1);
+}
+
+/* CLASH ROYALE STYLE CARD ACTIVE MENU */
+.deck-card {
+    position: relative;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+}
+
+.deck-card.menu-active {
+    transform: translateY(-5px) scale(1.02);
+    z-index: 100;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    overflow: visible !important;
+}
+
+.deck-slot:has(.menu-active) {
+    z-index: 100 !important;
+}
+
+.deck-card-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #1a0b2e; /* Roxo Escuro */
+    border-radius: 0 0 12px 12px;
+    padding: 10px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    z-index: 99;
+    border: 3px solid var(--primary);
+    border-top: none;
+    margin-top: -5px; 
+}
+
+.deck-card.menu-active .deck-card-menu {
+    display: flex;
+    animation: slideDownCR 0.2s ease-out forwards;
+    bottom: auto !important;
+}
+
+@keyframes slideDownCR {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.btn-card-action {
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #fff;
+    background: rgba(255,255,255,0.02);
+    position: relative;
+    overflow: hidden;
+    animation: buttonSlideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes buttonSlideUp {
+    from { opacity: 0; transform: translateY(20px) rotateX(-30deg); }
+    to { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+
+/* Stagger delays */
+.btn-card-details { animation-delay: 0.1s; }
+.btn-card-maestria-mini { animation-delay: 0.2s; }
+.btn-card-remove { animation-delay: 0.3s; }
+
+.btn-card-action span {
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+}
+
+.btn-card-details {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border-color: rgba(139, 92, 246, 0.4);
+}
+.btn-card-details:hover {
+    background: var(--gradient);
+    border-color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.5);
+}
+
+.btn-card-maestria-mini {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.05) 100%);
+    border-color: rgba(251, 191, 36, 0.5);
+    color: #fde047;
+}
+.btn-card-maestria-mini:hover {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+    border-color: #fff;
+    color: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(251, 191, 36, 0.6);
+}
+
+.btn-card-remove {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+.btn-card-remove:hover {
+    background: linear-gradient(135deg, #ef4444, #991b1b);
+    border-color: #fff;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(239, 68, 68, 0.6);
+}
+
+.btn-card-action::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: 0.5s;
+}
+.btn-card-action:hover::after {
+    left: 100%;
+}
+
+/* Active Grid LIST VIEW */
+.deck-active-grid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+/* Active Grid ROYALE VIEW (2x4 Grid) */
+#deckActiveGrid.royale-view {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    grid-template-rows: repeat(2, auto) !important;
+    gap: 8px !important;
+    padding: 10px 0;
+}
+
+#deckActiveGrid.royale-view .deck-slot {
+    aspect-ratio: 1 / 1.8 !important;
+    min-width: 0 !important;
+}
+
+#deckActiveGrid.royale-view .deck-card-menu {
+    display: none;
+}
+
+#deckActiveGrid.royale-view .deck-card.menu-active .deck-card-menu {
+    display: flex !important;
+    position: absolute !important;
+    top: 100% !important;
+    bottom: auto !important;
+    left: 0 !important;
+    width: 100% !important;
+    background: #1a0b2e !important;
+    border-radius: 0 0 12px 12px !important;
+    padding: 8px !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5) !important;
+    border: 2px solid var(--primary) !important;
+    border-top: none !important;
+    margin-top: -2px !important;
+    animation: slideDownCR 0.2s ease-out forwards;
+}
+
+#deckActiveGrid.royale-view .deck-card.menu-active .btn-card-action {
+    font-size: 0.7rem !important;
+    padding: 6px 4px !important;
+    height: auto !important;
+    width: 100% !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+}
+
+#deckActiveGrid.royale-view .deck-card-name {
+    font-size: 0.75rem !important;
+}
+
+#deckActiveGrid.royale-view .deck-card-level {
+    font-size: 0.65rem !important;
+}
+
+#deckActiveGrid.royale-view .deck-card-header {
+    font-size: 0.6rem !important;
+    padding: 2px 4px !important;
+}
+
+.deck-active-grid.list-view .deck-slot.list-slot {
+    width: 100%;
+    aspect-ratio: auto;
+    height: auto;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.deck-list-item {
+    display: flex;
+    align-items: center;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 10px 15px;
+    gap: 15px;
+    width: 100%;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.deck-list-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary);
+    opacity: 0.8;
+}
+
+.dli-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.dli-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dli-info {
+    flex: 1;
+}
+
+.dli-name {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    font-family: var(--font-family);
+    letter-spacing: 0.5px;
+}
+
+.dli-meta {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.dli-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.dli-actions .btn-card-action {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.dli-actions .btn-card-action:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.dli-actions .btn-card-remove:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+}

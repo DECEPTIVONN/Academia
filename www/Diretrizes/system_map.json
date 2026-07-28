@@ -1,0 +1,388 @@
+{
+  "$schema": "https://json.schemastore.org/chrome-manifest.json",
+  "project_name": "Academia Workout Tracker (PWA)",
+  "version": "3.5.3",
+  "last_updated": "2026-07-23",
+  "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
+  "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'.",
+
+  "entry_points": {
+    "description": "Arquivos raiz que iniciam a aplicação no navegador.",
+    "files": [
+      {
+        "file": "treino.html",
+        "purpose": "Shell HTML minimalista (~200 linhas). Contém splash screen, dynamic BG, section-strip skeleton com placeholders vazios, bottom nav e script tags. O conteúdo das seções é injetado via loader.js."
+      },
+      {
+        "file": "sw.js",
+        "purpose": "Service Worker de cache interceptativo. Habilita modo Offline-First via Cache Storage API, interceptando fetch de assets estáticos (JS, CSS, imagens, GIFs)."
+      },
+      {
+        "file": "manifest.json",
+        "purpose": "Manifesto PWA (Web App Manifest). Define nome, ícones, cores do tema e modo de exibição standalone para instalação na tela inicial."
+      },
+      {
+        "file": "style/treino.css",
+        "purpose": "Arquivo-contêiner de importações CSS. Apenas re-exporta via @import os 8 módulos de style/treino/ na ordem correta da cascata."
+      }
+    ]
+  },
+
+  "system_modules": {
+    "section_loader": {
+      "description": "Carregador modular de fragmentos HTML. Executa fetch() paralelo dos arquivos em componentes/secoes/ e injeta no DOM antes da inicialização do app. Deve ser o primeiro módulo importado por app.js. A partir da v3.1.0: o fragmento `perfil.html` é injetado em `#perfilOverlayScroll` (overlay fullscreen) em vez de `[data-section='perfil']` (slide removido do strip). A partir da v3.2.0: o fragmento `ficha.html` é injetado em `#fichaOverlayScroll` (overlay fullscreen) em vez de `[data-section='ficha']` (slide removido do strip).",
+      "js_files": ["JS/treino/loader.js"],
+      "css_files": [],
+      "dom_selectors": ["[data-section]", "#modais-container", "#perfilOverlayScroll", "#fichaOverlayScroll"],
+      "related_components": []
+    },
+    "app_init": {
+      "description": "Ponto de entrada (Entry point) do aplicativo. Inicializa o banco de dados local, vincula escutas de eventos globais e orquestra a carga inicial das seções. Chama loadAllSections() antes de qualquer init. A partir da v3.3.1: escuta o evento custom `academia:data-imported` (disparado por secao-perfil.js::importData) e executa `reinitAppAfterImport()` para re-renderizar todas as seções dinâmicas e fechar overlays/modais abertos sem precisar de window.location.reload().",
+      "js_files": ["JS/treino/app.js"],
+      "css_files": ["style/treino/1-core.css"],
+      "dom_selectors": ["body"],
+      "related_components": ["componentes/footer.js", "componentes/scroll-animations.js"]
+    },
+    "state_db": {
+      "description": "Motor de banco de dados e estado reativo local. Gerencia todas as operações de I/O em LocalStorage, define schemas padrão para fichas/exercícios/histórico e exporta utilitários de animação de transição (fadeIn, fadeSwap).",
+      "js_files": ["JS/treino/db.js"],
+      "css_files": [],
+      "dom_selectors": [],
+      "related_components": []
+    },
+    "navigation": {
+      "description": "Gerencia o motor de deslizamento (Swipe Viewport) e as abas inferiores (Bottom Nav Bar). Controla os swipes por toque, estados ativos e a renderização fluida das rotas via translateX. A partir da v2.5.0: a seção inicial é determinada por db.fichaEmAndamento + db.fichaEmAndamentoDate (lógica migrou para `app.js` em v3.2.0 com a Ficha virando overlay). A partir da v3.1.0: 'perfil' foi removido de sectionsOrder. Histórico da ordem: `['treinos','progresso','dashboard','loja','social']` em v3.2.0; `['treinos','progresso','dashboard','social','loja']` em v3.4.0 (Social vira 4ª, Loja vira 5ª); `['progresso','treinos','dashboard','social','loja']` em v3.5.0 (Progresso vira 1ª, Treinos vira 2ª). A chamada `_transitionTo('perfil')` é interceptada e redirecionada para `window.openPerfilOverlay()`; gestos de swipe são bloqueados quando o alvo é `.perfil-overlay`. A partir da v3.2.0: 'ficha' também foi removida de sectionsOrder; `_transitionTo('ficha')` é interceptada e redirecionada para `window.openFichaOverlay()`; gestos de swipe são bloqueados quando o alvo é `.ficha-overlay`.",
+      "js_files": ["JS/treino/nav.js"],
+      "css_files": ["style/treino/7-nav-icons.css"],
+      "dom_selectors": [".section-viewport", ".section-strip", ".section-slide", "#bottomNav", "#perfil-overlay", ".perfil-overlay", "#ficha-overlay", ".ficha-overlay"],
+      "related_components": []
+    },
+    "workout_tracking": {
+      "description": "Controla a ficha de treino ativa do dia, marcação de séries, Modo Foco de alta legibilidade, contadores de tempo (Hourglass/Radar Rest Timers) e o fechamento do treino com registro de duração. A partir da v2.5.0: a seção Ficha não é mais a landing section — é acessada exclusivamente via 'PRÓXIMO PASSO' do Dashboard. A partir da v3.2.0: a Ficha também deixou de ser um slide do Swipe Viewport e virou overlay fullscreen (`#ficha-overlay`) com fade-in/scale, sem header fixo (full-bleed imersivo). Trigger único: botão 'PRÓXIMO PASSO' do Dashboard (`#dashBtnIniciar`) via `window.openFichaOverlay()`. Auto-abertura se `db.fichaEmAndamento && db.fichaEmAndamentoDate === today()` (ou `workout_start_time` do dia atual). Fechamento (ESC/programático): se há treino em andamento, abre `modalEncerrarTreino`; senão, volta ao Dashboard. O botão legado 'INICIAR TREINO' (id=btnStartWorkout) é ocultado via CSS (mantido no DOM). Encerrar o cronômetro abre um modal de confirmação (modalEncerrarTreino).",
+      "js_files": ["JS/treino/secao-ficha.js", "JS/treino/ficha-overlay.js"],
+      "css_files": [
+        "style/treino/2-modals.css",
+        "style/treino/3-foco-badges.css",
+        "style/treino/5-premium-design.css",
+        "style/treino/secoes/ficha-overlay.css"
+      ],
+      "dom_selectors": ["#ficha-overlay", "#fichaOverlayScroll", "#btnFecharFicha", ".ficha-overlay-close", "#timerDisplay", "#focusModeOverlay", "#modalConclusao", "#modalEncerrarTreino"],
+      "related_components": []
+    },
+    "deck_builder": {
+      "description": "Lógica do criador de fichas. Permite arrastar/adicionar exercícios como decks de Clash Royale, pesquisa com autocomplete, filtros por agrupamento muscular e visualização da biblioteca.",
+      "js_files": ["JS/treino/secao-treinos.js"],
+      "css_files": [
+        "style/treino/3-foco-badges.css",
+        "style/treino/5-premium-design.css"
+      ],
+      "dom_selectors": ["#section-treinos", "#tab-exercicios", "#tab-montar", "#deckList"],
+      "related_components": []
+    },
+    "analytics_progress": {
+      "description": "Processamento estatístico e analíticos. Calcula estimativas de 1RM por Brzycki, renderiza os gráficos de Radar SVG (Atributos Físicos), exibe históricos e gerencia o Ciclo de 30 Dias. A partir da v3.3.0: a função `renderRadarChart(db, options?)` é generalizada para suportar múltiplos containers (Progresso e Dashboard); os side effects (achievements e tier) são aplicados uma única vez por ciclo de renderização via flag `radarSideEffectsApplied`; o estado `currentRadarMode` (mensal/total) e o tier do radar são compartilhados entre as instâncias de Progresso e Dashboard.",
+      "js_files": ["JS/treino/secao-progresso.js"],
+      "css_files": ["style/treino/4-gamificacao.css"],
+      "dom_selectors": ["#section-progresso", "#radarChartContainer", "#dashRadarChartContainer", "#btnRadarMensal", "#btnRadarTotal", "#btnDashRadarMensal", "#btnDashRadarTotal", ".cycle-xp-fill"],
+      "related_components": []
+    },
+    "dashboard_home": {
+      "description": "Tela inicial gamificada do módulo de treino (seção padrão ao abrir o site). Renderiza o Radar Tático de Atributos de Performance (substituiu a imagem da Forja a partir da v3.3.0) no widget central, sugere a ficha do dia, abre o bottom-sheet seletor de fichas e inicia o treino global ao clicar em 'PRÓXIMO PASSO' (seta db.fichaEmAndamento=true, db.fichaEmAndamentoDate=today() e abre a Ficha via `window.openFichaOverlay()`). O Radar exibido no Dashboard compartilha o estado `currentRadarMode` e o tier (Bronze/Prata/Ouro/Diamante/Ametista) com a versão exibida em Progresso; botões Mensal/Total (`#btnDashRadarMensal`/`#btnDashRadarTotal`) ficam sincronizados com os de Progresso. Diferente do Progresso, o radar do Dashboard NÃO exibe o botão de compartilhar nem a legenda 'Baseado na variedade...'. A partir da v3.1.0: o cartão de visitas (calling card) `#dashProfileCard` no header do Dashboard abre o overlay de Perfil via `window.openPerfilOverlay()` em vez de navegar no strip; o botão hambúrguer `#dashBtnMenu` torna-se decorativo (no-op). A partir da v3.2.0: o `startWorkoutFromDashboard` chama `openFichaOverlay()` em vez de `_transitionTo('ficha')` (a Ficha virou overlay fullscreen).",
+      "js_files": ["JS/treino/secao-dashboard.js", "JS/treino/secao-progresso.js"],
+      "css_files": ["style/treino/secoes/dashboard.css"],
+      "dom_selectors": ["[data-section='dashboard']", "#dashBtnIniciar", "#dashWorkoutCard", "#dashProfileCard", "#dashBtnMenu", "#modalSeletorFichas", "#dashRadarChartContainer", "#btnDashRadarMensal", "#btnDashRadarTotal"],
+      "related_components": ["componentes/secoes/dashboard.html", "componentes/secoes/modais.html"]
+    },
+    "user_profile": {
+      "description": "Área de perfil gamificada, exibida como overlay fullscreen modal (não mais como slide do Swipe Viewport). Contém badges de classe/arquétipo, vitrine de medalhas e conquistas, lista de ofensivas (amigos) e os botões de ação, exportação e importação de backup. Sub-abas gerenciadas via .perf-tab-content-wrapper. Trigger único: clique no cartão de visitas do Dashboard (`#dashProfileCard`). Fechamento: botão X no header do overlay, tecla ESC ou retorno programático. Em ambos os casos o usuário é sempre levado de volta ao Dashboard/Início. A partir da v3.3.1: os botões de backup (exportar/importar) vivem exclusivamente em perf-tab-prefs → perf-subtab2-config e usam data-action em vez de id (defesa contra IDs duplicados).",
+      "js_files": ["JS/treino/secao-perfil.js", "JS/treino/perfil-overlay.js"],
+      "css_files": [
+        "style/treino/4-gamificacao.css",
+        "style/treino/5-premium-design.css",
+        "style/treino/secoes/perfil-overlay.css"
+      ],
+      "dom_selectors": [
+        "#perfil-overlay",
+        "#perfilOverlayScroll",
+        "#perfilOverlayClose",
+        ".perf-tab-content-wrapper",
+        ".profile-actions",
+        "#btnVerColecao",
+        "[data-action='export-data']",
+        "[data-action='import-data']",
+        "#inputImportarJSON",
+        "#modalConfirm"
+      ],
+      "related_components": []
+    },
+    "profile_customization": {
+      "description": "Central de customização estética inspirada em Call of Duty / RPGs. Permite aplicar skins de temporizadores (Radar/Hourglass), bordas de avatar animadas, títulos e arquétipos de classe desbloqueados.",
+      "js_files": ["JS/treino/secao-customizacao.js"],
+      "css_files": ["style/treino/8-customizacao.css"],
+      "dom_selectors": ["#modalPersonalizarPerfil", ".avatar-preview", ".skin-option-card"],
+      "related_components": []
+    },
+    "ui_templates": {
+      "description": "Biblioteca centralizada de strings HTML injetáveis. Renderiza de forma dinâmica as linhas da tabela, os cards do grid e os blocos de cardio com tags stagger de animação.",
+      "js_files": ["JS/treino/templates.js"],
+      "css_files": ["style/treino/5-premium-design.css"],
+      "dom_selectors": [".stagger-item"],
+      "related_components": []
+    },
+    "mastery_system": {
+      "description": "Sistema de Maestria de exercícios. Controla a acumulação de XP por movimento concluído, promovendo de Tiers (Bronze, Prata, Ouro, Elite) com feedbacks visuais ricos.",
+      "js_files": ["JS/treino/secao-ficha.js"],
+      "css_files": ["style/treino/6-maestria.css"],
+      "dom_selectors": [".mastery-badge-wrap", ".xp-bar-fill"],
+      "related_components": []
+    }
+  },
+
+  "html_fragments": {
+    "description": "Fragmentos HTML modulares carregados via loader.js em tempo de execução. Cada arquivo contém o conteúdo interno de uma section-slide do treino.html. Antes da modularização, todo este conteúdo vivia monoliticamente no treino.html (~2.178 linhas).",
+    "modules": [
+      {
+        "file": "componentes/secoes/ficha.html",
+        "purpose": "Conteúdo do overlay de Ficha (v3.2.0+). Hero section, header bar, seletores de treino A-J, barra de progresso, tabela de exercícios, grid e deck views, botão Foco. Antes da v3.2.0 era injetado em `[data-section='ficha']` (Slide 0 do Swipe Viewport); a partir da v3.2.0 é injetado em `#fichaOverlayScroll` dentro do overlay fullscreen acionado pelo botão 'PRÓXIMO PASSO' do Dashboard.",
+        "injected_into": "#fichaOverlayScroll"
+      },
+      {
+        "file": "componentes/secoes/treinos.html",
+        "purpose": "Conteúdo do Slide 1 (Treinos). Sub-abas Exercícios/Montar Ficha, toolbar premium, grid de exercícios, sub-navbar Clash Royale, Deck Builder com coleção e templates.",
+        "injected_into": "[data-section='treinos']"
+      },
+      {
+        "file": "componentes/secoes/progresso.html",
+        "purpose": "Conteúdo do Slide 2 (Progresso). Ciclo de 30 dias, streak card, calendário mensal/semanal, volume de carga, radar chart SVG, calculadora 1RM.",
+        "injected_into": "[data-section='progresso']"
+      },
+      {
+        "file": "componentes/secoes/dashboard.html",
+        "purpose": "Conteúdo do Slide 3 (Dashboard). Header estilo Clash, widget central Radar Tático de Atributos de Performance (substituiu a imagem da Forja a partir da v3.3.0; mantém o cabeçalho com toggle Mensal/Total e o badge de Tier, mas SEM botão de compartilhar e SEM a legenda 'Baseado na variedade...'), barra segmentada de XP e CTA para abrir/iniciar a ficha sugerida.",
+        "injected_into": "[data-section='dashboard']"
+      },
+      {
+        "file": "componentes/secoes/perfil.html",
+        "purpose": "Conteúdo do overlay de Perfil (v3.1.0+). Profile header, emblemas, sub-abas (Perfil/Progressão/Personalizar/Preferências), temas, backup, segurança, assinaturas, configurações. Antes da v3.1.0 era injetado em `[data-section='perfil']` (Slide 4 do Swipe Viewport); a partir da v3.1.0 é injetado em `#perfilOverlayScroll` dentro do overlay fullscreen acionado pelo cartão de visitas do Dashboard.",
+        "injected_into": "#perfilOverlayScroll"
+      },
+      {
+        "file": "componentes/secoes/modais.html",
+        "purpose": "Todos os modais do aplicativo: Conclusão, Novo Exercício, Picker, Seletor de Fichas do Dashboard, Confirmação, Imagem, Histórico, Foco, Share Card, Volume Details, Radar Guide, Maestria, Coleção, Level Up, CR Details, Aeróbico.",
+        "injected_into": "#modais-container"
+      }
+    ]
+  },
+
+  "components": {
+    "description": "Scripts de UI globais reutilizáveis localizados em componentes/. São carregados pelo treino.html e atuam transversalmente às seções.",
+    "modules": [
+      {
+        "file": "componentes/navbar.js",
+        "purpose": "Gera e injeta dinamicamente a barra de navegação superior (Top Nav) em todas as páginas do site."
+      },
+      {
+        "file": "componentes/footer.js",
+        "purpose": "Gera e injeta o rodapé do site. Integrado ao app_init."
+      },
+      {
+        "file": "componentes/thememanager.js",
+        "purpose": "Gerenciador de temas global (ThemeManager). Controla a aplicação de temas visuais (cores, gradientes, fundo) via CSS custom properties e localStorage."
+      },
+      {
+        "file": "componentes/theme-integration.js",
+        "purpose": "Camada de integração entre o ThemeManager e os módulos de seção. Garante que mudanças de tema sejam propagadas corretamente para todos os componentes ativos."
+      },
+      {
+        "file": "componentes/theme-animation-override.js",
+        "purpose": "Sobrepõe e corrige animações específicas quando um tema não-padrão está ativo, prevenindo conflitos visuais."
+      },
+      {
+        "file": "componentes/fade-in.js",
+        "purpose": "Biblioteca de animações de entrada (fade-in) baseadas em IntersectionObserver. Aplicada em elementos com a classe .fade-in-element."
+      },
+      {
+        "file": "componentes/fade-in-integration.js",
+        "purpose": "Integra e dispara as animações do fade-in.js nos contextos corretos após navegação e carregamento de seções."
+      },
+      {
+        "file": "componentes/roster.js",
+        "purpose": "Componente de listagem do roster de amigos/ofensivas do perfil. Responsável por renderizar e atualizar a lista de contatos gamificados."
+      },
+      {
+        "file": "componentes/scroll-animations.js",
+        "purpose": "Animações baseadas em scroll (entrance animations). Complementa o fade-in para elementos que aparecem durante a rolagem da página."
+      }
+    ]
+  },
+
+  "styling_manifest": {
+    "description": "Todos os arquivos CSS do módulo de treino, carregados em cascata via style/treino.css. A ordem numérica define a especificidade.",
+    "style_treino_css": "Contêiner principal de importação de estilos de treino.",
+    "global_css": [
+      { "file": "style/main.css", "purpose": "Reset global e variáveis CSS base aplicadas ao site inteiro (fora do módulo de treino)." },
+      { "file": "style/navbar.css", "purpose": "Estilos completos da Top Nav Bar global (desktop e mobile)." },
+      { "file": "style/navbar-fix.css", "purpose": "Correções pontuais de especificidade e layout da navbar em contextos específicos." },
+      { "file": "style/footer.css", "purpose": "Estilos do rodapé global do site." },
+      { "file": "style/franquia.css", "purpose": "Estilos da página de franquia / landing page." },
+      { "file": "style/scroll-animations.css", "purpose": "Definição de keyframes e classes de animações de scroll globais." }
+    ],
+    "modules": [
+      { "file": "style/treino/1-core.css", "purpose": "Design tokens (:root), resets e layout base móvel. PONTO DE EDIÇÃO para variáveis globais do app." },
+      { "file": "style/treino/2-modals.css", "purpose": "Especificações visuais para popups de conclusão, compartilhamento e edição." },
+      { "file": "style/treino/3-foco-badges.css", "purpose": "Look-and-feel das tags de músculos, Modo Foco escuro e badges ativas." },
+      { "file": "style/treino/4-gamificacao.css", "purpose": "Métricas visuais, calendário mensal, planner semanal e XP Bars do Ciclo." },
+      { "file": "style/treino/5-premium-design.css", "purpose": "Índice de importação dos estilos modulares de premium design." },
+      { "file": "style/treino/secoes/bg-dinamico.css", "purpose": "Fundo dinâmico da arena (Clash Royale Style), partículas de elixir e coloração hue-rotate de seções." },
+      { "file": "style/treino/secoes/toolbar-busca.css", "purpose": "Filtros de categoria com checkboxes personalizados e campo de busca expansível." },
+      { "file": "style/treino/secoes/deck-builder.css", "purpose": "Estrutura do Deck Builder, grid do deck ativo, slot vazio e área de coleção de cards." },
+      { "file": "style/treino/secoes/cards.css", "purpose": "Design visual dos cards de exercício, overlay de ações (Clash Royale Style), list view e royale view." },
+      { "file": "style/treino/secoes/maestria.css", "purpose": "Menu e modal de desafios de maestria do exercício, recompensas e emblem badges." },
+      { "file": "style/treino/secoes/modais.css", "purpose": "Design premium e efeitos do modal de detalhes do exercício (Stellar Tactical Elite)." },
+      { "file": "style/treino/secoes/tabs-subnav.css", "purpose": "Navegação por dots e sub-navbar integrada." },
+       { "file": "style/treino/secoes/perfil.css", "purpose": "Estilos do perfil, switch toggles estilo iOS, formulário de segurança e planos de assinatura." },
+        { "file": "style/treino/secoes/perfil-overlay.css", "purpose": "Overlay fullscreen do Perfil (v3.1.0+). Container .perfil-overlay com animação de fade-in/scale, header sticky com glassmorphism e título 'MEU PERFIL', botão de fechar CoD-style (.perfil-overlay-close), área scrollable com scrollbar customizada, regras para sub-abas sticky (top:70px) e fallback de ocultação do botão legado .bnav-btn[data-section='perfil']. Z-index 600 (acima do bottom-nav, abaixo do news-overlay)." },
+        { "file": "style/treino/secoes/ficha-overlay.css", "purpose": "Overlay fullscreen da Ficha (v3.2.0+). Container .ficha-overlay full-bleed (sem header fixo, decisão de imersão) com animação de fade-in/scale (320ms cubic-bezier) e fade-out (240ms), área scrollable com scrollbar customizada roxa e `overscroll-behavior: contain`. Ajustes para o conteúdo da ficha dentro do overlay (.treino-container padding-top:0, .treino-hero margin-top:0). Regra `body.ficha-overlay-open` para travar scroll do body. Z-index 600 (mesmo do Perfil)." },
+        { "file": "style/treino/secoes/dashboard.css", "purpose": "Layout e efeitos visuais do Dashboard: header glassmorphism, arena Forja, barra segmentada de XP e bottom-sheet seletor de fichas." },
+       { "file": "style/treino/secoes/placeholders-animacoes.css", "purpose": "Premium placeholders, animações exPulse/exShimmer/exFloat e fade utilities." },
+      { "file": "style/treino/6-maestria.css", "purpose": "Texturas, cores e brilhos para medalhas de Maestria nos Tiers Bronze/Prata/Ouro/Elite." },
+      { "file": "style/treino/7-nav-icons.css", "purpose": "Transições suaves do Bottom Nav e ocultação inteligente de elementos." },
+      { "file": "style/treino/8-customizacao.css", "purpose": "Estilos premium da vitrine de skins de timer, títulos CoD e molduras de avatar. Inclui arquétipos de classe." }
+    ]
+  },
+
+  "assets": {
+    "description": "Recursos estáticos servidos diretamente. Gerenciados pelo Service Worker para cache offline.",
+    "directories": [
+      {
+        "path": "Assets/BG/",
+        "purpose": "Imagens de fundo (backgrounds) usadas pelos temas. Arquivo base: BG-roxo-vertical.jpg. Recoloração via CSS filter: hue-rotate()."
+      },
+      {
+        "path": "Assets/Exerciciosgif/",
+        "purpose": "GIFs locais de demonstração de execução dos exercícios. Referenciados pelo db.js nos registros de cada exercício."
+      },
+      {
+        "path": "Assets/FONTS/",
+        "purpose": "Fontes customizadas do projeto (Rajdhani e variantes) servidas localmente para funcionamento offline."
+      },
+      {
+        "path": "Assets/Images/",
+        "purpose": "Ícones, avatares, logos e imagens institucionais da aplicação."
+      },
+      {
+        "path": "Assets/Arenas/",
+        "purpose": "Artes centrais de arena/widget usadas no Dashboard. Atualmente inclui a imagem Forja.png da tela inicial gamificada."
+      },
+      {
+        "path": "Assets/libs/",
+        "purpose": "Bibliotecas JavaScript de terceiros (ex: html2canvas para geração de Share Cards) servidas localmente."
+      },
+      {
+        "path": "cache/",
+        "purpose": "Diretório de cache interno da aplicação. Gerenciado pelo sw.js e não deve ser editado manualmente."
+      }
+    ]
+  },
+
+  "documentation": {
+    "description": "Todos os arquivos de documentação e diretrizes do projeto. Leitura obrigatória para agentes de IA antes de editar o código.",
+    "files": [
+      {
+        "file": "Diretrizes/README.md",
+        "purpose": "Visão geral arquitetural, features, design guidelines e guia de uso para agentes de IA. LEITURA OBRIGATÓRIA no início de cada sessão."
+      },
+      {
+        "file": "Diretrizes/CHANGELOG.md",
+        "purpose": "Histórico de versões e alterações. Todo agente de IA DEVE registrar suas mudanças aqui ao final de cada sessão."
+      },
+      {
+        "file": "Diretrizes/Claude.md",
+        "purpose": "Diretrizes e instruções específicas para o modelo Claude (Anthropic). Contém contexto de personalidade, tom e regras de resposta."
+      },
+      {
+        "file": "Diretrizes/system_map.json",
+        "purpose": "Este arquivo. Índice Arquitetural completo do projeto. Deve ser a primeira leitura de um agente de IA para orientação eficiente de tokens."
+      },
+      {
+        "file": "Diretrizes/otimizacao_tokens_ia.md",
+        "purpose": "Diretrizes de otimização de consumo de tokens para agentes de IA. Descreve as boas práticas de modularização e documentação adotadas neste projeto."
+      },
+      {
+        "file": "Diretrizes/Ícones.md",
+        "purpose": "Biblioteca de referência de todos os ícones SVG inline usados no projeto. Consultar antes de adicionar qualquer novo ícone."
+      },
+      {
+        "file": "Personalização-perfil.md",
+        "purpose": "Documentação técnica e roadmap da feature de Personalização de Perfil (Fase 1 e Fase 2). Detalha skins, títulos, bordas e arquétipos."
+      }
+    ]
+  },
+
+  "plans": {
+    "description": "Documentação de planejamento futuro e progressão de features. Referência para roadmap.",
+    "files": [
+      {
+        "file": "Planos/Transição.md",
+        "purpose": "Plano de transição arquitetural do projeto, descrevendo etapas de migração e refatoração planejadas."
+      },
+      {
+        "file": "Planos/UpgradeBD.md",
+        "purpose": "Plano de upgrade do banco de dados local (LocalStorage schemas). Descreve migrações de dados e versioning."
+      },
+      {
+        "file": "Planos/Progressão/XP.md",
+        "purpose": "Tabela de progressão e fórmulas do sistema de XP e níveis."
+      },
+      {
+        "file": "Planos/Progressão/conquistas.md",
+        "purpose": "Catálogo completo de conquistas e badges desbloqueáveis no sistema de gamificação."
+      },
+      {
+        "file": "Planos/Progressão/gamificação mestre.md",
+        "purpose": "Documento mestre do sistema de gamificação completo: classes, arquétipos, missões e progressão."
+      },
+      {
+        "file": "Planos/Progressão/Missões diarias.md",
+        "purpose": "Definição e regras das missões diárias do sistema de gamificação."
+      },
+      {
+        "file": "Planos/Progressão/Missões semanais.md",
+        "purpose": "Definição e regras das missões semanais do sistema de gamificação."
+      },
+      {
+        "file": "Planos/Progressão/Missões Mensais.md",
+        "purpose": "Definição e regras das missões mensais e metas de longo prazo."
+      }
+    ]
+  },
+
+  "ia_quick_reference": {
+    "description": "Referência rápida de onde editar cada coisa. Use isto como primeira consulta antes de qualquer pesquisa de arquivo.",
+    "edit_color_variable": "style/treino/1-core.css → bloco :root",
+    "edit_modal_ui": "style/treino/2-modals.css",
+    "edit_workout_sheet_logic": "JS/treino/secao-ficha.js",
+    "edit_deck_builder_logic": "JS/treino/secao-treinos.js",
+    "edit_progress_charts": "JS/treino/secao-progresso.js",
+    "edit_dashboard_home": "JS/treino/secao-dashboard.js + componentes/secoes/dashboard.html + style/treino/secoes/dashboard.css (a partir de v3.3.0 o widget central exibe o Radar Tático via #dashRadarChartContainer)",
+    "edit_radar_chart_logic": "JS/treino/secao-progresso.js (a partir de v3.3.0: renderRadarChart(db, options?) é compartilhado entre Progresso e Dashboard; helpers: computeRadarStats, applyRadarSideEffects, buildRadarSvgHtml, updateProfileArchetypeBadge)",
+    "edit_profile_ui": "JS/treino/secao-perfil.js + JS/treino/perfil-overlay.js + style/treino/5-premium-design.css + style/treino/secoes/perfil-overlay.css",
+    "edit_profile_overlay_behavior": "JS/treino/perfil-overlay.js (open/close/init/ESC) + JS/treino/nav.js (intercepção de transitionTo('perfil')) + JS/treino/loader.js (injeção em #perfilOverlayScroll)",
+    "edit_profile_overlay_style": "style/treino/secoes/perfil-overlay.css",
+    "edit_ficha_overlay_behavior": "JS/treino/ficha-overlay.js (open/close/init/ESC) + JS/treino/nav.js (intercepção de transitionTo('ficha')) + JS/treino/loader.js (injeção em #fichaOverlayScroll) + JS/treino/app.js (init + auto-abertura condicional)",
+    "edit_ficha_overlay_style": "style/treino/secoes/ficha-overlay.css",
+    "edit_customization_skins": "JS/treino/secao-customizacao.js + style/treino/8-customizacao.css",
+    "edit_mastery_tiers": "style/treino/6-maestria.css",
+    "edit_navigation_swipe": "JS/treino/nav.js + style/treino/7-nav-icons.css",
+    "edit_html_templates": "JS/treino/templates.js",
+    "edit_local_data_schema": "JS/treino/db.js",
+    "edit_pwa_cache_rules": "sw.js",
+    "edit_backup_export_import": "JS/treino/secao-perfil.js (exportData/importData/validateBackup em 'BACKUP E DADOS') + JS/treino/app.js (listeners via [data-action] + reinitAppAfterImport disparado pelo evento 'academia:data-imported') + componentes/secoes/perfil.html (bloco acessível em perf-tab-prefs → perf-subtab2-config). A partir da v3.3.1: exportData usa navigator.share() com fallback <a download>; importData usa modalConfirm (modais.html:351) com schema check profundo; reinitAppAfterImport re-renderiza todas as seções sem reload e fecha overlays/modais abertos. Listeners passaram de getElementById para querySelectorAll('[data-action]') para evitar IDs duplicados.",
+    "add_new_icon": "Consultar Diretrizes/Ícones.md → adicionar SVG inline no treino.html",
+    "add_new_exercise_gif": "Assets/Exerciciosgif/ → registrar referência em JS/treino/db.js",
+    "record_change": "Diretrizes/CHANGELOG.md",
+    "update_this_index": "Diretrizes/system_map.json → atualizar seção relevante + version + last_updated",
+    "ficha_landing_behavior": "v3.2.0+: a Ficha deixa de ser uma slide do Swipe Viewport e vira overlay fullscreen (`#ficha-overlay`, full-bleed sem header fixo). db.fichaEmAndamento (boolean) + db.fichaEmAndamentoDate (string YYYY-MM-DD) — ou fallback `workout_start_time` do dia atual — controlam a auto-abertura do overlay em `app.js` (chamada `openFichaOverlay()` via requestAnimationFrame). Trigger manual único: botão 'PRÓXIMO PASSO' do Dashboard (`#dashBtnIniciar` → `startWorkoutFromDashboard` em `secao-dashboard.js` → `window.openFichaOverlay()`). Fechamento (ESC/programático): se há treino em andamento, abre `modalEncerrarTreino`; senão, volta ao Dashboard. Set em `startWorkoutFromDashboard`, clear em `app.js` (`btnFecharConclusao` e `btnEncerrarConfirmar`). A partir da v3.3.2: o overlay ganhou um botão X descobrível no canto superior esquerdo (`#btnFecharFicha` / `.ficha-overlay-close`) que sempre abre `modalEncerrarTreino` como confirmação (independente de `workout_start_time`); o handler de `#btnFecharConclusao` em `app.js` também passou a chamar `closeFichaOverlay({ force: true })` (antes só limpava o flag e navegava, deixando o usuário preso no overlay após o fluxo Share → Baixar Imagem → INCRÍVEL!).",
+    "perfil_overlay_trigger_behavior": "v3.1.0+: o Perfil deixa de ser uma slide do Swipe Viewport e vira overlay fullscreen. Único trigger: clique no cartão de visitas `#dashProfileCard` no header do Dashboard. Fechamento (X, ESC ou programático) sempre retorna ao Dashboard via window._transitionTo('dashboard'). `window.openPerfilOverlay()`, `window.closePerfilOverlay()` e `window.__applyProfileCustomization()` ficam expostos globalmente; `_transitionTo('perfil')` é interceptado e redirecionado para o overlay (defesa em profundidade)."
+  }
+}
