@@ -93,16 +93,33 @@ export const DEFAULT_EXERCISES = [
   { id: 'ex-roscamartelo-90', nome: 'Rosca 90°', grupoMuscular: 'Bíceps', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Rosca 90.gif', tags: ['Isolador', 'Máquina'] },
   // Novos para Perda Ponderal (média)
   { id: 'ex-hack', nome: 'HACK', grupoMuscular: 'Pernas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/HACK.webp', tags: ['Multiarticular', 'Máquina'] },
-  { id: 'ex-rosca-direta-barra-livre', nome: 'Rosca Direta Barra Livre', grupoMuscular: 'Bíceps', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Rosca Direta Barra Livre.gif', tags: ['Isolador', 'Livre'] },
+  { id: 'ex-rosca-direta-barra-livre', nome: 'Rosca Direta Barra Livre', grupoMuscular: 'Bíceps', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Rosca Direta Barra.gif', tags: ['Isolador', 'Livre'] },
   { id: 'ex-rosca-direta-cross', nome: 'Rosca Direta Cross', grupoMuscular: 'Bíceps', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Rosca Direta Cross.gif', tags: ['Isolador', 'Máquina'] },
-  { id: 'ex-remada-cavalinho', nome: 'Remada Cavalinho Máquina', grupoMuscular: 'Costas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Remada Cavalinho Máquina.webp', tags: ['Multiarticular', 'Máquina'] },
-  { id: 'ex-mesa-flexora', nome: 'Mesa Flexora', grupoMuscular: 'Pernas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Mesa flexora.gif', tags: ['Isolador', 'Máquina'] },
+  { id: 'ex-remada-cavalinho', nome: 'Remada Cavalinho Máquina', grupoMuscular: 'Costas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Remada Cavalinho.gif', tags: ['Multiarticular', 'Máquina'] },
+  { id: 'ex-mesa-flexora', nome: 'Mesa Flexora', grupoMuscular: 'Pernas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Mesa Flexora.webp', tags: ['Isolador', 'Máquina'] },
   { id: 'ex-panturrilha-livre', nome: 'Panturrilha Livre', grupoMuscular: 'Pernas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Panturrilha Livre.gif', tags: ['Isolador', 'Livre'] },
   { id: 'ex-flexao-quadril', nome: 'Flexão de Quadril', grupoMuscular: 'Pernas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Flexão de quadril.gif', tags: ['Isolador', 'Peso do Corpo'] },
-  { id: 'ex-triceps-corda', nome: 'Trícepes Corda', grupoMuscular: 'Tríceps', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Trícepes Corda.gif', tags: ['Isolador', 'Máquina'] },
+  { id: 'ex-triceps-corda', nome: 'Trícepes Corda', grupoMuscular: 'Tríceps', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Tricepes Corda.gif', tags: ['Isolador', 'Máquina'] },
   { id: 'ex-supino-reto', nome: 'Supino Reto', grupoMuscular: 'Peito', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Supino Reto.gif', tags: ['Multiarticular', 'Livre'] },
   { id: 'ex-desenvolvimento-ombro-halter', nome: 'Desenvolvimento Ombro com Halter', grupoMuscular: 'Ombros', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Desenvolvimento Ombro com Halter.gif', tags: ['Multiarticular', 'Livre'] },
   { id: 'ex-supra-banco', nome: 'Supra Banco', grupoMuscular: 'Core', series: 3, repeticoes: '20', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Supra Banco.gif', tags: ['Isolador', 'Máquina'] },
+  // Novos para Hipertrofia (Médio) II
+  { id: 'ex-supino-reto-halteres', nome: 'Supino Reto com Halteres', grupoMuscular: 'Peito', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/supino-reto-com-halteres.gif', tags: ['Multiarticular', 'Livre'] },
+  { id: 'ex-agach-guiado', nome: 'Agachamento Guiado', grupoMuscular: 'Pernas', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Agachamento guiado.gif', tags: ['Multiarticular', 'Máquina'] },
+  { id: 'ex-desenvolvimento-frente', nome: 'Desenvolvimento Frente', grupoMuscular: 'Ombros', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: null, tags: ['Multiarticular', 'Livre'] },
+  { id: 'ex-triceps-palmar', nome: 'Triceps Palmar', grupoMuscular: 'Tríceps', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Tricepes Palmar.gif', tags: ['Isolador', 'Máquina'] },
+  { id: 'ex-puxada-supinada', nome: 'Puxada Supinada', grupoMuscular: 'Costas', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Puxada Supinada.gif', tags: ['Multiarticular', 'Máquina'] },
+  { id: 'ex-fly-inverso', nome: 'Fly Inverso', grupoMuscular: 'Costas', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Fly Inverso.gif', tags: ['Isolador', 'Máquina'] },
+  // Novos para Perda Ponderal (Médio) II
+  { id: 'ex-panturrilha-leg-45', nome: 'Panturrilha Leg 45°', grupoMuscular: 'Pernas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/PANTURRILHA LEG 45°.gif', tags: ['Isolador', 'Máquina'] },
+  { id: 'ex-elevacao-joelho', nome: 'Elevação de Joelho', grupoMuscular: 'Core', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/ELEVACÃO DE JOELHO.gif', tags: ['Isolador', 'Máquina'] },
+  { id: 'ex-supino-45', nome: 'Supino 45°', grupoMuscular: 'Peito', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/SUPINO 45°.gif', tags: ['Multiarticular', 'Máquina'] },
+  { id: 'ex-triceps-testa-barra-h', nome: 'Triceps Testa Barra H', grupoMuscular: 'Tríceps', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/TRICEPS TESTA BARRA H.gif', tags: ['Isolador', 'Livre'] },
+  { id: 'ex-desenvolvimento-barra', nome: 'Desenvolvimento Barra', grupoMuscular: 'Ombros', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/DESENVOLVIMENTO BARRA.gif', tags: ['Multiarticular', 'Livre'] },
+  { id: 'ex-remada-unilateral', nome: 'Remada Unilateral', grupoMuscular: 'Costas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/REMADA UNILATERAL.gif', tags: ['Isolador', 'Máquina'] },
+  { id: 'ex-pull-down', nome: 'Pull Down', grupoMuscular: 'Costas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/PULL DOWN.gif', tags: ['Multiarticular', 'Máquina'] },
+  { id: 'ex-roscott-unilateral', nome: 'Rosca Scott Unilateral', grupoMuscular: 'Bíceps', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/ROSCA SCOTT UNILATERAL.gif', tags: ['Isolador', 'Livre'] },
+  { id: 'ex-extensao-lombar', nome: 'Extensão Lombar', grupoMuscular: 'Core', series: 3, repeticoes: '20', carga: '', descanso: 30, imagem: null, tags: ['Isolador', 'Máquina'] },
 ];
 
 export const DEFAULT_FICHAS = {

@@ -4506,6 +4506,15 @@ const TEMPLATES_PRONTOS = {
     A: ['ex-hack', 'ex-extensor', 'ex-remad-artic', 'ex-rosca-direta-barra-livre', 'ex-rosca-direta-cross', 'ex-remada-cavalinho', 'ex-banco-adutor', 'ex-banco-abdutor', 'ex-supra-banco'],
     B: ['ex-mesa-flexora', 'ex-panturrilha-livre', 'ex-flexao-quadril', 'ex-triceps-corda', 'ex-supino-reto', 'ex-desenvolvimento-ombro-halter', 'ex-elev-frontal', 'ex-supra-banco'],
     ae: { tipo: 'Geral', vel: '---', tempo: '20' }
+  },
+  hipertrofia_medio_ii: {
+    A: ['ex-supino-reto-halteres', 'ex-a4', 'ex-a1', 'ex-agach-guiado', 'ex-extensor', 'ex-desenvolvimento-frente', 'ex-triceps-corda', 'ex-triceps-palmar'],
+    B: ['ex-puxada-supinada', 'ex-fly-inverso', 'ex-remada-cavalinho', 'ex-b5', 'ex-mesa-flexora', 'ex-rosca-direta-barra-livre', 'ex-b4', 'ex-a8']
+  },
+  perda_ponderal_media_ii: {
+    A: ['ex-leg-45', 'ex-panturrilha-leg-45', 'ex-elevacao-joelho', 'ex-supino-45', 'ex-triceps-testa-barra-h', 'ex-desenvolvimento-barra', 'ex-b6', 'ex-b8'],
+    B: ['ex-b5', 'ex-remada-unilateral', 'ex-pull-down', 'ex-roscott-unilateral', 'ex-rosca-direta-cross', 'ex-fly-inverso', 'ex-supra-solo', 'ex-extensao-lombar'],
+    ae: { tipo: 'Geral', vel: '---', tempo: '20' }
   }
 };
 

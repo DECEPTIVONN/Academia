@@ -2,8 +2,16 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA (AI AGENTS INSTRUCTIONS):**
 > **LEIA ISTO ANTES DE ALTERAR CÓDIGO:**
-> Toda e qualquer modificação arquitetural, adição de nova feature, alteração de UI/UX, ou correção de bug complexo feita por um agente de Inteligência Artificial **DEVE** ser documentada neste arquivo imediatamente após sua conclusão. 
-> 
+>
+> ### ⚠️ SEMPRE REGISTRE AS ALTERAÇÕES FEITAS
+> **Toda e qualquer alteração feita neste projeto DEVE ser registrada neste arquivo, sem exceção.** Isso inclui, mas não se limita a: modificações arquiteturais, adição de novas features, alterações de UI/UX, correções de bugs, **e também mudanças em documentação, diretrizes e configuração** (`README.md`, `system_map.json`, `DESIGN.md`, `Ícones.md`, `Planos/*`, etc.).
+>
+> **Regras:**
+> 1. Registre a alteração **imediatamente após concluí-la** — nunca deixe para "depois" e nunca finalize uma sessão com mudanças não documentadas.
+> 2. Se a alteração não justificar uma nova versão SemVer, registre assim mesmo usando a versão vigente com sufixo de rótulo, ex.: `## [v3.5.4-docs] - 2026-09-25` — o importante é que **a mudança apareça aqui**.
+> 3. Se alterou o `system_map.json`, incremente o campo `version` dele **e** cite isso na entrada do Changelog.
+> 4. A entrada mais recente fica sempre no topo da lista de versões (logo abaixo deste bloco).
+>
 > **Padrão de Documentação Exigido:**
 > 1. Use o formato **[SemVer]** e a Data (`[vX.X.X] - YYYY-MM-DD`).
 > 2. Classifique as mudanças usando as tags:
@@ -12,6 +20,74 @@
 >    * `[Fixed]` para resoluções de bugs.
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
+
+## [v3.5.6] - 2026-09-25
+*Novo template "Perda Ponderal (Médio) II" (8+8 exercícios + aeróbico 20', 6x/semana) conforme planilha de 24/08/2026*
+
+### [Added]
+- **Novo template `perda_ponderal_media_ii`** em `TEMPLATES_PRONTOS`, espelhando a planilha (Objetivo PERDA PONDENDRAL, 30 treinos, freq. 6X, intervalo 30", AERÓBICO 20'):
+  - **A:** Leg 45°, Panturrilha Leg 45°, Elevação de Joelho, Supino 45°, Triceps Testa Barra H, Desenvolvimento Barra, Remada Alta, Infra Paralelo.
+  - **B:** Banco Flexor, Remada Unilateral, Pull Down, Rosca Scott Unilateral, Rosca Direta Cross, Fly Inverso, Supra Solo, Extensão Lombar.
+  - **`JS/treino/secao-treinos.js`**: chave `perda_ponderal_media_ii` adicionada a `TEMPLATES_PRONTOS`, com `ae: { tipo: 'Geral', vel: '---', tempo: '20' }`.
+  - **`JS/treino.js`** (legado): mesma chave adicionada ao `TEMPLATES_PRONTOS` legado.
+  - **`componentes/secoes/treinos.html`**: novo botão `<button class="btn-template" data-template="perda_ponderal_media_ii">` no grid `#templatesGrid`, com ícone SVG de pulso ECG (path da biblioteca de `Diretrizes/Ícones.md`, `.tpl-icon` 28px/stroke 2) e descrição "8 exercícios + aeróbico 20' · 6x/semana".
+- **9 novos exercícios em `DEFAULT_EXERCISES` (`JS/treino/db.js`)**:
+  - `ex-panturrilha-leg-45` — "Panturrilha Leg 45°" (Pernas, 3×15) → `PANTURRILHA LEG 45°.gif`
+  - `ex-elevacao-joelho` — "Elevação de Joelho" (Core, 3×15) → `ELEVACÃO DE JOELHO.gif`
+  - `ex-supino-45` — "Supino 45°" (Peito, 3×15) → `SUPINO 45°.gif`
+  - `ex-triceps-testa-barra-h` — "Triceps Testa Barra H" (Tríceps, 3×15) → `TRICEPS TESTA BARRA H.gif`
+  - `ex-desenvolvimento-barra` — "Desenvolvimento Barra" (Ombros, 3×15) → `DESENVOLVIMENTO BARRA.gif`
+  - `ex-remada-unilateral` — "Remada Unilateral" (Costas, 3×15) → `REMADA UNILATERAL.gif`
+  - `ex-pull-down` — "Pull Down" (Costas, 3×15) → `PULL DOWN.gif`
+  - `ex-roscott-unilateral` — "Rosca Scott Unilateral" (Bíceps, 3×15) → `ROSCA SCOTT UNILATERAL.gif`
+  - `ex-extensao-lombar` — "Extensão Lombar" (Core, **3×20**) → **`imagem: null`** (placeholder premium; GIF ainda não entregue — ao receber o arquivo, colocá-lo em `Assets/exerciciosgif/` e apontar `imagem` para ele)
+- **8 GIFs novos em `Assets/Exerciciosgif/`** (espelhados em `www/Assets/exerciciosgif/`): `PANTURRILHA LEG 45°.gif`, `ELEVACÃO DE JOELHO.gif`, `SUPINO 45°.gif`, `TRICEPS TESTA BARRA H.gif`, `DESENVOLVIMENTO BARRA.gif`, `REMADA UNILATERAL.gif`, `PULL DOWN.gif`, `ROSCA SCOTT UNILATERAL.gif` (o 9º nome da lista, `Remada Alta.gif`, já existia e foi reaproveitado pelo exercício `ex-b6`).
+- **`Diretrizes/system_map.json`**: `version` incrementada de `3.5.5` para `3.5.6`; `last_updated` mantido em `2026-09-25`.
+
+## [v3.5.5] - 2026-09-25
+*Novo template "Hipertrofia (Médio) II" (8+8 exercícios, 6x/semana) conforme planilha de 24/09/2026*
+
+### [Added]
+- **Novo template `hipertrofia_medio_ii`** em `TEMPLATES_PRONTOS`, espelhando a planilha (Objetivo HIPERTROFIA, 30 treinos, freq. 6X, intervalo 30", sem aeróbico):
+  - **A:** Supino Reto com Halteres, Crucifixo, Supino Articulado, Agachamento Guiado, Banco Extensor, Desenvolvimento Frente, Trícepes Corda, Triceps Palmar.
+  - **B:** Puxada Supinada, Fly Inverso, Remada Cavalinho, Banco Flexor, Mesa Flexora, Rosca Direta Barra, Elevação Lateral, Supra Prancha.
+  - **`JS/treino/secao-treinos.js`**: chave `hipertrofia_medio_ii` adicionada a `TEMPLATES_PRONTOS`.
+  - **`JS/treino.js`** (legado): mesma chave adicionada ao `TEMPLATES_PRONTOS` legado para manter sincronia.
+  - **`componentes/secoes/treinos.html`**: novo botão `<button class="btn-template" data-template="hipertrofia_medio_ii">` no grid `#templatesGrid`, com ícone SVG de haltere (path da biblioteca de `Diretrizes/Ícones.md`, `.tpl-icon` 28px/stroke 2) e descrição "8 exercícios por treino · 6x/semana".
+- **6 novos exercícios em `DEFAULT_EXERCISES` (`JS/treino/db.js`)**, todos 3×10 / descanso 30":
+  - `ex-supino-reto-halteres` — "Supino Reto com Halteres" (Peito) → `Assets/exerciciosgif/supino-reto-com-halteres.gif`
+  - `ex-agach-guiado` — "Agachamento Guiado" (Pernas) → `Assets/exerciciosgif/Agachamento guiado.gif`
+  - `ex-desenvolvimento-frente` — "Desenvolvimento Frente" (Ombros) → **`imagem: null`** (usa o placeholder premium, conforme decisão do usuário)
+  - `ex-triceps-palmar` — "Triceps Palmar" (Tríceps) → `Assets/exerciciosgif/Tricepes Palmar.gif`
+  - `ex-puxada-supinada` — "Puxada Supinada" (Costas) → `Assets/exerciciosgif/Puxada Supinada.gif`
+  - `ex-fly-inverso` — "Fly Inverso" (Costas) → `Assets/exerciciosgif/Fly Inverso.gif`
+- **8 GIFs novos em `Assets/Exerciciosgif/`** (espelhados em `www/Assets/exerciciosgif/`): `supino-reto-com-halteres.gif`, `Agachamento guiado.gif`, `Tricepes Corda.gif`, `Puxada Supinada.gif`, `Fly Inverso.gif`, `Remada Cavalinho.gif`, `Mesa Flexora.webp`, `Rosca Direta Barra.gif`.
+- **`Diretrizes/system_map.json`**: nova chave `ia_quick_reference.edit_workout_templates` (onde editar os templates prontos); `version` incrementada de `3.5.4` para `3.5.5`; `last_updated` mantido em `2026-09-25`.
+
+### [Changed]
+- **`JS/treino/db.js`**: imagem de 4 exercícios reutilizados apontando para os GIFs novos (IDs e nomes preservados; `loadDB()` sincroniza a imagem dos usuários existentes):
+  - `ex-triceps-corda`: `Trícepes Corda.gif` → `Tricepes Corda.gif`
+  - `ex-mesa-flexora`: `Mesa flexora.gif` → `Mesa Flexora.webp`
+  - `ex-remada-cavalinho`: `Remada Cavalinho Máquina.webp` → `Remada Cavalinho.gif`
+  - `ex-rosca-direta-barra-livre`: `Rosca Direta Barra Livre.gif` → `Rosca Direta Barra.gif`
+
+## [v3.5.4] - 2026-09-25
+*Consolidação da documentação: remoção do `Claude.md`, reforço da instrução de registro de alterações e regra de leitura de `Ícones.md` ao mexer em ícones*
+
+### [Changed]
+- **`Diretrizes/CHANGELOG.md`**: Bloco de instruções obrigatórias reescrito com a regra explícita **"SEMPRE REGISTRE AS ALTERAÇÕES FEITAS"**, estendendo a obrigação de registro a mudanças de documentação, diretrizes e configuração (não apenas código), com fallback de versão (`[vX.Y.Z-docs]`) e exigência de incrementar `version` no `system_map.json` quando ele for alterado.
+- **`Diretrizes/system_map.json`**: Mesma instrução de registro de alterações incorporada ao campo `how_to_update` e reforçada em `ia_quick_reference.record_change`.
+- **`Diretrizes/README.md`**: Nova obrigação explícita de **ler `Diretrizes/Ícones.md` antes de adicionar ou alterar qualquer ícone** (seções de Diretrizes de UI/UX e Guia para Agentes de IA); nova seção "📌 Stack, Estrutura e Convenções do Projeto" criada para absorver o conteúdo útil do antigo `Claude.md`.
+
+### [Removed]
+- **`Diretrizes/Claude.md`** (removido): documento de uma versão antiga do projeto, com informações desatualizadas (referência a `JS/treino.js` monolítico, `franquiaexemplo.html` inexistente, lista fixa de 16 exercícios pré-cadastrados e rotação apenas A/B — hoje há 10 fichas A-J e 50+ exercícios). O conteúdo ainda aproveitável (stack, estrutura de diretórios, schema do `localStorage`, como criar novas páginas e observações importantes) foi migrado para `Diretrizes/README.md`.
+- **`Diretrizes/system_map.json`**: Removida a entrada `Diretrizes/Claude.md` de `documentation.files` e a entrada fantasma `Diretrizes/otimizacao_tokens_ia.md` (arquivo inexistente no repositório).
+
+### [Added]
+- **`Diretrizes/system_map.json`**: Entradas novas em `documentation.files` para `DESIGN.md` (manual do design system, na raiz) e `Diretrizes/navbar-inferior.html` (guia/preview da navbar mobile HUD).
+- **`Diretrizes/README.md`**: Seção "📌 Stack, Estrutura e Convenções do Projeto" (stack tecnológica, árvore de diretórios atualizada, schema do `localStorage`, componentes reutilizáveis, como adicionar novas páginas e observações importantes).
+- **`Diretrizes/system_map.json`**: `version` incrementada de `3.5.3` para `3.5.4`; `last_updated` atualizado para `2026-09-25`.
+
 ## [v3.5.3] - 2026-07-23
 *Adição de 11 novos exercícios e template Perda Ponderal (Médio)*
 

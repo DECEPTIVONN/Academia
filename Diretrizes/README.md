@@ -34,6 +34,91 @@ Agrupados e carregados via `@import` no `treino.css` raiz, preservando a especif
 
 ---
 
+## 📌 Stack, Estrutura e Convenções do Projeto
+
+> Esta seção consolida o conteúdo útil do antigo `Claude.md`, que foi **removido** por descrever uma versão antiga do projeto (referências a `JS/treino.js` monolítico, `franquiaexemplo.html` e rotação apenas A/B). Sempre que houver conflito, prevalece o `system_map.json`.
+
+### 🧱 Stack Tecnológica
+- **HTML5** — Estrutura semântica (shell + fragmentos modulares).
+- **CSS3 Vanilla** — Sem frameworks de estilo (Tailwind é usado apenas em páginas/guia isolados). Variáveis globais em `style/main.css` e design tokens do app em `style/treino/1-core.css`.
+- **JavaScript Vanilla (ES Modules)** — Sem frameworks nem bundlers; módulos carregados via `<script type="module">`.
+- **localStorage** — Persistência de dados (100% client-side, sem backend).
+- **Service Worker** — Cache offline interceptativo (`sw.js`).
+- **Capacitor** — Embute o PWA no Android (`capacitor.config.json`, pasta `android/` ignorada pelo Git).
+- **Fonte:** Rajdhani servida localmente (`Assets/FONTS/`) — pesos 300–900, para funcionamento offline. `Inter`/`Outfit` apenas em textos de formulário.
+
+### 🗂️ Estrutura de Diretórios
+```
+Academia/
+├── treino.html                ← Shell da aplicação (splash, viewport, bottom nav)
+├── noticias.html, Banner.html, DESIGN.html, background-standalone.html, teste.html
+├── sw.js                      ← Service Worker (cache offline)
+├── manifest.json              ← Manifesto PWA
+├── DESIGN.md                  ← Manual do sistema de design
+├── Personalização-perfil.md   ← Roadmap da feature de personalização
+├── Diretrizes/                ← Documentação e diretrizes (LEIA ANTES DE EDITAR)
+│   ├── README.md              ← Este arquivo
+│   ├── system_map.json        ← Índice arquitetural (primeira leitura)
+│   ├── CHANGELOG.md           ← Registro obrigatório de todas as alterações
+│   ├── Ícones.md              ← Biblioteca de ícones SVG (ler ao mexer em ícones)
+│   └── navbar-inferior.html   ← Guia/preview da navbar mobile HUD
+├── Planos/                    ← Planejamento e roadmap de features
+├── JS/
+│   ├── treino.js              ← Legado (não é carregado pelo treino.html)
+│   └── treino/                ← Módulos ES6 do app (app, db, nav, loader, overlays, seções)
+├── style/
+│   ├── main.css, navbar.css, footer.css, ...   ← Estilos globais do site
+│   ├── treino.css             ← Contêiner de @import dos módulos do app
+│   └── treino/                ← 1-core … 8-customizacao + secoes/ (modulares)
+├── componentes/               ← JS globais reutilizáveis (navbar, footer, temas, animações)
+│   └── secoes/                ← Fragmentos HTML injetados pelo loader.js
+└── Assets/                    ← BG, Exerciciosgif, FONTS, Images, Arenas, libs
+```
+
+### 💾 Persistência (`localStorage`)
+Banco principal: chave **`academia_treino`** (constante `DB_KEY` em `JS/treino/db.js`). Estrutura produzida por `initDB()`:
+
+```json
+{
+  "exercicios": [ { "id": "ex-a1", "nome": "Supino Articulado", "grupoMuscular": "Peito",
+                    "series": 3, "repeticoes": "10", "carga": "", "descanso": 30,
+                    "imagem": "./Assets/exerciciosgif/...", "tags": ["Multiarticular", "Máquina"] } ],
+  "fichas":      { "A": ["ex-a1", "..."], "B": [], "C": [], "...": [], "J": [] },
+  "aerobicos":   { "A": null, "...": null, "J": null },
+  "historico":   { "2026-09-25": { "treino": "A", "concluido": true, "checks": ["ex-a1"] } },
+  "conquistas":  [], "maestrias": {}, "fichasArquivadas": [], "selectedEmblems": [],
+  "currentFichaWorkouts": 0, "currentCycleBreakdown": {}, "currentCycleStartDate": "YYYY-MM-DD",
+  "cycleEvents": {}, "dashboard": { "suggestedWorkout": null, "newsRead": [] },
+  "profileCustomization": { "nome": "", "handle": "", "banner": "roxo-neon", "barSkin": "default" }
+}
+```
+
+Chaves auxiliares no mesmo `localStorage`: `workout_start_time`, `academia_theme`, `academia_view_mode`, `academia_calendar_view`, `academia_perfil_tab`, `timerStyle`, `academia_dev_mode`.
+
+### 🧩 Componentes Reutilizáveis (`componentes/`)
+- `navbar.js` — barra superior injetada em `<div id="navbar-container">`.
+- `footer.js` — rodapé injetado em `<div id="footer-container">`.
+- `thememanager.js` + `theme-integration.js` + `theme-animation-override.js` — troca de temas sobrescrevendo as variáveis do `:root`.
+- `fade-in.js` + `fade-in-integration.js` + `scroll-animations.js` — animações de entrada; classes `scroll-fade-up|left|right` com `delay-1|2|3` e `.fade-in-element`.
+- `roster.js` — lista de amigos/ofensivas do perfil.
+
+### ➕ Como Adicionar Novas Páginas
+1. Criar `nomepagina.html` na raiz.
+2. Criar `style/nomepagina.css` e `JS/nomepagina.js`.
+3. Incluir os links para `main.css`, `navbar.css` e `footer.css` no `<head>`.
+4. Incluir os scripts dos componentes **antes** do script da página.
+5. Adicionar os containers `<div id="navbar-container">` e `<div id="footer-container">`.
+6. Se o arquivo entrar no escopo do app, registrar no `system_map.json` **e** no `CHANGELOG.md`.
+
+### ⚠️ Observações Importantes
+- **Sem backend:** todos os dados vivem no `localStorage` do navegador — nada é sincronizado entre dispositivos.
+- **Imagens em base64:** o upload de imagem do exercício é convertido para base64; evitar imagens muito grandes (>2MB) para não estourar a cota do `localStorage`.
+- **Responsivo:** todas as páginas devem funcionar em mobile (breakpoints: 768px e 480px).
+- **Tema:** o ThemeManager pode alterar as variáveis do `:root`; usar sempre `var(--primary)` e afins, **nunca** cores hardcoded.
+- **Ícones:** ao adicionar ou alterar qualquer ícone, ler `Diretrizes/Ícones.md` antes.
+
+---
+
 ## ✨ Features e Funcionalidades
 
 ### 1. Motor de Gamificação Completo
@@ -73,7 +158,7 @@ O projeto mantém diretrizes rígidas de UI/UX para não parecer uma "página da
   - Essa técnica utiliza CSS Puro (`filter: hue-rotate()`) aplicado na mesma imagem estática base (`BG-roxo-vertical.jpg`) para re-colorir dinamicamente a área (ex: `.theme-turquesa`, `.theme-ouro`) sem exigir o carregamento de novos e pesados assets. O conteúdo sempre fica em `.theme-content` para não sofrer distorção de cores.
 - **Padrão Sub-abas "Pílula Flutuante" (Floating Pill):** Quando uma seção for dividida em abas (ex: "Exercícios / Montar Ficha" na seção Treinos), as sub-abas utilizam a marcação `.treino-tabs-section.section-subtabs`. O layout padrão é uma pílula estática (`position: relative`) centralizada no topo da área útil (`margin: 20px 0 24px 0`). **NÃO use `position: sticky` ou fundos estendidos de 100vw**; a barra deve apenas rolar e sumir naturalmente quando o usuário descer pela tela, mantendo a tela desobstruída e limpa para as listas de exercícios.
 - **Glassmorphism e Neumorfismo:** O uso pesado de fundos com `backdrop-filter: blur()`, overlays semi-transparentes (`rgba(255,255,255, 0.05)`) e dropshadows elétricos coloridos confere um look *Cyber-Glass*. Garantir que o `--card-bg` base possua opacidade suficiente (ex: `rgba(10,5,20,0.6)`) para não gerar conflito de leitura com a textura animada do fundo.
-- **Iconografia Consistente:** Absolutamente **NENHUM EMOJI** deve ser usado para funções de UI, apenas para gamificação estrita (textos motivacionais). Todos os ícones de ação são `SVGs inline stroke`, que herdam a cor nativa através da tag CSS `stroke: currentColor`. Consulte o arquivo `Ícones.md` para novos ícones.
+- **Iconografia Consistente:** Absolutamente **NENHUM EMOJI** deve ser usado para funções de UI, apenas para gamificação estrita (textos motivacionais). Todos os ícones de ação são `SVGs inline stroke`, que herdam a cor nativa através da tag CSS `stroke: currentColor`. **⚠️ OBRIGATÓRIO: sempre que for necessário ADICIONAR ou ALTERAR um ícone, leia primeiro o arquivo `Diretrizes/Ícones.md`** — ele é a fonte única de todos os ícones do projeto e contém as regras de atributos, tamanhos e variantes. Nunca crie ou edite um ícone sem consultá-lo.
 - **Padrão de Dropdowns (Selects):** Todos os dropdowns (`<select>`) devem seguir o estilo escuro premium: fundo escuro (`#111` ou similar), letras brancas (`#ffffff`), `appearance: none` para remover o estilo nativo do navegador, e uma seta customizada em SVG como imagem de fundo. Isso garante consistência visual e evita que o navegador renderize fundos brancos padrão.
 - **Feedback Haptico e Visual:** Botões escalam (`scale(0.95)`) ao serem pressionados.
 - **Padrão de Nomenclatura BEM (Daqui para frente):** Para novos componentes e seções, utilize estritamente o padrão **BEM (Block__Element--Modifier)**. Ex: `.loja-card`, `.loja-card__price`, `.loja-card--premium`. Não reescreva o CSS legado, apenas aplique o BEM em adições futuras.
@@ -84,10 +169,11 @@ O projeto mantém diretrizes rígidas de UI/UX para não parecer uma "página da
 
 Se você é um assistente de inteligência artificial manipulando esta base de código:
 1. **Leia o `system_map.json` primeiro:** É o índice arquitetural leve do projeto. Uma única leitura revela qual arquivo abrir para qualquer tarefa — sem varreduras cegas de diretório.
-2. **Leia o `CHANGELOG.md`:** Você tem a obrigação arquitetural de gravar e versionar qual alteração fez lá, sob os padrões descritos.
-3. **Leia o `Ícones.md`:** Para gerar ou editar qualquer elemento visual sem quebrar o ecossistema SVGs.
+2. **SEMPRE REGISTRE AS ALTERAÇÕES FEITAS no `CHANGELOG.md`:** É obrigação inegociável gravar e versionar toda alteração concluída, sob os padrões descritos no topo do próprio Changelog. Isso inclui mudanças de código **e** de documentação/diretrizes/configuração. Nunca finalize uma sessão com mudanças não documentadas. Se mexeu no `system_map.json`, incremente também o `version` dele.
+3. **Leia `Diretrizes/Ícones.md` sempre que for necessário adicionar ou alterar um ícone:** antes de criar/editar qualquer SVG de UI, consulte a biblioteca oficial de ícones para não quebrar o ecossistema de `stroke="currentColor"` e não duplicar ícones existentes.
 4. Não crie códigos monolíticos. Tudo deve ser feito sob a filosofia modular instalada na pasta `treino/`.
 5. **Padrão CSS BEM:** Para qualquer novo estilo ou componente, é **obrigatório** o uso da metodologia BEM para evitar poluição da cascata global.
+6. **Leia o `DESIGN.md` (raiz do projeto)** antes de criar ou alterar qualquer elemento visual — ele é o manual completo de tokens, animações e blueprints do design system.
 
 ---
 
@@ -117,3 +203,17 @@ O arquivo `Diretrizes/system_map.json` é o **mapa vivo** do projeto. Ele deve s
 ```
 
 > **Regra de ouro:** O `system_map.json` deve sempre refletir 100% da estrutura real de arquivos do projeto. Um índice desatualizado é pior do que não ter índice.
+
+> **Regra de registro (obrigatória):** **SEMPRE REGISTRE AS ALTERAÇÕES FEITAS** — em `Diretrizes/CHANGELOG.md`, imediatamente após concluí-las, sem exceção. Vale para código, documentação, diretrizes e configuração. Nunca finalize uma sessão com mudanças não documentadas.
+
+---
+
+## 🔗 Resumo das Regras Absolutas
+
+| Regra | Onde ler/aplicar |
+| :--- | :--- |
+| Sempre registrar as alterações feitas | `Diretrizes/CHANGELOG.md` (topo do arquivo) |
+| Ler antes de mexer no código/arquitetura | `Diretrizes/system_map.json` |
+| Ler antes de adicionar ou alterar um ícone | `Diretrizes/Ícones.md` |
+| Ler antes de criar/alterar elementos visuais | `DESIGN.md` (raiz do projeto) |
+| Atualizar ao mudar a estrutura de arquivos | `Diretrizes/system_map.json` (procedimento acima) |

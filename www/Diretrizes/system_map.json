@@ -1,10 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "3.5.3",
-  "last_updated": "2026-07-23",
+  "version": "3.5.6",
+  "last_updated": "2026-09-25",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
-  "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'.",
+  "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog.",
 
   "entry_points": {
     "description": "Arquivos raiz que iniciam a aplicação no navegador.",
@@ -294,23 +294,23 @@
       },
       {
         "file": "Diretrizes/CHANGELOG.md",
-        "purpose": "Histórico de versões e alterações. Todo agente de IA DEVE registrar suas mudanças aqui ao final de cada sessão."
-      },
-      {
-        "file": "Diretrizes/Claude.md",
-        "purpose": "Diretrizes e instruções específicas para o modelo Claude (Anthropic). Contém contexto de personalidade, tom e regras de resposta."
+        "purpose": "Histórico de versões e alterações. REGRA OBRIGATÓRIA: SEMPRE REGISTRAR AS ALTERAÇÕES FEITAS aqui, imediatamente após concluí-las — vale para código, documentação, diretrizes e configuração. Todo agente de IA DEVE criar/atualizar sua entrada no Changelog ao final de cada sessão."
       },
       {
         "file": "Diretrizes/system_map.json",
         "purpose": "Este arquivo. Índice Arquitetural completo do projeto. Deve ser a primeira leitura de um agente de IA para orientação eficiente de tokens."
       },
       {
-        "file": "Diretrizes/otimizacao_tokens_ia.md",
-        "purpose": "Diretrizes de otimização de consumo de tokens para agentes de IA. Descreve as boas práticas de modularização e documentação adotadas neste projeto."
+        "file": "DESIGN.md",
+        "purpose": "Manual do Sistema de Design (Bíblia de estilo): tokens de design, core de variáveis globais, fundo dinâmico, navegação, cartões, maestria, personalização, timers, catálogo de animações, blueprints de componentes e checklist de conformidade. LEITURA OBRIGATÓRIA antes de criar ou alterar qualquer elemento visual."
+      },
+      {
+        "file": "Diretrizes/navbar-inferior.html",
+        "purpose": "Guia visual interativo (com Tailwind CDN) da navbar mobile HUD 'TRONUS' — preview de referência da barra de navegação inferior. Arquivo de referência, não é parte do app."
       },
       {
         "file": "Diretrizes/Ícones.md",
-        "purpose": "Biblioteca de referência de todos os ícones SVG inline usados no projeto. Consultar antes de adicionar qualquer novo ícone."
+        "purpose": "Biblioteca de referência de todos os ícones SVG inline usados no projeto. OBRIGATÓRIO consultar este arquivo antes de adicionar ou alterar qualquer ícone."
       },
       {
         "file": "Personalização-perfil.md",
@@ -363,6 +363,7 @@
     "edit_modal_ui": "style/treino/2-modals.css",
     "edit_workout_sheet_logic": "JS/treino/secao-ficha.js",
     "edit_deck_builder_logic": "JS/treino/secao-treinos.js",
+    "edit_workout_templates": "JS/treino/secao-treinos.js → objeto TEMPLATES_PRONTOS (chave = id do template; A/B = arrays de ids de DEFAULT_EXERCISES; opcional 'ae' = {tipo, vel, tempo} para aeróbico) + botão correspondente em componentes/secoes/treinos.html (data-template) + espelho legado em JS/treino.js. Novos exercícios do template devem ser cadastrados em JS/treino/db.js (DEFAULT_EXERCISES) com o GIF em Assets/Exerciciosgif/.",
     "edit_progress_charts": "JS/treino/secao-progresso.js",
     "edit_dashboard_home": "JS/treino/secao-dashboard.js + componentes/secoes/dashboard.html + style/treino/secoes/dashboard.css (a partir de v3.3.0 o widget central exibe o Radar Tático via #dashRadarChartContainer)",
     "edit_radar_chart_logic": "JS/treino/secao-progresso.js (a partir de v3.3.0: renderRadarChart(db, options?) é compartilhado entre Progresso e Dashboard; helpers: computeRadarStats, applyRadarSideEffects, buildRadarSvgHtml, updateProfileArchetypeBadge)",
@@ -378,10 +379,10 @@
     "edit_local_data_schema": "JS/treino/db.js",
     "edit_pwa_cache_rules": "sw.js",
     "edit_backup_export_import": "JS/treino/secao-perfil.js (exportData/importData/validateBackup em 'BACKUP E DADOS') + JS/treino/app.js (listeners via [data-action] + reinitAppAfterImport disparado pelo evento 'academia:data-imported') + componentes/secoes/perfil.html (bloco acessível em perf-tab-prefs → perf-subtab2-config). A partir da v3.3.1: exportData usa navigator.share() com fallback <a download>; importData usa modalConfirm (modais.html:351) com schema check profundo; reinitAppAfterImport re-renderiza todas as seções sem reload e fecha overlays/modais abertos. Listeners passaram de getElementById para querySelectorAll('[data-action]') para evitar IDs duplicados.",
-    "add_new_icon": "Consultar Diretrizes/Ícones.md → adicionar SVG inline no treino.html",
+    "add_new_icon": "OBRIGATÓRIO ler Diretrizes/Ícones.md ANTES de adicionar ou alterar qualquer ícone → adicionar/ajustar o SVG inline (stroke=currentColor, sem emojis na UI) → registrar no CHANGELOG.md",
     "add_new_exercise_gif": "Assets/Exerciciosgif/ → registrar referência em JS/treino/db.js",
-    "record_change": "Diretrizes/CHANGELOG.md",
-    "update_this_index": "Diretrizes/system_map.json → atualizar seção relevante + version + last_updated",
+    "record_change": "Diretrizes/CHANGELOG.md → SEMPRE REGISTRE AS ALTERAÇÕES FEITAS imediatamente após concluí-las (código, documentação, diretrizes e configuração), sem exceção",
+    "update_this_index": "Diretrizes/system_map.json → atualizar seção relevante + version + last_updated e registrar a atualização em Diretrizes/CHANGELOG.md",
     "ficha_landing_behavior": "v3.2.0+: a Ficha deixa de ser uma slide do Swipe Viewport e vira overlay fullscreen (`#ficha-overlay`, full-bleed sem header fixo). db.fichaEmAndamento (boolean) + db.fichaEmAndamentoDate (string YYYY-MM-DD) — ou fallback `workout_start_time` do dia atual — controlam a auto-abertura do overlay em `app.js` (chamada `openFichaOverlay()` via requestAnimationFrame). Trigger manual único: botão 'PRÓXIMO PASSO' do Dashboard (`#dashBtnIniciar` → `startWorkoutFromDashboard` em `secao-dashboard.js` → `window.openFichaOverlay()`). Fechamento (ESC/programático): se há treino em andamento, abre `modalEncerrarTreino`; senão, volta ao Dashboard. Set em `startWorkoutFromDashboard`, clear em `app.js` (`btnFecharConclusao` e `btnEncerrarConfirmar`). A partir da v3.3.2: o overlay ganhou um botão X descobrível no canto superior esquerdo (`#btnFecharFicha` / `.ficha-overlay-close`) que sempre abre `modalEncerrarTreino` como confirmação (independente de `workout_start_time`); o handler de `#btnFecharConclusao` em `app.js` também passou a chamar `closeFichaOverlay({ force: true })` (antes só limpava o flag e navegava, deixando o usuário preso no overlay após o fluxo Share → Baixar Imagem → INCRÍVEL!).",
     "perfil_overlay_trigger_behavior": "v3.1.0+: o Perfil deixa de ser uma slide do Swipe Viewport e vira overlay fullscreen. Único trigger: clique no cartão de visitas `#dashProfileCard` no header do Dashboard. Fechamento (X, ESC ou programático) sempre retorna ao Dashboard via window._transitionTo('dashboard'). `window.openPerfilOverlay()`, `window.closePerfilOverlay()` e `window.__applyProfileCustomization()` ficam expostos globalmente; `_transitionTo('perfil')` é interceptado e redirecionado para o overlay (defesa em profundidade)."
   }
