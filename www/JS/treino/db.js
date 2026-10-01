@@ -106,8 +106,8 @@ export const DEFAULT_EXERCISES = [
   // Novos para Hipertrofia (Médio) II
   { id: 'ex-supino-reto-halteres', nome: 'Supino Reto com Halteres', grupoMuscular: 'Peito', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/supino-reto-com-halteres.gif', tags: ['Multiarticular', 'Livre'] },
   { id: 'ex-agach-guiado', nome: 'Agachamento Guiado', grupoMuscular: 'Pernas', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Agachamento guiado.gif', tags: ['Multiarticular', 'Máquina'] },
-  { id: 'ex-desenvolvimento-frente', nome: 'Desenvolvimento Frente', grupoMuscular: 'Ombros', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: null, tags: ['Multiarticular', 'Livre'] },
-  { id: 'ex-triceps-palmar', nome: 'Triceps Palmar', grupoMuscular: 'Tríceps', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Tricepes Palmar.gif', tags: ['Isolador', 'Máquina'] },
+  { id: 'ex-desenvolvimento-frente', nome: 'Desenvolvimento Frontal', grupoMuscular: 'Ombros', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Desenvolvimento Frontal.gif', tags: ['Multiarticular', 'Livre'] },
+  { id: 'ex-triceps-palmar', nome: 'Triceps Palmar', grupoMuscular: 'Tríceps', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Triceps Palmar.gif', tags: ['Isolador', 'Máquina'] },
   { id: 'ex-puxada-supinada', nome: 'Puxada Supinada', grupoMuscular: 'Costas', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Puxada Supinada.gif', tags: ['Multiarticular', 'Máquina'] },
   { id: 'ex-fly-inverso', nome: 'Fly Inverso', grupoMuscular: 'Costas', series: 3, repeticoes: '10', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Fly Inverso.gif', tags: ['Isolador', 'Máquina'] },
   // Novos para Perda Ponderal (Médio) II
@@ -129,6 +129,11 @@ export const DEFAULT_FICHAS = {
 };
 
 // ---- DB ----
+// Nomes antigos de exercícios padrão que devem ser renomeados no load (bases já existentes)
+const LEGACY_EXERCISE_NAMES = {
+  'ex-desenvolvimento-frente': ['Desenvolvimento Frente']
+};
+
 export function loadDB() {
   try {
     const raw = localStorage.getItem(DB_KEY);
@@ -142,6 +147,11 @@ export function loadDB() {
         const defaultEx = DEFAULT_EXERCISES.find(d => d.id === ex.id);
         if (defaultEx && defaultEx.imagem && ex.imagem !== defaultEx.imagem) {
           ex.imagem = defaultEx.imagem;
+          updated = true;
+        }
+        const legacyNames = LEGACY_EXERCISE_NAMES[ex.id];
+        if (defaultEx && legacyNames && legacyNames.includes(ex.nome) && ex.nome !== defaultEx.nome) {
+          ex.nome = defaultEx.nome;
           updated = true;
         }
         if (ex.descanso === undefined) {

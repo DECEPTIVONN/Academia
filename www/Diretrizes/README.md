@@ -110,6 +110,17 @@ Chaves auxiliares no mesmo `localStorage`: `workout_start_time`, `academia_theme
 5. Adicionar os containers `<div id="navbar-container">` e `<div id="footer-container">`.
 6. Se o arquivo entrar no escopo do app, registrar no `system_map.json` **e** no `CHANGELOG.md`.
 
+### 🤖 Build do App Android (Capacitor) — LEIA ANTES DE COMPILAR
+> **O erro clássico:** compilar no Android Studio e gerar um app "antigo". A causa é quase sempre a mesma — o Capacitor **não** embute a raiz do projeto nem o `www/` em tempo real. O APK lê exclusivamente a cópia estática em `android/app/src/main/assets/public/`, que **só é atualizada** quando você roda o comando de sync. Como a pasta `android/` é ignorada pelo Git, ela nunca recebe as mudanças automaticamente.
+
+**Fluxo obrigatório antes de CADA build no Android Studio:**
+1. **Espelhar as edições em `www/`** — a raiz é o seu ambiente de edição, mas o app roda a partir de `www/`. O entry point do app é **`www/index.html`** (cópia de `treino.html` com os CDNs trocados por `vendor/*` locais) — alterações no shell de `treino.html` precisam ser replicadas em `www/index.html`. Mantenha também os espelhos `www/JS/`, `www/componentes/`, `www/Style/`, `www/Assets/` idênticos à raiz.
+2. **Rodar `npx cap sync android`** (na raiz do projeto) — copia `www/` → `android/app/src/main/assets/public/` e atualiza os plugins. Sem este passo, o APK continua empacotando o conteúdo antigo (templates, exercícios, GIFs e CSS desatualizados).
+3. **No Android Studio:** `File > Sync Project with Gradle Files` → `Build > Clean Project` → `Run`.
+4. **Se ainda aparecer algo antigo no aparelho:** o WebView mantém o Cache Storage do Service Worker (`sw.js`) e o `localStorage` entre instalações. Limpe os dados do app (Ajustes → Aplicativo → Armazenamento → Limpar dados) ou `adb shell pm clear com.academia.workout`.
+
+**Sintomas do problema:** templates/exercícios/GIFs novos não aparecem, UI antiga, alterações de CSS/JS "não pegam" no aparelho mas funcionam no navegador. Verificação rápida: os arquivos de `www/` batem com os de `android/app/src/main/assets/public/`? Se não, falta um `npx cap sync android`.
+
 ### ⚠️ Observações Importantes
 - **Sem backend:** todos os dados vivem no `localStorage` do navegador — nada é sincronizado entre dispositivos.
 - **Imagens em base64:** o upload de imagem do exercício é convertido para base64; evitar imagens muito grandes (>2MB) para não estourar a cota do `localStorage`.
@@ -212,6 +223,7 @@ O arquivo `Diretrizes/system_map.json` é o **mapa vivo** do projeto. Ele deve s
 
 | Regra | Onde ler/aplicar |
 | :--- | :--- |
+| Antes de compilar no Android Studio | `npx cap sync android` (seção "Build do App Android") |
 | Sempre registrar as alterações feitas | `Diretrizes/CHANGELOG.md` (topo do arquivo) |
 | Ler antes de mexer no código/arquitetura | `Diretrizes/system_map.json` |
 | Ler antes de adicionar ou alterar um ícone | `Diretrizes/Ícones.md` |

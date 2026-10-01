@@ -21,6 +21,41 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v3.5.7-docs] - 2026-10-01
+*Orientação de build Android no README para evitar o app compilado "antigo"*
+
+### [Changed]
+- **`Diretrizes/README.md`**: Nova seção **"🤖 Build do App Android (Capacitor) — LEIA ANTES DE COMPILAR"** (após "Como Adicionar Novas Páginas") documentando a causa raiz do bug de "versão antiga" no Android Studio e o fluxo obrigatório de build: (1) espelhar edições em `www/` — inclusive o shell em `www/index.html`, que é o **entry point** do app (não `treino.html`); (2) rodar `npx cap sync android` para copiar `www/` → `android/app/src/main/assets/public/` (a pasta `android/` é ignorada pelo Git e nunca é atualizada sozinha); (3) Sync Gradle + Clean Project no Android Studio; (4) limpeza de dados do app caso o Cache Storage do Service Worker/`localStorage` ainda sirva conteúdo antigo. Inclui lista de sintomas e verificação rápida por comparação de arquivos. Nova linha adicionada à tabela "Resumo das Regras Absolutas".
+- **`www/Diretrizes/README.md`**: espelho idêntico da alteração acima.
+- `Diretrizes/system_map.json` inalterado (nenhuma mudança de estrutura de arquivos).
+
+## [v3.5.7-android-sync] - 2026-10-01
+*App gerado no Android Studio continha a versão antiga: assets do APK desatualizados*
+
+### [Fixed]
+- **`npx cap sync android` executado** — a última sincronização de `www/` → `android/app/src/main/assets/public/` tinha ocorrido em 2026-09-25 às 19:48, **antes** das alterações das v3.5.5, v3.5.6 e v3.5.7 (feitas entre 20:11 do mesmo dia e 2026-09-30). Como o Capacitor empacota em `android/app/src/main/assets/public/` (o `webDir` `www/` só é copiado de lá por `cap sync/copy`), o APK seguia compilando o conteúdo de 23/07/2026.
+- **25 arquivos desatualizados/ausentes corrigidos no espelho do Android**: `JS/treino/db.js`, `JS/treino/secao-treinos.js`, `JS/treino.js` (legado), `componentes/secoes/treinos.html`, 18 GIFs novos de `Assets/exerciciosgif/` (ausentes por completo) e os documentos de `Diretrizes/`. Verificação pós-sync: 0 divergências e 0 ausências entre `www/` e `android/app/src/main/assets/public/`.
+- **`www/index.html` confirmado como entry point do app** (não `treino.html`): cópia de `treino.html` com os CDNs de Tailwind/Font Awesome/Google Fonts trocados por `vendor/*` locais (10 linhas de diferença apenas no `<head>`). Edições futuras em `treino.html` precisam ser replicadas em `www/index.html` para chegarem ao APK.
+
+### [Changed]
+- **Fluxo de build Android documentado**: após qualquer alteração em código/asset, rodar `npx cap sync android` **antes** de compilar no Android Studio (os arquivos de `android/` são ignorados pelo Git e nunca recebem as mudanças automaticamente). Se algo ainda parecer antigo no dispositivo, limpar os dados do app (`adb shell pm clear com.academia.workout`) para descartar o Cache Storage do Service Worker (`sw.js`) e o `localStorage`.
+
+## [v3.5.7] - 2026-09-30
+*Ajuste de nome e GIFs de 2 exercícios do template "Hipertrofia (Médio) II"*
+
+### [Changed]
+- **`JS/treino/db.js`** (`DEFAULT_EXERCISES`):
+  - `ex-desenvolvimento-frente` — nome alterado de "Desenvolvimento Frente" para **"Desenvolvimento Frontal"** (espelhando o nome do GIF) e `imagem` de `null` (placeholder premium) para `./Assets/exerciciosgif/Desenvolvimento Frontal.gif`.
+  - `ex-triceps-palmar` — `imagem` apontando para `Tricepes Palmar.gif` (arquivo inexistente) → **`Triceps Palmar.gif`**.
+  - `loadDB()` ganhou o mapa `LEGACY_EXERCISE_NAMES` para renomear "Desenvolvimento Frente" → "Desenvolvimento Frontal" nas bases `localStorage` já existentes (a sincronização de `imagem` já era feita automaticamente).
+- **`www/JS/treino/db.js`**: espelho idêntico da alteração acima (hashes batem).
+- **2 GIFs espelhados em `www/Assets/exerciciosgif/`**: `Desenvolvimento Frontal.gif` e `Triceps Palmar.gif` (já existentes em `Assets/Exerciciosgif/`, antes faltando no espelho).
+- Templates inalterados: `hipertrofia_medio_ii` em `JS/treino/secao-treinos.js` e `JS/treino.js` (legado) referenciam os IDs `ex-desenvolvimento-frente` e `ex-triceps-palmar`, que **não mudaram** — apenas nome/imagem do registro em `db.js`.
+- **`Diretrizes/system_map.json`**: `version` incrementada de `3.5.6` para `3.5.7`; `last_updated` atualizado de `2026-09-25` para `2026-09-30`.
+
+### [Fixed]
+- **`ex-triceps-palmar`** com caminho de GIF quebrado (`Tricepes Palmar.gif` → `Triceps Palmar.gif`), que renderizava o placeholder premium em vez da animação.
+
 ## [v3.5.6] - 2026-09-25
 *Novo template "Perda Ponderal (Médio) II" (8+8 exercícios + aeróbico 20', 6x/semana) conforme planilha de 24/08/2026*
 
