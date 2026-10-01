@@ -4,8 +4,8 @@
   "description": "",
   "main": "sw.js",
   "scripts": {
-    "build": "npm --prefix src-app run build",
-    "dev": "npm --prefix src-app run dev"
+    "build": "cd src-app && npm install && npm run build",
+    "dev": "cd src-app && npm run dev"
   },
   "keywords": [],
   "author": "",

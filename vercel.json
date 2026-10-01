@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm --prefix src-app run build",
+  "buildCommand": "cd src-app && npm install && npm run build",
   "outputDirectory": "dist",
   "rewrites": [
     {
