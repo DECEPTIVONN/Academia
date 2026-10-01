@@ -1,0 +1,85 @@
+/* ============================================================
+   ANIMAÇÕES DE BACKGROUND DINÂMICO — Academia v4.0
+   Migração de style/treino/secoes/bg-dinamico.css
+   ============================================================ */
+
+/* Ken Burns */
+@keyframes crKenBurns {
+  0%   { transform: scale(1.05) translate(0%, 0%); }
+  33%  { transform: scale(1.12) translate(-1.5%, -1%); }
+  66%  { transform: scale(1.08) translate(1%, 1.5%); }
+  100% { transform: scale(1.05) translate(0%, 0%); }
+}
+
+/* Partículas ascendentes de elixir */
+@keyframes crParticleRise {
+  0%   { transform: translateY(100%) rotate(25deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.4; }
+  100% { transform: translateY(-120vh) rotate(25deg); opacity: 0; }
+}
+
+/* ── Container do fundo dinâmico ── */
+.cr-bg-container {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ── Camada da imagem com Ken Burns ── */
+.cr-bg-layer {
+  position: absolute;
+  inset: -5%;
+  background-image: url('/assets/bg/BG-roxo-vertical.jpg');
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0) brightness(0.6);
+  animation: crKenBurns 24s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Variações de hue por tema */
+.cr-bg-layer[data-theme="turquesa"]  { filter: hue-rotate(265deg) saturate(1.2) brightness(1.1); }
+.cr-bg-layer[data-theme="carmesim"] { filter: hue-rotate(75deg) saturate(1.2) brightness(1.1); }
+.cr-bg-layer[data-theme="verde"]    { filter: hue-rotate(205deg) saturate(1.2) brightness(1.1); }
+.cr-bg-layer[data-theme="azul"]     { filter: hue-rotate(295deg) saturate(1.2) brightness(1.1); }
+.cr-bg-layer[data-theme="ouro"]     { filter: hue-rotate(130deg) saturate(1.5) brightness(1.2); }
+.cr-bg-layer[data-theme="marrom"]   { filter: hue-rotate(120deg) saturate(0.5) brightness(0.9); }
+.cr-bg-layer[data-theme="laranja"]  { filter: hue-rotate(115deg) saturate(1.5) brightness(1.1); }
+.cr-bg-layer[data-theme="cinza"]    { filter: saturate(0) brightness(0.8); }
+
+/* ── Overlay glassmorphic ── */
+.cr-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 5, 20, 0.5) 0%,
+    rgba(10, 5, 20, 0.3) 40%,
+    rgba(10, 5, 20, 0.6) 100%
+  );
+  backdrop-filter: blur(3px);
+}
+
+/* Estado de blur quando modal está aberto */
+.cr-bg-container.bg-blurred .cr-bg-overlay {
+  backdrop-filter: blur(8px);
+  background: rgba(10, 5, 20, 0.6);
+}
+
+/* ── Partículas ── */
+.cr-particle {
+  position: absolute;
+  bottom: -20px;
+  border-radius: 50%;
+  animation: crParticleRise linear infinite;
+  filter: blur(2px);
+  will-change: transform;
+}
+.cr-p1 { width: 6px;  height: 20px; left: 15%; background: linear-gradient(to top, rgba(139,92,246,0.8), transparent); animation-duration: 9s;  animation-delay: 0s; }
+.cr-p2 { width: 4px;  height: 14px; left: 35%; background: linear-gradient(to top, rgba(192,132,252,0.6), transparent); animation-duration: 13s; animation-delay: 2s; }
+.cr-p3 { width: 8px;  height: 24px; left: 55%; background: linear-gradient(to top, rgba(139,92,246,0.7), transparent); animation-duration: 11s; animation-delay: 4s; }
+.cr-p4 { width: 5px;  height: 18px; left: 70%; background: linear-gradient(to top, rgba(192,132,252,0.5), transparent); animation-duration: 16s; animation-delay: 1s; }
+.cr-p5 { width: 3px;  height: 12px; left: 85%; background: linear-gradient(to top, rgba(139,92,246,0.9), transparent); animation-duration: 7s;  animation-delay: 3s; }

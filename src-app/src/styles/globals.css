@@ -1,0 +1,157 @@
+/* ============================================================
+   GLOBALS — Academia v4.0
+   Entry point de estilos. Importa Tailwind v4 + design tokens.
+   ============================================================ */
+
+@import "./design-tokens.css";
+@import "tailwindcss";
+
+/* Tailwind v4: CSS-first configuration — consome os tokens */
+@theme {
+  /* Cores mapeadas para utilitários Tailwind */
+  --color-primary:        var(--primary);
+  --color-primary-light:  var(--primary-light);
+  --color-primary-dark:   var(--primary-dark);
+  --color-accent:         var(--accent);
+  --color-gym-green:      var(--gym-green);
+  --color-danger:         var(--danger);
+  --color-surface:        var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-background:     var(--background);
+
+  /* Fontes */
+  --font-rajdhani: var(--font-primary);
+  --font-inter:    var(--font-secondary);
+
+  /* Raios */
+  --radius-sm:  var(--radius-sm);
+  --radius-md:  var(--radius-md);
+  --radius-lg:  var(--radius-lg);
+  --radius-xl:  var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+}
+
+/* ── Reset & Base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;  /* O scroll é gerenciado por cada section-slide */
+}
+
+body {
+  font-family: var(--font-primary);
+  background: var(--background);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+/* ── Scrollbar Customizada (roxa, estilo legado) ── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}
+
+/* ── Seleção de Texto ── */
+::selection {
+  background: rgba(139, 92, 246, 0.4);
+  color: #fff;
+}
+
+/* ── Focus ring acessível ── */
+:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Animações de entrada globais (migração de placeholders-animacoes.css) ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes exPulse {
+  0%, 100% {
+    box-shadow: inset 0 0 30px rgba(139,92,246,0.2), 0 0 10px rgba(139,92,246,0.1);
+    border-color: rgba(139,92,246,0.3);
+  }
+  50% {
+    box-shadow: inset 0 0 40px rgba(139,92,246,0.4), 0 0 20px rgba(139,92,246,0.3);
+    border-color: rgba(139,92,246,0.6);
+  }
+}
+@keyframes exShimmer {
+  0%   { transform: translate(-30%, -30%) rotate(45deg); }
+  100% { transform: translate(30%, 30%) rotate(45deg); }
+}
+@keyframes exFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+@keyframes checkPop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes xpFlow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+@keyframes holoShine {
+  0%        { transform: rotate(25deg) translate(-100%, -100%); }
+  20%, 100% { transform: rotate(25deg) translate(100%, 100%); }
+}
+@keyframes staggerFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Classe utilitária de stagger (migração de stagger-item) ── */
+.stagger-item {
+  opacity: 0;
+  animation: staggerFadeIn 0.32s cubic-bezier(0.25, 1, 0.5, 1) both;
+  animation-delay: calc(var(--item-index, 0) * 0.035s);
+}
+
+/* ── Premium Placeholder (migração de premium-placeholder) ── */
+.premium-placeholder {
+  background: linear-gradient(145deg, rgba(139,92,246,0.1), rgba(10,5,20,0.8));
+  border: 1px solid rgba(139,92,246,0.3);
+  border-radius: var(--radius-lg);
+  animation: exPulse 2s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+.premium-placeholder::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(
+    to bottom right,
+    transparent 40%,
+    rgba(255,255,255,0.06) 50%,
+    transparent 60%
+  );
+  transform: translate(-30%, -30%) rotate(45deg);
+  animation: exShimmer 2.5s linear infinite;
+}
