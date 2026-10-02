@@ -78,26 +78,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'react-vendor';
-            }
-            if (id.includes('motion')) {
-              return 'motion-vendor';
-            }
-            if (id.includes('@supabase')) {
-              return 'supabase-vendor';
-            }
-            if (id.includes('dexie')) {
-              return 'dexie-vendor';
-            }
-          }
-        },
-      },
-    },
   },
 
   server: {
