@@ -33,7 +33,6 @@ export default defineConfig({
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
-            // GIFs de exercícios — cache-first (pesados, imutáveis)
             urlPattern: /\.(?:gif|webp)$/i,
             handler: 'CacheFirst',
             options: {
@@ -42,7 +41,6 @@ export default defineConfig({
             },
           },
           {
-            // Fontes locais — cache-first
             urlPattern: /assets\/fonts\/.+\.woff2$/i,
             handler: 'CacheFirst',
             options: {
@@ -51,17 +49,14 @@ export default defineConfig({
             },
           },
           {
-            // Supabase API — network-only (dados em tempo real)
             urlPattern: /supabase\.co\/rest\//i,
             handler: 'NetworkOnly',
           },
           {
-            // Supabase Auth — network-only
             urlPattern: /supabase\.co\/auth\//i,
             handler: 'NetworkOnly',
           },
           {
-            // Assets estáticos — stale-while-revalidate
             urlPattern: /assets\//i,
             handler: 'StaleWhileRevalidate',
             options: {
@@ -81,7 +76,7 @@ export default defineConfig({
   },
 
   build: {
-    outDir: '../dist',      // Build vai para Academia/dist/ (usado pelo Capacitor)
+    outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -107,8 +102,6 @@ export default defineConfig({
 
   server: {
     port: 5173,
-    host: true,   // Expõe na rede local (Capacitor no Android via IP)
+    host: true,
   },
-
-  // CSS: Tailwind v4 processa via @tailwindcss/vite — sem configuração JS extra
 });
