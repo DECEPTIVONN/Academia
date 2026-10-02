@@ -1173,26 +1173,4 @@
     background: rgba(var(--primary-rgb), 0.1);
     box-shadow: 0 0 15px var(--glow);
 }
-.timer-option input:checked + .to-card .to-lbl {
-    color: var(--primary-light);
-}
 
-.theme-colors {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.t-color {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.1);
-    background: var(--c);
-    cursor: pointer;
-    transition: 0.3s;
-}
-.t-color.active {
-    border-color: #fff;
-    transform: scale(1.2);
-    box-shadow: 0 0 10px var(--c);
-}

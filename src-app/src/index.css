@@ -1,6 +1,4 @@
-/* Default Vite style override for full width layout */
-@import "./styles/globals.css";
-
+/* Root container reset */
 #root {
   width: 100% !important;
   max-width: 100% !important;

@@ -1,28 +1,4 @@
-/* Importa o CSS Vanilla Legado copiado para dentro de src-app/src/legacy-style/ */
-@import "../legacy-style/main.css";
-@import "../legacy-style/footer.css";
-@import "../legacy-style/treino/1-core.css";
-@import "../legacy-style/treino/2-modals.css";
-@import "../legacy-style/treino/3-foco-badges.css";
-@import "../legacy-style/treino/4-gamificacao.css";
-@import "../legacy-style/treino/5-premium-design.css";
-@import "../legacy-style/treino/6-maestria.css";
-@import "../legacy-style/treino/7-nav-icons.css";
-@import "../legacy-style/treino/8-customizacao.css";
-
-@import "../legacy-style/treino/secoes/bg-dinamico.css";
-@import "../legacy-style/treino/secoes/cards.css";
-@import "../legacy-style/treino/secoes/dashboard.css";
-@import "../legacy-style/treino/secoes/deck-builder.css";
-@import "../legacy-style/treino/secoes/ficha-overlay.css";
-@import "../legacy-style/treino/secoes/maestria.css";
-@import "../legacy-style/treino/secoes/modais.css";
-@import "../legacy-style/treino/secoes/perfil-overlay.css";
-@import "../legacy-style/treino/secoes/perfil.css";
-@import "../legacy-style/treino/secoes/placeholders-animacoes.css";
-@import "../legacy-style/treino/secoes/tabs-subnav.css";
-@import "../legacy-style/treino/secoes/toolbar-busca.css";
-
+/* ── Tailwind v4 base (processed by @tailwindcss/vite plugin) ── */
 @import "tailwindcss";
 
 /* ── Reset local ── */

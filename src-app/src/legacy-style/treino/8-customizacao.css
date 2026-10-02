@@ -1885,7 +1885,7 @@ body[data-bar-skin="diamante-elite"] .cycle-xp-fill::after {
 }
 @keyframes pulse-supernova {
   from { filter: hue-rotate(0deg) brightness(1); }
-  to { filter: filter: hue-rotate(15deg) brightness(1.5); }
+  to { filter: hue-rotate(15deg) brightness(1.5); }
 }
 @keyframes ethereal-wisps {
   0% { filter: hue-rotate(0deg) blur(2px); }
