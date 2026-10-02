@@ -1,0 +1,17 @@
+/* 
+   5-PREMIUM-DESIGN.CSS (INDEX OF PREMIUM STYLES)
+   Modularized for token optimization (IA-Friendly structure)
+*/
+
+@import url('./secoes/bg-dinamico.css?v=2');
+@import url('./secoes/toolbar-busca.css?v=2');
+@import url('./secoes/deck-builder.css?v=2');
+@import url('./secoes/cards.css?v=2');
+@import url('./secoes/maestria.css?v=2');
+@import url('./secoes/modais.css?v=2');
+@import url('./secoes/tabs-subnav.css?v=2');
+@import url('./secoes/perfil.css?v=2');
+@import url('./secoes/perfil-overlay.css?v=1');
+@import url('./secoes/ficha-overlay.css?v=1');
+@import url('./secoes/dashboard.css?v=2');
+@import url('./secoes/placeholders-animacoes.css?v=2');

@@ -1,0 +1,252 @@
+/**
+ * Scroll Animations CSS
+ * Sistema completo de animações ao scroll
+ * Reutilizável em todo o projeto
+ */
+
+/* ===== ANIMAÇÕES BASE ===== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(60px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-60px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ===== SCROLL FADE UP ===== */
+.scroll-fade-up {
+    opacity: 0;
+    transform: translateY(60px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ===== SCROLL FADE LEFT ===== */
+.scroll-fade-left {
+    opacity: 0;
+    transform: translateX(-60px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-fade-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ===== SCROLL FADE RIGHT ===== */
+.scroll-fade-right {
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-fade-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ===== SCROLL ANIMATE (Alias para fade-up) ===== */
+.scroll-animate {
+    opacity: 0;
+    transform: translateY(80px);
+}
+
+.scroll-animate.animate-in {
+    animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ===== SCROLL ANIMATE LEFT ===== */
+.scroll-animate-left {
+    opacity: 0;
+    transform: translateX(-60px);
+}
+
+.scroll-animate-left.animate-in {
+    animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ===== SCROLL ANIMATE RIGHT ===== */
+.scroll-animate-right {
+    opacity: 0;
+    transform: translateX(60px);
+}
+
+.scroll-animate-right.animate-in {
+    animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ===== DELAYS EM CASCADE ===== */
+.delay-1,
+.animate-delay-1 {
+    transition-delay: 0.1s;
+    animation-delay: 0.1s;
+}
+
+.delay-2,
+.animate-delay-2 {
+    transition-delay: 0.2s;
+    animation-delay: 0.2s;
+}
+
+.delay-3,
+.animate-delay-3 {
+    transition-delay: 0.3s;
+    animation-delay: 0.3s;
+}
+
+.delay-4,
+.animate-delay-4 {
+    transition-delay: 0.4s;
+    animation-delay: 0.4s;
+}
+
+.animate-delay-5 {
+    transition-delay: 0.5s;
+    animation-delay: 0.5s;
+}
+
+.animate-delay-6 {
+    transition-delay: 0.6s;
+    animation-delay: 0.6s;
+}
+
+/* ===== VARIAÇÕES EXTRAS ===== */
+
+/* Fade zoom - cresce enquanto aparece */
+@keyframes fadeInZoom {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.scroll-fade-zoom {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-fade-zoom.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Fade rotate - gira enquanto aparece */
+@keyframes fadeInRotate {
+    from {
+        opacity: 0;
+        transform: rotate(-5deg) translateY(60px);
+    }
+    to {
+        opacity: 1;
+        transform: rotate(0) translateY(0);
+    }
+}
+
+.scroll-fade-rotate {
+    opacity: 0;
+    transform: rotate(-5deg) translateY(60px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-fade-rotate.visible {
+    opacity: 1;
+    transform: rotate(0) translateY(0);
+}
+
+/* Fade bounce - efeito de bounce */
+@keyframes fadeInBounce {
+    0% {
+        opacity: 0;
+        transform: translateY(60px);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(-10px);
+    }
+    80% {
+        transform: translateY(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scroll-fade-bounce {
+    opacity: 0;
+    transform: translateY(60px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.scroll-fade-bounce.visible {
+    animation: fadeInBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===== VELOCIDADES ===== */
+.scroll-fast {
+    transition-duration: 0.4s;
+    animation-duration: 0.4s;
+}
+
+.scroll-slow {
+    transition-duration: 1.2s;
+    animation-duration: 1.2s;
+}
+
+.scroll-slower {
+    transition-duration: 1.6s;
+    animation-duration: 1.6s;
+}
+
+/* ===== EASING ALTERNATIVAS ===== */
+.scroll-ease-in {
+    transition-timing-function: cubic-bezier(0.42, 0, 1, 1);
+}
+
+.scroll-ease-out {
+    transition-timing-function: cubic-bezier(0, 0, 0.58, 1);
+}
+
+.scroll-ease-in-out {
+    transition-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+}

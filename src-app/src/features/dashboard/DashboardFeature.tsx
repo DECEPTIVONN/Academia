@@ -1,6 +1,6 @@
 /**
  * DashboardFeature.tsx — Tela Inicial Gamificada (Início / Dashboard)
- * Espelho 1:1 do HTML/CSS original de componentes/secoes/dashboard.html + treino.html
+ * Mapeamento pixel-perfect do HTML/CSS original (componentes/secoes/dashboard.html + dashboard.css)
  */
 
 import React, { useState } from 'react';
@@ -19,182 +19,227 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   const [radarFilter, setRadarFilter] = useState<'MENSAL' | 'TOTAL'>('MENSAL');
 
   return (
-    <div className="dash-container px-4 py-4 max-w-lg mx-auto flex flex-col gap-5 pb-24">
-      {/* ── TOP SECTION: Redesigned Header calling-card-bg style ── */}
-      <header
-        className="profile-banner dash-header-calling-card dash-profile-banner-card relative rounded-3xl p-5 overflow-hidden border border-amber-500/30 cursor-pointer bg-gradient-to-b from-[#131313]/90 to-[#0a0514]"
-        onClick={onOpenPerfil}
-      >
-        <div className="dash-header-overlay absolute inset-0 bg-gradient-to-b from-[#131313]/10 to-[#131313]/85 z-10 pointer-events-none" />
-
-        {/* Top bar: Avatar & Nav */}
-        <div className="flex justify-between items-start z-20 w-full mb-6 relative">
-          <div className="relative -mt-2">
-            {/* Dynamic avatar container */}
-            <div className="profile-avatar dash-profile-avatar w-24 h-24 border-2 border-[#fde047] p-1 shadow-[0_0_20px_rgba(253,224,71,0.5)] bg-[#1c1b1b] overflow-hidden rounded-2xl flex items-center justify-center">
-              <span className="material-symbols-outlined text-4xl text-[#fde047]">shield_person</span>
+    <div className="section-slide" data-section="dashboard" style={{ display: 'block' }}>
+      <div className="dash-container">
+        
+        {/* ROW 1: Profile Banner Card + Top Right Action Buttons */}
+        <div className="dash-header-row-1">
+          <div
+            className="dash-profile-banner-card profile-banner"
+            data-banner="roxo-neon"
+            onClick={onOpenPerfil}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="dash-banner-checkers" />
+            <div className="profile-avatar dash-profile-avatar" style={{ width: '48px', height: '48px', margin: '4px' }}>
+              <div className="w-full h-full rounded-xl bg-purple-900/60 border border-amber-400 flex items-center justify-center">
+                <span className="material-symbols-outlined text-amber-400 text-xl">shield_person</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-3 mt-1">
-            <div className="flex items-center gap-2">
-              <button
-                className="dash-header-btn w-11 h-11 rounded-xl bg-[#2a2a2a]/80 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-purple-600/30 transition-all"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onNavigate('social');
-                }}
-                aria-label="Social"
-              >
-                <span className="material-symbols-outlined text-[22px]">person</span>
-              </button>
+          <div className="dash-top-actions">
+            <button
+              className="dash-action-circle-btn"
+              onClick={() => onNavigate('social')}
+              title="Social"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </button>
 
-              <button
-                className="dash-header-btn w-11 h-11 rounded-xl bg-[#2a2a2a]/80 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-purple-600/30 transition-all relative"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                aria-label="Calendário"
-              >
-                <span className="material-symbols-outlined text-[22px]">calendar_today</span>
-              </button>
+            <button
+              className="dash-action-circle-btn has-notification"
+              onClick={() => {}}
+              title="Notícias / Calendário"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </button>
 
-              <button
-                className="dash-header-btn w-11 h-11 rounded-xl bg-[#2a2a2a]/80 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-purple-600/30 transition-all"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                aria-label="Menu"
-              >
-                <span className="material-symbols-outlined text-[22px]">menu</span>
-              </button>
+            <button
+              className="dash-action-circle-btn"
+              onClick={() => {}}
+              title="Menu"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* ROW 2: Welcome Text / Nickname + Unified Missions Widget */}
+        <div className="dash-header-row-2">
+          <div className="dash-user-trophy-display">
+            <span className="dash-welcome-text">Bem vindo de volta,</span>
+            <h1 className="dash-nickname-text">DECEPTIVON</h1>
+          </div>
+
+          <div className="dash-unified-missions-widget" onClick={() => {}}>
+            <div className="dash-missions-header-tag">
+              <span className="dash-missions-tag-text">MISSÕES</span>
+            </div>
+            <div className="dash-missions-body-card">
+              <div className="dash-missions-diamond-badge">
+                <div className="dash-missions-diamond-inner">
+                  <span className="material-symbols-outlined dash-missions-diamond-arrow">crown</span>
+                </div>
+              </div>
+
+              <div className="dash-missions-progress-area">
+                <span className="dash-missions-progress-text">0/30</span>
+                <div className="dash-missions-progress-track">
+                  <div className="dash-missions-progress-fill" style={{ width: '0%' }} />
+                </div>
+              </div>
+
+              <div className="dash-missions-blue-ribbon">
+                <span className="material-symbols-outlined dash-missions-ribbon-crown">workspace_premium</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Welcome text and missions */}
-        <div className="flex justify-between items-end z-20 w-full mt-auto relative">
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="font-['Outfit'] text-gray-400 text-xs tracking-widest uppercase">
-                Bem vindo de volta,
-              </span>
+        {/* CENTER SECTION: Unified Arena Card (Tactical Radar) */}
+        <div className="dash-arena-card">
+          <div className="dash-arena-content">
+            <div className="dash-radar-header">
+              <h3>Atributos de Performance</h3>
+              <div className="dash-radar-toggle">
+                <button
+                  className={`btn btn-sm ${radarFilter === 'MENSAL' ? 'active' : ''}`}
+                  onClick={() => setRadarFilter('MENSAL')}
+                  style={{
+                    padding: '4px 12px',
+                    fontSize: '.7rem',
+                    borderRadius: '6px',
+                    background: radarFilter === 'MENSAL' ? 'var(--primary)' : 'transparent',
+                    color: radarFilter === 'MENSAL' ? '#000' : 'var(--text-secondary)',
+                    border: 'none',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    transition: '.3s',
+                  }}
+                >
+                  MENSAL
+                </button>
+                <button
+                  className={`btn btn-sm ${radarFilter === 'TOTAL' ? 'active' : ''}`}
+                  onClick={() => setRadarFilter('TOTAL')}
+                  style={{
+                    padding: '4px 12px',
+                    fontSize: '.7rem',
+                    borderRadius: '6px',
+                    background: radarFilter === 'TOTAL' ? 'var(--primary)' : 'transparent',
+                    color: radarFilter === 'TOTAL' ? '#000' : 'var(--text-secondary)',
+                    border: 'none',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    transition: '.3s',
+                  }}
+                >
+                  TOTAL
+                </button>
+              </div>
             </div>
-            <h1 className="font-['Rajdhani'] font-bold text-3xl text-white uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-              DECEPTIVON
-            </h1>
+
+            {/* Radar Chart SVG */}
+            <div className="dash-radar-container">
+              <div className="radar-wrapper">
+                <svg viewBox="0 0 300 240">
+                  <polygon points="150,20 250,70 250,170 150,220 50,170 50,70" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                  <polygon points="150,50 215,82 215,147 150,180 85,147 85,82" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3 3" />
+                  <polygon points="150,80 180,95 180,135 150,150 120,135 120,95" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3 3" />
+
+                  {/* Attribute polygon */}
+                  <polygon points="150,110 165,120 158,135 150,142 140,130 140,115" fill="rgba(192, 132, 252, 0.45)" stroke="#c084fc" strokeWidth="2" />
+
+                  {/* Labels */}
+                  <text x="150" y="14" fill="#cbc3d7" fontSize="11" textAnchor="middle" fontFamily="Rajdhani" fontWeight="bold">FORÇA</text>
+                  <text x="255" y="70" fill="#cbc3d7" fontSize="11" textAnchor="start" fontFamily="Rajdhani" fontWeight="bold">RESISTÊNCIA</text>
+                  <text x="255" y="175" fill="#cbc3d7" fontSize="11" textAnchor="start" fontFamily="Rajdhani" fontWeight="bold">INTENSIDADE</text>
+                  <text x="150" y="235" fill="#cbc3d7" fontSize="11" textAnchor="middle" fontFamily="Rajdhani" fontWeight="bold">EQUILÍBRIO</text>
+                  <text x="45" y="175" fill="#cbc3d7" fontSize="11" textAnchor="end" fontFamily="Rajdhani" fontWeight="bold">CARDIO</text>
+                  <text x="45" y="70" fill="#cbc3d7" fontSize="11" textAnchor="end" fontFamily="Rajdhani" fontWeight="bold">POTÊNCIA</text>
+                </svg>
+              </div>
+            </div>
           </div>
 
-          <div
-            className="flex flex-col items-end gap-1 ml-4 cursor-pointer"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="font-['Rajdhani'] text-[9px] bg-black/70 px-2 py-0.5 rounded text-white/90 uppercase whitespace-nowrap mb-0.5">
-              MISSÕES
-            </div>
-            <div className="dash-missions-pill flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-full py-1.5 pr-4 pl-1.5 border border-[#fde047]/40">
-              <div className="dash-missions-hexagon w-7 h-7 bg-[#d97706] flex items-center justify-center rounded-lg shadow-[0_0_10px_rgba(217,119,6,0.6)]">
-                <span className="material-symbols-outlined text-white text-[16px]">crown</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="dash-missions-val font-mono text-white text-xs font-bold">0/30</span>
-                <div className="dash-missions-progress-bar w-24 h-2.5 bg-[#353534] rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#fde047] to-[#d97706] w-0 rounded-full shadow-[0_0_8px_rgba(253,224,71,0.5)]" />
+          {/* Arena Card Footer */}
+          <div className="dash-arena-footer">
+            <button className="dash-arena-trophy-btn" onClick={onOpenFicha} aria-label="Selecionar Ficha">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                <path d="M4 22h16" />
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+              </svg>
+            </button>
+
+            <div className="dash-arena-progress-container">
+              <div className="dash-arena-progress-track">
+                <div className="dash-arena-progress-fill progress-fill" style={{ width: '15%' }}>
+                  <div className="dash-progress-shimmer" />
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* ── CENTER SECTION: Unified Arena Card (Tactical Radar) ── */}
-      <div className="dash-arena-card bg-[#0a0514]/80 border border-[#8b5cf6]/30 rounded-3xl p-5 backdrop-blur-md shadow-2xl">
-        <div className="dash-arena-content">
-          <div className="dash-radar-header flex justify-between items-center mb-4">
-            <h3 className="font-['Rajdhani'] font-bold text-lg text-white uppercase tracking-wider">
-              Atributos de Performance
-            </h3>
-            <div className="dash-radar-toggle flex gap-1 bg-[#1c1b1b] p-1 rounded-xl border border-white/10">
-              <button
-                className={`btn btn-sm px-3 py-1 text-[10px] font-extrabold rounded-lg transition-all ${
-                  radarFilter === 'MENSAL'
-                    ? 'bg-[#8b5cf6] text-white font-bold shadow-[0_0_10px_rgba(139,92,246,0.5)]'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-                onClick={() => setRadarFilter('MENSAL')}
-              >
-                MENSAL
-              </button>
-              <button
-                className={`btn btn-sm px-3 py-1 text-[10px] font-extrabold rounded-lg transition-all ${
-                  radarFilter === 'TOTAL'
-                    ? 'bg-[#8b5cf6] text-white font-bold shadow-[0_0_10px_rgba(139,92,246,0.5)]'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-                onClick={() => setRadarFilter('TOTAL')}
-              >
-                TOTAL
-              </button>
+        {/* BOTTOM SECTION: SUGGESTED WORKOUT CARD */}
+        <div className="dash-suggested-workout-wrapper">
+          <div className="dash-suggested-workout-card">
+            <button className="dash-workout-exercise-card" onClick={onOpenFicha}>
+              <div className="dash-workout-img-container">
+                <div className="w-full h-full bg-purple-950/60 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-purple-300">fitness_center</span>
+                </div>
+                <div className="dash-workout-letter-badge">
+                  <span>A</span>
+                </div>
+              </div>
+              <div className="dash-workout-card-details">
+                <span className="dash-workout-label">TREINO</span>
+                <span className="dash-workout-ex-count">8 ex</span>
+              </div>
+            </button>
+
+            <button className="dash-next-step-btn" onClick={onOpenFicha}>
+              <span className="btn-text">PRÓXIMO PASSO</span>
+              <span className="neon-glow-left-pill" />
+              <span className="neon-glow-right-pill" />
+            </button>
+
+            <div className="dash-cycle-progress-card" onClick={() => onNavigate('progresso')}>
+              <div className="dash-cycle-trophy-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                  <path d="M4 22h16" />
+                  <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                  <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+                </svg>
+              </div>
+              <span className="dash-cycle-value">2/30</span>
+              <span className="dash-cycle-label">CICLO</span>
             </div>
           </div>
-
-          {/* Radar Chart SVG Visual Hexagon */}
-          <div className="dash-radar-container flex justify-center items-center py-6 relative">
-            <svg viewBox="0 0 300 240" className="w-full max-w-[280px] h-auto">
-              {/* Polygon grids */}
-              <polygon points="150,20 250,70 250,170 150,220 50,170 50,70" fill="none" stroke="#353534" strokeWidth="1" />
-              <polygon points="150,50 215,82 215,147 150,180 85,147 85,82" fill="none" stroke="#353534" strokeWidth="1" strokeDasharray="3 3" />
-              <polygon points="150,80 180,95 180,135 150,150 120,135 120,95" fill="none" stroke="#353534" strokeWidth="1" strokeDasharray="3 3" />
-              
-              {/* Value Polygon */}
-              <polygon points="150,100 170,110 160,130 150,140 135,125 135,105" fill="rgba(192, 132, 252, 0.4)" stroke="#c084fc" strokeWidth="2" />
-
-              {/* Axis labels */}
-              <text x="150" y="14" fill="#cbc3d7" fontSize="10" textAnchor="middle" fontFamily="Rajdhani" fontWeight="bold">FORÇA</text>
-              <text x="260" y="70" fill="#cbc3d7" fontSize="10" textAnchor="start" fontFamily="Rajdhani" fontWeight="bold">RESISTÊNCIA</text>
-              <text x="260" y="175" fill="#cbc3d7" fontSize="10" textAnchor="start" fontFamily="Rajdhani" fontWeight="bold">INTENSIDADE</text>
-              <text x="150" y="235" fill="#cbc3d7" fontSize="10" textAnchor="middle" fontFamily="Rajdhani" fontWeight="bold">EQUILÍBRIO</text>
-              <text x="40" y="175" fill="#cbc3d7" fontSize="10" textAnchor="end" fontFamily="Rajdhani" fontWeight="bold">CARDIO</text>
-              <text x="40" y="70" fill="#cbc3d7" fontSize="10" textAnchor="end" fontFamily="Rajdhani" fontWeight="bold">POTÊNCIA</text>
-            </svg>
-          </div>
         </div>
-      </div>
 
-      {/* ── SUGGESTED WORKOUT CARD (Unified Bottom Bar Card) ── */}
-      <div className="dash-suggested-workout-wrapper">
-        <div className="dash-suggested-workout-card flex items-center justify-between gap-3 bg-[#1c1b1b] border border-[#8b5cf6]/30 p-3 rounded-2xl shadow-xl">
-          {/* Left Card: Workout suggestion details */}
-          <button
-            className="dash-workout-exercise-card flex items-center gap-3 bg-transparent text-left focus:outline-none"
-            onClick={onOpenFicha}
-          >
-            <div className="dash-workout-img-container relative w-14 h-14 rounded-xl overflow-hidden bg-[#2a2a2a] border border-white/10 flex-shrink-0">
-              <div className="w-full h-full bg-gradient-to-br from-purple-900 to-indigo-950 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#c084fc]">fitness_center</span>
-              </div>
-              <div className="dash-workout-letter-badge absolute bottom-0 right-0 bg-[#8b5cf6] text-white font-['Rajdhani'] font-bold text-xs px-1.5 py-0.5 rounded-tl-md">
-                A
-              </div>
-            </div>
-            <div className="dash-workout-card-details">
-              <span className="dash-workout-label block font-['Rajdhani'] text-[10px] text-gray-400 tracking-wider uppercase">
-                TREINO
-              </span>
-              <span className="dash-workout-ex-count font-['Rajdhani'] font-bold text-white text-sm">
-                8 ex
-              </span>
-            </div>
-          </button>
-
-          {/* Center: Metallic textured "PRÓXIMO PASSO" button */}
-          <button
-            className="dash-next-step-btn flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-['Rajdhani'] font-black text-sm tracking-widest uppercase shadow-[0_0_15px_rgba(139,92,246,0.6)] transition-all border border-purple-400/40 text-center"
-            onClick={onOpenFicha}
-          >
-            PRÓXIMO PASSO
-          </button>
-        </div>
       </div>
     </div>
   );

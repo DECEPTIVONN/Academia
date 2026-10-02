@@ -1,0 +1,308 @@
+/* ============================================================
+   VIEWPORT + STRIP — Clash Royale Slide System
+   ============================================================
+   
+   Architecture:
+   ┌─ .section-viewport ─────────────────┐  ← overflow:hidden ("camera")
+   │  ┌─ .section-strip ────────────────┐│  ← translateX moves this
+   │  │ [Ficha][Treinos][Prog][Perfil]..││  ← all slides side by side
+   │  └─────────────────────────────────┘│
+   └─────────────────────────────────────┘
+   
+   Transitioning = just animating translateX on the strip.
+   Both sections are always rendered → no reflow on show.
+   Both visible simultaneously during slide → true CR effect.
+   ============================================================ */
+
+/* ── Viewport: the "camera" — clips everything offscreen ── */
+.section-viewport {
+  width: 100%;
+  flex: 1; /* Fills remaining height of the flex column (.treino-page) */
+  min-height: 0; /* Important to prevent flex items from overflowing */
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Strip: all slides side by side, slides as one unit ── */
+.section-strip {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 500vw; /* 5 slides x 100vw (Ficha removida do strip em v3.2.0 — virou overlay) */
+  height: 100%;
+  will-change: transform;
+  transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Each slide = viewport width × viewport height, scroll interno ── */
+.section-slide {
+  width: 100vw;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-shrink: 0;
+  /* Scroll suave no iOS */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ── Sections: always block — viewport handles clipping ── */
+.main-section {
+  display: block;
+  width: 100%;
+}
+
+/* ── Padding so content isn't hidden under bottom nav ── */
+.section-slide .treino-container {
+  padding-bottom: 260px !important;
+}
+
+main {
+  padding-bottom: 0;
+}
+
+
+
+/* ---- Bottom Nav Bar ---- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  background: rgba(10, 8, 20, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5), 0 -1px 0 rgba(139, 92, 246, 0.15);
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  height: auto;
+  min-height: 64px;
+}
+
+/* ---- Nav Button ---- */
+.bnav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 2px;
+  border-radius: 12px;
+  position: relative;
+  transition: transform .2s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 0;
+}
+.bnav-btn:active {
+  transform: scale(0.9);
+}
+
+/* ---- Icon wrapper ---- */
+.bnav-icon {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+}
+.bnav-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: rgba(255, 255, 255, 0.35);
+  transition: stroke .3s ease, filter .3s ease;
+}
+
+/* ---- Label ---- */
+.bnav-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+  transition: color .3s ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* ---- Active dot indicator ---- */
+.bnav-active-dot {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 20px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
+  opacity: 0;
+}
+
+/* ---- Active State ---- */
+.bnav-btn.active .bnav-icon {
+  transform: translateY(-3px) scale(1.1);
+}
+.bnav-btn.active .bnav-icon svg {
+  stroke: var(--primary-light);
+  filter: drop-shadow(0 0 6px var(--primary));
+}
+.bnav-btn.active .bnav-label {
+  color: var(--primary-light);
+}
+.bnav-btn.active .bnav-active-dot {
+  transform: translateX(-50%) scaleX(1);
+  opacity: 1;
+}
+
+/* ---- Hover (desktop) ---- */
+@media (hover: hover) {
+  .bnav-btn:hover .bnav-icon svg {
+    stroke: rgba(255, 255, 255, 0.7);
+  }
+  .bnav-btn:hover .bnav-label {
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+/* ============================================================
+   SUB-TABS inside section-treinos
+   ============================================================ */
+.section-subtabs {
+  margin: calc(20px + env(safe-area-inset-top, 0px)) 0 0 0; /* Removido o gap inferior de 24px conforme solicitado */
+  position: relative;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+}
+
+.section-subtabs .treino-tab-nav {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 14px;
+}
+
+/* ============================================================
+   COMING SOON — Loja & Social placeholders
+   ============================================================ */
+.section-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  padding: 60px 24px;
+  text-align: center;
+}
+.cs-icon {
+  font-size: 4rem;
+  filter: drop-shadow(0 0 20px rgba(139,92,246,.5));
+  animation: float 3s ease-in-out infinite;
+}
+.cs-title {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+.cs-sub {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  max-width: 340px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   INLINE SVG ICON STYLES — Consistent stroke icon system
+   ============================================================ */
+
+/* All SVGs inherit stroke from parent color */
+.view-btn svg,
+.t-tab-btn svg,
+.g-chip svg,
+.btn-novo-ex svg,
+.btn-start-workout svg,
+.fab-icon svg,
+.btn-template .tpl-icon svg,
+.ex-search-icon svg,
+.maestria-widget-icon svg,
+.cardio-icon svg,
+.dash-icon-btn svg,
+.dash-progress-icon svg,
+.dash-pedestal-icon,
+.dash-wk-icon svg,
+.dash-cycle-icon svg,
+.dash-profile-rank svg,
+.dash-start-btn .icon svg {
+  display: block;
+  flex-shrink: 0;
+  stroke: currentColor;
+  transition: stroke .25s ease, filter .25s ease;
+}
+
+/* Grupo filter chips: icon color matches text */
+.g-chip svg { opacity: .8; }
+.g-chip.active svg { opacity: 1; }
+
+/* Search icon color */
+.ex-search-icon svg { stroke: var(--text-tertiary); }
+
+/* Maestria star: fill accent on active/hover */
+.maestria-widget-icon svg {
+  stroke: var(--primary-light);
+  filter: drop-shadow(0 0 5px var(--primary));
+}
+.maestria-widget-icon svg polygon {
+  fill: rgba(139,92,246,.15);
+}
+
+/* Cardio icon: pulse color */
+.cardio-icon svg { stroke: var(--primary-light); }
+
+/* FAB icon: white stroke */
+.fab-icon svg { stroke: #fff; }
+
+/* Template icons: scale on hover */
+.btn-template .tpl-icon svg {
+  stroke: var(--primary-light);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), filter .3s ease;
+}
+.btn-template:hover .tpl-icon svg {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 8px var(--primary));
+}
+
+/* btn-start-workout play icon fills on active */
+.btn-start-workout svg polygon {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Botão legado "INICIAR TREINO" / "ENCERRAR TREINO" no header da Ficha:
+   mantido no DOM para preservar a lógica de cronômetro em
+   initGlobalTimer()/stopGlobalTimer(). O estado padrão "INICIAR TREINO"
+   fica oculto porque o cronômetro agora é iniciado exclusivamente pelo
+   "PRÓXIMO PASSO" do Dashboard (ver secao-dashboard.js). Quando o timer
+   está rodando, o botão ganha .active e vira "ENCERRAR TREINO",
+   permitindo que o usuário pare manualmente com confirmação via modal. */
+.btn-start-workout {
+  display: none;
+}
+.btn-start-workout.active {
+  display: flex;
+}

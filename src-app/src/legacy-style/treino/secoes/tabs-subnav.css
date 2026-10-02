@@ -1,0 +1,190 @@
+/* TABS AND DOT NAVIGATION */
+.cr-tab-nav {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.cr-tabs-container {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 24px;
+    padding-bottom: 40px; 
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.cr-tabs-content {
+    padding: 15px;
+}
+
+.cr-tab-nav-dots {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    background: rgba(0,0,0,0.4);
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    z-index: 5;
+    backdrop-filter: blur(5px);
+}
+
+.cr-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding: 0;
+    position: relative;
+}
+
+.cr-dot.active {
+    background: #fde047;
+    transform: scale(1.5);
+    box-shadow: 
+        0 0 20px #fde047,
+        0 0 40px rgba(253, 224, 71, 0.4);
+    border-color: #fff;
+    animation: stellarPulse 2s infinite ease-in-out;
+}
+
+@keyframes stellarPulse {
+    0%, 100% { filter: brightness(1) drop-shadow(0 0 5px #fde047); }
+    50% { filter: brightness(1.5) drop-shadow(0 0 15px #fde047); }
+}
+
+/* SUB-NAVBAR (CLASH ROYALE STYLE) */
+.sub-navbar {
+    display: flex;
+    justify-content: space-around;
+    background: transparent;
+    padding: 8px 5px;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    margin: -15px -10px 15px -10px; /* Overlap the wrapper padding */
+    position: relative;
+    z-index: 2;
+}
+
+.sub-nav-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 12px;
+    position: relative;
+}
+
+.sub-nav-btn:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sub-nav-btn.active {
+    color: #fff;
+    background: linear-gradient(135deg, #6d28d9, #4c1d95);
+    box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3);
+    transform: translateY(-2px);
+}
+
+.sub-nav-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0;
+    border-style: solid;
+    border-color: #4c1d95 transparent;
+    display: block;
+    width: 0;
+}
+
+.sub-tab-content {
+    background: #0f172a;
+    border: 2px solid rgba(139, 92, 246, 0.3);
+    border-radius: 0 0 16px 16px;
+    padding: 20px;
+    border-top: none;
+    position: relative;
+    z-index: 1;
+}
+
+.sub-tab-content.active {
+    display: block !important;
+}
+
+/* OVERRIDES PARA AS ABAS PRINCIPAIS (ESTILO CLASH ROYALE) */
+.section-subtabs .treino-tab-nav {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 10px !important;
+    backdrop-filter: none !important;
+    display: flex !important;
+    gap: 4px !important;
+    align-items: flex-end !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto;
+    border-bottom: 2px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+.section-subtabs .t-tab-btn {
+    background: rgba(16, 10, 28, 0.9) !important;
+    border: 2px solid rgba(139, 92, 246, 0.3) !important;
+    border-bottom: none !important;
+    border-radius: 16px 16px 0 0 !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    padding: 12px 10px !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin-bottom: -2px !important;
+    position: relative !important;
+    z-index: 1 !important;
+    box-shadow: none !important;
+    flex: 1 !important;
+}
+
+.section-subtabs .t-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.section-subtabs .t-tab-btn.active {
+    background: #150b24 !important;
+    color: #fff !important;
+    border-color: rgba(139, 92, 246, 0.6) !important;
+    border-bottom: 2px solid #150b24 !important;
+    z-index: 3 !important;
+    transform: none !important;
+    padding-top: 16px !important;
+}
+
+.perf-tab-content-wrapper, #tab-exercicios {
+    background: #150b24;
+    border: 2px solid rgba(139, 92, 246, 0.3);
+    border-top: none;
+    border-radius: 0 0 24px 24px;
+    padding: 20px 10px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    margin: 0 10px 20px 10px;
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+}
