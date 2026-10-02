@@ -1,28 +1,24 @@
 /**
  * supabase.ts — Cliente Supabase (singleton)
- * Lê as variáveis de ambiente via Vite (VITE_SUPABASE_*)
- * Tipado com o Database interface de schema.ts
+ * Suporta fallback gracioso quando as variáveis de ambiente VITE_SUPABASE_* não estiverem configuradas.
  */
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/core/db/schema';
 
-const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL  as string;
-const supabaseKey  = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const supabaseUrl  = (import.meta.env.VITE_SUPABASE_URL  as string) || 'https://placeholder.supabase.co';
+const supabaseKey  = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || 'placeholder-anon-key';
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error(
-    '[supabase] VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY são obrigatórias. ' +
-    'Crie o arquivo src-app/.env com as chaves do seu projeto Supabase.'
-  );
-}
+export const isSupabaseConfigured = Boolean(
+  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   auth: {
     storage:          localStorage,
-    autoRefreshToken: true,
-    persistSession:   true,
-    detectSessionInUrl: true,    // Suporta OAuth redirect
+    autoRefreshToken: isSupabaseConfigured,
+    persistSession:   isSupabaseConfigured,
+    detectSessionInUrl: isSupabaseConfigured,
   },
   realtime: {
     params: {
@@ -33,6 +29,9 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
 
 /* ── Helper: retorna o user_id do usuário atual ou lança ── */
 export async function requireUserId(): Promise<string> {
+  if (!isSupabaseConfigured) {
+    return 'local-user';
+  }
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user.id) {
     throw new Error('Usuário não autenticado');

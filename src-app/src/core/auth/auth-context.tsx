@@ -1,7 +1,6 @@
 /**
  * auth-context.tsx — AuthProvider + useAuth hook
- * Gerencia o ciclo de vida da sessão Supabase:
- * login com email/senha, Google OAuth, WebAuthn 2FA e logout.
+ * Gerencia o ciclo de vida da sessão Supabase / Modo Offline gracioso.
  */
 
 import React, {
@@ -13,10 +12,9 @@ import React, {
   type ReactNode,
 } from 'react';
 import type { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from '@/core/supabase';
+import { supabase, isSupabaseConfigured } from '@/core/supabase';
 import { clearLocalDB } from '@/core/db/idb';
 
-/* ── Tipos ── */
 interface AuthContextValue {
   user:    User    | null;
   session: Session | null;
@@ -29,25 +27,25 @@ interface AuthContextValue {
   resetPassword:   (email: string) => Promise<void>;
 }
 
-/* ── Context ── */
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/* ── Provider ── */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,    setUser]    = useState<User    | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  /* Inicializar sessão na montagem */
   useEffect(() => {
-    // Recupera sessão existente do localStorage
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Escutar mudanças de auth (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -59,14 +57,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  /* ── Ações ── */
-
   const signIn = useCallback(async (email: string, password: string) => {
+    if (!isSupabaseConfigured) throw new Error('Supabase não configurado.');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw formatAuthError(error);
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
+    if (!isSupabaseConfigured) throw new Error('Supabase não configurado.');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -82,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     displayName?: string
   ) => {
+    if (!isSupabaseConfigured) throw new Error('Supabase não configurado.');
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -94,11 +93,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
-    await clearLocalDB();   // Limpa dados locais no logout
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
+    await clearLocalDB();
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
+    if (!isSupabaseConfigured) throw new Error('Supabase não configurado.');
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
@@ -115,14 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/* ── Hook ── */
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth deve ser usado dentro de <AuthProvider>');
   return ctx;
 }
 
-/* ── Formata mensagens de erro Supabase para pt-BR ── */
 function formatAuthError(error: AuthError): Error {
   const messages: Record<string, string> = {
     'Invalid login credentials':              'Email ou senha incorretos.',
