@@ -27,13 +27,14 @@ import {
 } from '@/core/db/queries';
 import { SheetSelectorModal } from '@/features/dashboard/SheetSelectorModal';
 import { MissionsOverlay } from '@/features/dashboard/MissionsOverlay';
+import { NewsOverlay } from '@/features/news/NewsOverlay';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { RadarChart } from '@/features/gamification/RadarChart';
 import { useRadarMode } from '@/features/gamification/useRadarFit';
 
 interface DashboardFeatureProps {
   onNavigate: (section: string) => void;
-  onOpenFicha: () => void;
+  onOpenFicha: (letter: SheetKey) => void;
   onOpenPerfil: () => void;
 }
 
@@ -50,6 +51,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
 
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [missionsOpen, setMissionsOpen] = useState(false);
+  const [newsOpen, setNewsOpen] = useState(false);
   /* Modo do radar global (legado: currentRadarMode compartilhado) */
   const radarMode = useRadarMode((s) => s.mode);
   const setRadarMode = useRadarMode((s) => s.setMode);
@@ -144,7 +146,10 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                   className="dash-header-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all relative"
                   id="dashBtnNoticias"
                   aria-label="Notícias"
-                  onClick={stop}
+                  onClick={(e) => {
+                    stop(e);
+                    setNewsOpen(true);
+                  }}
                 >
                   <span className="material-symbols-outlined text-[24px]">calendar_today</span>
                   <span className="notification-dot absolute top-3 right-3 w-2 h-2 bg-chest-red rounded-full" />
@@ -323,7 +328,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
               <span id="dashWkBadge" style={{ display: 'none' }} />
             </button>
 
-            <button className="dash-next-step-btn" id="dashBtnIniciar" onClick={onOpenFicha}>
+            {/* startWorkoutFromDashboard (secao-dashboard.js L276-304): o PRÓXIMO
+                PASSO inicia o cronômetro (localStorage workout_start_time) e só
+                depois abre a Ficha — ver App.handleOpenFicha */}
+            <button
+              className="dash-next-step-btn"
+              id="dashBtnIniciar"
+              onClick={() => onOpenFicha(suggestion)}
+            >
               <span className="btn-text" id="dashBtnStartText">PRÓXIMO PASSO</span>
               <span className="neon-glow-left-pill" />
               <span className="neon-glow-right-pill" />
@@ -374,6 +386,9 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
 
       {/* Overlay de Missões (treino.html L903-1254) */}
       <MissionsOverlay open={missionsOpen} onClose={() => setMissionsOpen(false)} />
+
+      {/* Overlay de Notícias (treino.html L303-427) — acionado pelo #dashBtnNoticias */}
+      <NewsOverlay open={newsOpen} onClose={() => setNewsOpen(false)} />
     </div>
   );
 };

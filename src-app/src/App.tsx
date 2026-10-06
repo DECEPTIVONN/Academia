@@ -8,7 +8,6 @@ import { DashboardFeature } from '@/features/dashboard/DashboardFeature';
 import { TreinosFeature } from '@/features/workout/treinos/TreinosFeature';
 import { FichaFeature } from '@/features/workout/FichaFeature';
 import { ProgressoFeature } from '@/features/training/ProgressoFeature';
-import { ActiveWorkoutModal } from '@/features/workout/ActiveWorkoutModal';
 import { ConclusaoModal } from '@/features/workout/ConclusaoModal';
 import { ProfileFeature } from '@/features/profile/ProfileFeature';
 import { applyAppTheme, readLS } from '@/features/profile/profile-data';
@@ -29,7 +28,6 @@ export function App() {
   const [isFichaOverlayOpen, setIsFichaOverlayOpen] = useState(false);
   const [isPerfilOverlayOpen, setIsPerfilOverlayOpen] = useState(false);
   const [isPerfilClosing, setIsPerfilClosing] = useState(false);
-  const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
   const [isConclusaoOpen, setIsConclusaoOpen] = useState(false);
   const [isEncerrarOpen, setIsEncerrarOpen] = useState(false);
   const isShareOpen = useShareStore((s) => s.show);
@@ -127,18 +125,36 @@ export function App() {
     };
   }, [activeSection, navigateSection]);
 
-  const { isActive, startWorkout, cancelWorkout } = useWorkoutStore();
+  const { isActive, startWorkout } = useWorkoutStore();
 
+  /* startWorkoutFromDashboard (secao-dashboard.js L276-304): o PRÓXIMO PASSO do
+     Dashboard grava o treino escolhido em db.historico[today] (setTodayTreino),
+     inicia o cronômetro (workout_start_time) e só então abre a Ficha — é daí
+     que vêm o contador "Duração do Treino" e o botão ENCERRAR TREINO. */
+  const handleOpenFicha = useCallback(
+    async (sheetKey: SheetKey) => {
+      const entryStore = useTodayEntryStore.getState();
+      if (!entryStore.loaded) await useTodayEntryStore.getState().load();
+      const loaded = useTodayEntryStore.getState();
+      if (loaded.loaded && loaded.entry.sheetKey !== sheetKey) {
+        await loaded.update((e) => ({ ...e, sheetKey }));
+      }
+      if (!useWorkoutStore.getState().isActive) startWorkout(sheetKey, `Treino ${sheetKey}`);
+      setIsFichaOverlayOpen(true);
+    },
+    [startWorkout]
+  );
+
+  /* initGlobalTimer (secao-ficha.js L1007-1028): iniciar = start + toast,
+     sem fechar a Ficha e sem abrir outro modal */
   const handleStartWorkout = (sheetKey: SheetKey) => {
     startWorkout(sheetKey, `Treino ${sheetKey}`);
-    setIsFichaOverlayOpen(false);
-    setIsWorkoutModalOpen(true);
+    showToast('Treino iniciado! Foco total!', 'success');
   };
 
-  const handleCloseWorkoutModal = () => {
-    cancelWorkout();
-    setIsWorkoutModalOpen(false);
-  };
+  /* btnStartWorkout com o timer rodando (secao-ficha.js L1022-1027):
+     nunca encerra direto — pede confirmação via modalEncerrarTreino */
+  const handleRequestEncerrar = () => setIsEncerrarOpen(true);
 
   /* btnFecharConclusao (app.js L272–292): fecha, volta ao Início e fecha a ficha */
   const handleConclusaoClose = () => {
@@ -254,7 +270,7 @@ export function App() {
             {activeSection === 'dashboard' && (
               <DashboardFeature
                 onNavigate={(sec) => navigateSection(sec as SectionType)}
-                onOpenFicha={() => setIsFichaOverlayOpen(true)}
+                onOpenFicha={handleOpenFicha}
                 onOpenPerfil={() => setIsPerfilOverlayOpen(true)}
               />
             )}
@@ -264,14 +280,26 @@ export function App() {
             {activeSection === 'progresso' && <ProgressoFeature />}
 
             {(activeSection === 'social' || activeSection === 'loja') && (
-              <div className="flex flex-col items-center justify-center p-12 text-center text-gray-400 font-['Rajdhani'] text-sm max-w-md mx-auto my-20 bg-[#1c1b1b]/80 rounded-3xl border border-[#8b5cf6]/30">
-                <span className="text-5xl mb-4">💬</span>
-                <h2 className="text-white font-bold text-2xl uppercase mb-2">
-                  {activeSection === 'social' ? 'SOCIAL' : 'LOJA'}
-                </h2>
-                <p className="text-gray-400 font-['Outfit'] text-xs">
-                  Em breve! Conecte-se com amigos, compare progresso e desafie outros atletas.
-                </p>
+              /* Placeholders .section-coming-soon — estrutura 1:1 com
+                 treino.html L184-207 (SOCIAL) e L197-207 (LOJA) */
+              <div className="section-slide" data-section={activeSection}>
+                <div className="treino-container">
+                  <div
+                    id={activeSection === 'social' ? 'section-social' : 'section-loja'}
+                    className="main-section"
+                    role="tabpanel"
+                  >
+                    <div className="section-coming-soon">
+                      <div className="cs-icon">{activeSection === 'social' ? '💬' : '🛒'}</div>
+                      <h2 className="cs-title">{activeSection === 'social' ? 'SOCIAL' : 'LOJA'}</h2>
+                      <p className="cs-sub">
+                        {activeSection === 'social'
+                          ? 'Em breve! Conecte-se com amigos, compare progresso e desafie outros atletas.'
+                          : 'Em breve! Itens, skins e upgrades exclusivos para sua jornada.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </main>
@@ -344,16 +372,16 @@ export function App() {
             <div className="ficha-overlay__scroll" id="fichaOverlayScroll">
               <FichaFeature
                 onStartWorkout={handleStartWorkout}
-                onShowActiveWorkout={() => setIsWorkoutModalOpen(true)}
+                onRequestEncerrar={handleRequestEncerrar}
                 onWorkoutCompleted={() => setIsConclusaoOpen(true)}
               />
             </div>
           </div>
 
-          {/* Modal de Treino Ativo */}
-          {isActive && isWorkoutModalOpen && (
-            <ActiveWorkoutModal onClose={handleCloseWorkoutModal} />
-          )}
+          {/* Modal de Treino Ativo removido do fluxo: no legado o treino em
+              andamento é conduzido pela Ficha (btnStartWorkout → ENCERRAR TREINO
+              → modalEncerrarTreino). O arquivo ActiveWorkoutModal.tsx permanece
+              no projeto como scaffold não montado. */}
 
           {/* Modal: Conclusão de Treino (modais.html L1–37 + showConclusao L421–495) */}
           <ConclusaoModal open={isConclusaoOpen} onClose={handleConclusaoClose} />

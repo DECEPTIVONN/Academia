@@ -21,6 +21,45 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.0.7-phase5] - 2026-10-06
+*Paridade das pendências da migração React v4: cronômetro global do treino + confirmação ao sair, overlay de Notícias completo, placeholders Social/Loja com DOM legado e navbar inferior 1:1 com `7-nav-icons.css` (system_map.json → version 3.5.16)*
+
+### [Added]
+- **`src-app/src/features/news/NewsOverlay.tsx` + `news-overlay.css` (novos)**: port 1:1 de `#news-overlay` (`treino.html` L303–427 DOM/CSS + L429–599 comportamento) — 3 abas `noticias`/`atualizacoes`/`guias` (seta `tab-arrow`, `bg-[#8b5cf6]`, `drop-shadow` no ícone, `font-bold`/`font-medium`), seções `.tab-content`/`.active` com `newsFadeIn`, cartões `glass-panel` (4 notícias — o 1º com o rótulo "Notícias" no placeholder e a borda `border-primary/10`, como no legado — e 7 atualizações), botões `MOSTRAR MAIS` (equivalentes à remoção de `.hidden-news`/`.hidden-updates` + ocultação do wrapper), detail views `#news-detail-view`/`#update-detail-view` com `hidden-view`/`active` (slide de 300 ms), paginação `btn-prev`/`btn-next` com fade de 200 ms (`updateDetailContent`: o índice avança no clique e o DOM só muda após o timeout — `currentIndices` legado), conteúdo via `dangerouslySetInnerHTML` (strings literais L432–445), containers de footer mantidos vazios e lock de `body.overflow` (`openNewsOverlay` L505). O `<style>` inline foi extraído verbatim para `news-overlay.css` (as regras `!important` de `#news-main-view`/`main` substituem os atributos `style` inline).
+- **`src-app/src/App.tsx` — cronômetro global do treino (item "contador de tempo") + confirmação ao sair (item "modal de confirmação") — a causa raiz dos dois era a mesma**: `handleOpenFicha(sheetKey)` (ligado ao `#dashBtnIniciar` "PRÓXIMO PASSO") espelha `startWorkoutFromDashboard` (`secao-dashboard.js` L276–304): grava o treino escolhido em `db.historico[today]` (`setTodayTreino` via `today-entry-store`, com guarda de `loaded` para não persistir uma entrada em branco), inicia o treino (`workout_start_time`) somente se não houver nenhum ativo e só então abre a Ficha. **Antes o timer nunca era iniciado** — `#globalWorkoutTimer` ("Duração do Treino") e `#btnStartWorkout` ficavam ocultos (`.btn-start-workout{display:none}` / `.active{display:flex}`) e o `#modalEncerrarTreino` era inalcançável a partir da Ficha.
+- **`src-app/src/features/dashboard/DashboardFeature.tsx`**: `#dashBtnNoticias` chama `openNewsOverlay()` → `<NewsOverlay open onClose/>` montado junto ao `<MissionsOverlay/>` (o legado só permite abrir por aqui, `secao-dashboard.js` L366).
+
+### [Changed]
+- **`src-app/src/App.tsx`**: `handleStartWorkout` (prop `onStartWorkout` da Ficha) vira `startWorkout` + toast `Treino iniciado! Foco total!` **sem fechar a Ficha nem abrir modal** (initGlobalTimer L1007–1021); `#btnStartWorkout` com timer rodando (e o X da Ficha) seguem abrindo `#modalEncerrarTreino` (L1022–1027) — prop `onShowActiveWorkout` renomeada para `onRequestEncerrar` em `FichaFeature.tsx`; `onOpenFicha` do Dashboard agora recebe a letra efetiva (`(letter: SheetKey) => void`).
+- **`src-app/src/App.tsx` — placeholders Social/Loja**: substitui o card Tailwind ad-hoc pelo DOM legado `.section-slide > .treino-container > .main-section > .section-coming-soon` (`treino.html` L184–207), com `💬`/`🛒`, `.cs-title` e **o texto correto de cada seção** (a Loja usava o subtítulo do Social) — reativando o CSS `7-nav-icons.css` L198–228 (incl. `padding-bottom: 260px` do `.section-slide .treino-container`).
+- **`src-app/src/components/BottomNav.tsx` — navbar inferior otimizada**: DOM 1:1 com `treino.html` L1046–1077 removendo **todas** as utilities Tailwind conflitantes (`px-2 py-2`, `max-w-md mx-auto`, `z-40`, `bg-[#0a0514]/95`, `border-t border-[#8b5cf6]/30`, `text-[10px]`, `tracking-wider`, `py-1 px-3`, `w-5 h-5`, cores inline) e mantendo apenas `.bottom-nav`/`.bnav-btn`/`.bnav-icon`/`.bnav-label`/`.bnav-active-dot` de `7-nav-icons.css` + `data-section`, `id="bnavProgresso"…`, `role`/`aria-label` e `type="button"`. Causa da sobreposição dos labels: no App o CSS legado é **não camadeado** e vence as utilities do Tailwind v4 (que ficam em `@layer utilities`), então `padding`/`letter-spacing`/`font-size` divergiam e o conteúdo dos 5 botões (`flex:1`, `white-space:nowrap`) transbordava.
+- **`Diretrizes/system_map.json`**: `version` 3.5.15 → **3.5.16**; `last_updated` → 2026-10-06; `react_app.description` ganha a Fase 5; `react_app.entry_points` de `App.tsx` reescrito (handleOpenFicha/timer/onRequestEncerrar/placeholders, sem `isWorkoutModalOpen`) + nova entrada `src-app/src/features/news/`; `react_app.known_gaps` atualizado (Fase 5 concluída, divergências resolvidas, `ActiveWorkoutModal` na lista de scaffold órfão, rest timer só no Modo Foco).
+
+### [Removed]
+- **`src-app/src/App.tsx`: fluxo do `ActiveWorkoutModal`** (`isWorkoutModalOpen`, `handleCloseWorkoutModal`, import e render): no legado o treino em andamento é conduzido pela Ficha (`btnStartWorkout` → `modalEncerrarTreino`); o modal era inalcançável na prática (só abria pelo botão oculto "INICIAR TREINO"). O arquivo `src-app/src/features/workout/ActiveWorkoutModal.tsx` permanece como scaffold não montado (junto aos 4 órfãos já documentados).
+
+### [Divergências conscientes]
+- `closeNewsOverlay` legado chama `window._transitionTo('dashboard')`; aqui basta fechar, pois o overlay só abre a partir do Dashboard (mesmo racional do `MissionsOverlay`).
+- Os 3 contêineres de footer do overlay ficam vazios (o footer HTML injetado pelo legado não foi portado para o React).
+- Swip horizontal com o overlay aberto não é excluído (idêntico ao `nav.js`): no React o Dashboard desmonta e o overlay some junto, enquanto o legado o mantém e force-a volta ao Dashboard ao fechar.
+- Aba ativa do overlay mantém `transition-opacity` entre ativa/inativa (o markup inicial do legado só a tem na aba inativa; micro-divergência de 150 ms).
+
+### [Verification]
+- `npx tsc -b` exit 0; `npx oxlint src` exit 0 com **zero warnings** (1 warning `react(refs)` de render-phase ref corrigido); `npm run build` OK (bundle `index-6Ol1E3a_.js`, 902.575 B + CSS `index-CUvlxgwi.css`, 331.015 B) e PWA precache 112 entries.
+- Strings no dist (script Node UTF-8): `news-overlay`, `MOSTRAR MAIS`, `Treino iniciado! Foco total!`, `Fechar notícias`, `ATUALIZAÇÕES`, `Príncipe das Trevas`, `Em breve! Itens, skins e upgrades exclusivos para sua jornada.`, `bnavDashboard`, `hidden-view`, `detail-view`, `Sair da Ficha?`, `Guias em breve`, `NOVA TEMPORADA` — todas presentes.
+- Classes no CSS do bundle (script Node UTF-8): 19/20 probes — `bg-\[\#8b5cf6\]`, `z-\[110\]`, `border-t-\[6px\]`, `hover\:bg-red-500`, `shadow-\[0_0_15px_rgba…\]`, `text-neon-purple-glow`, `aspect-video`, `animate-bounce`, `news-overlay`, `section-coming-soon`, etc.; a única ausente é `float-animation`, **que também não existe em lugar nenhum do CSS legado** (no-op nos dois lados).
+- Preview `vite preview --port 4173`: index 200 (1503 B) · `index-6Ol1E3a_.js` 200 (902.575 B, `text/javascript`) · `index-CUvlxgwi.css` 200 (331.015 B).
+- Encoding: 6 arquivos novos/alterados sem BOM e sem `U+FFFD` (script Node).
+
+## [v4.0.6-phase4-docs] - 2026-10-05
+*Documentação de continuidade de sessão (system_map.json → version 3.5.15)*
+
+### [Added]
+- **`context.md` (novo, raiz do repo)**: arquivo de contexto entre sessões de IA — estado atual ao fim de 2026-10-05 (Fases 0–4 concluídas, verificação verde, 46 paths não commitados), resumo do que foi feito na sessão, mapa dos 8 arquivos da Fase 4 (`src-app/src/features/workout/treinos/`), decisões/divergências conscientes (deck compacto, swipe sem arrasto contínuo, banners duplicados, scaffold órfãos mantidos, Social/Loja ainda ad-hoc), regras obrigatórias (CHANGELOG, incremento do system_map com JSON sem BOM, comandos de verificação, gotchas do PowerShell 5.1) e próximos passos (commit, paridade Social/Loja, teste manual da seção Treinos, known_gaps, deploy Vercel com Root Directory `src-app`).
+
+### [Changed]
+- **`Diretrizes/system_map.json`**: `version` 3.5.14 → **3.5.15**; `documentation.files` passa a listar `context.md` como primeira entrada (leitura de continuidade junto com o system_map).
+
 ## [v4.0.6-phase4] - 2026-10-05
 *Fase 4 (seção Treinos) da migração React v4 — CONCLUÍDA: port 1:1 de `componentes/secoes/treinos.html` + `JS/treino/secao-treinos.js`/`templates.js`/`montar.js`/`secao-customizacao.js` (8 arquivos de UI), navegação por swipe com exclusões do nav.js, substituição total do stub `SheetsFeature` e limpeza de warnings (oxlint 0) (system_map.json → version 3.5.14)*
 

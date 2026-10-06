@@ -38,8 +38,9 @@ type ViewMode = 'table' | 'grid' | 'deck';
 
 interface FichaFeatureProps {
   onStartWorkout: (sheetKey: SheetKey) => void;
-  /** Reabre o modal de treino ativo (botão "ENCERRAR TREINO" legado). */
-  onShowActiveWorkout: () => void;
+  /** Botão "ENCERRAR TREINO" com o cronômetro rodando → modalEncerrarTreino
+      (secao-ficha.js L1022-1027 nunca encerra direto). */
+  onRequestEncerrar: () => void;
   /** Todo marcado (legado: showConclusao com delay de 400ms — L312/L368). */
   onWorkoutCompleted: () => void;
 }
@@ -469,7 +470,7 @@ function formatElapsed(ms: number): string {
 
 export const FichaFeature: React.FC<FichaFeatureProps> = ({
   onStartWorkout,
-  onShowActiveWorkout,
+  onRequestEncerrar,
   onWorkoutCompleted,
 }) => {
   const { exercises, sheets, history, legacy } = useLocalData();
@@ -664,9 +665,11 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     onToggle: onToggleCheck,
   };
 
+  /* btnStartWorkout (secao-ficha.js L1007-1028): timer parado → inicia;
+     timer rodando → modalEncerrarTreino (nunca encerra direto) */
   const handleStartClick = () => {
     if (!isActive) onStartWorkout(treino);
-    else onShowActiveWorkout();
+    else onRequestEncerrar();
   };
 
   return (

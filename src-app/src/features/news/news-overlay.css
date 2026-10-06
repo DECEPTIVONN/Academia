@@ -1,0 +1,119 @@
+/* news-overlay.css — extraido verbatim de treino.html L305-416 (Fase 5)
+   As duas regras !important no fim reproduzem os atributos style inline de
+   #news-main-view e do <main> (treino.html L474 e L556). */
+            .news-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                overflow-y: auto;
+                overflow-x: hidden;
+                color: #e5e2e1;
+                background-color: #0a0514;
+            }
+            .news-overlay .arena-bg {
+                background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKNhRMaQRBLOVDBSB6Y9zT6KeBJWTqJPEV8J2oYo-rVytUTbwYxpbDvv-oFgvbcL0s3HZbx1u2-zE3dDusALTGWv-XHMJdBgB0kiQwjuObalYwkuGE9k0A3vWLlVUrOE67rOuoNJdIB9eVlCueLZKfBEj3IpCPqqMP0o5L0gZ_19_XyZExy3782vyuqY73W9URvgrTuhkjTY38O8rbMIf4kAWswYgRs_pn8sxUNv-yo-1VEGJcSTiCeoved-e8aoZjOr84kvHd7gY');
+                background-repeat: repeat;
+                animation: bgScroll 60s linear infinite;
+            }
+            @keyframes bgScroll {
+                from { background-position: 0 0; }
+                to { background-position: 500px 1000px; }
+            }
+            .news-overlay .detail-view {
+                transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+                transform: translateX(100%);
+                opacity: 0;
+                pointer-events: none;
+                position: fixed;
+                inset: 0;
+                z-index: 100;
+                overflow-y: auto;
+                background-color: #0a0514;
+                visibility: hidden;
+            }
+            .news-overlay #news-footer-container,
+            .news-overlay .detail-view .detail-footer-wrap {
+                width: 100%;
+            }
+            .news-overlay #news-footer-container footer,
+            .news-overlay .detail-view .detail-footer-wrap footer {
+                margin: 0;
+                border-radius: 0;
+                padding: 20px 20px 40px;
+            }
+            .news-overlay .detail-view.active {
+                transform: translateX(0);
+                opacity: 1;
+                pointer-events: auto;
+                visibility: visible;
+            }
+            .news-overlay #news-main-view {
+                transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            }
+            .news-overlay #news-main-view.hidden-view {
+                transform: translateX(-30%);
+                opacity: 0;
+                pointer-events: none;
+            }
+            .news-overlay .tab-content {
+                display: none;
+            }
+            .news-overlay .tab-content.active {
+                display: block;
+                animation: newsFadeIn 0.3s ease-in-out;
+            }
+            @keyframes newsFadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .news-overlay .glass-panel {
+                backdrop-filter: blur(12px);
+                background: rgba(10, 5, 20, 0.7);
+                border: 1px solid rgba(139, 92, 246, 0.3);
+                box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.1);
+            }
+            .news-overlay .premium-placeholder {
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+                position: relative;
+                overflow: hidden;
+            }
+            .news-overlay .premium-placeholder::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, transparent 40%, rgba(139, 92, 246, 0.2) 50%, transparent 60%);
+                animation: newsShimmer 3s infinite linear;
+            }
+            @keyframes newsShimmer {
+                0% { transform: translate(-100%, -100%); }
+                100% { transform: translate(100%, 100%); }
+            }
+            .news-overlay .premium-placeholder span.material-symbols-outlined {
+                animation: newsFloat 3s ease-in-out infinite;
+                display: inline-block;
+            }
+            @keyframes newsFloat {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+            .news-overlay .glass-card {
+                backdrop-filter: blur(12px);
+                background: rgba(10, 5, 20, 0.7);
+                border: 1px solid rgba(139, 92, 246, 0.2);
+            }
+            .news-overlay .text-glow {
+                text-shadow: 0 0 10px rgba(192, 132, 252, 0.5);
+            }
+            .news-overlay .active-tab-shield {
+                background: linear-gradient(180deg, #6d3bd7 0%, #340080 100%);
+                clip-path: polygon(0% 0%, 100% 0%, 100% 85%, 50% 100%, 0% 85%);
+                border-bottom: 2px solid #d0bcff;
+            }
+            .news-overlay #news-main-view,
+            .news-overlay #news-main-view > main {
+                min-height: auto !important;
+                height: auto !important;
+            }
