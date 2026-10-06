@@ -29,6 +29,7 @@ import { SheetSelectorModal } from '@/features/dashboard/SheetSelectorModal';
 import { MissionsOverlay } from '@/features/dashboard/MissionsOverlay';
 import { NewsOverlay } from '@/features/news/NewsOverlay';
 import { useProfileState } from '@/features/profile/useProfileState';
+import { IDENTITY_EMBLEMS, SPRITESHEET_URL } from '@/features/profile/profile-data';
 import { RadarChart } from '@/features/gamification/RadarChart';
 import { useRadarMode } from '@/features/gamification/useRadarFit';
 
@@ -85,6 +86,13 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
 
   const userName = pc?.nome || legacy?.profileCustomization?.nome || 'ATLETA';
 
+  /* Emblema do avatar (#dashAvatar) — port de `applyProfileCustomization`
+     (secao-customizacao.js L371-396): wrapper com blend screen (+ pulse),
+     sprite ou imagem, fallback dicebear e `data-frame`. */
+  const emblemPc = pc ?? legacy?.profileCustomization;
+  const emblem = IDENTITY_EMBLEMS.find((e) => e.id === (emblemPc?.mainEmblem || 'prestigio-1'));
+  const emblemPulsing = emblemPc?.mainEmblemPulse !== false;
+
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
@@ -121,11 +129,50 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
               <div
                 className="profile-avatar dash-profile-avatar w-28 h-28 border-2 border-prestige-gold p-1 shadow-[0_0_20px_rgba(253,224,71,0.5)] bg-surface-container-low overflow-hidden rounded-2xl"
                 id="dashAvatar"
-                data-frame=""
+                data-frame={emblemPc?.avatarFrame || ''}
               >
-                <div className="w-full h-full rounded-2xl bg-[#131313] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[48px] text-[#d0bcff]">shield_person</span>
-                </div>
+                {emblem ? (
+                  <div
+                    className={`profile-avatar__emblem-wrapper${emblemPulsing ? ' animate-pulse' : ''}`}
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                      overflow: 'hidden',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mixBlendMode: 'screen',
+                    }}
+                  >
+                    {emblem.type === 'sprite' ? (
+                      <img
+                        src={SPRITESHEET_URL}
+                        style={{
+                          position: 'absolute',
+                          maxWidth: 'none',
+                          width: '300%',
+                          height: '300%',
+                          left: emblem.x,
+                          top: emblem.y,
+                        }}
+                        alt=""
+                      />
+                    ) : (
+                      <img
+                        src={emblem.url}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        alt=""
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${emblemPc?.avatarSeed || 'Deceptivon'}`}
+                    alt="Avatar"
+                  />
+                )}
               </div>
             </div>
 

@@ -14,7 +14,7 @@ import { applyAppTheme, readLS } from '@/features/profile/profile-data';
 import { BottomNav, type SectionType } from '@/components/BottomNav';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
-import { loadLocalData, getTodayTreino } from '@/core/db/queries';
+import { loadLocalData, getTodayTreino, selectSheetEntry } from '@/core/db/queries';
 import { ShareModal } from '@/features/gamification/ShareModal';
 import { useShareStore } from '@/features/gamification/share-store';
 import { ColecaoModals } from '@/features/gamification/ColecaoModals';
@@ -137,7 +137,9 @@ export function App() {
       if (!entryStore.loaded) await useTodayEntryStore.getState().load();
       const loaded = useTodayEntryStore.getState();
       if (loaded.loaded && loaded.entry.sheetKey !== sheetKey) {
-        await loaded.update((e) => ({ ...e, sheetKey }));
+        /* db.js L440-451 `setTodayTreino`: troca a ficha e recalcula `concluido`
+           (só segue true se a nova ficha já foi concluída hoje). */
+        await loaded.update((e) => selectSheetEntry(e, sheetKey));
       }
       if (!useWorkoutStore.getState().isActive) startWorkout(sheetKey, `Treino ${sheetKey}`);
       setIsFichaOverlayOpen(true);

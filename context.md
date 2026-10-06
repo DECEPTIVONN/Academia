@@ -1,9 +1,9 @@
 # context.md — Continuidade de sessão (2026-10-06)
 
 > **Arquivo de contexto entre sessões.** Ler junto com `Diretrizes/CHANGELOG.md`
-> (entradas `v4.0.6-phase4`, `v4.0.7-phase5` e `v4.0.7-phase5-navfix`) e `Diretrizes/system_map.json`
-> (**version 3.5.17** — primeira leitura obrigatória de todo agente).
-> Atualizado ao fim da sessão de 2026-10-06 (Fase 5 da migração React v4).
+> (entradas `v4.0.6-phase4`, `v4.0.7-phase5`, `v4.0.7-phase5-navfix` e `v4.0.8-bugfix`) e `Diretrizes/system_map.json`
+> (**version 3.5.18** — primeira leitura obrigatória de todo agente).
+> Atualizado ao fim da sessão de 2026-10-06 (Fase 5 + correções dos 4 bugs reportados).
 
 ---
 
@@ -15,22 +15,51 @@
   **5 pendências de paridade** (esta sessão, 2026-10-06): cronômetro global do
   treino + `#modalEncerrarTreino` acionáveis, overlay de Notícias completo,
   placeholders Social/Loja em DOM legado e BottomNav 1:1.
-- **Verificação final verde**: `npx tsc -b` exit 0 · `npx oxlint src` exit 0 com
-  **ZERO warnings** · `npm run build` OK (`dist/assets/index-CT0DKUU3.js` +
-  CSS `index-CEYtTqum.css`; PWA precache 112 entries) ·
-  preview :4173 serviu index (200, 1503 B) + JS/CSS (200) ·
-  strings/classes no bundle conferidas por script Node UTF-8 · encoding sem BOM/`U+FFFD` ·
-  `system_map.json` validado (3.5.17, sem BOM).
-- **GIT**: Fases 3 + 4 commitadas em `5663cad` (2026-10-05) e **Fase 5 commitada
+- **Correções `v4.0.8-bugfix` (2026-10-06)** dos 4 bugs reportados pelo usuário:
+  (1) cronômetro negativo ~1 s ao iniciar, (2) emblema de perfil ausente no
+  `#dashAvatar` da aba Início, (3) contador de ciclo que regredia ao trocar de
+  ficha e (4) ciclo contando dias em vez de por ficha — detalhe na seção 2.
+- **Verificação final verde**: `npx tsc -b` exit 0 · `npx oxlint src -D warning`
+  exit 0 com **ZERO warnings** · `npm run build` OK (`dist/assets/index-H7L16KK3.js` +
+  CSS `index-D9hB-1kn.css`) · CDP headless **14/14 PASS**
+  (`%TEMP%\opencode\verify_fixes.js`) ·
+  `system_map.json` validado (3.5.18, sem BOM).
+- **GIT**: Fases 3 + 4 commitadas em `5663cad` (2026-10-05), **Fase 5 commitada
   pelo usuário em `0f8c3dd`** ("Atualização dos itens pendentes", 2026-10-06 11:44,
-  9 paths — inclui `context.md` e `features/news/`). Única alteração posterior
-  (esta sessão): rollback do padding da navbar em `globals.css` + docs — ainda NÃO commitada.
+  9 paths — inclui `context.md` e `features/news/`) e rollback da navbar em
+  `960163e` (`globals.css` + docs `v4.0.7-phase5-navfix`). **Ainda NÃO commitado**
+  (7 paths, esta sessão): correções `v4.0.8-bugfix` (`FichaFeature.tsx`,
+  `DashboardFeature.tsx`, `queries.ts`, `App.tsx`) + docs (CHANGELOG, system_map,
+  context.md) — commit só com pedido explícito do usuário.
 - Servidores: encerrar o preview de :4173 ao fim da sessão
   (`Get-NetTCPConnection -LocalPort 4173 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`).
 
 ---
 
 ## 2. O que foi feito
+
+### Correções dos 4 bugs reportados — `v4.0.8-bugfix` (esta sessão; detalhe na entrada do CHANGELOG)
+1. **Timer negativo (`FichaFeature.tsx`)**: `now` (state) só era refrescado pelo
+   intervalo de 1 s quando `isActive` ligava → `formatElapsed(now - startTime)`
+   negativo ~1 s (repro: `-1:-8`). Efeito agora chama `setNow(Date.now())` ao
+   ativar (paridade `initGlobalTimer`/`startInterval` L988–1028) + clamp
+   `Math.max(0, now - startTime)` no display.
+2. **Emblema ausente (`DashboardFeature.tsx`)**: `#dashAvatar` só tinha o ícone
+   `shield_person`; agora porta `applyProfileCustomization` (L371–396):
+   `.profile-avatar__emblem-wrapper` (mix-blend screen + `animate-pulse`), sprite
+   `SPRITESHEET_URL`/URL, fallback dicebear, `data-frame` — mesmo render de
+   `ProfileFeature.tsx` L331–352.
+3. **Contador de ciclo (`queries.ts getCycleStats`)**: contava DIAS (`h.completed`
+   desde `cycleStart`); dashboard legado usa `getCycleProgress` (L47–51) =
+   **soma por ficha**. Bugs: 2º treino do mesmo dia não somava; a flag
+   `completed` vira `false` ao trocar de ficha no meio da sessão
+   (`selectSheetEntry`) e derrubava o contador ("não atualizado"); exibia o total
+   de dias ("geral") em vez das fichas A/B (item 4). Agora soma `completedKeys`
+   por letra nos dias ≥ `currentCycleStartDate` (estável contra a flag) +
+   fallback `currentFichaWorkouts`. **Progresso segue por-dia** (paridade com
+   `secao-progresso.js` — mesma assimetria do legado).
+4. **`App.tsx handleOpenFicha`**: spread `{...e, sheetKey}` não recalculava
+   `completed` → agora `selectSheetEntry` (espelha `setTodayTreino` db.js L440–451).
 
 ### Fase 5 — paridade das pendências (esta sessão; detalhe na entrada `v4.0.7-phase5` do CHANGELOG)
 **Causa raiz única dos itens 1 e 2**: `#dashBtnIniciar` ("PRÓXIMO PASSO") nunca
@@ -91,9 +120,10 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 | Arquivo | Papel |
 |---|---|
 | `features/news/NewsOverlay.tsx` + `news-overlay.css` | Overlay `#news-overlay`: 3 abas `noticias`/`atualizacoes`/`guias` (seta `tab-arrow`, `bg-[#8b5cf6]`, `drop-shadow`), `.tab-content`/`.active`, 4 notícias (1ª com rótulo "Notícias" + borda) e 7 atualizações, `MOSTRAR MAIS` (= remoção de `.hidden-news`/`.hidden-updates`), detail views `#news-detail-view`/`#update-detail-view` (`hidden-view`/`active`, slide 300 ms), paginação com fade 200 ms (**índice avança no clique, DOM só após o timeout** — `updateDetailContent`), conteúdo via `dangerouslySetInnerHTML`, footers vazios, lock de `body.overflow`. Fase 5. |
-| `App.tsx` | `handleOpenFicha(letter)` (timer + treino do dia), `handleStartWorkout` (toast, sem fechar ficha), `handleRequestEncerrar` → `#modalEncerrarTreino`, placeholders Social/Loja `.section-coming-soon`, `ActiveWorkoutModal` removido; seções/overlays/swipe das fases anteriores. |
-| `features/dashboard/DashboardFeature.tsx` | `onOpenFicha(letter: SheetKey)`, `#dashBtnNoticias` → `<NewsOverlay/>` (montado junto ao `<MissionsOverlay/>`), `#dashBtnMissoes` inalterado. |
-| `features/workout/FichaFeature.tsx` | props `onShowActiveWorkout` → `onRequestEncerrar`; `handleStartClick`: `!isActive` → `onStartWorkout`, senão `onRequestEncerrar()`. |
+| `App.tsx` | `handleOpenFicha(letter)` (timer + treino do dia, agora via `selectSheetEntry`), `handleStartWorkout` (toast, sem fechar ficha), `handleRequestEncerrar` → `#modalEncerrarTreino`, placeholders Social/Loja `.section-coming-soon`, `ActiveWorkoutModal` removido; seções/overlays/swipe das fases anteriores. |
+| `features/dashboard/DashboardFeature.tsx` | `onOpenFicha(letter: SheetKey)`, `#dashBtnNoticias` → `<NewsOverlay/>` (montado junto ao `<MissionsOverlay/>`), `#dashBtnMissoes` inalterado; `#dashAvatar` renderiza o emblema selecionado (v4.0.8). |
+| `features/workout/FichaFeature.tsx` | props `onShowActiveWorkout` → `onRequestEncerrar`; `handleStartClick`: `!isActive` → `onStartWorkout`, senão `onRequestEncerrar()`; cronômetro sincroniza `now` ao ativar + clamp ≥ 0 (v4.0.8). |
+| `core/db/queries.ts` | `getCycleStats` = soma **por ficha** desde `currentCycleStartDate` (paridade `getCycleProgress`; Progresso usa sua própria contagem por-dia); `selectSheetEntry`/`applyFichaCompletion` (v4.0.8). |
 | `components/BottomNav.tsx` | Só classes legadas (`.bottom-nav/.bnav-btn/.bnav-icon/.bnav-label/.bnav-active-dot`), `data-section`, ids `bnavProgresso`/`bnavTreinos`/`bnavDashboard`/`bnavSocial`/`bnavLoja`. Fase 5 (reescrito). |
 | `features/workout/treinos/*` (8 arquivos) | Fase 4 — ver tabela completa na entrada `v4.0.6-phase4`. |
 
@@ -126,9 +156,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 1. **CHANGELOG imediatamente** após QUALQUER alteração (`Diretrizes/CHANGELOG.md`):
    `## [vX.X.X] - YYYY-MM-DD` no topo, tags `[Added]/[Changed]/[Fixed]/[Removed]`,
-   citar arquivos; versão vigente = `v4.0.7-phase5-navfix` (+ sufixo de rótulo p/ docs, ex. `-docs`).
+   citar arquivos; versão vigente = `v4.0.8-bugfix` (+ sufixo de rótulo p/ docs, ex. `-docs`).
 2. **`system_map.json`**: incrementar `version` sempre que estrutura/documentação indexada mudar
-   (hoje: **3.5.17**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
+   (hoje: **3.5.18**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
    `node $env:TEMP\opencode\checkjson.js "C:\Nova pasta\htdocs\Academia\Diretrizes\system_map.json"`
    (script de uma linha: `JSON.parse(fs.readFileSync(process.argv[2],'utf8'))` + imprime a versão;
    recriar se o %TEMP% tiver sido limpo).
@@ -158,22 +188,28 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 ## 6. Próximos passos (ordem sugerida)
 
-1. **Commit da Fase 5** (6 paths modificados + `context.md` + `src-app/src/features/news/`)
-   — *só quando o usuário pedir*; revisar `git status`, `git diff` e `git log --oneline -10`.
-2. **Teste manual da Fase 5** no preview (checklist): `#dashBtnIniciar` → ficha com
+1. **Commit** (só quando o usuário pedir): correções `v4.0.8-bugfix` +
+   docs (CHANGELOG/system_map/context.md) — revisar `git status`, `git diff`
+   e `git log --oneline -10`.
+2. **Confirmar com o usuário a interpretação do item 4** ("total de treinos
+   geral" → resolvemos como dias vs. soma por ficha no card `#dashCycleVal` /
+   pílula `#dashEmblemsValue`); se ele quis OUTRO elemento, investigar.
+3. **Teste manual da Fase 5** no preview (checklist): `#dashBtnIniciar` → ficha com
    cronômetro rodando → X/parar → `#modalEncerrarTreino` → Encerrar → `showConclusao`;
    `#dashBtnNoticias` → 3 abas, cartões, MOSTRAR MAIS, detalhe prev/next, ESC;
    Social/Loja com `.section-coming-soon`; navbar com labels visíveis e dot ativo;
    swipe não dispara dentro do news-overlay (divergência aceita).
-3. **Teste manual da Fase 4** (seção Treinos) — checklist completo na entrada
+4. **Teste manual da Fase 4** (seção Treinos) — checklist completo na entrada
    `v4.0.6-phase4` do CHANGELOG.
-4. **known_gaps menores** (system_map): `#modalDayHist` sem lock de `body.overflow`,
+5. **known_gaps menores** (system_map): `#modalDayHist` sem lock de `body.overflow`,
    rest timer só no Modo Foco, overlay de missões estático (desenho legado),
    destino dos 5 componentes scaffold órfãos (agora inclui `ActiveWorkoutModal`).
-5. **Deploy Vercel**: atenção aos **dois `vercel.json`** — o da raiz aponta para
+6. **Deploy Vercel**: atenção aos **dois `vercel.json`** — o da raiz aponta para
    `Academia/dist/` desatualizado; o projeto precisa de Root Directory = `src-app` (ver `system_map → build.deploy`).
-6. Se houver pedido de paridade total de deck com `null`s, revisar `fichaIds.every()`
+7. Se houver pedido de paridade total de deck com `null`s, revisar `fichaIds.every()`
    em `App.tsx` antes de mudar o formato (divergência nº 1 da seção 4).
+   (Re-regressão dos bugs v4.0.8: `node $env:TEMP\opencode\verify_fixes.js` com preview
+   :4173 + Chrome CDP :9222 — espera 14/14 PASS.)
 
 ---
 

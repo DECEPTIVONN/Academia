@@ -494,9 +494,14 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     void loadEntry();
   }, [loadEntry]);
 
-  /* Cronômetro global do treino (globalWorkoutTimer / gtTime) */
+  /* Cronômetro global do treino (globalWorkoutTimer / gtTime).
+     Legado `initGlobalTimer`/`startInterval` (secao-ficha.js L988-1028) chama
+     `updateGlobalTimerUI()` imediatamente ao iniciar; aqui sincroniza `now`
+     no mesmo instante em que `isActive` liga (senão o estado fica defasado no
+     mount da Ficha e o display mostra `now - startTime` negativo por ~1s). */
   useEffect(() => {
     if (!isActive) return;
+    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [isActive]);
@@ -878,7 +883,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
               <div className="gt-content">
                 <span className="gt-label">Duração do Treino</span>
                 <span className="gt-time" id="gtTime">
-                  {formatElapsed(startTime ? now - startTime : 0)}
+                  {formatElapsed(startTime ? Math.max(0, now - startTime) : 0)}
                 </span>
               </div>
             </div>

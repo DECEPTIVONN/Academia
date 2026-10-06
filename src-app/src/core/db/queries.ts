@@ -194,9 +194,15 @@ export function getTodayTreino(data: LocalData): SheetKey {
   return determineNextTreino(data);
 }
 
-/** Progresso do Ciclo (30 treinos) — espelha o recálculo fresco de `renderProgresso`
- *  (secao-progresso.js): contagem de DIAS concluídos desde `currentCycleStartDate`
- *  e breakdown por letra recalculado do histórico (fonte única de verdade). */
+/** Progresso do Ciclo (30 treinos) — espelha o DASHBOARD legado
+ *  `getCycleProgress` (secao-dashboard.js L47-51): contagem POR FICHA
+ *  (soma do breakdown por letra desde `currentCycleStartDate`, com fallback
+ *  `currentFichaWorkouts`), não por dia. O breakdown é recalculado do
+ *  histórico (fonte única de verdade) e não depende da flag transitória
+ *  `completed` (que vira `false` ao trocar de ficha no meio da sessão —
+ *  `setTodayTreino`/`selectSheetEntry`), evitando que o contador regresse
+ *  ou ignore um 2º treino do mesmo dia. A Progresso segue por-dia
+ *  (`secao-progresso.js`), como no legado. */
 export function getCycleStats(data: LocalData): {
   done: number;
   total: number;
@@ -207,17 +213,26 @@ export function getCycleStats(data: LocalData): {
   const total = 30;
   const startDate = data.legacy?.currentCycleStartDate ?? today();
 
-  const doneRows = data.history.filter((h) => h.completed && h.date >= startDate);
-  const done = doneRows.length;
-
   const breakdown: Record<string, number> = {};
   for (const key of SHEET_ORDER) breakdown[key] = 0;
-  for (const row of doneRows) {
-    const keys =
-      row.completedKeys?.length ? row.completedKeys : row.sheetKey ? [row.sheetKey] : [];
+  let done = 0;
+  for (const row of data.history) {
+    if (row.date < startDate) continue;
+    const keys = row.completedKeys?.length
+      ? row.completedKeys
+      : row.completed && row.sheetKey
+        ? [row.sheetKey]
+        : [];
     for (const key of keys) {
-      if (key in breakdown) breakdown[key] += 1;
+      if (key in breakdown) {
+        breakdown[key] += 1;
+        done += 1;
+      }
     }
+  }
+  /* Legado: `progress = sum(breakdown) || db.currentFichaWorkouts || 0`. */
+  if (done === 0 && data.legacy?.currentFichaWorkouts) {
+    done = data.legacy.currentFichaWorkouts;
   }
 
   const capped = Math.min(done, total);
