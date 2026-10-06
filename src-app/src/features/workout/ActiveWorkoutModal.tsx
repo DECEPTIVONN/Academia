@@ -4,13 +4,14 @@
  * acumular XP de maestria e salvar a sessão no IndexedDB / Supabase.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, Circle, X, Trophy, Timer, SkipForward } from 'lucide-react';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useUserStore } from '@/store/user-store';
-import { DEFAULT_EXERCISES } from '@/core/db/default-data';
-import { upsertHistory } from '@/core/db/idb';
+import { useLocalData } from '@/hooks/useLocalData';
+import { upsertHistory, localToday, idb } from '@/core/db/idb';
+import { LOCAL_USER_ID, type Exercise } from '@/core/db/schema';
 
 interface ActiveWorkoutModalProps {
   onClose: () => void;
@@ -32,6 +33,19 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({ onClose 
   } = useWorkoutStore();
 
   const { addXP, recordWorkout } = useUserStore();
+  const { exercises: allExercises, sheets } = useLocalData();
+
+  /* Exercícios REAIS da ficha em execução (mesmos IDs da Ficha do Dia). */
+  const sheet = useMemo(
+    () => sheets.find((s) => s.sheetKey === sheetKey),
+    [sheets, sheetKey]
+  );
+  const exercises = useMemo(() => {
+    const map = new Map(allExercises.map((e) => [e.id, e]));
+    return (sheet?.exerciseIds ?? [])
+      .map((id) => map.get(id))
+      .filter((e): e is Exercise => Boolean(e));
+  }, [allExercises, sheet]);
 
   // Decrementar timer de descanso
   useEffect(() => {
@@ -46,22 +60,31 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({ onClose 
 
   if (!isActive || !sheetKey) return null;
 
-  const exercises = DEFAULT_EXERCISES;
-  const progressPercent = Math.round((completedExerciseIds.length / exercises.length) * 100);
+  const progressPercent = exercises.length
+    ? Math.round((completedExerciseIds.length / exercises.length) * 100)
+    : 0;
 
   const handleFinish = async () => {
+    const date = localToday();
     const durationMin = startTime ? Math.max(1, Math.round((Date.now() - startTime) / 60000)) : 30;
     const xpGained = completedExerciseIds.length * 20 + 50;
 
-    // Salva no banco de dados offline
+    // Merge com a entrada existente de hoje (preserva séries/conclusões do dia)
+    const prev = await idb.workoutHistory.get([LOCAL_USER_ID, date]);
+    const completedKeys = prev?.completedKeys ? [...prev.completedKeys] : [];
+    if (!completedKeys.includes(sheetKey)) completedKeys.push(sheetKey);
+
     await upsertHistory({
-      userId: 'user-local',
-      date: new Date().toISOString().split('T')[0],
-      sheetKey: sheetKey,
+      ...prev,
+      userId: LOCAL_USER_ID,
+      date,
+      sheetKey,
       completed: true,
       checks: completedExerciseIds,
-      durationMin: durationMin,
-      createdAt: new Date().toISOString(),
+      seriesDone: prev?.seriesDone,
+      completedKeys,
+      durationMin,
+      createdAt: prev?.createdAt ?? new Date().toISOString(),
     });
 
     // Atualiza estado global do usuário (XP e Streak)
@@ -70,6 +93,8 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({ onClose 
 
     finishWorkout();
     onClose();
+    // Propaga para Ficha/Dashboard/Progresso recarregarem
+    document.dispatchEvent(new Event('academia:db-ready'));
   };
 
   return (

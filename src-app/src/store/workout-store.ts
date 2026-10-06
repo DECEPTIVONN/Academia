@@ -4,7 +4,48 @@
  */
 
 import { create } from 'zustand';
-import type { SheetKey, Exercise } from '@/core/db/schema';
+import type { SheetKey } from '@/core/db/schema';
+
+/** Chaves legadas (JS/treino/secao-ficha.js → initGlobalTimer) — persistem o
+ *  treino em andamento entre recarregamentos da página. */
+const START_KEY = 'workout_start_time';
+const SHEET_KEY = 'workout_sheet_key';
+
+function readStart(): number | null {
+  try {
+    const raw = localStorage.getItem(START_KEY);
+    const n = raw ? parseInt(raw, 10) : NaN;
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+function readSheet(): SheetKey | null {
+  try {
+    const raw = localStorage.getItem(SHEET_KEY);
+    return raw && raw.length === 1 ? (raw as SheetKey) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStart(start: number | null, sheet: SheetKey | null): void {
+  try {
+    if (start !== null) {
+      localStorage.setItem(START_KEY, String(start));
+      if (sheet) localStorage.setItem(SHEET_KEY, sheet);
+    } else {
+      localStorage.removeItem(START_KEY);
+      localStorage.removeItem(SHEET_KEY);
+    }
+  } catch {
+    /* ignora */
+  }
+}
+
+const restoredStart = readStart();
+const restoredSheet = readSheet();
 
 interface ActiveWorkoutState {
   isActive: boolean;
@@ -31,10 +72,10 @@ interface ActiveWorkoutState {
 }
 
 export const useWorkoutStore = create<ActiveWorkoutState>((set, get) => ({
-  isActive: false,
-  sheetKey: null,
-  sheetTitle: '',
-  startTime: null,
+  isActive: restoredStart !== null,
+  sheetKey: restoredSheet,
+  sheetTitle: restoredSheet ? `Treino ${restoredSheet}` : '',
+  startTime: restoredStart,
   completedExerciseIds: [],
   currentExerciseIndex: 0,
 
@@ -43,11 +84,13 @@ export const useWorkoutStore = create<ActiveWorkoutState>((set, get) => ({
   restTotalDuration: 0,
 
   startWorkout: (sheetKey, title) => {
+    const start = Date.now();
+    writeStart(start, sheetKey);
     set({
       isActive: true,
       sheetKey,
       sheetTitle: title,
-      startTime: Date.now(),
+      startTime: start,
       completedExerciseIds: [],
       currentExerciseIndex: 0,
       isResting: false,
@@ -56,6 +99,7 @@ export const useWorkoutStore = create<ActiveWorkoutState>((set, get) => ({
   },
 
   finishWorkout: () => {
+    writeStart(null, null);
     set({
       isActive: false,
       sheetKey: null,
@@ -68,6 +112,7 @@ export const useWorkoutStore = create<ActiveWorkoutState>((set, get) => ({
   },
 
   cancelWorkout: () => {
+    writeStart(null, null);
     set({
       isActive: false,
       sheetKey: null,

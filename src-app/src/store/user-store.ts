@@ -1,11 +1,10 @@
-/**
- * user-store.ts — Estado global do usuário e progressão gamificada
- * Gerencia XP, Nível, Nível de Maestria, Streak (dias consecutivos) e Avatar.
+﻿/**
+ * user-store.ts â€” Estado global do usuÃ¡rio e progressÃ£o gamificada
+ * Gerencia XP, NÃ­vel, NÃ­vel de Maestria, Streak (dias consecutivos) e Avatar.
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { getTierForXP } from '@/core/db/idb';
 
 interface UserProfile {
   name: string;
@@ -34,7 +33,7 @@ export const useUserStore = create<UserStore>()(
 
       addXP: (amount: number) => {
         const newXP = get().xp + amount;
-        // 100 XP por nível
+        // 100 XP por nÃ­vel
         const newLevel = Math.floor(newXP / 100) + 1;
         set({ xp: newXP, level: newLevel });
       },

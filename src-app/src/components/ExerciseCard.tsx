@@ -3,7 +3,7 @@
  * Apresenta GIF do exercício, séries, repetições, descanso, carga recente e badge de maestria.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Play, Dumbbell, Timer, CheckCircle, Info } from 'lucide-react';
 import type { Exercise } from '@/core/db/schema';
@@ -26,6 +26,12 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 }) => {
   const tier = getTierForXP(exerciseXP);
 
+  /* Fallback idêntico ao legado (onerror → premium-placeholder): 7 GIFs do
+     DEFAULT_EXERCISES apontam para arquivos ainda não entregues; em vez de
+     ícone quebrado, mostra o placeholder. Compara a URL falha (sem setState em efeito). */
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const imgFailed = failedUrl === exercise.imageUrl;
+
   return (
     <motion.div
       whileHover={{ scale: 1.02, translateY: -2 }}
@@ -39,12 +45,13 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       <div className="flex items-center gap-4">
         {/* GIF / Imagem com fallback e badge de maestria */}
         <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-800 border border-gray-700/80 flex-shrink-0 flex items-center justify-center">
-          {exercise.imageUrl ? (
+          {exercise.imageUrl && !imgFailed ? (
             <img
               src={exercise.imageUrl}
               alt={exercise.name}
               className="w-full h-full object-cover"
               loading="lazy"
+              onError={() => setFailedUrl(exercise.imageUrl)}
             />
           ) : (
             <Dumbbell className="w-8 h-8 text-purple-400/60" />

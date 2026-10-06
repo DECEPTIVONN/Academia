@@ -1,11 +1,10 @@
 /**
- * auth-context.tsx — AuthProvider + useAuth hook
+ * auth-context.tsx — AuthProvider (o hook useAuth vive em use-auth.ts)
  * Gerencia o ciclo de vida da sessão Supabase / Modo Offline gracioso.
  */
 
 import React, {
   createContext,
-  useContext,
   useEffect,
   useState,
   useCallback,
@@ -15,7 +14,7 @@ import type { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '@/core/supabase';
 import { clearLocalDB } from '@/core/db/idb';
 
-interface AuthContextValue {
+export interface AuthContextValue {
   user:    User    | null;
   session: Session | null;
   loading: boolean;
@@ -28,17 +27,15 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+export { AuthContext };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,    setUser]    = useState<User    | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -115,12 +112,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth deve ser usado dentro de <AuthProvider>');
-  return ctx;
 }
 
 function formatAuthError(error: AuthError): Error {

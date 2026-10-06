@@ -7,7 +7,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Flame, Wifi, WifiOff, RefreshCw, User as UserIcon, Shield } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
-import { useAuth } from '@/core/auth/auth-context';
+import { useAuth } from '@/core/auth/use-auth';
 
 interface HeaderHUDProps {
   isOnline?: boolean;

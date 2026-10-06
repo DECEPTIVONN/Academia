@@ -1,5 +1,6 @@
 /* ── Tailwind v4 base (processed by @tailwindcss/vite plugin) ── */
 @import "tailwindcss";
+@import "./tailwind-legacy-theme.css";
 
 /* ── Reset local ── */
 html, body, #root {
@@ -9,4 +10,16 @@ html, body, #root {
   padding: 0;
   background-color: #0a0514;
   color: #e5e2e1;
+}
+
+/* ── Rollback do overflow:hidden do legado (1-core.css) ──
+   O legado usa Swipe Viewport (slides com scroll próprio), por isso trava
+   html/body. O app React usa fluxo normal de documento, então o body precisa
+   rolar. Esta regra vem DEPOIS de legacy.css no bundle (main.tsx importa
+   legacy.css antes de globals.css), portanto vence o seletor igual de 1-core.css.
+   `body.ficha-overlay-open` continua com overflow:hidden !important (ficha-overlay.css). */
+html, body {
+  height: auto;
+  overflow: auto;
+  overflow-x: hidden;
 }

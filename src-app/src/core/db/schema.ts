@@ -5,6 +5,11 @@
  */
 
 /* ── Exercício ── */
+
+/** Usuário local (offline) — usado quando o Supabase Auth não está em uso.
+ *  Substitui os IDs divergentes que existiam antes ('default' / 'user-local'). */
+export const LOCAL_USER_ID = 'local';
+
 export interface Exercise {
   id: string;                  // ex: "ex-a1" (IDs legados preservados)
   name: string;
@@ -15,6 +20,12 @@ export interface Exercise {
   rest: number;                // segundos
   imageUrl: string | null;
   tags: ExerciseTag[];
+  /** Legado: exercício executado "por lado" (ex: Crucifixo) */
+  porLado?: boolean;
+  /** Legado: `anotacoes` — nota rápida do usuário no exercício */
+  notes?: string;
+  /** Legado: `historicoCargas` — evolução de carga (máx. 15 entradas). */
+  historicoCargas?: { data: string; valor: number; label: string }[];
   createdAt?: string;
 }
 
@@ -33,13 +44,18 @@ export type MuscleGroup =
 export type ExerciseTag =
   | 'Multiarticular'
   | 'Isolado'
+  | 'Isolador'          // variante usada pelo legado (db.js)
   | 'Máquina'
   | 'Livre'
   | 'Cabo'
   | 'Peso Corporal'
+  | 'Peso do Corpo'     // variante usada pelo legado (db.js)
   | 'Haltere'
   | 'Barra'
-  | 'Funcional';
+  | 'Funcional'
+  | 'Unilateral'        // chips do form legado (modais.html L145–160)
+  | 'Explosão'
+  | 'Mobilidade';
 
 /* ── Ficha de Treino (A–J) ── */
 export type SheetKey = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J';
@@ -68,7 +84,13 @@ export interface WorkoutHistory {
   sheetKey: SheetKey | null;
   completed: boolean;
   checks: string[];          // IDs de exercícios concluídos
+  /** Série a série de cada exercício no dia (legado: `historico[data].seriesDone`). */
+  seriesDone?: Record<string, boolean[]>;
+  /** Letras concluídas no dia (legado: `historico[data].treinos`). */
+  completedKeys?: string[];
   durationMin: number | null;
+  /** Minutos no Modo Foco (legado: `historico[data].duracaoFoco`). */
+  focusMin?: number;
   createdAt?: string;
 }
 
@@ -189,6 +211,75 @@ export interface ActiveWorkout {
   date: string;          // YYYY-MM-DD
   checks: Set<string>;   // IDs de exercícios concluídos
 }
+
+/* ── Migração v3 (offline) → v4 (React) ── */
+
+/**
+ * Cópia bruta do estado da versão offline.
+ * A chave é a chave do `localStorage` legado (ex.: `academia_treino`);
+ * `value` guarda o JSON original parseado, para que as features ainda não
+ * portadas (maestria, conquistas, ciclo, personalização…) possam ler os dados
+ * sem perda. Protegida de `clearLocalDB()`.
+ */
+export interface LegacyState {
+  key: string;
+  value: unknown;
+  updatedAt: string;
+}
+
+/* ── Perfil / Personalização (Fase 2 — espelha `db.profileCustomization` do legado) ── */
+
+export interface ProfileCustomization {
+  nome: string;
+  handle: string;
+  avatarSeed: string;
+  banner: string | null;
+  titulo: string | null;
+  avatarFrame: string | null;
+  assinatura: string;
+  barSkin: string;
+  cardSkin: string;
+  showcaseStat: string;
+  mainEmblem: string;
+  mainEmblemPulse: boolean;
+  timerSkin?: string;
+  email?: string;
+  senha?: string;
+  /** Ano de "AQUI DESDE" (legado usa '2024' como fallback) */
+  since?: string;
+}
+
+/** Conquista gravada em `db.conquistas` — string (id fixo) ou objeto datado. */
+export type ProfileConquista =
+  | string
+  | { id: string; icon?: string; titulo?: string; name?: string; desc?: string; data?: string };
+
+/**
+ * Estado do perfil derivado da cópia bruta legada.
+ * Chave única `local`; gravado na tabela `profileState` (store v3 do Dexie).
+ */
+export interface ProfileState {
+  key: string;
+  customization: ProfileCustomization;
+  selectedEmblems: string[];
+  conquistas: ProfileConquista[];
+}
+
+/** Defaults idem `initDB()`/`loadDB()` de JS/treino/db.js (L265–309). */
+export const DEFAULT_PROFILE_CUSTOMIZATION: ProfileCustomization = {
+  nome: 'DECEPTIVON',
+  handle: '@deceptivon',
+  avatarSeed: 'Deceptivon',
+  banner: 'roxo-neon',
+  titulo: null,
+  avatarFrame: null,
+  assinatura: '',
+  barSkin: 'default',
+  cardSkin: 'default',
+  showcaseStat: 'streak',
+  mainEmblem: 'prestigio-1',
+  mainEmblemPulse: true,
+};
 
 /* ── Supabase Database Types (gerado manualmente — rodar supabase gen types para atualizar) ── */
 export interface Database {

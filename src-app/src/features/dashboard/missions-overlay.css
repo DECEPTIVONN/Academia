@@ -1,0 +1,133 @@
+/* missions-overlay.css — extraido verbatim de treino.html L905-1038 (Fase 3) */
+            .missions-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                overflow-y: auto;
+                overflow-x: hidden;
+                color: #e5e2e1;
+                background-color: #0a0514;
+            }
+            .missions-overlay .arena-bg {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: -1;
+                background-color: #0a0514;
+                background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKNhRMaQRBLOVDBSB6Y9zT6KeBJWTqJPEV8J2oYo-rVytUTbwYxpbDvv-oFgvbcL0s3HZbx1u2-zE3dDusALTGWv-XHMJdBgB0kiQwjuObalYwkuGE9k0A3vWLlVUrOE67rOuoNJdIB9eVlCueLZKfBEj3IpCPqqMP0o5L0gZ_19_XyZExy3782vyuqY73W9URvgrTuhkjTY38O8rbMIf4kAWswYgRs_pn8sxUNv-yo-1VEGJcSTiCeoved-e8aoZjOr84kvHd7gY');
+                background-repeat: repeat;
+                animation: msBgScroll 60s linear infinite;
+            }
+            @keyframes msBgScroll {
+                from { background-position: 0 0; }
+                to { background-position: 500px 1000px; }
+            }
+            .missions-overlay .ms-bg-overlay {
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(to bottom, rgba(10,5,20,0.15) 0%, rgba(10,5,20,0.5) 100%);
+                backdrop-filter: blur(0.5px);
+                -webkit-backdrop-filter: blur(0.5px);
+            }
+            /* Hide scrollbar */
+            .missions-overlay::-webkit-scrollbar { display: none; }
+            .missions-overlay { -ms-overflow-style: none; scrollbar-width: none; }
+
+            /* Tab active/inactive states */
+            .missions-overlay .ms-tab-btn {
+                padding: 12px 16px;
+                font-family: 'Rajdhani', sans-serif;
+                font-weight: 700;
+                font-size: 14px;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                position: relative;
+                transition: all 0.25s ease;
+                cursor: pointer;
+                border: none;
+                background: transparent;
+                color: rgba(203, 195, 215, 0.7);
+            }
+            .missions-overlay .ms-tab-btn.active {
+                background: #a078ff;
+                color: #340080;
+                border-radius: 12px 12px 0 0;
+                box-shadow: 0 -4px 15px rgba(160, 120, 255, 0.3);
+            }
+            .missions-overlay .ms-tab-btn:hover:not(.active) {
+                color: #d0bcff;
+            }
+            .missions-overlay .ms-tab-indicator {
+                position: absolute;
+                bottom: -1px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 32px;
+                height: 2px;
+                background: white;
+                box-shadow: 0 0 8px #fff;
+                display: none;
+            }
+            .missions-overlay .ms-tab-btn.active .ms-tab-indicator {
+                display: block;
+            }
+
+            /* Hover lift for mission cards */
+            .missions-overlay .ms-hover-lift {
+                transition: all 0.3s ease;
+            }
+            .missions-overlay .ms-hover-lift:hover {
+                transform: scale(1.02);
+                box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
+                border-color: rgba(192, 132, 252, 0.5);
+            }
+
+            /* Progress bar shimmer */
+            @keyframes msShimmer {
+                100% { transform: translateX(100%); }
+            }
+            /* Fade in */
+            @keyframes msFadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            /* Float */
+            @keyframes msFloat {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+            }
+            /* Clock rotation */
+            @keyframes msClockRotation {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            .missions-overlay .ms-animate-clock {
+                animation: msClockRotation 2s linear infinite;
+            }
+            .missions-overlay .ms-content-area > div {
+                display: none;
+            }
+            .missions-overlay .ms-content-area > div.ms-active {
+                display: flex;
+                flex-direction: column;
+                animation: msFadeIn 0.3s ease-out;
+            }
+
+            /* Mission card title — padrão tipográfico do site (Rajdhani 700 uppercase) */
+            .missions-overlay .ms-mission-title {
+                font-family: 'Rajdhani', sans-serif;
+                font-weight: 700;
+                font-size: 18px;
+                line-height: 1.3;
+                letter-spacing: 0.05em;
+                color: #fff;
+                text-transform: uppercase;
+                margin-bottom: 8px;
+            }

@@ -14,6 +14,8 @@ import type {
   TrainingCycle,
   Exercise,
   MasteryTier,
+  LegacyState,
+  ProfileState,
 } from './schema';
 
 class AcademiaDB extends Dexie {
@@ -24,6 +26,8 @@ class AcademiaDB extends Dexie {
   userProfiles!:     Table<UserProfile>;
   trainingCycles!:   Table<TrainingCycle>;
   pendingMutations!: Table<PendingMutation>;
+  legacyState!:      Table<LegacyState>;
+  profileState!:     Table<ProfileState>;
 
   constructor() {
     super('academia-v4');
@@ -37,11 +41,26 @@ class AcademiaDB extends Dexie {
       trainingCycles:   '++id, userId, isActive',
       pendingMutations: '++id, table, timestamp',
     });
+
+    // v4.0.1-phase0: cópia bruta do estado legado (`localStorage.academia_treino`)
+    this.version(2).stores({
+      legacyState: 'key',
+    });
+
+    // v4.0.4-phase2: perfil/customização derivado da cópia bruta (Fase 2)
+    this.version(3).stores({
+      profileState: 'key',
+    });
   }
 }
 
 export const idb = new AcademiaDB();
 export const db = idb;
+
+/** Dispara `academia:db-ready` — as UIs (useLocalData etc.) recarregam. */
+export function emitDbReady(): void {
+  document.dispatchEvent(new CustomEvent('academia:db-ready'));
+}
 
 /* ── Helpers de Maestria ── */
 
@@ -60,6 +79,16 @@ export function getTierForXP(xp: number): TierInfo {
 }
 
 /* ── Helpers de Acesso ao Banco Local ── */
+
+/** Data local no formato YYYY-MM-DD (espelha `today()` do legado — JS/treino/db.js).
+ *  Usar em vez de `toISOString().slice(0,10)`, que fica em UTC e pode cair no dia seguinte. */
+export function localToday(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 /** Retorna as fichas do usuário ordenadas por sheet key */
 export async function getUserSheets(userId: string): Promise<WorkoutSheet[]> {
@@ -105,6 +134,20 @@ export async function saveCustomExercise(exercise: Exercise): Promise<void> {
   await idb.exercises.put(exercise);
 }
 
+/* ── Helpers de Perfil (Fase 2) ── */
+
+export const PROFILE_STATE_KEY = 'local';
+
+/** Lê o estado de perfil/customização (derivado da cópia bruta legada). */
+export async function getProfileState(): Promise<ProfileState | undefined> {
+  return idb.profileState.get(PROFILE_STATE_KEY);
+}
+
+/** Grava o estado de perfil inteiro (upsert). */
+export async function saveProfileState(state: ProfileState): Promise<void> {
+  await idb.profileState.put(state);
+}
+
 /** Retorna a maestria de todos os exercícios do usuário */
 export async function getUserMastery(userId: string): Promise<ExerciseMastery[]> {
   return idb.exerciseMastery.where('userId').equals(userId).toArray();
@@ -144,5 +187,8 @@ export async function clearLocalDB(): Promise<void> {
     idb.userProfiles.clear(),
     idb.trainingCycles.clear(),
     idb.pendingMutations.clear(),
+    // legacyState (cópia bruta do localStorage legado) é mantida de propósito:
+    // é a cópia de segurança dos dados da versão offline.
+    // idb.exercises também é mantida (seed/exercícios do usuário).
   ]);
 }

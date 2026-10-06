@@ -19,7 +19,7 @@ html, body, .treino-page {
     inset: -5%;
     width: 110%;
     height: 110%;
-    background-image: url('../../../Assets/BG/BG-roxo-vertical.jpg');
+    background-image: url('/assets/bg/BG-roxo-vertical.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -29,7 +29,7 @@ html, body, .treino-page {
 
 @media (orientation: landscape) {
     .cr-bg-layer {
-        background-image: url('../../../Assets/BG/BG-roxo-horizontal.jpg');
+        background-image: url('/assets/bg/BG-roxo-horizontal.jpg');
     }
 }
 
@@ -114,7 +114,7 @@ html, body, .treino-page {
 .theme-bg {
     position: absolute;
     inset: 0;
-    background-image: url('../../../Assets/BG/BG-roxo-vertical.jpg');
+    background-image: url('/assets/bg/BG-roxo-vertical.jpg');
     background-size: cover;
     background-position: top center;
     background-attachment: local;
@@ -124,7 +124,7 @@ html, body, .treino-page {
 
 @media (orientation: landscape) {
     .theme-bg {
-        background-image: url('../../../Assets/BG/BG-roxo-horizontal.jpg');
+        background-image: url('/assets/bg/BG-roxo-horizontal.jpg');
     }
 }
 
