@@ -21,6 +21,19 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.0.7-phase5-navfix] - 2026-10-06
+*Navbar inferior sem espaço morto no rodapé — padding de safe-area removido (system_map.json → version 3.5.17)*
+
+### [Changed]
+- **`src-app/src/styles/globals.css`**: novo rollback de `.bottom-nav` (`padding: 6px 4px`) sobre a regra de `src-app/src/legacy-style/treino/7-nav-icons.css` L81 (`padding: 6px 4px calc(6px + env(safe-area-inset-bottom))`). Em aparelhos/navegadores que reportam `safe-area-inset-bottom` (barra de gestos, notch, tela edge-to-edge) a barra crescia para baixo dos ícones, deixando uma faixa vazia e não utilizada no rodapé (pedido do usuário em 2026-10-06 com prints). Com o rollback a barra tem altura apenas do conteúdo: `6px + botão ~51px (ícone 26 + gap 3 + label ~10 + padding 12) + 6px ≈ 64px` (= `min-height: 64px` original, que permanece). `globals.css` é importado depois de `legacy.css` (`main.tsx`), portanto vence o seletor igual. **Divergência consciente da regra legada** (espelho `7-nav-icons.css` mantido intacto).
+- **`Diretrizes/system_map.json`**: `version` 3.5.16 → **3.5.17**; `react_app.styles` cita também o rollback da navbar feito em `globals.css`.
+
+### [Verification]
+- `npx tsc -b` exit 0; `npx oxlint src` exit 0 com **zero warnings**; `npm run build` OK (`dist/assets/index-CT0DKUU3.js` + `index-CEYtTqum.css`).
+- CSS do dist contém **2** regras `.bottom-nav` — a legada e o override `.bottom-nav{padding:6px 4px}` posicionado **depois** (ordem de cascata conferida por script Node UTF-8).
+- CDP (Chrome headless, 390×844 dpr3): nav com `h=64`, `bottom=844=vh` (rente à borda), botão 51px, `padding` computado `6px 4px` e 3 regras casando com o elemento (reset + legada + override).
+- Obs.: no desktop `env(safe-area-inset-bottom)` já era `0`, então a faixa só aparece em aparelhos com inset ≠ 0 (não reproduzível no headless) — usuário deve confirmar a correção no dispositivo.
+
 ## [v4.0.7-phase5] - 2026-10-06
 *Paridade das pendências da migração React v4: cronômetro global do treino + confirmação ao sair, overlay de Notícias completo, placeholders Social/Loja com DOM legado e navbar inferior 1:1 com `7-nav-icons.css` (system_map.json → version 3.5.16)*
 

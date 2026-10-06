@@ -23,3 +23,18 @@ html, body {
   overflow: auto;
   overflow-x: hidden;
 }
+
+/* ── Rollback do padding inferior da navbar (7-nav-icons.css L81) ──
+   O legado declara `padding: 6px 4px calc(6px + env(safe-area-inset-bottom))`
+   em `.bottom-nav`. Em aparelhos/navegadores que reportam
+   `safe-area-inset-bottom` (barra de gestos, notch, tela edge-to-edge) a barra
+   crescia para baixo dos ícones, deixando uma faixa vazia e não utilizada no
+   rodapé — exatamente o espaço apontado pelo usuário em 2026-10-06.
+   Aqui a barra passa a ter altura apenas do seu conteúdo:
+   6px + botões (~51px: ícone 26 + gap 3 + label ~10 + padding 12) + 6px ≈ 64px
+   (= min-height: 64px da regra original, que permanece).
+   Vence o seletor igual de 7-nav-icons.css porque main.tsx importa legacy.css
+   antes de globals.css. DIVERGÊNCIA DOCUMENTADA no CHANGELOG. */
+.bottom-nav {
+  padding: 6px 4px;
+}

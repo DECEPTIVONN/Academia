@@ -1,8 +1,8 @@
 # context.md — Continuidade de sessão (2026-10-06)
 
 > **Arquivo de contexto entre sessões.** Ler junto com `Diretrizes/CHANGELOG.md`
-> (entradas `v4.0.6-phase4` e `v4.0.7-phase5`) e `Diretrizes/system_map.json`
-> (**version 3.5.16** — primeira leitura obrigatória de todo agente).
+> (entradas `v4.0.6-phase4`, `v4.0.7-phase5` e `v4.0.7-phase5-navfix`) e `Diretrizes/system_map.json`
+> (**version 3.5.17** — primeira leitura obrigatória de todo agente).
 > Atualizado ao fim da sessão de 2026-10-06 (Fase 5 da migração React v4).
 
 ---
@@ -16,16 +16,15 @@
   treino + `#modalEncerrarTreino` acionáveis, overlay de Notícias completo,
   placeholders Social/Loja em DOM legado e BottomNav 1:1.
 - **Verificação final verde**: `npx tsc -b` exit 0 · `npx oxlint src` exit 0 com
-  **ZERO warnings** · `npm run build` OK (`dist/assets/index-6Ol1E3a_.js`,
-  902.575 B + CSS `index-CUvlxgwi.css`, 331.015 B; PWA precache 112 entries) ·
-  preview :4173 serviu index (200, 1503 B) + JS (200, 902.575 B) + CSS (200, 331.015 B) ·
+  **ZERO warnings** · `npm run build` OK (`dist/assets/index-CT0DKUU3.js` +
+  CSS `index-CEYtTqum.css`; PWA precache 112 entries) ·
+  preview :4173 serviu index (200, 1503 B) + JS/CSS (200) ·
   strings/classes no bundle conferidas por script Node UTF-8 · encoding sem BOM/`U+FFFD` ·
-  `system_map.json` validado (3.5.16, sem BOM).
-- **GIT**: Fases 3 + 4 **já commitadas** em `5663cad` ("Ataulização de estilo",
-  2026-10-05 21:44, 169 paths — autor DECEPTIVONN). **Fase 5 NÃO commitada**:
-  6 paths modificados (`CHANGELOG.md`, `system_map.json`, `App.tsx`,
-  `BottomNav.tsx`, `DashboardFeature.tsx`, `FichaFeature.tsx`) + não rastreados
-  `context.md` e `src-app/src/features/news/`. Commit só com pedido explícito do usuário.
+  `system_map.json` validado (3.5.17, sem BOM).
+- **GIT**: Fases 3 + 4 commitadas em `5663cad` (2026-10-05) e **Fase 5 commitada
+  pelo usuário em `0f8c3dd`** ("Atualização dos itens pendentes", 2026-10-06 11:44,
+  9 paths — inclui `context.md` e `features/news/`). Única alteração posterior
+  (esta sessão): rollback do padding da navbar em `globals.css` + docs — ainda NÃO commitada.
 - Servidores: encerrar o preview de :4173 ao fim da sessão
   (`Get-NetTCPConnection -LocalPort 4173 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`).
 
@@ -61,6 +60,13 @@ inalcançável pela Ficha. Corrigido em `App.tsx`:
 6. **`ActiveWorkoutModal` fora do fluxo**: `isWorkoutModalOpen`,
    `handleCloseWorkoutModal`, import e render removidos do `App.tsx`; o arquivo
    permanece como scaffold não montado (5º órfão).
+7. **Navbar sem espaço morto (`v4.0.7-phase5-navfix`, após commit da Fase 5)**:
+   rollback em `globals.css` do padding inferior de `.bottom-nav`
+   (`calc(6px + env(safe-area-inset-bottom))` → `6px 4px`) — em aparelhos que
+   reportam safe-area a barra crescia para baixo dos ícones deixando faixa vazia
+   (pedido do usuário com prints); espelho `7-nav-icons.css` intacto (divergência
+   documentada), system_map → 3.5.17. Localmente `env()` = 0 (não reproduzível no
+   headless) — confirmar no aparelho do usuário.
 
 ### Fase 3 — gamificação (detalhe na entrada `v4.0.5-phase3` do CHANGELOG)
 Radar Fit real + badge de arquétipo, `showConclusao`/`modalEncerrarTreino`,
@@ -120,9 +126,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 1. **CHANGELOG imediatamente** após QUALQUER alteração (`Diretrizes/CHANGELOG.md`):
    `## [vX.X.X] - YYYY-MM-DD` no topo, tags `[Added]/[Changed]/[Fixed]/[Removed]`,
-   citar arquivos; versão vigente = `v4.0.7-phase5` (+ sufixo de rótulo p/ docs, ex. `-docs`).
+   citar arquivos; versão vigente = `v4.0.7-phase5-navfix` (+ sufixo de rótulo p/ docs, ex. `-docs`).
 2. **`system_map.json`**: incrementar `version` sempre que estrutura/documentação indexada mudar
-   (hoje: **3.5.16**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
+   (hoje: **3.5.17**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
    `node $env:TEMP\opencode\checkjson.js "C:\Nova pasta\htdocs\Academia\Diretrizes\system_map.json"`
    (script de uma linha: `JSON.parse(fs.readFileSync(process.argv[2],'utf8'))` + imprime a versão;
    recriar se o %TEMP% tiver sido limpo).
