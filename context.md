@@ -2,10 +2,10 @@
 
 > **Arquivo de contexto entre sessões.** Ler junto com `Diretrizes/CHANGELOG.md`
 > (entradas `v4.0.6-phase4`, `v4.0.7-phase5`, `v4.0.7-phase5-navfix`, `v4.0.8-bugfix`,
-> `v4.0.9-android`, `v4.0.10-news-parity` e `v4.0.11-lombar-gif`) e `Diretrizes/system_map.json`
-> (**version 3.5.20** — primeira leitura obrigatória de todo agente).
-> Atualizado ao fim da sessão de 2026-10-07 (paridade visual total do news-overlay +
-> GIF da Extensão Lombar conectado em todas as camadas).
+> `v4.0.9-android`, `v4.0.10-news-parity`, `v4.0.11-lombar-gif` e `v4.0.12-splash`) e `Diretrizes/system_map.json`
+> (**version 3.5.21** — primeira leitura obrigatória de todo agente).
+> Atualizado ao fim da sessão de 2026-10-07 (paridade visual total do news-overlay,
+> GIF da Extensão Lombar conectado e splash do legado portada ao React).
 
 ---
 
@@ -29,16 +29,26 @@
   `JS/treino/db.js` + espelho `www/` e no seed React, com
   **`backfillExerciseImages()`** no `bootstrap.ts` restaurando instalações
   existentes (IDB com `imageUrl: null`).
+- **Splash do legado portada ao React (`v4.0.12-splash`, 2026-10-07)**:
+  DOM `#splashScreen` + script inline no `src-app/index.html` (1:1 de
+  `treino.html` L102–134; o CSS já estava espelhado no `8-customizacao.css`);
+  saída em `academia:db-ready` com a sequência do `app.js` L477–488
+  (100 ms → fill 100% → 400 ms → `--hidden`); **divergência pedida pelo
+  usuário: com treino em andamento a splash é removida antes do paint**
+  (flags `workout_start_time`/`fichaEmAndamento` do dia) e nunca reabre.
 - **Verificação final verde**: `npx tsc -b` exit 0 · `npx oxlint src` exit 0
-  (**ZERO warnings**) · `npm run build` OK (`index-DpYmpvWT.js`) ·
-  `system_map.json` validado (**3.5.20**, sem BOM, diff só 3 linhas) ·
-  CDP `verify_lombar.js` **5/5 PASS** · legado servido com marcador + gif
-  200 em `:8099`/`:4173`.
+  (**ZERO warnings**) · `npm run build` OK (`dist/index.html` com splash) ·
+  `system_map.json` validado (**3.5.21**, sem BOM, diff só 2 linhas) ·
+  CDP `verify_lombar.js` **5/5 PASS** + `verify_splash.js` **10/10 PASS** +
+  `verify_fixes.js` **14/14 PASS** + `verify_click_after_splash.js` **6/6 PASS**
+  (splash escondida não intercepta cliques; BottomNav alterna Treinos ↔ Dashboard) ·
+  screenshots React vs legado da splash praticamente idênticos.
 - **GIT**: HEAD = `6a1d399` (usuário commitou a paridade `v4.0.10-news-parity`
   entre sessões — news-overlay.css/tokens/NewsOverlay docs). **NÃO commitado**
-  (7 paths, só com pedido explícito): `JS/treino/db.js` + espelho `www/`,
-  `src-app/src/core/db/{default-data.ts,bootstrap.ts}`, `Diretrizes/CHANGELOG.md`,
-  `Diretrizes/system_map.json`, `context.md` e o gif novo untracked
+  (só com pedido explícito): `JS/treino/db.js` + espelho `www/`,
+  `src-app/src/core/db/{default-data.ts,bootstrap.ts}`, `src-app/index.html`
+  (splash), `Diretrizes/CHANGELOG.md`, `Diretrizes/system_map.json`,
+  `context.md` e o gif novo untracked
   `www/Assets/exerciciosgif/Extensão Lombar.gif`.
 - Servidores desta sessão: preview **:4173**, `serve_www.js` **:8099** (serve a
   **raiz** do repo — legado fica em `/www/index.html`), Chrome CDP **:9222** —
@@ -50,7 +60,25 @@
 
 ## 2. O que foi feito
 
-### GIF da Extensão Lombar conectado — `v4.0.11-lombar-gif` (esta sessão; detalhe na entrada do CHANGELOG)
+### Splash do legado portada ao React — `v4.0.12-splash` (esta sessão; detalhe na entrada do CHANGELOG)
+O CSS da "Feature 9" já estava espelhado (`8-customizacao.css` L1979–2111) mas o
+DOM nunca foi portado. Feito em `src-app/index.html`:
+1. **DOM `#splashScreen`** 1:1 de `treino.html` L102–118 (primeiro no `<body>`,
+   antes do `#root`) — aparece desde o primeiro paint, antes do bundle.
+2. **Script inline** (port de L119–134 + saída do `app.js` L477–488): banner
+   (`data-banner`) + nome/"BEM-VINDO DE VOLTA" lidos síncronos do
+   `localStorage.academia_treino`; em `academia:db-ready` → 100 ms → fill 100%
+   → 400 ms → `.splash-screen--hidden`; fallback de 10 s se o bundle falhar.
+3. **Divergência pedida pelo usuário**: com treino em andamento a splash é
+   **removida antes do paint** (`workout_start_time` de hoje ou
+   `fichaEmAndamento`+data de hoje — flags do `app.js` L53–59); no legado ela
+   aparece em todo boot. Nunca reabre (DOM estático, sem caminho de volta).
+4. **Verificação**: CDP `verify_splash.js` **10/10 PASS** (boot, saída,
+   db-ready extra não reexibe, 2 cenários de treino ativo sem splash,
+   banner/nome) · screenshots React vs legado praticamente idênticos ·
+   tsc/oxlint/build verdes.
+
+### GIF da Extensão Lombar conectado — `v4.0.11-lombar-gif` (sessão anterior; detalhe na entrada do CHANGELOG)
 O usuário entregou `Assets/exerciciosgif/Extensão Lombar.gif` (1.515.678 bytes,
 já commitado na raiz e no `src-app/public/` pelo commit `ba7495e`), fechando o
 pendente da entrada `v3.5.6` ("GIF ainda não entregue"). Feito:
@@ -180,6 +208,7 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 | Arquivo | Papel |
 |---|---|
+| `src-app/index.html` | Shell + **splash `#splashScreen`** (port `treino.html` L102–118) com script inline: banner/nome do `academia_treino`, remoção imediata com treino ativo, saída em `academia:db-ready` (100 ms/fill/400 ms/`--hidden`). v4.0.12. |
 | `features/news/NewsOverlay.tsx` + `news-overlay.css` | Overlay `#news-overlay`: 3 abas `noticias`/`atualizacoes`/`guias` (seta `tab-arrow`, `bg-[#8b5cf6]`, `drop-shadow`), `.tab-content`/`.active`, 4 notícias (1ª com rótulo "Notícias" + borda) e 7 atualizações, `MOSTRAR MAIS` (= remoção de `.hidden-news`/`.hidden-updates`), detail views `#news-detail-view`/`#update-detail-view` (`hidden-view`/`active`, slide 300 ms), paginação com fade 200 ms (**índice avança no clique, DOM só após o timeout** — `updateDetailContent`), conteúdo via `dangerouslySetInnerHTML`, **`FOOTER_HTML` nos 3 containers**, lock de `body.overflow`; bloco `v4.0.10-news-parity` no CSS. Fase 5 + paridade v4.0.10. |
 | `App.tsx` | `handleOpenFicha(letter)` (timer + treino do dia, agora via `selectSheetEntry`), `handleStartWorkout` (toast, sem fechar ficha), `handleRequestEncerrar` → `#modalEncerrarTreino`, placeholders Social/Loja `.section-coming-soon`, `ActiveWorkoutModal` removido; seções/overlays/swipe das fases anteriores. |
 | `features/dashboard/DashboardFeature.tsx` | `onOpenFicha(letter: SheetKey)`, `#dashBtnNoticias` → `<NewsOverlay/>` (montado junto ao `<MissionsOverlay/>`), `#dashBtnMissoes` inalterado; `#dashAvatar` renderiza o emblema selecionado (v4.0.8). |
@@ -221,9 +250,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 1. **CHANGELOG imediatamente** após QUALQUER alteração (`Diretrizes/CHANGELOG.md`):
    `## [vX.X.X] - YYYY-MM-DD` no topo, tags `[Added]/[Changed]/[Fixed]/[Removed]`,
-   citar arquivos; versão vigente = `v4.0.11-lombar-gif` (+ sufixo de rótulo p/ docs, ex. `-docs`).
+   citar arquivos; versão vigente = `v4.0.12-splash` (+ sufixo de rótulo p/ docs, ex. `-docs`).
 2. **`system_map.json`**: incrementar `version` sempre que estrutura/documentação indexada mudar
-   (hoje: **3.5.20**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
+   (hoje: **3.5.21**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
    `node $env:TEMP\opencode\checkjson.js "C:\Nova pasta\htdocs\Academia\Diretrizes\system_map.json"`
    (script de uma linha: `JSON.parse(fs.readFileSync(process.argv[2],'utf8'))` + imprime a versão;
    recriar se o %TEMP% tiver sido limpo).
@@ -256,11 +285,12 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 ## 6. Próximos passos (ordem sugerida)
 
-1. **Commit** (só quando o usuário pedir): `v4.0.11-lombar-gif` —
-   `JS/treino/db.js` + espelho `www/`, `src-app/src/core/db/{default-data.ts,bootstrap.ts}`,
+1. **Commit** (só quando o usuário pedir): `v4.0.11-lombar-gif` +
+   `v4.0.12-splash` — `JS/treino/db.js` + espelho `www/`,
+   `src-app/src/core/db/{default-data.ts,bootstrap.ts}`, `src-app/index.html`,
    gif untracked `www/Assets/exerciciosgif/Extensão Lombar.gif` +
    docs (CHANGELOG/system_map/context.md) — revisar `git status`, `git diff`
-   e `git log --oneline -10` (7 paths).
+   e `git log --oneline -10`.
 2. **Confirmar com o usuário a interpretação do item 4** ("total de treinos
    geral" → resolvemos como dias vs. soma por ficha no card `#dashCycleVal` /
    pílula `#dashEmblemsValue`); se ele quis OUTRO elemento, investigar.

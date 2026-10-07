@@ -16,6 +16,92 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
   </head>
   <body class="bg-[#131313] text-[#e5e2e1] antialiased selection:bg-purple-500 selection:text-white">
+    <!-- ✨ Splash Screen Personalizada (Feature 9) — port de treino.html L102–118 -->
+    <div id="splashScreen" class="splash-screen">
+      <div class="splash-screen__bg" id="splashBg"></div>
+      <div class="splash-screen__content">
+        <div class="splash-screen__logo">
+          <span class="splash-screen__logo-text">ACADEMIA</span>
+          <span class="splash-screen__logo-sub">WORKOUT TRACKER</span>
+        </div>
+        <div class="splash-screen__user" id="splashUser"></div>
+        <div class="splash-screen__bar-wrap">
+          <div class="splash-screen__bar">
+            <div class="splash-screen__fill" id="splashFill"></div>
+          </div>
+          <span class="splash-screen__loading-text">Carregando...</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Port do script inline de treino.html L119–134 + saída de app.js L477–488.
+      (function () {
+        var splash = document.getElementById('splashScreen');
+        if (!splash) return;
+
+        // 1) Divergência deliberada do legado (pedido do usuário 2026-10-07):
+        //    com treino em andamento a splash NÃO aparece (recarregar a página
+        //    no meio do treino volta direto para o app). Flags espelham app.js L53–59.
+        var treinoAtivo = false;
+        try {
+          var t = localStorage.getItem('workout_start_time');
+          if (t && new Date(parseInt(t, 10)).toDateString() === new Date().toDateString()) {
+            treinoAtivo = true;
+          }
+          if (!treinoAtivo) {
+            var raw0 = localStorage.getItem('academia_treino');
+            if (raw0) {
+              var d0 = JSON.parse(raw0);
+              var dt = new Date();
+              var hoje =
+                dt.getFullYear() +
+                '-' + String(dt.getMonth() + 1).padStart(2, '0') +
+                '-' + String(dt.getDate()).padStart(2, '0');
+              treinoAtivo = Boolean(d0.fichaEmAndamento) && String(d0.fichaEmAndamentoDate || '') === hoje;
+            }
+          }
+        } catch (e) {}
+        if (treinoAtivo) {
+          splash.parentNode.removeChild(splash);
+          return;
+        }
+
+        // 2) Banner + nome (espelha treino.html L120–134: lê o localStorage legado
+        //    ANTES do bundle, sem flash).
+        try {
+          var raw = localStorage.getItem('academia_treino');
+          if (raw) {
+            var d = JSON.parse(raw);
+            var banner = (d.profileCustomization && d.profileCustomization.banner) || 'roxo-neon';
+            var nome = (d.profileCustomization && d.profileCustomization.nome) || '';
+            document.getElementById('splashBg').setAttribute('data-banner', banner);
+            if (nome) {
+              document.getElementById('splashUser').innerHTML =
+                '<span class="splash-screen__user-name">' + nome +
+                '</span><span class="splash-screen__user-sub">BEM-VINDO DE VOLTA</span>';
+            }
+          }
+        } catch (e) {}
+
+        // 3) Saída quando o bootstrap termina (academia:db-ready) — sequência
+        //    literal de app.js L477–488: +100 ms fill 100% → +400 ms hidden.
+        var saida = false;
+        function sair() {
+          if (saida) return;
+          saida = true;
+          var fill = document.getElementById('splashFill');
+          if (fill) fill.style.width = '100%';
+          setTimeout(function () {
+            splash.classList.add('splash-screen--hidden');
+          }, 400);
+        }
+        document.addEventListener('academia:db-ready', function () {
+          setTimeout(sair, 100);
+        });
+        // Fallback: se o bundle falhar, a splash não fica presa na tela.
+        setTimeout(sair, 10000);
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

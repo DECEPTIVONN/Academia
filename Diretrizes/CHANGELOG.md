@@ -21,6 +21,24 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.0.12-splash] - 2026-10-07
+*Tela de carregamento (splash "Feature 9") do legado portada para o React: DOM + script inline idênticos ao `treino.html`, saída sincronizada com o `academia:db-ready` — e **não exibida quando há treino em andamento** (divergência deliberada, pedido do usuário) (system_map.json → version 3.5.21)*
+
+### [Added]
+- **`src-app/index.html` — splash `#splashScreen` (port 1:1 de `treino.html` L102–118)**: DOM completo como primeiro filho do `<body>` (antes do `#root`): `__bg` com `data-banner`, logo ACADEMIA/WORKOUT TRACKER, `__user`, barra com `__fill` e "Carregando...". O CSS da Feature 9 já estava espelhado em `src-app/src/legacy-style/treino/8-customizacao.css` L1979–2111 e entra no bundle via `legacy.css` — só faltava o DOM (nunca portado na Fase 1). A splash aparece desde o primeiro paint, antes do bundle carregar, como no legado.
+- **Script inline de saída (port de `treino.html` L119–134 + `app.js` L477–488)**: banner (`data-banner`) e nome do usuário ("BEM-VINDO DE VOLTA") lidos **sincronamente** do `localStorage.academia_treino` antes de qualquer paint; no evento `academia:db-ready` (disparado sempre pelo `bootstrap()`) → `setTimeout` 100 ms → fill `width: 100%` → +400 ms → `.splash-screen--hidden` (transição de 0.7 s do CSS legado) — sequência literal da Feature 9. Fallback de 10 s esconde a splash se o bundle falhar (divergência de segurança: o legado não precisa, pois não tem bundle assíncrono).
+
+### [Changed]
+- **Divergência deliberada do legado (pedido do usuário em 2026-10-07)**: **com treino em andamento a splash não é exibida** — o script a remove do DOM logo no parse, antes de qualquer paint, então recarregar a página no meio do treino volta direto para o app. Flags espelham `app.js` L53–59: `workout_start_time` de hoje (`workout-store.ts`, chave removida ao encerrar o treino) **ou** `fichaEmAndamento` + `fichaEmAndamentoDate === hoje` no `academia_treino`. No legado a splash aparece em todo boot, inclusive com treino ativo. Como a splash só existe no carregamento da página (DOM estático, sem caminho de reexibição), um `academia:db-ready` posterior (ex.: `patchLegacyState`) nunca a reabre — treinos em curso nunca são interrompidos.
+- **`Diretrizes/system_map.json`**: `version` 3.5.20 → **3.5.21**; `entry_points` do `src-app/index.html` documenta a splash + script inline.
+- **`context.md`**: cabeçalho/estado (entrada `v4.0.12-splash`, 3.5.21, verificação 10/10 CDP), subseção na "O que foi feito", linha no mapa de arquivos, versão vigente e próximos passos.
+
+### [Verification]
+- `npx tsc -b` exit 0; `npx oxlint src` exit 0 (**zero warnings**); `npm run build` OK — `dist/index.html` contém `splashScreen`, o listener de `academia:db-ready` e a checagem `treinoAtivo` (script Node UTF-8).
+- CDP (Chrome headless 390×844 dpr3, script `%TEMP%\opencode\verify_splash.js`, preview :4173): **10/10 PASS** — boot normal: splash presente, `position: fixed` + `z-index: 99999`, sai com `--hidden` + fill 100% após o `db-ready`, e um `db-ready` extra **não** reexibe; treino ativo via `workout_start_time` de hoje → splash **ausente** do DOM; treino ativo via `fichaEmAndamento` de hoje → splash **ausente**; banner `ouro-elite` + nome SIDNEY/"BEM-VINDO DE VOLTA" aplicados; screenshot da splash congelada salvo.
+- **Regressão pós-entrega**: `verify_fixes.js` **14/14 PASS** (bugs v4.0.8 intactos após a mudança no `index.html`) e `verify_click_after_splash.js` **6/6 PASS** — splash escondida não intercepta interação (`pointer-events: none` + `visibility: hidden` computados, `elementFromPoint` fora da splash, clique real via CDP `Input.dispatchMouseEvent` na BottomNav alterna Treinos ↔ Dashboard); CSS `.splash-screen--hidden` byte a byte idêntico entre `www/Style/treino/8-customizacao.css` e o espelho React.
+- Screenshots comparativos React (`:4173`) vs legado (`:8099/www/index.html`): **praticamente idênticos** — mesmo CSS espelhado + DOM idêntico (`position: fixed`, `z-index: 99999`, logo Outfit 41.6 px, barra em 0%). Origem do port conferida: `www/index.html` contém a splash + script inline.
+
 ## [v4.0.11-lombar-gif] - 2026-10-07
 *GIF entregue pelo usuário para o exercício "Extensão Lombar" e conectado em todas as camadas: `ex-extensao-lombar` de `imagem: null` para o arquivo real no legado (raiz + espelho `www/`) e no seed React, com backfill idempotente para instalações existentes (system_map.json → version 3.5.20)*
 
