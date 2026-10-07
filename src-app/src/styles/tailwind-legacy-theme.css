@@ -27,7 +27,9 @@
   --color-on-primary: #3c0091;
   --color-outline-variant: #494454;
   --color-on-tertiary: #482900;
-  --color-on-surface-variant: #cbc3d7;
+  /* tailwind.config.js (build legado) define #cac4d0 — medido no news overlay
+     2026-10-07 (content p); o #cbc3d7 vinha do JSON inline do thememanager. */
+  --color-on-surface-variant: #cac4d0;
   --color-on-secondary-fixed-variant: #005321;
   --color-on-primary-container: #340080;
   --color-primary-container: #a078ff;
@@ -39,7 +41,11 @@
   --color-on-secondary-container: #004119;
   --color-on-secondary: #003915;
   --color-on-tertiary-fixed-variant: #673d00;
-  --color-surface-container-highest: #353534;
+  /* Runtime legado (vendor/tailwind.min.css, build de tailwind.config.js L41)
+     usa #36343b; o #353534 do JSON inline de thememanager só vale quando o
+     tema dinâmico sobrescreve — a utility bg-surface-container-highest/80
+     renderiza #36343b no legado (medido no news overlay 2026-10-07). */
+  --color-surface-container-highest: #36343b;
   --color-secondary-fixed: #6bff8f;
   --color-inverse-surface: #e5e2e1;
   --color-error-container: #93000a;
@@ -51,7 +57,12 @@
   --color-on-error-container: #ffdad6;
   --color-accent-pink: #f5a6d3;
   --color-surface: #131313;
-  --color-card-border: rgba(139, 92, 246, 0.25);
+  /* A utility border-card-border NÃO existe no build legado
+     (www/vendor/tailwind.min.css não a gera; tailwind.config.js não define a
+     cor) → no legado a borda usa o preflight #e5e7eb. O roxo translúcido do
+     DESIGN.md (L39) é a variável --card-border das REGRAS CSS, não esta
+     utility. Só a usa no news-overlay (4×). */
+  --color-card-border: #e5e7eb;
   --color-tertiary-fixed-dim: #ffb869;
   --color-secondary-fixed-dim: #4ae176;
   --color-surface-container-lowest: #0e0e0e;
@@ -60,11 +71,15 @@
   --color-error: #ffb4ab;
 
   --font-headline-lg: "Rajdhani", sans-serif;
-  --font-body-lg: "Outfit", sans-serif;
+  /* O JSON inline (index.html/treino.html) diz "Outfit", mas o build legado
+     (vendor/tailwind.min.css) NÃO gera .font-body-lg/.font-body-md → no
+     runtime o texto dessas classes herda Rajdhani (medido 2026-10-07).
+     Tokens só são usados pelo news-overlay (NewsOverlay.tsx). */
+  --font-body-lg: "Rajdhani", sans-serif;
   --font-headline-xl: "Rajdhani", sans-serif;
   --font-card-level: "Rajdhani", sans-serif;
   --font-headline-md: "Rajdhani", sans-serif;
   --font-label-caps: "Rajdhani", sans-serif;
   --font-headline-lg-mobile: "Rajdhani", sans-serif;
-  --font-body-md: "Outfit", sans-serif;
+  --font-body-md: "Rajdhani", sans-serif;
 }

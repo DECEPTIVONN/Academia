@@ -117,3 +117,122 @@
                 min-height: auto !important;
                 height: auto !important;
             }
+
+/* ==========================================================================
+   v4.0.10-news-parity — paridade de cascata com o legado
+   --------------------------------------------------------------------------
+   CAUSA-RAIZ: no legado (www/index.html) o Tailwind (vendor/tailwind.min.css)
+   é NÃO camadeado e carrega DEPOIS de main.css, então as utilities vencem o
+   reset `* { margin: 0; padding: 0 }` e as regras elementais (h1..h6, p) por
+   especificidade+ordem, e o preflight desestiliza headings
+   (`font-size/font-weight: inherit`). Aqui (Tailwind v4) as utilities vivem em
+   @layer utilities e PERDEM para todo CSS legado não camadeado — zerando
+   paddings/margins (p-6, px-6, pt-24, py-3, mb-4, space-y-*) e deixando
+   headings/p com os valores do main.css (h1 26px/700 em vez de 13px/400,
+   p em 13px/lh 1.8 em vez de text-xs 9.75px/lh 13 etc.).
+
+   CORREÇÃO (escopada só neste overlay): `revert-layer` descarta a camada não
+   camadeada e reaplica o valor vencedor das camadas Tailwind (utilities →
+   base/preflight), reproduzindo exatamente o resultado computado do legado
+   sem tocar no CSS legado nem nas demais telas. O rodapé fica de fora
+   (`:not(footer)`) porque o footer.css é idêntico nos dois apps e não usa
+   utilities — ali basta manter as regras originais.
+
+   Requer Chrome/WebView 111+ (revert-layer); navegadores antigos ignoram as
+   regras e mantêm o comportamento anterior (degradação graciosa). */
+
+.news-overlay *:not(footer):not(footer *) {
+    margin: revert-layer;
+    padding: revert-layer;
+}
+
+.news-overlay :is(h1, h2, h3, h4, h5, h6):not(footer):not(footer *) {
+    font-size: revert-layer;
+    font-weight: revert-layer;
+    /* Utilities de texto (text-xl/text-lg/leading-*) trazem line-height
+       pareado no legado; sem utility o main.css dita 1.2 (ver regra abaixo). */
+    line-height: revert-layer;
+}
+/* Detail title (news-title/update-title): as classes text-headline-lg*
+   não existem em nenhum dos dois Tailwind → sem utility de lh → 1.2 (main.css). */
+.news-overlay :is(.news-title, .update-title) {
+    line-height: 1.2;
+}
+/* tracking-tight (detail title): no legado a utility não camadeada vence o
+   -0.02em do main.css; aqui a utility está em @layer → reaplica. */
+.news-overlay :is(h1, h2, h3, h4, h5, h6)[class*="tracking-"]:not(footer):not(footer *) {
+    letter-spacing: revert-layer;
+}
+
+.news-overlay p:not(footer):not(footer *) {
+    font-size: revert-layer;
+    line-height: revert-layer;
+    color: revert-layer;
+}
+/* p SEM utility de line-height — text-[10px] arbitrário (date/versão dos
+   cards), text-label-caps (date do detail: o build legado não gera a classe)
+   etc.: no legado esses p's ficam com 1.8 do main.css. Os p com lh própria
+   (text-xs pareado, leading-relaxed do conteúdo do detail) ficam com a
+   utility via revert-layer acima. */
+.news-overlay p:not([class*="text-xs"]):not([class*="leading-"]):not(footer):not(footer *) {
+    line-height: 1.8;
+}
+
+/* Ícones material: a base do Google (`.material-symbols-outlined { font-size:
+   24px }`, não camadeada) vence a utility text-[N] que está em @layer aqui —
+   no legado ambas são não camadeadas e a utility (carregada depois) vence.
+   Spans sem utility de tamanho mantêm a base 24px (mesmo resultado nos dois).
+   Fora dos .premium-placeholder: lá o placeholders-animacoes.css L47
+   (`.premium-placeholder span { font-size: 0.75rem }`, spec 0,1,1) vence o
+   text-[80px]/text-6xl no legado e já vence aqui — não interferir. */
+.news-overlay .material-symbols-outlined[class*="text-"]:not(footer):not(footer *):not(.premium-placeholder *) {
+    font-size: revert-layer;
+    /* No legado a utility v3 `text-[N]` não mexe no lh e sobra o `line-height:
+       1` da base do Google (→ N px). No v4 o revert cai num lh herdado/pareado
+       (1.5 → 24px) — pinamos 1 para reproduzir 1×fs como o legado. */
+    line-height: 1;
+}
+
+/* border-tertiary-fixed-dim* NÃO existe no build legado (tailwind.config.js
+   não define) → sobra o padrão do preflight #e5e7eb (barra de 6px do detail,
+   medida 2026-10-07). No <hr> vale a regra abaixo (outline-variant/20). */
+.news-overlay [class*="border-tertiary-fixed-dim"]:not(hr) {
+    border-color: #e5e7eb;
+}
+/* hr: no legado só border-outline-variant/20 (existente) vale — o
+   border-tertiary-fixed-dim/50 do JSX é ignorado → rgba(#494454, 0.2). */
+.news-overlay hr {
+    border-color: rgb(73, 68, 84, 0.2);
+}
+
+/* Cores do date — thememanager.js (legado) injeta
+   `.news-date { color: theme.primaryLight !important }`; o tema padrão
+   "Escuro" tem primaryLight #c084fc = neon-purple-glow. A utility
+   text-primary-fixed-dim/80 do JSX não existe no build legado.
+   `.update-date` NÃO tem regra no thememanager → o p cai no fallback do
+   main.css `color: var(--text-secondary)` (#cccccc). */
+.news-overlay .news-date {
+    color: var(--color-neon-purple-glow);
+}
+.news-overlay .update-date {
+    color: var(--text-secondary);
+}
+
+/* Fonte/lh da raiz: o App herda Outfit do font-['Outfit'] do shell; o legado
+   usa Rajdhani (var(--font-family)) e lh 1.5 (preflight vence body 1.6 do
+   main.css por ordem de carregamento). Só o overlay muda — o body do app
+   permanece como está. */
+.news-overlay {
+    font-family: var(--font-family);
+    line-height: 1.5;
+}
+
+/* A utility `from-deep-void` NÃO existe no build legado (tailwind.config.js
+   não define deep-void) → no legado o background-image de
+   `bg-gradient-to-t from-deep-void ...` é inválido e computa `none` (medido
+   2026-10-07): o overlay do placeholder/detalhe não escurece. Aqui o token
+   existe e a utility renderizaria — neutralizada para manter o visual do
+   legado (bg-gradient-to-b do infoBox é outro caso e permanece). */
+.news-overlay .bg-gradient-to-t {
+    background-image: none;
+}

@@ -1,7 +1,7 @@
 {
   "appId": "com.academia.workout",
   "appName": "Academia Workout Tracker",
-  "webDir": "dist",
+  "webDir": "src-app/dist",
   "server": {
     "androidScheme": "https",
     "cleartext": false,

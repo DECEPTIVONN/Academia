@@ -1,44 +1,78 @@
-# context.md — Continuidade de sessão (2026-10-06)
+# context.md — Continuidade de sessão (2026-10-07)
 
 > **Arquivo de contexto entre sessões.** Ler junto com `Diretrizes/CHANGELOG.md`
-> (entradas `v4.0.6-phase4`, `v4.0.7-phase5`, `v4.0.7-phase5-navfix` e `v4.0.8-bugfix`) e `Diretrizes/system_map.json`
-> (**version 3.5.18** — primeira leitura obrigatória de todo agente).
-> Atualizado ao fim da sessão de 2026-10-06 (Fase 5 + correções dos 4 bugs reportados).
+> (entradas `v4.0.6-phase4`, `v4.0.7-phase5`, `v4.0.7-phase5-navfix`, `v4.0.8-bugfix`,
+> `v4.0.9-android` e `v4.0.10-news-parity`) e `Diretrizes/system_map.json`
+> (**version 3.5.19** — primeira leitura obrigatória de todo agente).
+> Atualizado ao fim da sessão de 2026-10-07 (paridade visual total do news-overlay:
+> cascata `revert-layer`, port do footer e fechamento da view de detalhe).
 
 ---
 
-## 1. Estado atual (fim da sessão 2026-10-06)
+## 1. Estado atual (fim da sessão 2026-10-07)
 
 - **Fases 0–5 da migração React v4 CONCLUÍDAS**:
   0 fundação → 1 visual (Dashboard/Ficha/Progresso) → 2 Perfil/temas →
   3 gamificação → 4 seção Treinos + swipe + limpeza (2026-10-05) →
-  **5 pendências de paridade** (esta sessão, 2026-10-06): cronômetro global do
+  5 pendências de paridade (2026-10-06): cronômetro global do
   treino + `#modalEncerrarTreino` acionáveis, overlay de Notícias completo,
   placeholders Social/Loja em DOM legado e BottomNav 1:1.
-- **Correções `v4.0.8-bugfix` (2026-10-06)** dos 4 bugs reportados pelo usuário:
-  (1) cronômetro negativo ~1 s ao iniciar, (2) emblema de perfil ausente no
-  `#dashAvatar` da aba Início, (3) contador de ciclo que regredia ao trocar de
-  ficha e (4) ciclo contando dias em vez de por ficha — detalhe na seção 2.
-- **Verificação final verde**: `npx tsc -b` exit 0 · `npx oxlint src -D warning`
-  exit 0 com **ZERO warnings** · `npm run build` OK (`dist/assets/index-H7L16KK3.js` +
-  CSS `index-D9hB-1kn.css`) · CDP headless **14/14 PASS**
-  (`%TEMP%\opencode\verify_fixes.js`) ·
-  `system_map.json` validado (3.5.18, sem BOM).
-- **GIT**: Fases 3 + 4 commitadas em `5663cad` (2026-10-05), **Fase 5 commitada
-  pelo usuário em `0f8c3dd`** ("Atualização dos itens pendentes", 2026-10-06 11:44,
-  9 paths — inclui `context.md` e `features/news/`) e rollback da navbar em
-  `960163e` (`globals.css` + docs `v4.0.7-phase5-navfix`). **Ainda NÃO commitado**
-  (7 paths, esta sessão): correções `v4.0.8-bugfix` (`FichaFeature.tsx`,
-  `DashboardFeature.tsx`, `queries.ts`, `App.tsx`) + docs (CHANGELOG, system_map,
-  context.md) — commit só com pedido explícito do usuário.
-- Servidores: encerrar o preview de :4173 ao fim da sessão
-  (`Get-NetTCPConnection -LocalPort 4173 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`).
+- **Paridade visual do news-overlay CONCLUÍDA (`v4.0.10-news-parity`, 2026-10-07)**:
+  bloco `v4.0.10-news-parity` no `news-overlay.css` (`revert-layer` escopado +
+  pins), `FOOTER_HTML` portado para os 3 containers, tokens corrigidos e a
+  **view de detalhe medida sem diffs visuais** (lista = 6 diffs e detalhe = 15,
+  todas não-visuais; screenshots e band stats ±1 idênticos).
+- **Verificação final verde**: `npx tsc -b` exit 0 · `npx oxlint src` exit 0
+  (**ZERO warnings**) · `npm run build` OK · `system_map.json` validado
+  (**3.5.19**, sem BOM) · medições CDP: lista 6 diffs não-visuais / detalhe 15
+  não-visuais · screenshots idênticos (band stats ±1).
+- **GIT**: HEAD = `b2e5ecb` (Fases 0–5 + v4.0.8 commitados). **NÃO commitado**
+  (só com pedido explícito): `NewsOverlay.tsx`, `news-overlay.css`,
+  `tailwind-legacy-theme.css` (paridade news + tokens), `capacitor.config.json`
+  + entrada `v4.0.9-android` do CHANGELOG (sessão Android) e docs
+  (`CHANGELOG.md`, `system_map.json`, `context.md`).
+- Servidores desta sessão: preview **:4173**, `serve_www.js` **:8099**, Chrome CDP
+  **:9222** — encerrar ao fim
+  (`Get-NetTCPConnection -LocalPort 4173 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`,
+  idem 8099/9222).
 
 ---
 
 ## 2. O que foi feito
 
-### Correções dos 4 bugs reportados — `v4.0.8-bugfix` (esta sessão; detalhe na entrada do CHANGELOG)
+### Paridade visual do news-overlay — `v4.0.10-news-parity` (esta sessão + continuação da anterior; detalhe na entrada do CHANGELOG)
+**Causa-raiz**: no legado o `vendor/tailwind.min.css` (v3.4, **não camadeado**)
+carrega depois de `main.css` → utilities vencem; no React (v4) as utilities
+ficam em `@layer utilities` e perdem para o CSS legado espelhado não camadeado.
+1. **Bloco `v4.0.10-news-parity` em `news-overlay.css`**: `revert-layer` escopado
+   em `.news-overlay` (margins/paddings, headings fs/fw/lh/ls, p fs/lh/color)
+   + pins: p sem lh própria → 1.8 (main.css), `.news-title/.update-title` lh 1.2,
+   raiz `font-family: var(--font-family)` + lh 1.5, `.bg-gradient-to-t` → `none`
+   (`from-deep-void` não existe no vendor), ícone material `revert-layer` +
+   `line-height: 1` **exceto** `.premium-placeholder` (o `placeholders-animacoes.css`
+   L47 (`.premium-placeholder span { font-size: 0.75rem }`, spec 0,1,1) já vence
+   o `text-[80px]` lá — nos testes o ícone do hero estava saindo em 80 px),
+   `border-tertiary-fixed-dim*` (inexistente no vendor) → `#e5e7eb`, `<hr>` →
+   `rgba(#494454,0.2)`, `.news-date` → `#c084fc` (thememanager L1054 injeta
+   `theme.primaryLight`; tema "Escuro") e `.update-date` → `#cccccc`.
+2. **Footer**: `FOOTER_HTML` (`componentes/footer.js` L3–42 + estilos inline dos
+   ícones do `theme-integration.js` L609–613) injetado nos 3 containers via
+   `dangerouslySetInnerHTML` (fecha a divergência "footers vazios" da Fase 5 —
+   decisão do usuário de portar).
+3. **Tokens (`tailwind-legacy-theme.css`)**: `surface-container-highest` → `#36343b`,
+   `card-border` → `#e5e7eb` (preflight do legado), `on-surface-variant` → `#cac4d0`,
+   `font-body-lg/md` `Outfit` → `Rajdhani` (o build legado não gera as classes e o
+   runtime herda Rajdhani — medido `contentFf`).
+4. **View de detalhe (nunca medida antes)**: 13 diffs visuais → 0 — date lh 23.4 px
+   + cor `#c084fc`; `tracking-tight` −0.325 px; botões 128×33 (ícone 16 px/lh 16 —
+   base do Google em 24 px perdia para a utility só no React); ícone hero 9.75 px;
+   hr/barra com cores legadas; conteúdo p em Rajdhani.
+5. **Medição final**: lista = 6 diffs e detalhe = 15 diffs, **todas não-visuais**
+   (oklab vs rgba com valores exatos, `border-color` em `border-width: 0`,
+   margens `space-y` v3/v4 com gaps idênticos — todos os `xywh` batem);
+   screenshots + band stats ±1 idênticos nos dois pares.
+
+### Correções dos 4 bugs reportados — `v4.0.8-bugfix` (sessão anterior; detalhe na entrada do CHANGELOG)
 1. **Timer negativo (`FichaFeature.tsx`)**: `now` (state) só era refrescado pelo
    intervalo de 1 s quando `isActive` ligava → `formatElapsed(now - startTime)`
    negativo ~1 s (repro: `-1:-8`). Efeito agora chama `setNow(Date.now())` ao
@@ -119,7 +153,7 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 | Arquivo | Papel |
 |---|---|
-| `features/news/NewsOverlay.tsx` + `news-overlay.css` | Overlay `#news-overlay`: 3 abas `noticias`/`atualizacoes`/`guias` (seta `tab-arrow`, `bg-[#8b5cf6]`, `drop-shadow`), `.tab-content`/`.active`, 4 notícias (1ª com rótulo "Notícias" + borda) e 7 atualizações, `MOSTRAR MAIS` (= remoção de `.hidden-news`/`.hidden-updates`), detail views `#news-detail-view`/`#update-detail-view` (`hidden-view`/`active`, slide 300 ms), paginação com fade 200 ms (**índice avança no clique, DOM só após o timeout** — `updateDetailContent`), conteúdo via `dangerouslySetInnerHTML`, footers vazios, lock de `body.overflow`. Fase 5. |
+| `features/news/NewsOverlay.tsx` + `news-overlay.css` | Overlay `#news-overlay`: 3 abas `noticias`/`atualizacoes`/`guias` (seta `tab-arrow`, `bg-[#8b5cf6]`, `drop-shadow`), `.tab-content`/`.active`, 4 notícias (1ª com rótulo "Notícias" + borda) e 7 atualizações, `MOSTRAR MAIS` (= remoção de `.hidden-news`/`.hidden-updates`), detail views `#news-detail-view`/`#update-detail-view` (`hidden-view`/`active`, slide 300 ms), paginação com fade 200 ms (**índice avança no clique, DOM só após o timeout** — `updateDetailContent`), conteúdo via `dangerouslySetInnerHTML`, **`FOOTER_HTML` nos 3 containers**, lock de `body.overflow`; bloco `v4.0.10-news-parity` no CSS. Fase 5 + paridade v4.0.10. |
 | `App.tsx` | `handleOpenFicha(letter)` (timer + treino do dia, agora via `selectSheetEntry`), `handleStartWorkout` (toast, sem fechar ficha), `handleRequestEncerrar` → `#modalEncerrarTreino`, placeholders Social/Loja `.section-coming-soon`, `ActiveWorkoutModal` removido; seções/overlays/swipe das fases anteriores. |
 | `features/dashboard/DashboardFeature.tsx` | `onOpenFicha(letter: SheetKey)`, `#dashBtnNoticias` → `<NewsOverlay/>` (montado junto ao `<MissionsOverlay/>`), `#dashBtnMissoes` inalterado; `#dashAvatar` renderiza o emblema selecionado (v4.0.8). |
 | `features/workout/FichaFeature.tsx` | props `onShowActiveWorkout` → `onRequestEncerrar`; `handleStartClick`: `!isActive` → `onStartWorkout`, senão `onRequestEncerrar()`; cronômetro sincroniza `now` ao ativar + clamp ≥ 0 (v4.0.8). |
@@ -142,11 +176,14 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 7. **Componentes scaffold órfãos mantidos** (nunca montados, decidir futuro): `components/HeaderHUD.tsx`,
    `components/TabBar.tsx`, `components/ExerciseCard.tsx`, `components/ui/DynamicBg.tsx` e
    `features/workout/ActiveWorkoutModal.tsx` (fora do fluxo desde a Fase 5).
-8. **News overlay (Fase 5)**: `closeNewsOverlay` não faz `_transitionTo('dashboard')`
-   (só abre do Dashboard, mesmo racional do `MissionsOverlay`); os 3 containers de
-   footer ficam vazios (footer HTML do legado não portado); swipe com o overlay aberto
+8. **News overlay (Fase 5 + v4.0.10)**: `closeNewsOverlay` não faz `_transitionTo('dashboard')`
+   (só abre do Dashboard, mesmo racional do `MissionsOverlay`); swipe com o overlay aberto
    desmonta o Dashboard e o overlay some (idêntico no `nav.js`); micro-divergência de
-   150 ms na `transition-opacity` da aba ativa.
+   150 ms na `transition-opacity` da aba ativa. **Diffs aceitos da paridade** (medidos,
+   não-visuais): serialização de cor oklab (v4) vs rgba (v3) com valores exatos,
+   `border-color` de elementos com `border-width: 0` (preflight #e5e7eb vs currentcolor),
+   margens `space-y` (v3 põe `margin-top` no irmão seguinte, v4 `margin-end` no anterior
+   — gaps e `xywh` idênticos). `revert-layer` exige Chrome/WebView 111+.
 9. **SOCIAL/LOJA AGORA PARIDADE** (item resolvido na Fase 5): DOM
    `.section-coming-soon` portado de `treino.html` L184–207 com o texto correto de cada seção.
 
@@ -156,9 +193,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 1. **CHANGELOG imediatamente** após QUALQUER alteração (`Diretrizes/CHANGELOG.md`):
    `## [vX.X.X] - YYYY-MM-DD` no topo, tags `[Added]/[Changed]/[Fixed]/[Removed]`,
-   citar arquivos; versão vigente = `v4.0.8-bugfix` (+ sufixo de rótulo p/ docs, ex. `-docs`).
+   citar arquivos; versão vigente = `v4.0.10-news-parity` (+ sufixo de rótulo p/ docs, ex. `-docs`).
 2. **`system_map.json`**: incrementar `version` sempre que estrutura/documentação indexada mudar
-   (hoje: **3.5.18**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
+   (hoje: **3.5.19**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
    `node $env:TEMP\opencode\checkjson.js "C:\Nova pasta\htdocs\Academia\Diretrizes\system_map.json"`
    (script de uma linha: `JSON.parse(fs.readFileSync(process.argv[2],'utf8'))` + imprime a versão;
    recriar se o %TEMP% tiver sido limpo).
@@ -188,7 +225,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 ## 6. Próximos passos (ordem sugerida)
 
-1. **Commit** (só quando o usuário pedir): correções `v4.0.8-bugfix` +
+1. **Commit** (só quando o usuário pedir): paridade `v4.0.10-news-parity`
+   (`NewsOverlay.tsx`, `news-overlay.css`, `tailwind-legacy-theme.css`) +
+   pendências Android (`capacitor.config.json` + entrada `v4.0.9-android`) +
    docs (CHANGELOG/system_map/context.md) — revisar `git status`, `git diff`
    e `git log --oneline -10`.
 2. **Confirmar com o usuário a interpretação do item 4** ("total de treinos
@@ -196,9 +235,12 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
    pílula `#dashEmblemsValue`); se ele quis OUTRO elemento, investigar.
 3. **Teste manual da Fase 5** no preview (checklist): `#dashBtnIniciar` → ficha com
    cronômetro rodando → X/parar → `#modalEncerrarTreino` → Encerrar → `showConclusao`;
-   `#dashBtnNoticias` → 3 abas, cartões, MOSTRAR MAIS, detalhe prev/next, ESC;
-   Social/Loja com `.section-coming-soon`; navbar com labels visíveis e dot ativo;
-   swipe não dispara dentro do news-overlay (divergência aceita).
+   `#dashBtnNoticias` → 3 abas, cartões, MOSTRAR MAIS, detalhe prev/next, ESC,
+   footer visível na lista e nos detalhes; Social/Loja com `.section-coming-soon`;
+   navbar com labels visíveis e dot ativo; swipe não dispara dentro do news-overlay
+   (divergência aceita). Paridade news medida por script (lista 6 / detalhe 15 diffs
+   não-visuais): `node $env:TEMP\opencode\measure_news.js` + `diff_measure.js` e
+   `node $env:TEMP\opencode\probe_detail.js` (precisa de :4173, :8099, :9222).
 4. **Teste manual da Fase 4** (seção Treinos) — checklist completo na entrada
    `v4.0.6-phase4` do CHANGELOG.
 5. **known_gaps menores** (system_map): `#modalDayHist` sem lock de `body.overflow`,

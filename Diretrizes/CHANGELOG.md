@@ -21,6 +21,39 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.0.10-news-parity] - 2026-10-07
+*Paridade visual do overlay de Notícias com o legado: correção da cascata Tailwind v4 vs CSS legado não camadeado (bloco `revert-layer`), port do footer legado para os 3 containers, tokens de tema corrigidos e fechamento da view de detalhe — lista e detalhe medidas com **zero diffs visuais** (system_map.json → version 3.5.19)*
+
+### [Added]
+- **`src-app/src/features/news/NewsOverlay.tsx` — port do footer legado (`FOOTER_HTML`)**: o HTML de `componentes/footer.js` L3–42 (idêntico em `www/componentes/footer.js`), incl. os 5 estilos inline dos ícones sociais que o `theme-integration.js` L609–613 injeta no runtime legado, é injetado via `dangerouslySetInnerHTML` nos 3 containers — `#news-footer-container` da lista e os `#news-detail-footer-container`/`#update-detail-footer-container` dos detalhes. Resolve a divergência consciente "os 3 containers de footer ficam vazios" da Fase 5 (decisão do usuário em 2026-10-07 de portar o rodapé).
+- **`src-app/src/features/news/news-overlay.css` — bloco `v4.0.10-news-parity` (cascata)**: causa-raiz — no legado o `vendor/tailwind.min.css` (v3.4, **não camadeado**) carrega depois de `main.css` e as utilities vencem; aqui (Tailwind v4) as utilities vivem em `@layer utilities` e PERDEM para o CSS legado espelhado não camadeado. Correção escopada só no overlay: `.news-overlay *:not(footer)` com `margin/padding: revert-layer`; headings com `font-size/font-weight/line-height/letter-spacing: revert-layer` (+ `tracking-*` para `tracking-tight` do title); `p` com `font-size/line-height/color: revert-layer` + pin `line-height: 1.8` para p sem utility de lh própria (`text-[10px]`, `text-label-caps` — o build legado não gera a classe); raiz com `font-family: var(--font-family)` + `line-height: 1.5`; `.bg-gradient-to-t` neutralizado (`from-deep-void` não existe no build legado → `background-image: none`); ícone material com `font-size: revert-layer` + `line-height: 1` **exceto** dentro de `.premium-placeholder` (lá o `placeholders-animacoes.css` L47 — `.premium-placeholder span { font-size: 0.75rem; ... }` — já vence no legado e aqui, como no legado); `border-tertiary-fixed-dim*` (inexistente no build legado) → `#e5e7eb` do preflight e `<hr>` → `rgba(#494454, 0.2)` (só `border-outline-variant/20` vale); `.news-date` → `var(--color-neon-purple-glow)` (o `thememanager.js` L1054 injeta `theme.primaryLight !important`; tema padrão "Escuro" = `#c084fc`) e `.update-date` → `var(--text-secondary)` (`#cccccc`, sem regra no thememanager). Requer Chrome/WebView 111+ (`revert-layer`); mais antigos ignoram as regras e mantêm o comportamento anterior (degradação graciosa).
+
+### [Fixed]
+- **View de detalhe do news-overlay nunca havia sido medida** (última lacuna de paridade da Fase 5): 13 diffs visuais → **0**. Correções: date do detail com `line-height` 1.8 (23.4 px) e cor `#c084fc` (antes: 19.5 px + `text-primary-fixed-dim/80` que o build legado não gera); `letter-spacing` do `h1` −0.325 px (`tracking-tight`, antes −0.26 px do `main.css`); ícone `material-symbols` dos botões `btn-prev/btn-next` em 16 px com `line-height` 16 px (antes 24 px — a base do Google vencia a utility em camada; botões 136×39 → **128×33** iguais ao legado); ícone do hero em 9.75 px (antes 80 px — a regra nova não pode interferir nos `.premium-placeholder`, onde o legado vence por especificidade 0,1,1); `<hr>` e barra `border-t-[6px]` com as cores legadas (antes roxo/laranja das utilities `border-tertiary-fixed-dim/*` inexistentes no vendor — medido `rgba(73,68,84,0.2)` e `#e5e7eb`); conteúdo `p` em Rajdhani (antes Outfit via `font-body-lg`); token `on-surface-variant` `#cbc3d7` → `#cac4d0`.
+
+### [Changed]
+- **`src-app/src/styles/tailwind-legacy-theme.css`**: `--color-surface-container-highest` → `#36343b` e `--color-card-border` → `#e5e7eb` (utilities inexistentes no build legado: valores do `tailwind.config.js`/preflight, não o JSON inline do thememanager); `--color-on-surface-variant` → `#cac4d0`; `--font-body-lg`/`--font-body-md` `"Outfit"` → `"Rajdhani"` — o JSON inline tem "Outfit", mas o build legado **não gera** `.font-body-lg/.font-body-md` e o runtime herda Rajdhani (medido; tokens usados só pelo news-overlay).
+
+### [Verification]
+- `npx tsc -b` exit 0; `npx oxlint src` exit 0 (zero warnings); `npm run build` OK (bundle novo com `revert-layer`/footer via script Node UTF-8); `system_map.json` validado sem BOM (`checkjson.js` → 3.5.19).
+- Medição CDP (390×844, animações congeladas, SW limpo via `Storage.clearDataForOrigin` + seed do `legacyDB`): **lista = 6 diffs** e **detalhe = 15 diffs — todas não-visuais** (serialização oklab vs rgba com valores exatos, `border-color` de elementos com `border-width: 0`, margens do `space-y` v3 `margin-top` no irmão seguinte vs v4 `margin-end` no anterior — gaps idênticos, todos os `xywh` batem). Screenshots `news_react.png`/`news_legacy.png` e `detail_react.png`/`detail_legacy.png` visualmente idênticos; band stats das 8 faixas ±1 nos dois pares. Scripts: `%TEMP%\opencode\measure_news.js`+`diff_measure.js` (lista), `probe_detail.js` (detalhe), `band_stats.ps1`.
+
+
+## [v4.0.9-android] - 2026-10-06
+*Build Android (Capacitor) apontando para o bundle React correto e correção do erro "Duplicate resources" no `assembleDebug`*
+
+### [Changed]
+- **`capacitor.config.json` — `webDir: "dist"` → `"src-app/dist"`**: o valor antigo apontava para `dist/` na raiz (build Vite estático de 01/10 que **não contém** a Fase 5/`NewsOverlay`/correções v4.0.8 — verificado por script: `ENTERRADAS=false` no bundle antigo). Agora o APK embute o build real do React (`src-app/dist` = `index-H7L16KK3.js`). `npx cap sync android` executado — `android/app/src/main/assets/public/` atualizado com o bundle novo.
+
+### [Fixed]
+- **`gradlew assembleDebug` falhava com "Duplicate resources" em ~todos os arquivos de `assets/public/`**: o merge de assets listava **o mesmo caminho duas vezes** (chave `public/...` idêntica + mesmo caminho absoluto), mas nenhum `.gradle` do projeto declara `sourceSets`/`srcDirs` duplicado — era **estado incremental stale** de `android/app/build/` de um build abortado anteriormente. `gradlew clean assembleDebug` resolveu (BUILD SUCCESSFUL).
+
+### [Verification]
+- JAVA_HOME da sessão contornado com o JBR do Android Studio (`C:\Program Files\Android\Android Studio\jbr`) — a variável de usuário aponta para `...\Eclipse Adoptium\jdk-21.0.2-hotspot` **inexistente** no disco (pendente de `setx` com aprovação do usuário).
+- `npx cap sync android` OK → assets = `index-H7L16KK3.js` + `index-D9hB-1kn.css` (hash conferido com o `src-app/dist`).
+- `gradlew clean assembleDebug`: **BUILD SUCCESSFUL in 6m 2s** (97 tasks) → `android/app/build/outputs/apk/debug/app-debug.apk` **29,3 MB** (06/10/2026 16:39).
+- Observações: pasta `android/` é gitignored (só `capacitor.config.json` entra no git); `app/build.gradle` **não tem `signingConfig`** — release sai não assinado (debug ok); fluxo completo documentado em `Diretrizes/README.md` (seção "Build do App Android").
+
 ## [v4.0.8-bugfix] - 2026-10-06
 *Correções dos 4 bugs reportados: cronômetro negativo ao iniciar, emblema de perfil ausente na aba Início, contador de treinos/ciclo desatualizado e ciclo exibindo total de dias em vez do total por ficha (system_map.json → version 3.5.18)*
 
