@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "3.5.19",
+  "version": "3.5.20",
   "last_updated": "2026-10-07",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog.",
@@ -385,13 +385,13 @@
       { "file": "src-app/src/features/workout/treinos/", "purpose": "Pasta da Fase 4: TreinosFeature.tsx (raiz #section-treinos — header/busca, abas .t-tab-btn e sub-abas .sub-nav-btn com fadeSwap+flushSync+fadeIn, eventos delegados de imagem e ESC fecha todos os overlays), treinos-store.ts (store da seção com defaults de db.js L43–47), treinos-helpers.ts (sheets/deck DECK_MAX=8/templates/ciclo novo), cards.tsx (grid/coleção/deck com DnD e menus), ExercicioFormModal.tsx, TreinosModals.tsx (Confirm/Image/Aerobico/CRDetails/MaestriaGeral) e CustomizacaoTabs.tsx (personalização: banners/identidade/itens mágicos/emotes/emblemas com toasts literais)." },
       { "file": "src-app/src/core/auth/use-auth.ts", "purpose": "Hook useAuth extraído de auth-context.tsx na Fase 4 (fast-refresh: provider e hook em arquivos separados; AuthContext/AuthContextValue exportados do módulo do provider)." },
       { "file": "src-app/src/core/db/queries.ts", "purpose": "Contrato de dados da Fase 1: loadLocalData(), helpers de derivação do legado (getTodayTreino/determineNextTreino, getStreak, getXp, getCycleStats (contagem POR FICHA do getCycleProgress do dashboard — soma das completedKeys desde currentCycleStartDate com fallback currentFichaWorkouts, independente da flag transitória completed; a Progresso segue por-dia como no legado), todayLabel) e mutações puras de hoje (toggleCheckEntry/toggleSetEntry/selectSheetEntry/applyFichaCompletion)." },
-      { "file": "src-app/src/core/db/bootstrap.ts", "purpose": "Ordem offline-first idempotente: ensureSeed() → migrateLegacyData() → ensureProfileState() → flushQueue() → dispara o evento 'academia:db-ready' (a UI que lê IDB refaz a carga)." },
+      { "file": "src-app/src/core/db/bootstrap.ts", "purpose": "Ordem offline-first idempotente: ensureSeed() → backfillExerciseImages() (restaura imageUrl de exercícios com GIF novo, v4.0.11-lombar-gif) → migrateLegacyData() → ensureProfileState() → flushQueue() → dispara o evento 'academia:db-ready' (a UI que lê IDB refaz a carga)." },
       { "file": "src-app/vite.config.ts", "purpose": "React + Tailwind v4 + vite-plugin-pwa (ícones /assets/icons/icon-192.png e icon-512.png gerados de D.jpg)." }
     ],
     "core_db": [
       "src-app/src/core/db/schema.ts — tipos, LOCAL_USER_ID ('local', unifica os antigos 'default'/'user-local'), LegacyState, Exercise.porLado e ExerciseTag estendido com 'Isolador'/'Peso do Corpo' (variantes do legado) e 'Unilateral'/'Explosão'/'Mobilidade' (chips do form legado, Fase 4).",
       "src-app/src/core/db/idb.ts — Dexie 'academia-v4' (stores v1 + v2 com legacyState + v3 com profileState), helpers localToday() (data local, igual today() do legado), getRecentHistory, upserts, getProfileState/saveProfileState e clearLocalDB (preserva legacyState e exercises).",
-      "src-app/src/core/db/default-data.ts — GERADO de JS/treino/db.js: 66 exercícios com IDs legados (ex-a1…) + DEFAULT_SHEETS A–J. Regenerar com o script de geração quando db.js mudar.",
+      "src-app/src/core/db/default-data.ts — GERADO de JS/treino/db.js: 66 exercícios com IDs legados (ex-a1…) + DEFAULT_SHEETS A–J. Regenerar com o script de geração quando db.js mudar. imageUrl preenchido para ex-extensao-lombar (v4.0.11-lombar-gif); quando um GIF chegar depois do seed, atualizar o default — a backfillExerciseImages() do bootstrap.ts restaura registros antigos com imageUrl null.",
       "src-app/src/core/db/legacy-migrator.ts — lê a chave real do localStorage ('academia_treino'), guarda cópia bruta em legacyState e deriva exercises / workoutSheets / workoutHistory (inclui seriesDone, treinos → completedKeys e anotacoes → notes); marcador localStorage 'academia_v4_migrated'; Fase 2: migrateLegacyObject (extraído), ensureProfileState (deriva profileState da cópia bruta), validateBackup e importLegacyBackup (réplica da importação do legado).",
       "src-app/src/store/today-entry-store.ts — db.historico[today()] (checks, séries, conclusão) com persistência em workoutHistory e guarda de concorrência pending/reloadQueued; propaga 'academia:db-ready'.",
       "src-app/src/hooks/useLocalData.ts — hook que (re)carrega exercises/sheets/history/legacyState no mount e no evento 'academia:db-ready'.",
@@ -399,7 +399,7 @@
       "src-app/src/core/db/sync-queue.ts — fila FIFO de mutações offline → Supabase (flush automático no evento 'online')."
     ],
     "public_assets": [
-      "src-app/public/assets/exerciciosgif/ — 65 GIFs (caminho legado /assets/exerciciosgif/…, tudo em minúsculas por causa do Vercel/Linux). 7 GIFs do seed ainda não existem (Agachamento, Flexao, Panturrilha, Gluteo 3 Apoios, Abducao Solo, Prancha, Leg Press 180): o <img> usa onError → placeholder (paridade com o onerror do legado).",
+      "src-app/public/assets/exerciciosgif/ — 65 GIFs (caminho legado /assets/exerciciosgif/…, tudo em minúsculas por causa do Vercel/Linux), incl. Extensão Lombar.gif (v4.0.11-lombar-gif). Espelhos: Assets/exerciciosgif/, www/Assets/exerciciosgif/ e android/app/src/main/assets/public/assets/exerciciosgif/ (65 arquivos cada). 7 GIFs do seed ainda não existem (Agachamento, Flexao, Panturrilha, Gluteo 3 Apoios, Abducao Solo, Prancha, Leg Press 180): o <img> usa onError → placeholder (paridade com o onerror do legado).",
       "src-app/public/assets/bg/ + src-app/public/assets/images/background/ + src-app/public/assets/icons/ (D.jpg, icon-192.png, icon-512.png).",
       "src-app/public/vendor/ — fonts.css, fonts/ (24), fontawesome.min.css e webfonts/ (6), copiados de www/vendor/ para manter offline-first."
     ],

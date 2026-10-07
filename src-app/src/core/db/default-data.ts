@@ -939,7 +939,7 @@ export const DEFAULT_EXERCISES: Exercise[] = [
     "reps": "20",
     "load": "",
     "rest": 30,
-    "imageUrl": null,
+    "imageUrl": "/assets/exerciciosgif/Extensão Lombar.gif",
     "tags": [
       "Isolador",
       "Máquina"

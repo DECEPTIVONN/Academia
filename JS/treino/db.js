@@ -119,7 +119,7 @@ export const DEFAULT_EXERCISES = [
   { id: 'ex-remada-unilateral', nome: 'Remada Unilateral', grupoMuscular: 'Costas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/REMADA UNILATERAL.gif', tags: ['Isolador', 'Máquina'] },
   { id: 'ex-pull-down', nome: 'Pull Down', grupoMuscular: 'Costas', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/PULL DOWN.gif', tags: ['Multiarticular', 'Máquina'] },
   { id: 'ex-roscott-unilateral', nome: 'Rosca Scott Unilateral', grupoMuscular: 'Bíceps', series: 3, repeticoes: '15', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/ROSCA SCOTT UNILATERAL.gif', tags: ['Isolador', 'Livre'] },
-  { id: 'ex-extensao-lombar', nome: 'Extensão Lombar', grupoMuscular: 'Core', series: 3, repeticoes: '20', carga: '', descanso: 30, imagem: null, tags: ['Isolador', 'Máquina'] },
+  { id: 'ex-extensao-lombar', nome: 'Extensão Lombar', grupoMuscular: 'Core', series: 3, repeticoes: '20', carga: '', descanso: 30, imagem: './Assets/exerciciosgif/Extensão Lombar.gif', tags: ['Isolador', 'Máquina'] },
 ];
 
 export const DEFAULT_FICHAS = {

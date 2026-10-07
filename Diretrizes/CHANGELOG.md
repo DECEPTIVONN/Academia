@@ -21,6 +21,25 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.0.11-lombar-gif] - 2026-10-07
+*GIF entregue pelo usuário para o exercício "Extensão Lombar" e conectado em todas as camadas: `ex-extensao-lombar` de `imagem: null` para o arquivo real no legado (raiz + espelho `www/`) e no seed React, com backfill idempotente para instalações existentes (system_map.json → version 3.5.20)*
+
+### [Added]
+- **`Assets/exerciciosgif/Extensão Lombar.gif` (novo, 1.515.678 bytes)**: arquivo entregue com o nome do exercício (mesma convenção dos demais GIFs). Espelhado em `www/Assets/exerciciosgif/` (regra do `Diretrizes/README.md` §"Espelhar as edições em `www/`") — 4 cópias conferidas por SHA-256 idêntico (`86B7EFA1…`): raiz, `www/`, `src-app/public/assets/exerciciosgif/` e `android/app/src/main/assets/public/assets/exerciciosgif/` (os dois últimos já continham o arquivo; os 4 diretórios estão com 65 arquivos).
+- **`src-app/src/core/db/bootstrap.ts` — nova `backfillExerciseImages()`**: preenche `imageUrl` de exercícios pré-cadastrados cujo GIF só foi entregue depois do seed original — roda entre `ensureSeed()` e `migrateLegacyData()`, só toca em registros com `imageUrl` nulo e é idempotente. Sem ela, instalações existentes (IDB `academia-v4` já populado, incl. usuários migrados do legado) continuariam com `imageUrl: null`, pois o seed só popula tabelas vazias. Espelha a sincronização automática de imagens que o `loadDB()` legado já fazia (`JS/treino/db.js` L143–151: `ex.imagem !== defaultEx.imagem` → corrige).
+
+### [Changed]
+- **`JS/treino/db.js` L122 + espelho `www/JS/treino/db.js` (hashes idênticos)**: `ex-extensao-lombar` — `imagem: null` → `'./Assets/exerciciosgif/Extensão Lombar.gif'`. Instalações legadas existentes são corrigidas automaticamente no próximo `loadDB()` pela regra de sync de imagens (L148). Fecha o pendente da entrada `v3.5.6` ("GIF ainda não entregue — ao receber o arquivo, apontar `imagem` para ele").
+- **`src-app/src/core/db/default-data.ts`**: `ex-extensao-lombar.imageUrl`: `null` → `"/assets/exerciciosgif/Extensão Lombar.gif"` (convenção das demais entradas — caminho em minúsculas por causa do Vercel/Linux).
+- **`Diretrizes/system_map.json`**: `version` 3.5.19 → **3.5.20**; `core_db` (linha do `default-data.ts` — imagem do `ex-extensao-lombar` + nota do backfill) e `public_assets` (contagem de GIFs) atualizados.
+- **`context.md`**: cabeçalho/estado (entrada `v4.0.11-lombar-gif`, system_map 3.5.20, HEAD `6a1d399` — paridade news commitada pelo usuário entre sessões, 7 paths de hoje pendentes), nova subseção na "O que foi feito" com os 5 passos do GIF, regras obrigatórias (versão vigente + aviso contra `JSON.stringify` no `system_map.json`) e próximos passos (lista de commit atualizada).
+
+### [Verification]
+- `npx tsc -b` exit 0; `npx oxlint src` exit 0 (**zero warnings**); `npm run build` OK — bundle `dist/assets/index-DpYmpvWT.js` contém o marcador `/assets/exerciciosgif/Extensão Lombar.gif` (script Node UTF-8) e o gif foi copiado para `dist/assets/exerciciosgif/`.
+- HTTP (preview `:4173` + servidor de arquivos `:8099`): gif **200 / 1.515.678 bytes** em `/assets/exerciciosgif/…` (React), `/Assets/exerciciosgif/…` (raiz legada) e `/www/Assets/exerciciosgif/…` (espelho); `JS/treino/db.js` servido nas duas raizes contém o marcador (200); `www/index.html` 200.
+- CDP (Chrome headless, script `%TEMP%\opencode\verify_lombar.js`): **5/5 PASS** — seed novo grava a URL no IDB; registro antigo forçado a `null` persiste; após reload o backfill restaura a URL; GIF 200:1515678 no preview.
+- Sintaxe dos dois `db.js` validada com `node --check` (cópia `.mjs` em `%TEMP%`); espelhos raiz/`www` com hash idêntico.
+
 ## [v4.0.10-news-parity] - 2026-10-07
 *Paridade visual do overlay de Notícias com o legado: correção da cascata Tailwind v4 vs CSS legado não camadeado (bloco `revert-layer`), port do footer legado para os 3 containers, tokens de tema corrigidos e fechamento da view de detalhe — lista e detalhe medidas com **zero diffs visuais** (system_map.json → version 3.5.19)*
 

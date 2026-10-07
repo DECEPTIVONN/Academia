@@ -2,10 +2,13 @@
  * bootstrap.ts — Inicialização offline-first do banco local
  *
  * Ordem (uma única vez por carregamento):
- *   1. ensureSeed()       → popula exercises/sheets se o banco estiver vazio
- *   2. migrateLegacyData()→ importa o localStorage da v3.5.7 (`academia_treino`)
- *                           por cima do seed, preservando os dados do usuário
- *   3. flushQueue()       → tenta enviar mutações pendentes do Supabase
+ *   1. ensureSeed()            → popula exercises/sheets se o banco estiver vazio
+ *   2. backfillExerciseImages()→ preenche imageUrl de exercícios cujo GIF chegou
+ *                                depois do seed original (idempotente; espelha a
+ *                                sincronização de imagens do loadDB() legado)
+ *   3. migrateLegacyData()     → importa o localStorage da v3.5.7 (`academia_treino`)
+ *                                 por cima do seed, preservando os dados do usuário
+ *   4. flushQueue()            → tenta enviar mutações pendentes do Supabase
  *
  * Idempotente e tolerante a falhas: um erro aqui nunca impede o app de renderizar
  * (seeds e migração guardam as próprias marcas; reexecuções são seguras).
@@ -40,13 +43,30 @@ async function ensureSeed(): Promise<void> {
   }
 }
 
-/** Executa seed → migração → flush. Seguro de chamar várias vezes. */
+/**
+ * Preenche `imageUrl` de exercícios pré-cadastrados cujo GIF só foi entregue
+ * depois do seed original (ex.: `ex-extensao-lombar`). Idempotente — só toca em
+ * registros com `imageUrl` nulo; espelha a sincronização automática de imagens
+ * do `loadDB()` legado (`JS/treino/db.js`).
+ */
+async function backfillExerciseImages(): Promise<void> {
+  const withImage = DEFAULT_EXERCISES.filter((ex) => ex.imageUrl);
+  for (const def of withImage) {
+    const existing = await idb.exercises.get(def.id);
+    if (existing && !existing.imageUrl) {
+      await idb.exercises.update(def.id, { imageUrl: def.imageUrl });
+    }
+  }
+}
+
+/** Executa seed → backfill → migração → flush. Seguro de chamar várias vezes. */
 export async function bootstrap(): Promise<void> {
   if (started) return;
   started = true;
 
   try {
     await ensureSeed();
+    await backfillExerciseImages();
   } catch (err) {
     console.warn('[bootstrap] falha no seed:', err);
   }

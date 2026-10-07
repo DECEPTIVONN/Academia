@@ -2,10 +2,10 @@
 
 > **Arquivo de contexto entre sessões.** Ler junto com `Diretrizes/CHANGELOG.md`
 > (entradas `v4.0.6-phase4`, `v4.0.7-phase5`, `v4.0.7-phase5-navfix`, `v4.0.8-bugfix`,
-> `v4.0.9-android` e `v4.0.10-news-parity`) e `Diretrizes/system_map.json`
-> (**version 3.5.19** — primeira leitura obrigatória de todo agente).
-> Atualizado ao fim da sessão de 2026-10-07 (paridade visual total do news-overlay:
-> cascata `revert-layer`, port do footer e fechamento da view de detalhe).
+> `v4.0.9-android`, `v4.0.10-news-parity` e `v4.0.11-lombar-gif`) e `Diretrizes/system_map.json`
+> (**version 3.5.20** — primeira leitura obrigatória de todo agente).
+> Atualizado ao fim da sessão de 2026-10-07 (paridade visual total do news-overlay +
+> GIF da Extensão Lombar conectado em todas as camadas).
 
 ---
 
@@ -22,17 +22,27 @@
   pins), `FOOTER_HTML` portado para os 3 containers, tokens corrigidos e a
   **view de detalhe medida sem diffs visuais** (lista = 6 diffs e detalhe = 15,
   todas não-visuais; screenshots e band stats ±1 idênticos).
+- **GIF `ex-extensao-lombar` conectado (`v4.0.11-lombar-gif`, 2026-10-07)**:
+  `Assets/exerciciosgif/Extensão Lombar.gif` (entregue pelo usuário, já
+  commitado em `ba7495e` na raiz + `src-app/public/`) espelhado em
+  `www/Assets/exerciciosgif/`; `imagem`/`imageUrl` apontando para o arquivo em
+  `JS/treino/db.js` + espelho `www/` e no seed React, com
+  **`backfillExerciseImages()`** no `bootstrap.ts` restaurando instalações
+  existentes (IDB com `imageUrl: null`).
 - **Verificação final verde**: `npx tsc -b` exit 0 · `npx oxlint src` exit 0
-  (**ZERO warnings**) · `npm run build` OK · `system_map.json` validado
-  (**3.5.19**, sem BOM) · medições CDP: lista 6 diffs não-visuais / detalhe 15
-  não-visuais · screenshots idênticos (band stats ±1).
-- **GIT**: HEAD = `b2e5ecb` (Fases 0–5 + v4.0.8 commitados). **NÃO commitado**
-  (só com pedido explícito): `NewsOverlay.tsx`, `news-overlay.css`,
-  `tailwind-legacy-theme.css` (paridade news + tokens), `capacitor.config.json`
-  + entrada `v4.0.9-android` do CHANGELOG (sessão Android) e docs
-  (`CHANGELOG.md`, `system_map.json`, `context.md`).
-- Servidores desta sessão: preview **:4173**, `serve_www.js` **:8099**, Chrome CDP
-  **:9222** — encerrar ao fim
+  (**ZERO warnings**) · `npm run build` OK (`index-DpYmpvWT.js`) ·
+  `system_map.json` validado (**3.5.20**, sem BOM, diff só 3 linhas) ·
+  CDP `verify_lombar.js` **5/5 PASS** · legado servido com marcador + gif
+  200 em `:8099`/`:4173`.
+- **GIT**: HEAD = `6a1d399` (usuário commitou a paridade `v4.0.10-news-parity`
+  entre sessões — news-overlay.css/tokens/NewsOverlay docs). **NÃO commitado**
+  (7 paths, só com pedido explícito): `JS/treino/db.js` + espelho `www/`,
+  `src-app/src/core/db/{default-data.ts,bootstrap.ts}`, `Diretrizes/CHANGELOG.md`,
+  `Diretrizes/system_map.json`, `context.md` e o gif novo untracked
+  `www/Assets/exerciciosgif/Extensão Lombar.gif`.
+- Servidores desta sessão: preview **:4173**, `serve_www.js` **:8099** (serve a
+  **raiz** do repo — legado fica em `/www/index.html`), Chrome CDP **:9222** —
+  encerrar ao fim
   (`Get-NetTCPConnection -LocalPort 4173 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`,
   idem 8099/9222).
 
@@ -40,7 +50,24 @@
 
 ## 2. O que foi feito
 
-### Paridade visual do news-overlay — `v4.0.10-news-parity` (esta sessão + continuação da anterior; detalhe na entrada do CHANGELOG)
+### GIF da Extensão Lombar conectado — `v4.0.11-lombar-gif` (esta sessão; detalhe na entrada do CHANGELOG)
+O usuário entregou `Assets/exerciciosgif/Extensão Lombar.gif` (1.515.678 bytes,
+já commitado na raiz e no `src-app/public/` pelo commit `ba7495e`), fechando o
+pendente da entrada `v3.5.6` ("GIF ainda não entregue"). Feito:
+1. **Espelho `www/Assets/exerciciosgif/`** (regra do README — o app legado roda
+   de `www/`); 4 cópias com SHA-256 idêntico (raiz, `www/`, `public`, `android`).
+2. **`JS/treino/db.js` L122 + espelho `www/`** (hashes idênticos):
+   `imagem: null` → `'./Assets/exerciciosgif/Extensão Lombar.gif'` — instalações
+   legadas existentes corrigem sozinhas no `loadDB()` (regra L148 de sync).
+3. **`default-data.ts`**: `imageUrl: null` → `"/assets/exerciciosgif/Extensão Lombar.gif"`.
+4. **`bootstrap.ts` → `backfillExerciseImages()`** (novo): restaura `imageUrl`
+   de registros antigos no IDB (o seed só popula tabela vazia); idempotente,
+   roda entre `ensureSeed()` e `migrateLegacyData()`.
+5. **Verificação**: CDP `verify_lombar.js` 5/5 PASS (seed, backfill após null
+   forçado, gif 200:1515678) · gif 200 nos 3 servidores · tsc/oxlint/build ·
+   sintaxe dos `db.js` com `node --check`.
+
+### Paridade visual do news-overlay — `v4.0.10-news-parity` (sessão anterior, commitada em `6a1d399`; detalhe na entrada do CHANGELOG)
 **Causa-raiz**: no legado o `vendor/tailwind.min.css` (v3.4, **não camadeado**)
 carrega depois de `main.css` → utilities vencem; no React (v4) as utilities
 ficam em `@layer utilities` e perdem para o CSS legado espelhado não camadeado.
@@ -158,6 +185,7 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 | `features/dashboard/DashboardFeature.tsx` | `onOpenFicha(letter: SheetKey)`, `#dashBtnNoticias` → `<NewsOverlay/>` (montado junto ao `<MissionsOverlay/>`), `#dashBtnMissoes` inalterado; `#dashAvatar` renderiza o emblema selecionado (v4.0.8). |
 | `features/workout/FichaFeature.tsx` | props `onShowActiveWorkout` → `onRequestEncerrar`; `handleStartClick`: `!isActive` → `onStartWorkout`, senão `onRequestEncerrar()`; cronômetro sincroniza `now` ao ativar + clamp ≥ 0 (v4.0.8). |
 | `core/db/queries.ts` | `getCycleStats` = soma **por ficha** desde `currentCycleStartDate` (paridade `getCycleProgress`; Progresso usa sua própria contagem por-dia); `selectSheetEntry`/`applyFichaCompletion` (v4.0.8). |
+| `core/db/bootstrap.ts` + `default-data.ts` | `ensureSeed()` → **`backfillExerciseImages()`** (novo, v4.0.11 — restaura `imageUrl` de GIFs entregues após o seed; idempotente, só null → default) → `migrateLegacyData()` → flush; `default-data.ts` com `ex-extensao-lombar.imageUrl` preenchido (regenerar do `JS/treino/db.js` quando ele mudar). |
 | `components/BottomNav.tsx` | Só classes legadas (`.bottom-nav/.bnav-btn/.bnav-icon/.bnav-label/.bnav-active-dot`), `data-section`, ids `bnavProgresso`/`bnavTreinos`/`bnavDashboard`/`bnavSocial`/`bnavLoja`. Fase 5 (reescrito). |
 | `features/workout/treinos/*` (8 arquivos) | Fase 4 — ver tabela completa na entrada `v4.0.6-phase4`. |
 
@@ -193,9 +221,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 1. **CHANGELOG imediatamente** após QUALQUER alteração (`Diretrizes/CHANGELOG.md`):
    `## [vX.X.X] - YYYY-MM-DD` no topo, tags `[Added]/[Changed]/[Fixed]/[Removed]`,
-   citar arquivos; versão vigente = `v4.0.10-news-parity` (+ sufixo de rótulo p/ docs, ex. `-docs`).
+   citar arquivos; versão vigente = `v4.0.11-lombar-gif` (+ sufixo de rótulo p/ docs, ex. `-docs`).
 2. **`system_map.json`**: incrementar `version` sempre que estrutura/documentação indexada mudar
-   (hoje: **3.5.19**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
+   (hoje: **3.5.20**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
    `node $env:TEMP\opencode\checkjson.js "C:\Nova pasta\htdocs\Academia\Diretrizes\system_map.json"`
    (script de uma linha: `JSON.parse(fs.readFileSync(process.argv[2],'utf8'))` + imprime a versão;
    recriar se o %TEMP% tiver sido limpo).
@@ -218,18 +246,21 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
    **mata o build** (usar `*> log` + `-Tail`); **ler arquivos com a ferramenta `read`** antes de
    editar (o console mojibaka o texto e o `oldString` falha); payloads gigantes de `write` quebram
    (particionar com sentinela + `edit`).
-5. **Fonte de verdade**: `src-app/dist/assets/index-*.js` (git tem `src-app` desde `5663cad`,
-   mas a Fase 5 ainda não foi commitada).
+5. **Fonte de verdade**: `src-app/dist/assets/index-*.js` (git tem `src-app` desde `5663cad`).
+   **CUIDADO com patches de texto em `system_map.json`**: usar substituição literal
+   (como `patch_sysmap.js`), **NUNCA** `JSON.stringify(m, null, 2)` — isso reescreve
+   os arrays inline do formato original e infla o diff em ~300 linhas (aconteceu hoje;
+   reconstruído a partir do `git show HEAD:` + reps textuais via `rebuild_sysmap.js`).
 
 ---
 
 ## 6. Próximos passos (ordem sugerida)
 
-1. **Commit** (só quando o usuário pedir): paridade `v4.0.10-news-parity`
-   (`NewsOverlay.tsx`, `news-overlay.css`, `tailwind-legacy-theme.css`) +
-   pendências Android (`capacitor.config.json` + entrada `v4.0.9-android`) +
+1. **Commit** (só quando o usuário pedir): `v4.0.11-lombar-gif` —
+   `JS/treino/db.js` + espelho `www/`, `src-app/src/core/db/{default-data.ts,bootstrap.ts}`,
+   gif untracked `www/Assets/exerciciosgif/Extensão Lombar.gif` +
    docs (CHANGELOG/system_map/context.md) — revisar `git status`, `git diff`
-   e `git log --oneline -10`.
+   e `git log --oneline -10` (7 paths).
 2. **Confirmar com o usuário a interpretação do item 4** ("total de treinos
    geral" → resolvemos como dias vs. soma por ficha no card `#dashCycleVal` /
    pílula `#dashEmblemsValue`); se ele quis OUTRO elemento, investigar.
