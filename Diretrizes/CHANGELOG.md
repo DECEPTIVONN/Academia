@@ -21,6 +21,31 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.0.14-social-placeholder] - 2026-10-08
+*Aba SOCIAL preenchida com o conteúdo de `Ligas.html` como placeholder — 3 sub-abas (Liga/Amigos/Guilda), Caminho das Ligas, ranking com filtros, grid de amigos, guilda com chat/membros/doações/guerra e 3 modais — tipografia Rajdhani/tokens do app, superfícies glass translúcidas (fundo dinâmico da arena continua visível) e ícones SVG stroke no lugar dos emojis (system_map.json → version 3.5.24)*
+
+### [Added]
+- **`src-app/src/features/social/social.css` (novo)**: port visual de `Ligas.html` adaptado ao app — Rajdhani (`--font-primary`), títulos em caixa alta com letter-spacing, **somente design tokens + derivados locais `--soc-*`** (nenhum hex solto), superfícies **glass translúcidas** (`rgba` + `backdrop-filter`) para o `cr-bg-container` permanecer visível atrás da aba (o mockup usava body/card opaco), grid `1fr 340px` colapsando em 1 coluna ≤820px, ajustes mobile ≤480px, dropdown `.soc-select` no padrão premium exigido pelo `Diretrizes/README.md` (seta SVG data-uri) e classes `.soc-modal*` reaproveitando o `modal-overlay` legado (+ keyframe `socFadeIn`).
+- **`src-app/src/features/social/SocialFeature.tsx`**: componente da aba com header + stats, 3 sub-abas, aba **Liga** (banner "Temporada 14: Forja de Titãs" + Caminho das Ligas com resgates + ranking filtrável Global/Brasil/Amigos), aba **Amigos** (grid com status, desafiar/assistir/perfil) e aba **Guilda** (4 pílulas: bate-papo local com envio, membros, doações com contador, guerra semanal com barras), 3 modais (duelo, adicionar amigo, perfil) com ESC/backdrop-to-close, toasts `showToast` e estado **local sem persistência** — placeholder com ações reais disparando "funcionalidade em breve!". Raiz `.treino-container.soc-root` (escopo dos tokens locais, inclusive para os modais irmãos).
+- **`src-app/src/features/social/social-data.ts` + `social-icons.tsx`** (nesta sessão): mocks estáticos (leaderboard, amigos, guilda, doações, guerra, passos) e biblioteca de ícones SVG stroke (`viewBox 0 0 24 24`, `stroke="currentColor"`, `stroke-width 2`, round caps) — substituem todos os emojis do mockup (regra do `Diretrizes/Ícones.md`).
+
+### [Changed]
+- **`src-app/src/features/social/SocialFeature.tsx` → modais via `createPortal(…, document.body)`**: os 3 modais da aba saíram da árvore do `.section-strip` (que tem `transform: translateX()` na navegação de seções e, por isso, vira o *containing block* do `position:fixed` do `.modal-overlay`) — medido antes do fix: modal com `left: 855 px` numa viewport de 430 px (totalmente fora da tela). Com o portal eles ficam fixos na viewport como no legado (retângulo final medido 16..414 × 347..586 em 430×932, visível e centralizado).
+- **`src-app/src/App.tsx`**: branch `activeSection === 'social'` deixou de renderizar o placeholder `.section-coming-soon` e agora monta `<SocialFeature />` dentro de `<div className="section-slide" data-section="social">` (scroll interno + `padding-bottom:260px` valem como nas outras seções); o branch da **Loja** foi separado e continua 1:1 com `treino.html` L197–207; novo import `SocialFeature`.
+- **`Diretrizes/system_map.json`**: `version` 3.5.23 → **3.5.24**; `last_updated` → 2026-10-08 (feature Social + arquivos `features/social/*`).
+
+### Notas
+- **PLACEHOLDER consciente**: convites/ranking global/chat online/doações persistentes ficam para fase futura (pedido do usuário); por ora o comportamento roda em estado React local.
+- `textos/vocabulário` renomeados do "Tetris Royale" para o app ("Academia Royale", guilda "Academia Masters BR").
+
+## [v4.0.13-typography-docs] - 2026-10-07
+*Regra nova para agentes: informar estimativa de prazo e progresso em tarefas demoradas (feedback do usuário sobre a duração da sessão de tipografia) (system_map.json → version 3.5.23)*
+
+### [Added]
+- **`Diretrizes/README.md` — nova regra 7 no "🤖 Guia para Agentes de IA"**: quando a tarefa puder demorar (diagnóstico de bug difícil, migração multi-arquivo, verificação visual exaustiva), o agente **não deve executar em silêncio até o fim** — deve informar ao usuário, logo no início, uma estimativa de conclusão e quantos passos restam (ex.: `≈4 passos: pins de CSS → medição CDP → regressões → documentação`) e atualizar o progresso a cada passo concluído. Motivo: o usuário apontou que a tarefa `v4.0.13-typography` demorou mais que o esperado sem retorno de progresso.
+- **`www/Diretrizes/README.md`**: espelho idêntico da alteração acima (regra de espelhar `Diretrizes/` em `www/`).
+- **`Diretrizes/system_map.json`**: `version` 3.5.22 → **3.5.23**; `documentation.files` do `Diretrizes/README.md` cita a regra 7.
+
 ## [v4.0.13-typography] - 2026-10-07
 *Paridade de tipografia, cascata e layout raiz React vs legado: pins da cascata do Play CDN v3 (revert-layer), scroll interno do `.section-slide` restaurado, wrappers `.section-viewport`/`.section-strip`/`.section-slide` 1:1, cor herdada do body, tokens de card/fonte, thumb de scrollbar em gradiente, 7 pins de `backdrop-filter` e — grande achado da sessão — reparo do raster stale de 1–2 device px dos `.p-card` na troca de seção (Progresso 6239 → 65 diffs) (system_map.json → version 3.5.22)*
 

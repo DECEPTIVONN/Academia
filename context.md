@@ -1,17 +1,18 @@
-# context.md — Continuidade de sessão (2026-10-07)
+# context.md — Continuidade de sessão (2026-10-08)
 
 > **Arquivo de contexto entre sessões.** Ler junto com `Diretrizes/CHANGELOG.md`
 > (entradas `v4.0.6-phase4`, `v4.0.7-phase5`, `v4.0.7-phase5-navfix`, `v4.0.8-bugfix`,
-> `v4.0.9-android`, `v4.0.10-news-parity`, `v4.0.11-lombar-gif`, `v4.0.12-splash` e
-> `v4.0.13-typography`) e `Diretrizes/system_map.json`
-> (**version 3.5.22** — primeira leitura obrigatória de todo agente).
-> Atualizado ao fim da sessão de 2026-10-07 (paridade de tipografia/cascata +
-> layout raiz, scroll interno do slide restaurado, raster stale dos `.p-card`
-> reparado na troca de seção — Progresso 6239 → 65 diffs).
+> `v4.0.9-android`, `v4.0.10-news-parity`, `v4.0.11-lombar-gif`, `v4.0.12-splash`,
+> `v4.0.13-typography`, `v4.0.13-typography-docs` e `v4.0.14-social-placeholder`) e
+> `Diretrizes/system_map.json` (**version 3.5.24** — primeira leitura obrigatória de
+> todo agente).
+> Atualizado ao fim da sessão de 2026-10-08 (aba **Social** preenchida com o conteúdo
+> de `Ligas.html` como placeholder — `src-app/src/features/social/` montado no
+> `App.tsx`; docs `v4.0.14-social-placeholder`).
 
 ---
 
-## 1. Estado atual (fim da sessão 2026-10-07)
+## 1. Estado atual (fim da sessão 2026-10-08)
 
 - **Fases 0–5 da migração React v4 CONCLUÍDAS**:
   0 fundação → 1 visual (Dashboard/Ficha/Progresso) → 2 Perfil/temas →
@@ -51,30 +52,80 @@
   toggle de `-webkit-font-smoothing` em duas tasks após cada troca de seção
   zera o raster stale de 1–2 device px dos `.p-card` na primeira pintura
   pós-boot (Progresso **6239 → 65** diffs, bandas 0/0/0).
-- **Verificação final verde**: `npx tsc -b` exit 0 · `npx oxlint src` exit 0
-  (**ZERO warnings**) · `npm run build` OK (`dist/assets/index-CGtinHH9.css` +
-  `index-vvx8dXFq.js`) · `system_map.json` validado (**3.5.22**, sem BOM) ·
-  `probe_text` **0 diffs** + `measure_fonts` **0/0** (409 pareados) ·
-  CDP `verify_fixes.js` **14/14 PASS** + `verify_splash.js` **10/10 PASS** +
-  `verify_click_after_splash.js` **6/6 PASS** · screenshots dashboard 1717 /
-  progresso 65 (só GIF).
-- **GIT**: HEAD = `6a1d399` (usuário commitou a paridade `v4.0.10-news-parity`
-  entre sessões). **NÃO commitado** (só com pedido explícito): 7 arquivos
-  modificados desta sessão — `src-app/src/App.tsx`, `src-app/src/styles/{globals.css,design-tokens.css,tailwind-legacy-theme.css}`,
+- **Aba SOCIAL preenchida (`v4.0.14-social-placeholder`, 2026-10-08)**: novo
+  `src-app/src/features/social/` (`SocialFeature.tsx` + `social.css` +
+  `social-data.ts` + `social-icons.tsx`) portando o conteúdo de `Ligas.html`
+  como **placeholder** — 3 sub-abas Liga/Amigos/Guilda, Caminho das Ligas com
+  resgates, ranking filtrável, grid de amigos, guilda (chat local/membros/
+  doações/guerra) e 3 modais — com tipografia/tokens do app, superfícies glass
+  translúcidas (o fundo dinâmico da arena segue visível) e ícones SVG stroke no
+  lugar dos emojis; montado no `App.tsx` no branch `social` (o `.section-coming-soon`
+  da Loja foi separado e segue 1:1).
+- **Verificação desta sessão (FINAL)**: `npx tsc -b` exit 0 · `npx oxlint src`
+  exit 0 (ZERO warnings) · `npm run build` OK (`dist/assets/index-*.css` +
+  `index-*.js`, com as strings sociais no bundle) · `system_map.json` validado
+  (**3.5.24**, sem BOM) · checagem CDP no preview (perfil Chrome limpo):
+  `shot_social.js`/`probe_modal.js`/`probe_boot.js` — 3 sub-abas montam
+  (5 passos/5 ranks; 5 amigos; 4 pílulas da guilda + 3 msgs), grid 1 col
+  `382px` no mobile e `872px 340px` no desktop (≤820px colapsa), header
+  `rgba(10,5,20,.75)` + `blur(16px)`, fonte Rajdhani, `#cr-dynamic-bg` visível
+  atrás, slide com `overflow-y:auto`, ESC fecha modal, **0 erros de JS** e
+  splash some em 1,5 s (db-ready 547 ms). **Bug encontrado e corrigido no
+  fim**: modais fora da tela (`left:855` em 430 px) → `createPortal` no
+  `document.body` (detalhe na entrada do CHANGELOG). Atenção: o `sw.js` do
+  preview acusa erro de MIME (fallback do vite preview) — pré-existente,
+  não relacionado à aba Social.
+- **Verificação da sessão anterior (v4.0.13) — segue válida**: `probe_text`
+  **0 diffs** + `measure_fonts` **0/0** · CDP `verify_fixes.js` **14/14 PASS** +
+  `verify_splash.js` **10/10 PASS** + `verify_click_after_splash.js` **6/6 PASS** ·
+  screenshots dashboard 1717 / progresso 65 (só GIF).
+- **GIT**: HEAD = `6a1d399`. **NÃO commitado** (só com pedido explícito):
+  7 arquivos da sessão anterior — `src-app/src/App.tsx`,
+  `src-app/src/styles/{globals.css,design-tokens.css,tailwind-legacy-theme.css}`,
   `src-app/src/main.tsx`, `src-app/src/features/dashboard/DashboardFeature.tsx`,
-  `src-app/index.html` — mais `Diretrizes/CHANGELOG.md`,
+  `src-app/index.html` — **mais os 4 novos da aba Social**
+  (`src-app/src/features/social/{SocialFeature.tsx,social.css,social-data.ts,social-icons.tsx}`,
+  App.tsx modificado de novo), `Diretrizes/CHANGELOG.md`,
   `Diretrizes/system_map.json`, `context.md`; pendentes das sessões anteriores:
   `JS/treino/db.js` + espelho `www/`, `src-app/src/core/db/{default-data.ts,bootstrap.ts}`
   e gif untracked `www/Assets/exerciciosgif/Extensão Lombar.gif`.
-- Servidores desta sessão: preview **:4173**, `serve_www.js` **:8099** (serve a
-  **raiz** do repo — legado fica em `/www/index.html`), Chrome CDP **:9222** —
-  encerrar ao fim
+- Servidores desta sessão: preview **:4173** e Chrome CDP **:9222** (se usados
+  para screenshot) — encerrar ao fim
   (`Get-NetTCPConnection -LocalPort 4173 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`,
-  idem 8099/9222).
+  idem 9222).
 
 ---
 
 ## 2. O que foi feito
+
+### Aba Social (placeholder de `Ligas.html`) — `v4.0.14-social-placeholder` (esta sessão; detalhe na entrada do CHANGELOG)
+1. **Novo `src-app/src/features/social/`** (4 arquivos): `social-data.ts`
+   (mocks: leaderboard 3 filtros, amigos, membros da guilda, doações, guerra,
+   passos do Caminho, `PLAYER_STATS`/`PLAYER_TAG`), `social-icons.tsx`
+   (SVG stroke `24/2/round`, sem emojis — regra do `Diretrizes/Ícones.md`),
+   `SocialFeature.tsx` (header+stats, 3 sub-abas, banner "Temporada 14",
+   Caminho das Ligas com resgates, ranking filtrável, grid de amigos, guilda
+   com 4 pílulas — chat local com envio/auto-scroll, membros, doações com
+   contador, guerra com barras —, 3 modais `.modal-overlay` com ESC/backdrop,
+   toasts `showToast`, tudo em estado local) e `social.css`.
+2. **`social.css`**: só tokens + derivados locais `--soc-*`; superfícies
+   **glass translúcidas** (`rgba(10,5,20,.55/.75)` + `backdrop-filter`) para o
+   fundo dinâmico da arena continuar visível (o mockup era opaco); Rajdhani +
+   títulos uppercase com letter-spacing; grid `1fr 340px` → 1 col ≤820px;
+   `.soc-select` no padrão premium do `Diretrizes/README.md`; modais reusam
+   `modal-overlay`/`slideUp` legados. Decisão: tab bar própria `soc-tabs` (mais
+   fiel ao mockup) em vez das `.treino-tabs-section` do app.
+3. **Integração no `App.tsx`**: branch `social` separado de `loja` —
+   `<SocialFeature/>` dentro de `.section-slide[data-section=social]`
+   (raiz `.treino-container.soc-root` dá escopo aos `--soc-*`, inclusive para
+   os modais irmãos); Loja continua `.section-coming-soon` 1:1.
+   **Modais via `createPortal(document.body)`** (bug medido e corrigido no
+   fim: o `transform` do `.section-strip` fazia do `.modal-overlay` um filho
+   fixo relativo à fita → modal com `left:855` numa tela de 430 px).
+4. **Divergências conscientes**: PLACEHOLDER sem persistência (ações reais
+   → toast "funcionalidade em breve!"); vocabulário do Tetris Royale trocado
+   ("Academia Royale", "Academia Masters BR"); emojis → avatares de iniciais
+   (`.soc-avatar`) + SVG.
 
 ### Paridade de tipografia/cascata + raster stale — `v4.0.13-typography` (esta sessão; detalhe na entrada do CHANGELOG)
 1. **Pins da cascata do Play CDN v3 em `globals.css`**: `body{line-height:inherit}`,
@@ -265,13 +316,14 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 |---|---|
 | `src-app/index.html` | Shell + **splash `#splashScreen`** (port `treino.html` L102–118) com script inline: banner/nome do `academia_treino`, remoção imediata com treino ativo, saída em `academia:db-ready` (100 ms/fill/400 ms/`--hidden`). v4.0.12. |
 | `features/news/NewsOverlay.tsx` + `news-overlay.css` | Overlay `#news-overlay`: 3 abas `noticias`/`atualizacoes`/`guias` (seta `tab-arrow`, `bg-[#8b5cf6]`, `drop-shadow`), `.tab-content`/`.active`, 4 notícias (1ª com rótulo "Notícias" + borda) e 7 atualizações, `MOSTRAR MAIS` (= remoção de `.hidden-news`/`.hidden-updates`), detail views `#news-detail-view`/`#update-detail-view` (`hidden-view`/`active`, slide 300 ms), paginação com fade 200 ms (**índice avança no clique, DOM só após o timeout** — `updateDetailContent`), conteúdo via `dangerouslySetInnerHTML`, **`FOOTER_HTML` nos 3 containers**, lock de `body.overflow`; bloco `v4.0.10-news-parity` no CSS. Fase 5 + paridade v4.0.10. |
-| `App.tsx` | `handleOpenFicha(letter)` (timer + treino do dia, agora via `selectSheetEntry`), `handleStartWorkout` (toast, sem fechar ficha), `handleRequestEncerrar` → `#modalEncerrarTreino`, placeholders Social/Loja `.section-coming-soon`, `ActiveWorkoutModal` removido, shell `h-screen` com wrappers `.section-viewport`/`.section-strip`/`.section-slide` 1:1 + `repairSectionRaster()` após cada `fadeSwap` (v4.0.13); seções/overlays/swipe das fases anteriores. |
+| `App.tsx` | `handleOpenFicha(letter)` (timer + treino do dia, agora via `selectSheetEntry`), `handleStartWorkout` (toast, sem fechar ficha), `handleRequestEncerrar` → `#modalEncerrarTreino`, **branch social monta `<SocialFeature/>`** e Loja segue `.section-coming-soon` (v4.0.14), `ActiveWorkoutModal` removido, shell `h-screen` com wrappers `.section-viewport`/`.section-strip`/`.section-slide` 1:1 + `repairSectionRaster()` após cada `fadeSwap` (v4.0.13); seções/overlays/swipe das fases anteriores. |
 | `src-app/src/styles/globals.css` | Pins da cascata v3 (`revert-layer`/line-heights/`* margin/padding`), preflight `border-color:#e5e7eb`, 7 pins `backdrop-filter`, thumb gradiente, scroll html/body `overflow:hidden`, `.cr-bg-container{z-index:0}`, `color:#ffffff`, rollback navbar `6px 4px` (v4.0.13 + v4.0.7-phase5-navfix). |
 | `features/dashboard/DashboardFeature.tsx` | `onOpenFicha(letter: SheetKey)`, `#dashBtnNoticias` → `<NewsOverlay/>` (montado junto ao `<MissionsOverlay/>`), `#dashBtnMissoes` inalterado; `#dashAvatar` renderiza o emblema selecionado (v4.0.8). |
 | `features/workout/FichaFeature.tsx` | props `onShowActiveWorkout` → `onRequestEncerrar`; `handleStartClick`: `!isActive` → `onStartWorkout`, senão `onRequestEncerrar()`; cronômetro sincroniza `now` ao ativar + clamp ≥ 0 (v4.0.8). |
 | `core/db/queries.ts` | `getCycleStats` = soma **por ficha** desde `currentCycleStartDate` (paridade `getCycleProgress`; Progresso usa sua própria contagem por-dia); `selectSheetEntry`/`applyFichaCompletion` (v4.0.8). |
 | `core/db/bootstrap.ts` + `default-data.ts` | `ensureSeed()` → **`backfillExerciseImages()`** (novo, v4.0.11 — restaura `imageUrl` de GIFs entregues após o seed; idempotente, só null → default) → `migrateLegacyData()` → flush; `default-data.ts` com `ex-extensao-lombar.imageUrl` preenchido (regenerar do `JS/treino/db.js` quando ele mudar). |
 | `components/BottomNav.tsx` | Só classes legadas (`.bottom-nav/.bnav-btn/.bnav-icon/.bnav-label/.bnav-active-dot`), `data-section`, ids `bnavProgresso`/`bnavTreinos`/`bnavDashboard`/`bnavSocial`/`bnavLoja`. Fase 5 (reescrito). |
+| `features/social/*` (4 arquivos) | Aba Social placeholder (v4.0.14): `SocialFeature.tsx` (sub-abas Liga/Amigos/Guilda + 3 modais, estado local), `social.css` (glass translucido + tokens), `social-data.ts` (mocks) e `social-icons.tsx` (SVG stroke). |
 | `features/workout/treinos/*` (8 arquivos) | Fase 4 — ver tabela completa na entrada `v4.0.6-phase4`. |
 
 ---
@@ -313,9 +365,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 1. **CHANGELOG imediatamente** após QUALQUER alteração (`Diretrizes/CHANGELOG.md`):
    `## [vX.X.X] - YYYY-MM-DD` no topo, tags `[Added]/[Changed]/[Fixed]/[Removed]`,
-   citar arquivos; versão vigente = `v4.0.13-typography` (+ sufixo de rótulo p/ docs, ex. `-docs`).
+   citar arquivos; versão vigente = `v4.0.13-typography-docs` (+ sufixo de rótulo p/ docs, ex. `-docs`).
 2. **`system_map.json`**: incrementar `version` sempre que estrutura/documentação indexada mudar
-   (hoje: **3.5.22**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
+   (hoje: **3.5.23**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
    `node $env:TEMP\opencode\checkjson.js "C:\Nova pasta\htdocs\Academia\Diretrizes\system_map.json"`
    (script de uma linha: `JSON.parse(fs.readFileSync(process.argv[2],'utf8'))` + imprime a versão;
    recriar se o %TEMP% tiver sido limpo).
@@ -349,9 +401,10 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 ## 6. Próximos passos (ordem sugerida)
 
 1. **Commit** (só quando o usuário pedir): `v4.0.11-lombar-gif` +
-   `v4.0.12-splash` + `v4.0.13-typography` — `JS/treino/db.js` + espelho `www/`,
-   `src-app/src/core/db/{default-data.ts,bootstrap.ts}`, `src-app/index.html`,
-   os 7 arquivos modificados (App.tsx + styles + main.tsx + DashboardFeature),
+   `v4.0.12-splash` + `v4.0.13-typography` + **`v4.0.14-social-placeholder`** —
+   `JS/treino/db.js` + espelho `www/`, `src-app/src/core/db/{default-data.ts,bootstrap.ts}`,
+   `src-app/index.html`, os 7 arquivos modificados (App.tsx + styles + main.tsx +
+   DashboardFeature), **a pasta nova `src-app/src/features/social/` (4 arquivos)**,
    gif untracked `www/Assets/exerciciosgif/Extensão Lombar.gif` +
    docs (CHANGELOG/system_map/context.md) — revisar `git status`, `git diff`
    e `git log --oneline -10`.
@@ -361,11 +414,18 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 3. **Teste manual da Fase 5** no preview (checklist): `#dashBtnIniciar` → ficha com
    cronômetro rodando → X/parar → `#modalEncerrarTreino` → Encerrar → `showConclusao`;
    `#dashBtnNoticias` → 3 abas, cartões, MOSTRAR MAIS, detalhe prev/next, ESC,
-   footer visível na lista e nos detalhes; Social/Loja com `.section-coming-soon`;
+   footer visível na lista e nos detalhes; **Loja** com `.section-coming-soon`
+   (o Social agora é `SocialFeature`);
    navbar com labels visíveis e dot ativo; swipe não dispara dentro do news-overlay
    (divergência aceita). Paridade news medida por script (lista 6 / detalhe 15 diffs
    não-visuais): `node $env:TEMP\opencode\measure_news.js` + `diff_measure.js` e
    `node $env:TEMP\opencode\probe_detail.js` (precisa de :4173, :8099, :9222).
+3b. **Teste manual da aba Social** (placeholder v4.0.14): abrir `#bnavSocial` →
+   Liga (banner, resgates do Caminho, filtros do ranking, clique no ranking →
+   modal perfil), Amigos (modal duelo/adicionar amigo, status), Guilda (enviar
+   mensagem no chat, 4 pílulas, doar item), ESC/backdrop fecham modais, fundo
+   dinâmico visível atrás das superfícies glass, layout 1 col ≤820px e nenhuma
+   cor hardcoded; ações "reais" disparam o toast "funcionalidade em breve!".
 4. **Teste manual da Fase 4** (seção Treinos) — checklist completo na entrada
    `v4.0.6-phase4` do CHANGELOG.
 5. **known_gaps menores** (system_map): `#modalDayHist` sem lock de `body.overflow`,

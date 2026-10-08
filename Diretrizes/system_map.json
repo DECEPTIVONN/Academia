@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "3.5.22",
-  "last_updated": "2026-10-07",
+  "version": "3.5.24",
+  "last_updated": "2026-10-08",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog.",
 
@@ -294,7 +294,7 @@
       },
       {
         "file": "Diretrizes/README.md",
-        "purpose": "Visão geral arquitetural, features, design guidelines e guia de uso para agentes de IA. LEITURA OBRIGATÓRIA no início de cada sessão."
+        "purpose": "Visão geral arquitetural, features, design guidelines e guia de uso para agentes de IA (inclui a regra 7: informar estimativa de prazo e progresso em tarefas demoradas, v4.0.13-typography-docs). LEITURA OBRIGATÓRIA no início de cada sessão."
       },
       {
         "file": "Diretrizes/CHANGELOG.md",
@@ -379,6 +379,7 @@
       { "file": "src-app/src/features/workout/FocusModal.tsx", "purpose": "Modo Foco fullscreen #modalFocus (modais.html L410–462 + secao-ficha.js L754–923): snapshot da ficha, navegação por exercício, botões de série, descanso 60s sincronizado em #focusTimerVal, auto-avanço 1.5s e conclusão atômica do dia (duracaoFoco → focusMin) fechando + showConclusao; iniciado pelo FAB #btnStartFocus da FichaFeature (Fase 3)." },
       { "file": "src-app/src/features/dashboard/MissionsOverlay.tsx", "purpose": "Overlay de missões #missions-overlay (treino.html L903–1314, <style> inline extraído para missions-overlay.css): 3 abas daily/weekly/guides, openMissionsOverlay/closeMissionsOverlay com lock de body.overflow; mockup estático fiel ao legado; aberto pela pílula #dashBtnMissoes do Dashboard (Fase 3)." },
       { "file": "src-app/src/features/news/", "purpose": "Overlay de Notícias da Fase 5: NewsOverlay.tsx + news-overlay.css (novos) portam #news-overlay (treino.html L303–427 DOM/CSS extraído para o CSS, L429–599 comportamento) — 3 abas noticias/atualizacoes/guias com .tab-content/.active, 4 cartões de notícia + 7 de atualização, botões MOSTRAR MAIS (remoção de .hidden-news/.hidden-updates), detail views #news-detail-view/#update-detail-view com hidden-view/active (slide 300 ms), paginação btn-prev/btn-next com fade 200 ms (índice avança no clique, DOM só após o timeout), conteúdo via dangerouslySetInnerHTML, FOOTER_HTML do componentes/footer.js injetado nos 3 containers (lista + 2 detalhes) e lock de body.overflow; bloco v4.0.10-news-parity no CSS (revert-layer escopado + pins de cor/lh de ícone) fecha a cascata Tailwind v4 vs vendor legado e a view de detalhe foi medida sem diffs visuais (2026-10-07); aberto pela pílula #dashBtnNoticias do Dashboard." },
+      { "file": "src-app/src/features/social/", "purpose": "Aba SOCIAL (v4.0.14-social-placeholder): SocialFeature.tsx + social.css + social-data.ts + social-icons.tsx — port do conteúdo de Ligas.html (3 sub-abas Liga/Amigos/Guilda, banner de temporada, Caminho das Ligas com resgates, ranking filtrável, grid de amigos, guilda com chat local/membros/doações/guerra e 3 modais) montado em App.tsx no branch social via .section-slide (o placeholder .section-coming-soon da Loja foi separado e segue 1:1 com treino.html L197–207); tipografia/tokens do app, superfícies glass translúcidas (fundo dinâmico da arena visível) e ícones SVG stroke no lugar dos emojis; PLACEHOLDER em estado React local, sem persistência." },
       { "file": "src-app/src/features/profile/ProfileFeature.tsx", "purpose": "Port 1:1 de componentes/secoes/perfil.html: 4 abas (perfil/progressao/personalizar/prefs) com nav #perfTabNav salva em localStorage.academia_perfil_tab, modo dev, sub-abas de progressão/personalizar/preferências, identidade com drafts, export/import de backup e campos de segurança (Fase 2)." },
       { "file": "src-app/src/features/profile/profile-data.ts", "purpose": "Catálogos e helpers do Perfil: 12 temas (applyAppTheme), SHOWCASE_STATS, FRASES_PRESET, TITULOS, EMBLEMAS, IDENTITY_EMBLEMS, BANNERS, BAR/CARD/TIMER_SKINS, badges b1..b6, isUnlocked/getProfileStats, applyCustomizationGlobals e revertLockedCustomizations." },
       { "file": "src-app/src/features/profile/useProfileState.ts", "purpose": "Hook useProfileState(): leitura/upsert do registro profileState (IndexedDB v3) com listeners 'academia:db-ready' e 'academia:profile-updated'." },

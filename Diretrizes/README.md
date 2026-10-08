@@ -185,6 +185,7 @@ Se você é um assistente de inteligência artificial manipulando esta base de c
 4. Não crie códigos monolíticos. Tudo deve ser feito sob a filosofia modular instalada na pasta `treino/`.
 5. **Padrão CSS BEM:** Para qualquer novo estilo ou componente, é **obrigatório** o uso da metodologia BEM para evitar poluição da cascata global.
 6. **Leia o `DESIGN.md` (raiz do projeto)** antes de criar ou alterar qualquer elemento visual — ele é o manual completo de tokens, animações e blueprints do design system.
+7. **Informe prazo e progresso em tarefas demoradas:** quando a tarefa puder demorar (diagnóstico de bug difícil, migração multi-arquivo, verificação visual exaustiva), **não execute em silêncio até o fim**. Logo no início, diga ao usuário uma estimativa de conclusão e quantos passos restam (ex.: `≈4 passos: pins de CSS → medição CDP → regressões → documentação`) e vá atualizando o progresso a cada passo concluído — o usuário deve sempre saber onde a tarefa está e quanto falta.
 
 ---
 

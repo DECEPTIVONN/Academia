@@ -8,6 +8,7 @@ import { DashboardFeature } from '@/features/dashboard/DashboardFeature';
 import { TreinosFeature } from '@/features/workout/treinos/TreinosFeature';
 import { FichaFeature } from '@/features/workout/FichaFeature';
 import { ProgressoFeature } from '@/features/training/ProgressoFeature';
+import { SocialFeature } from '@/features/social/SocialFeature';
 import { ConclusaoModal } from '@/features/workout/ConclusaoModal';
 import { ProfileFeature } from '@/features/profile/ProfileFeature';
 import { applyAppTheme, readLS } from '@/features/profile/profile-data';
@@ -337,23 +338,26 @@ export function App() {
               </div>
             )}
 
-            {(activeSection === 'social' || activeSection === 'loja') && (
-              /* Placeholders .section-coming-soon — estrutura 1:1 com
-                 treino.html L184-207 (SOCIAL) e L197-207 (LOJA) */
-              <div className="section-slide" data-section={activeSection}>
+            {activeSection === 'social' && (
+              /* Aba SOCIAL — placeholder de Ligas.html (v4.0.14-social).
+                 SocialFeature monta seu próprio .treino-container.soc-root
+                 + modais; o scroll acontece dentro do .section-slide. */
+              <div className="section-slide" data-section="social">
+                <SocialFeature />
+              </div>
+            )}
+
+            {activeSection === 'loja' && (
+              /* Placeholder .section-coming-soon — estrutura 1:1 com
+                 treino.html L197-207 (LOJA) */
+              <div className="section-slide" data-section="loja">
                 <div className="treino-container">
-                  <div
-                    id={activeSection === 'social' ? 'section-social' : 'section-loja'}
-                    className="main-section"
-                    role="tabpanel"
-                  >
+                  <div id="section-loja" className="main-section" role="tabpanel">
                     <div className="section-coming-soon">
-                      <div className="cs-icon">{activeSection === 'social' ? '💬' : '🛒'}</div>
-                      <h2 className="cs-title">{activeSection === 'social' ? 'SOCIAL' : 'LOJA'}</h2>
+                      <div className="cs-icon">🛒</div>
+                      <h2 className="cs-title">LOJA</h2>
                       <p className="cs-sub">
-                        {activeSection === 'social'
-                          ? 'Em breve! Conecte-se com amigos, compare progresso e desafie outros atletas.'
-                          : 'Em breve! Itens, skins e upgrades exclusivos para sua jornada.'}
+                        Em breve! Itens, skins e upgrades exclusivos para sua jornada.
                       </p>
                     </div>
                   </div>
