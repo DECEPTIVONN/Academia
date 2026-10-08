@@ -37,6 +37,28 @@ export function App() {
   /* Guarda de animação (nav.js isAnimating): evita troca dupla durante o fade */
   const animatingRef = useRef(false);
 
+  /* v4.0.13-typography: reparo do raster stale do primeiro paint da seção.
+     O primeiro paint de uma seção montada depois do boot (ex.: Progresso ao
+     clicar na navbar) é rasterizado ~1–2 device px fora em alguns .p-card
+     (backdrop-filter): borda inferior do .streak-card em y890–891 vs y888–889
+     do legado, borda do .weekly-summary-card e o ink do h3 "Sua Semana" ~2 px
+     acima — ~3,5 mil px de diff por tela. Rects/computed/styles são idênticos
+     ao legado; só a rasterização diverge, e QUALQUER mudança real de estilo
+     num ancestral do conteúdo (body/#root/main) reparo o raster — medido no
+     CDP: setar -webkit-font-smoothing em qualquer UM desses elementos e
+     restaurar em task seguinte zera as três regiões (0/780 e 0/4480). Toggle
+     em duas tasks (set → 200ms → remove) mantém o valor final idêntico ao
+     original (sem divergência de render em macOS). O legado nunca monta seção
+     depois do boot (todas existem desde o início) e não sofre do problema. */
+  const repairSectionRaster = useCallback(() => {
+    window.setTimeout(() => {
+      document.body.style.setProperty('-webkit-font-smoothing', 'auto');
+      window.setTimeout(() => {
+        document.body.style.removeProperty('-webkit-font-smoothing');
+      }, 200);
+    }, 450);
+  }, []);
+
   /* nav.js L135-152: fadeSwap na seção ativa → troca → fadeIn na nova */
   const navigateSection = useCallback(
     (sec: SectionType) => {
@@ -52,9 +74,10 @@ export function App() {
       fadeSwap(mainRef.current, () => {
         setActiveSection(sec);
         document.dispatchEvent(new CustomEvent('sectionchange', { detail: sec }));
+        repairSectionRaster();
       });
     },
-    [activeSection]
+    [activeSection, repairSectionRaster]
   );
 
   /* nav.js L207–298: swipe horizontal por threshold (20% da largura ou 150px)
@@ -252,7 +275,10 @@ export function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-[#0a0514] text-[#e5e2e1] font-['Outfit'] relative overflow-x-hidden">
+      {/* v4.0.13: text-white (antes text-[#e5e2e1]) — paridade com o `body{color:var(--text)}`
+          do legado (#ffffff); o cinza derrubava a herança de cor de títulos e textos sem
+          cor própria. Ver globals.css reset local. */}
+      <div className="h-screen bg-[#0a0514] text-white relative overflow-x-hidden">
         {/* CR Dynamic Background System */}
         <div id="cr-dynamic-bg" className="cr-bg-container fixed inset-0 pointer-events-none z-0">
           <div className="cr-bg-layer" />
@@ -266,9 +292,27 @@ export function App() {
           <div className="cr-bg-overlay" />
         </div>
 
-        <div className="relative z-10 flex flex-col min-h-screen">
-          {/* Conteúdo Principal (Slide / Seção) */}
-          <main className="flex-1" ref={mainRef}>
+        <div className="relative z-10 flex flex-col h-full">
+          {/* Conteúdo Principal (Slide / Seção) — v4.0.13: altura definite
+              (h-full → main flex → .section-viewport flex:1 min-h-0) para que
+              .section-slide{height:100%} resolva como no legado
+              (.treino-page display:flex + .section-viewport, 7-nav-icons.css
+              L18–47) e o scroll aconteça DENTRO do slide.
+              A classe `treino-page` é obrigatória: main.css declara
+              `main{background-color:var(--background)}` (opaco #121212, que
+              taparia o background dinâmico) e no legado a regra
+              `html, body, .treino-page{background:transparent !important}`
+              de bg-dinamico.css anula isso — sem a classe, o React ficava com
+              o <main> opaco e o fundo de diamantes sumia atrás dele. */}
+          <main className="treino-page flex-1 min-h-0 flex flex-col" ref={mainRef}>
+            <div className="section-viewport">
+            {/* .section-strip 1:1 com o legado (7-nav-icons.css L27–35 e
+                treino.html): wrapper flex-row + will-change:transform —
+                paridade de DOM/estrutura de pintura. Sozinho ele NÃO corrige
+                o paint offset de 1–2 device px dos .p-card (medido: JSX strip
+                desde a renderização inicial continuava com os bands); quem
+                zera as regiões é o repairSectionRaster acima (v4.0.13). */}
+            <div className="section-strip">
             {activeSection === 'dashboard' && (
               <DashboardFeature
                 onNavigate={(sec) => navigateSection(sec as SectionType)}
@@ -277,9 +321,21 @@ export function App() {
               />
             )}
 
-            {activeSection === 'treinos' && <TreinosFeature />}
+            {activeSection === 'treinos' && (
+              /* .section-slide wrapper 1:1 com o legado (treino.html: cada
+                 slide envolve .treino-container > .main-section) — ativa a
+                 regra .section-slide .treino-container{padding-bottom:260px}
+                 (7-nav-icons.css L56) e o scroll interno com scrollbar 10px. */
+              <div className="section-slide" data-section="treinos">
+                <TreinosFeature />
+              </div>
+            )}
 
-            {activeSection === 'progresso' && <ProgressoFeature />}
+            {activeSection === 'progresso' && (
+              <div className="section-slide" data-section="progresso">
+                <ProgressoFeature />
+              </div>
+            )}
 
             {(activeSection === 'social' || activeSection === 'loja') && (
               /* Placeholders .section-coming-soon — estrutura 1:1 com
@@ -304,6 +360,8 @@ export function App() {
                 </div>
               </div>
             )}
+            </div>
+            </div>
           </main>
 
           {/* ====== PERFIL OVERLAY ======

@@ -31,8 +31,11 @@
 
   /* ── Card System ── */
   --card-bg:          rgba(10, 5, 20, 0.6);
-  --card-border:      rgba(139, 92, 246, 0.25);
-  --card-hover:       rgba(139, 92, 246, 0.35);
+  /* v4.0.13-typography: paridade com :root do legado (1-core.css L2) —
+     antes 0.25/0.35, o que tingia as bordas de .p-card (ex.: weekly-summary-card)
+     com rgba(...,0.25) enquanto o legado pinta rgba(...,0.2). */
+  --card-border:      rgba(139, 92, 246, 0.2);
+  --card-hover:       rgba(139, 92, 246, 0.25);
 
   /* ── Texto ── */
   --text:             #ffffff;

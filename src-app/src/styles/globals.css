@@ -2,6 +2,21 @@
 @import "tailwindcss";
 @import "./tailwind-legacy-theme.css";
 
+/* ── v4.0.13-typography: cor padrão de borda do preflight TW3 ──
+   O legado carrega o Tailwind Play CDN v3, cujo preflight declara
+   `*{border-color:#e5e7eb}`; o preflight do TW4 usa currentColor. Com o body
+   agora branco, TODA borda visível sem cor explícita pintava branca no React
+   onde o legado pinta cinza (ex.: `.dash-missions-pill`, medida 1px
+   rgb(229,231,235) vs rgb(255,255,255) — ~1300 px por tela no dashboard).
+   Dentro de @layer base: empata com o preflight do TW4 e vence por folha
+   posterior dentro da camada; utilities (camada posterior) continuam vencendo,
+   como no legado (TW3 sem camadas, utilities por especificidade). */
+@layer base {
+  *, ::before, ::after {
+    border-color: #e5e7eb;
+  }
+}
+
 /* ── Reset local ── */
 html, body, #root {
   width: 100%;
@@ -9,19 +24,42 @@ html, body, #root {
   margin: 0;
   padding: 0;
   background-color: #0a0514;
-  color: #e5e2e1;
+  /* v4.0.13: legado usa `body{color:var(--text)}` = #ffffff (design-tokens
+     1-core). O #e5e2e1 aqui derrubava a herança de todo texto sem cor
+     explícita (títulos h1/h2, funil do Treino) ~26 níveis mais escuro que o
+     legado. Elementos com cor própria (overlays, tokens Material) não mudam. */
+  color: #ffffff;
 }
 
-/* ── Rollback do overflow:hidden do legado (1-core.css) ──
-   O legado usa Swipe Viewport (slides com scroll próprio), por isso trava
-   html/body. O app React usa fluxo normal de documento, então o body precisa
-   rolar. Esta regra vem DEPOIS de legacy.css no bundle (main.tsx importa
-   legacy.css antes de globals.css), portanto vence o seletor igual de 1-core.css.
-   `body.ficha-overlay-open` continua com overflow:hidden !important (ficha-overlay.css). */
+/* ── Scroll: arquitetura original do legado (1-core.css html/body) ──
+   v4.0.13: o rollback anterior (html/body com overflow:auto) fazia o DOCUMENTO
+   rolar, mas no legado o scroll acontece dentro de .section-slide (regra
+   overflow-y:auto de 7-nav-icons.css) e html/body ficam travados. Com o
+   documento rolando, o React perdia a scrollbar clássica de 10px
+   (::-webkit-scrollbar de main.css L385) → .section-slide com 390px de
+   conteúdo em vez dos 380px do legado (cards e colunas ~5px mais largos +
+   faixa roxa ausente em Progresso/Treinos). Restaurado o travamento
+   original; o App.tsx agora monta .section-viewport/.section-slide com
+   altura definite (h-screen → h-full → flex → 100%).
+   `body.ficha-overlay-open` continua com overflow:hidden !important
+   (ficha-overlay.css) — redundante agora, mantido por paridade. */
 html, body {
-  height: auto;
-  overflow: auto;
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── v4.0.13: z-index do container do background dinâmico ──
+   O espelho bg-dinamico.css declara z-index:-10 (funciona no legado porque
+   #cr-dynamic-bg é filho do body, com html/body transparentes via
+   `background: transparent !important` da mesma folha). No React o nó é filho
+   de #root e da div externa, que têm background-color opaco (#0a0514 do reset
+   acima) e pintam DEPOIS de um z negativo → o fundo sumiria. z-index:0 (o
+   valor que o antigo styles/dynamic-bg.css, removido em v4.0.13, já usava)
+   mantém a mesma hierarquia visual: acima dos backgrounds do shell, abaixo do
+   conteúdo em z-10. Vence o espelho por ser não camadeado e vir depois no
+   bundle. DIVERGÊNCIA DOCUMENTADA (valor, não visual). */
+.cr-bg-container {
+  z-index: 0;
 }
 
 /* ── Rollback do padding inferior da navbar (7-nav-icons.css L81) ──
@@ -37,4 +75,120 @@ html, body {
    antes de globals.css. DIVERGÊNCIA DOCUMENTADA no CHANGELOG. */
 .bottom-nav {
   padding: 6px 4px;
+  /* v4.0.13-typography: o par do espelho (backdrop-filter + -webkit-...) é
+     deduplicado para SÓ -webkit- pelo lightningcss do build, e o Chrome só
+     expõe o nome não-prefixado em getComputedStyle (computado ficava `none`
+     onde o legado reporta `blur(24px)` — divergência medida pelo probe_nav).
+     O alias -webkit- continua sendo pintado (verificado em runtime: injetar o
+     nome não-prefixado não moveu 1 px), logo correção de paridade NÃO visual.
+     Declaração ÚNICA não-prefixada sobrevive ao minifier (pares são
+     deduplicados) e vence por ser folha posterior (regra espelhada intacta). */
+  backdrop-filter: blur(24px);
+}
+
+/* ── v4.0.13-typography: mesmo caso do .bottom-nav nos demais pares do bundle
+   (par `backdrop-filter` + `-webkit-backdrop-filter` deduplicado para só o
+   prefixado pelo lightningcss → getComputedStyle ficava `none` onde o legado
+   reporta o blur). Só seletores carregados pelo treino.html (navbar.css e
+   franquia.css não entram no legacy.css nem na página legada). Valores 1:1 do
+   espelho; pins não camadeados e folha posterior vencem por igualdade de
+   especificidade. Paridade de CSS COMPUTADO (o alias -webkit- já era pintado). */
+.note-popover {
+  backdrop-filter: blur(20px) saturate(180%);
+}
+.cr-dropdown-menu {
+  backdrop-filter: blur(15px);
+}
+.perfil-overlay__header {
+  backdrop-filter: blur(16px);
+}
+.ficha-overlay-close {
+  backdrop-filter: blur(8px);
+}
+.profile-edit-btn {
+  backdrop-filter: blur(8px);
+}
+.missions-overlay .ms-bg-overlay {
+  backdrop-filter: blur(0.5px);
+}
+
+/* ── v4.0.13: thumb da scrollbar com gradiente (thememanager.js) ──
+   O legado injeta via JS (`componentes/thememanager.js`, tema "Escuro"):
+     ::-webkit-scrollbar-thumb { background: <theme.gradient> !important; }
+     ::-webkit-scrollbar-thumb:hover { background: <theme.gradientHover> !important; }
+   com gradient = linear-gradient(135deg, #8b5cf6, #6d28d9) e
+   gradientHover = linear-gradient(135deg, #a78bfa, #8b5cf6). O main.css base
+   (espelhado) só tem `background: var(--primary)` (sólido), então sem este
+   pin o React renderizava o thumb roxo CHATO onde o legado mostra o degradê
+   (medido nos screenshots: L varia #8b5cf6→#6d28d9 no comprimento do thumb).
+   !important vence as regras escopadas (ex.: .ficha-overlay__scroll::-...) —
+   idêntico ao legado, cuja injeção também é !important global.
+   DIVERGÊNCIA DOCUMENTADA: regra estática (o thememanager re-injeta dinâmico
+   ao trocar tema de app; o React não porta esse sistema de temas de app). */
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6) !important;
+}
+
+/* ── v4.0.13-typography: paridade de cascata de tipografia ──
+   O legado carrega o Tailwind Play CDN v3 (cdn.tailwindcss.com) numa <style>
+   que vem DEPOIS do main.css: o preflight do CDN vence o main.css no empate
+   (mesma especificidade, folha posterior) e as utilities geradas vencem por
+   especificidade. No React o main.css espelhado é não camadeado e vence o
+   @layer utilities/base do TW4. Estes pins restauram a ordem efetiva do
+   legado (requer Chrome/WebView 111+, mesma restrição do news-overlay). */
+
+/* (1) body: CDN `body{line-height:inherit}` vence `body{line-height:1.6}` do
+       main.css → 1.5 (html). Sem o pin, o React ficaria em 1.6. */
+body {
+  line-height: inherit;
+}
+
+/* (2) headings: no legado a utility de tamanho/peso (.text-3xl, .font-bold)
+       vence por especificidade e, sem utility, o preflight do CDN
+       (`font-size/weight: inherit`) vence o main.css. Aqui o revert-layer
+       devolve a cascata para as utilities e, na ausência, para o inherit do
+       preflight do TW4. line-height 1.2 e letter-spacing -0.02em do main.css
+       continuam valendo nos dois lados (o preflight não os declara). */
+h1, h2, h3, h4, h5, h6 {
+  font-size: revert-layer;
+  font-weight: revert-layer;
+}
+
+/* (3) text-* do TW3 usam line-height ABSOLUTO em rem (.text-sm → 1.25rem);
+       o TW4 gera razão unitária (calc(1.25/0.875)) aplicada ao font-size do
+       elemento — diverge quando a font-size é sobrescrita por outra regra
+       (ex.: #dashEmblemsValue com 9,75px → TW3 16,25px vs TW4 13,93px).
+       Sem combos text-*+leading-* no app (grep), então o pin é seguro:
+       nos do TWS o valor em rem é idêntico à razão quando a font-size
+       não é sobrescrita. */
+.text-xs { line-height: 1rem; }
+.text-sm { line-height: 1.25rem; }
+.text-base { line-height: 1.5rem; }
+.text-lg { line-height: 1.75rem; }
+.text-xl { line-height: 1.75rem; }
+.text-2xl { line-height: 2rem; }
+.text-3xl { line-height: 2.25rem; }
+.text-4xl { line-height: 2.5rem; }
+.text-5xl,
+.text-6xl,
+.text-7xl,
+.text-8xl,
+.text-9xl { line-height: 1; }
+
+/* (4) Reset universal × utilities de espaçamento: o main.css declara
+       `*{margin:0;padding:0}` (não camadeado) e no legado as utilities do
+       Play CDN venciam por especificidade (.mb-6 0,1,0 > * 0,0,0, CDN depois).
+       No React as utilities vivem em @layer utilities e PERDIAM para o reset
+       não camadeado (ex.: header do dashboard com mb-6/-mt-2 mortos → 16px
+       mais baixo). O revert-layer derruba o reset para a cascata de camadas:
+       com utility → utility vence (paridade); sem utility → cai no preflight
+       do TW4 (`*{margin:0}` em @layer base) → zero, igual ao legado. */
+*,
+*::before,
+*::after {
+  margin: revert-layer;
+  padding: revert-layer;
 }

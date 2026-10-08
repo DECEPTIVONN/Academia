@@ -2,10 +2,12 @@
 
 > **Arquivo de contexto entre sessões.** Ler junto com `Diretrizes/CHANGELOG.md`
 > (entradas `v4.0.6-phase4`, `v4.0.7-phase5`, `v4.0.7-phase5-navfix`, `v4.0.8-bugfix`,
-> `v4.0.9-android`, `v4.0.10-news-parity`, `v4.0.11-lombar-gif` e `v4.0.12-splash`) e `Diretrizes/system_map.json`
-> (**version 3.5.21** — primeira leitura obrigatória de todo agente).
-> Atualizado ao fim da sessão de 2026-10-07 (paridade visual total do news-overlay,
-> GIF da Extensão Lombar conectado e splash do legado portada ao React).
+> `v4.0.9-android`, `v4.0.10-news-parity`, `v4.0.11-lombar-gif`, `v4.0.12-splash` e
+> `v4.0.13-typography`) e `Diretrizes/system_map.json`
+> (**version 3.5.22** — primeira leitura obrigatória de todo agente).
+> Atualizado ao fim da sessão de 2026-10-07 (paridade de tipografia/cascata +
+> layout raiz, scroll interno do slide restaurado, raster stale dos `.p-card`
+> reparado na troca de seção — Progresso 6239 → 65 diffs).
 
 ---
 
@@ -36,20 +38,34 @@
   (100 ms → fill 100% → 400 ms → `--hidden`); **divergência pedida pelo
   usuário: com treino em andamento a splash é removida antes do paint**
   (flags `workout_start_time`/`fichaEmAndamento` do dia) e nunca reabre.
+- **Paridade de tipografia/cascata + layout raiz CONCLUÍDA (`v4.0.13-typography`,
+  2026-10-07)**: pins da cascata do Play CDN v3 em `globals.css` (`revert-layer`
+  de h1–h6, line-heights das utilities, `* margin/padding`, `body line-height`),
+  preflight `border-color:#e5e7eb`, **7 pins de `backdrop-filter`** (o par
+  prefixado é deduplicado pelo lightningcss → `computed: none`), thumb de
+  scrollbar em gradiente, `--card-border/hover` 0.2/0.25, tokens de fonte
+  Outfit, `dynamic-bg.css` removido, **scroll interno do `.section-slide`
+  restaurado** (html/body `overflow:hidden`, shell `h-screen` + wrappers
+  `.section-viewport`/`.section-strip`/`.section-slide` 1:1), cor herdada
+  `#ffffff` e — grande achado — **`repairSectionRaster()`** no `App.tsx`:
+  toggle de `-webkit-font-smoothing` em duas tasks após cada troca de seção
+  zera o raster stale de 1–2 device px dos `.p-card` na primeira pintura
+  pós-boot (Progresso **6239 → 65** diffs, bandas 0/0/0).
 - **Verificação final verde**: `npx tsc -b` exit 0 · `npx oxlint src` exit 0
-  (**ZERO warnings**) · `npm run build` OK (`dist/index.html` com splash) ·
-  `system_map.json` validado (**3.5.21**, sem BOM, diff só 2 linhas) ·
-  CDP `verify_lombar.js` **5/5 PASS** + `verify_splash.js` **10/10 PASS** +
-  `verify_fixes.js` **14/14 PASS** + `verify_click_after_splash.js` **6/6 PASS**
-  (splash escondida não intercepta cliques; BottomNav alterna Treinos ↔ Dashboard) ·
-  screenshots React vs legado da splash praticamente idênticos.
+  (**ZERO warnings**) · `npm run build` OK (`dist/assets/index-CGtinHH9.css` +
+  `index-vvx8dXFq.js`) · `system_map.json` validado (**3.5.22**, sem BOM) ·
+  `probe_text` **0 diffs** + `measure_fonts` **0/0** (409 pareados) ·
+  CDP `verify_fixes.js` **14/14 PASS** + `verify_splash.js` **10/10 PASS** +
+  `verify_click_after_splash.js` **6/6 PASS** · screenshots dashboard 1717 /
+  progresso 65 (só GIF).
 - **GIT**: HEAD = `6a1d399` (usuário commitou a paridade `v4.0.10-news-parity`
-  entre sessões — news-overlay.css/tokens/NewsOverlay docs). **NÃO commitado**
-  (só com pedido explícito): `JS/treino/db.js` + espelho `www/`,
-  `src-app/src/core/db/{default-data.ts,bootstrap.ts}`, `src-app/index.html`
-  (splash), `Diretrizes/CHANGELOG.md`, `Diretrizes/system_map.json`,
-  `context.md` e o gif novo untracked
-  `www/Assets/exerciciosgif/Extensão Lombar.gif`.
+  entre sessões). **NÃO commitado** (só com pedido explícito): 7 arquivos
+  modificados desta sessão — `src-app/src/App.tsx`, `src-app/src/styles/{globals.css,design-tokens.css,tailwind-legacy-theme.css}`,
+  `src-app/src/main.tsx`, `src-app/src/features/dashboard/DashboardFeature.tsx`,
+  `src-app/index.html` — mais `Diretrizes/CHANGELOG.md`,
+  `Diretrizes/system_map.json`, `context.md`; pendentes das sessões anteriores:
+  `JS/treino/db.js` + espelho `www/`, `src-app/src/core/db/{default-data.ts,bootstrap.ts}`
+  e gif untracked `www/Assets/exerciciosgif/Extensão Lombar.gif`.
 - Servidores desta sessão: preview **:4173**, `serve_www.js` **:8099** (serve a
   **raiz** do repo — legado fica em `/www/index.html`), Chrome CDP **:9222** —
   encerrar ao fim
@@ -60,7 +76,46 @@
 
 ## 2. O que foi feito
 
-### Splash do legado portada ao React — `v4.0.12-splash` (esta sessão; detalhe na entrada do CHANGELOG)
+### Paridade de tipografia/cascata + raster stale — `v4.0.13-typography` (esta sessão; detalhe na entrada do CHANGELOG)
+1. **Pins da cascata do Play CDN v3 em `globals.css`**: `body{line-height:inherit}`,
+   `h1–h6{font-size/weight:revert-layer}`, line-heights absolutos das utilities
+   `.text-*` (TW3), `* margin/padding: revert-layer` (utilities `mb-6`/`-mt-2`
+   voltam a vencer o reset do `main.css`), preflight `border-color:#e5e7eb`.
+   Requer Chrome/WebView 111+ (mesma restrição do news-overlay).
+2. **7 pins não camadeados de `backdrop-filter`**: o par `backdrop-filter` +
+   `-webkit-backdrop-filter` do espelho é deduplicado para só o prefixado no
+   build (lightningcss) → `getComputedStyle` ficava `none` onde o legado tem o
+   blur (`.cr-bg-container`, note-popover, dropdown, perfil-header, ficha-close,
+   profile-edit, missions `ms-bg-overlay`). Não visual (1 px intacto).
+3. **Layout raiz**: `dynamic-bg.css` removido (`main.tsx` não importa),
+   `.cr-bg-container{z-index:0}` em `globals.css`; `main` ganha `treino-page`
+   (necessária para anular o `background-color` opaco de `main.css`) + altura
+   definite; cor herdada `#ffffff` (globals + `text-white` no `index.html` e na
+   div raiz); `--card-border/hover` 0.2/0.25; fontes `font-body-lg/md` → Outfit.
+4. **Scroll interno restaurado** (rollback `overflow:auto` desfeito): no legado
+   o scroll acontece dentro de `.section-slide` (`overflow-y:auto` de
+   `7-nav-icons.css`) com html/body travados — agora idêntico (shell `h-screen`
+   + wrappers `.section-viewport`/`.section-strip`/`.section-slide` 1:1 no
+   `App.tsx`; slides de treinos/progresso ganham o wrapper `data-section`).
+5. **`repairSectionRaster()` (`App.tsx`)** — causa-raiz dos bands de 1–2 device
+   px (streak y886–891, weekly y1214–1217, ink do h3 ~2 px): **raster stale na
+   primeira pintura de seção montada depois do boot** (rects/computed/fontes
+   idênticos; só o raster diverge). Qualquer mudança real de estilo em um
+   ancestral (body/`#root`/main) repara; invalidação sem mudança de valor
+   computado, não. Fix: set `-webkit-font-smoothing:auto` no body 450 ms após o
+   `fadeSwap` → remove 200 ms depois (estado final idêntico ao original).
+   Teoria do transform `uiFadeIn` DESMENTIDA por medição. **Progresso
+   6239 → 65** (só GIF r3c5), dashboard 1717.
+6. **Divergências/não-visuais medidos**: treinos nondeterminístico (R-vs-R =
+   36000 diffs = ordem do L-vs-R; GIFs `<img>` não pausáveis);
+   `state@R_treinos` null estrutural (React desmonta seções, legado mantém
+   todas); font-family do `<html>` difere (preflight TW3 vs TW4, sem efeito —
+   body herda Rajdhani); `measure_fonts` segue **0/0**.
+7. **Verificação**: tsc/oxlint (0 warnings)/build verdes; `probe_text` 0;
+   regressões 14/14 + 10/10 + 6/6 (SW limpo via `probe_sw.js` antes de cada
+   medição).
+
+### Splash do legado portada ao React — `v4.0.12-splash` (sessão anterior; detalhe na entrada do CHANGELOG)
 O CSS da "Feature 9" já estava espelhado (`8-customizacao.css` L1979–2111) mas o
 DOM nunca foi portado. Feito em `src-app/index.html`:
 1. **DOM `#splashScreen`** 1:1 de `treino.html` L102–118 (primeiro no `<body>`,
@@ -210,7 +265,8 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 |---|---|
 | `src-app/index.html` | Shell + **splash `#splashScreen`** (port `treino.html` L102–118) com script inline: banner/nome do `academia_treino`, remoção imediata com treino ativo, saída em `academia:db-ready` (100 ms/fill/400 ms/`--hidden`). v4.0.12. |
 | `features/news/NewsOverlay.tsx` + `news-overlay.css` | Overlay `#news-overlay`: 3 abas `noticias`/`atualizacoes`/`guias` (seta `tab-arrow`, `bg-[#8b5cf6]`, `drop-shadow`), `.tab-content`/`.active`, 4 notícias (1ª com rótulo "Notícias" + borda) e 7 atualizações, `MOSTRAR MAIS` (= remoção de `.hidden-news`/`.hidden-updates`), detail views `#news-detail-view`/`#update-detail-view` (`hidden-view`/`active`, slide 300 ms), paginação com fade 200 ms (**índice avança no clique, DOM só após o timeout** — `updateDetailContent`), conteúdo via `dangerouslySetInnerHTML`, **`FOOTER_HTML` nos 3 containers**, lock de `body.overflow`; bloco `v4.0.10-news-parity` no CSS. Fase 5 + paridade v4.0.10. |
-| `App.tsx` | `handleOpenFicha(letter)` (timer + treino do dia, agora via `selectSheetEntry`), `handleStartWorkout` (toast, sem fechar ficha), `handleRequestEncerrar` → `#modalEncerrarTreino`, placeholders Social/Loja `.section-coming-soon`, `ActiveWorkoutModal` removido; seções/overlays/swipe das fases anteriores. |
+| `App.tsx` | `handleOpenFicha(letter)` (timer + treino do dia, agora via `selectSheetEntry`), `handleStartWorkout` (toast, sem fechar ficha), `handleRequestEncerrar` → `#modalEncerrarTreino`, placeholders Social/Loja `.section-coming-soon`, `ActiveWorkoutModal` removido, shell `h-screen` com wrappers `.section-viewport`/`.section-strip`/`.section-slide` 1:1 + `repairSectionRaster()` após cada `fadeSwap` (v4.0.13); seções/overlays/swipe das fases anteriores. |
+| `src-app/src/styles/globals.css` | Pins da cascata v3 (`revert-layer`/line-heights/`* margin/padding`), preflight `border-color:#e5e7eb`, 7 pins `backdrop-filter`, thumb gradiente, scroll html/body `overflow:hidden`, `.cr-bg-container{z-index:0}`, `color:#ffffff`, rollback navbar `6px 4px` (v4.0.13 + v4.0.7-phase5-navfix). |
 | `features/dashboard/DashboardFeature.tsx` | `onOpenFicha(letter: SheetKey)`, `#dashBtnNoticias` → `<NewsOverlay/>` (montado junto ao `<MissionsOverlay/>`), `#dashBtnMissoes` inalterado; `#dashAvatar` renderiza o emblema selecionado (v4.0.8). |
 | `features/workout/FichaFeature.tsx` | props `onShowActiveWorkout` → `onRequestEncerrar`; `handleStartClick`: `!isActive` → `onStartWorkout`, senão `onRequestEncerrar()`; cronômetro sincroniza `now` ao ativar + clamp ≥ 0 (v4.0.8). |
 | `core/db/queries.ts` | `getCycleStats` = soma **por ficha** desde `currentCycleStartDate` (paridade `getCycleProgress`; Progresso usa sua própria contagem por-dia); `selectSheetEntry`/`applyFichaCompletion` (v4.0.8). |
@@ -243,6 +299,13 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
    — gaps e `xywh` idênticos). `revert-layer` exige Chrome/WebView 111+.
 9. **SOCIAL/LOJA AGORA PARIDADE** (item resolvido na Fase 5): DOM
    `.section-coming-soon` portado de `treino.html` L184–207 com o texto correto de cada seção.
+10. **v4.0.13 — raster stale e medição**: o `repairSectionRaster()` alterna
+    `-webkit-font-smoothing` por ~650 ms a cada troca de seção (estado final
+    idêntico; não altera texto/posições, só o raster da primeira pintura).
+    **Treinos é nondeterminístico** (GIFs `<img>` avançam entre capturas —
+    R-vs-R entre sessões idênticas = 36000 diffs; não comparar células de GIF).
+    `state@R_treinos` null para "Sua Semana" é estrutural (React desmonta
+    seções; legado mantém todas). `revert-layer`/pins exigem Chrome/WebView 111+.
 
 ---
 
@@ -250,9 +313,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 
 1. **CHANGELOG imediatamente** após QUALQUER alteração (`Diretrizes/CHANGELOG.md`):
    `## [vX.X.X] - YYYY-MM-DD` no topo, tags `[Added]/[Changed]/[Fixed]/[Removed]`,
-   citar arquivos; versão vigente = `v4.0.12-splash` (+ sufixo de rótulo p/ docs, ex. `-docs`).
+   citar arquivos; versão vigente = `v4.0.13-typography` (+ sufixo de rótulo p/ docs, ex. `-docs`).
 2. **`system_map.json`**: incrementar `version` sempre que estrutura/documentação indexada mudar
-   (hoje: **3.5.21**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
+   (hoje: **3.5.22**), citar o incremento no CHANGELOG, **JSON sem BOM** e validar:
    `node $env:TEMP\opencode\checkjson.js "C:\Nova pasta\htdocs\Academia\Diretrizes\system_map.json"`
    (script de uma linha: `JSON.parse(fs.readFileSync(process.argv[2],'utf8'))` + imprime a versão;
    recriar se o %TEMP% tiver sido limpo).
@@ -286,8 +349,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
 ## 6. Próximos passos (ordem sugerida)
 
 1. **Commit** (só quando o usuário pedir): `v4.0.11-lombar-gif` +
-   `v4.0.12-splash` — `JS/treino/db.js` + espelho `www/`,
+   `v4.0.12-splash` + `v4.0.13-typography` — `JS/treino/db.js` + espelho `www/`,
    `src-app/src/core/db/{default-data.ts,bootstrap.ts}`, `src-app/index.html`,
+   os 7 arquivos modificados (App.tsx + styles + main.tsx + DashboardFeature),
    gif untracked `www/Assets/exerciciosgif/Extensão Lombar.gif` +
    docs (CHANGELOG/system_map/context.md) — revisar `git status`, `git diff`
    e `git log --oneline -10`.
@@ -313,6 +377,9 @@ prop change", `reduce` no `useMemo`, `TODAY_BASE`).
    em `App.tsx` antes de mudar o formato (divergência nº 1 da seção 4).
    (Re-regressão dos bugs v4.0.8: `node $env:TEMP\opencode\verify_fixes.js` com preview
    :4173 + Chrome CDP :9222 — espera 14/14 PASS.)
+8. **Melhorias medidas deixadas p/ depois** (abaixo da dobra do Progresso):
+   volume-card 4.8 px e `progresso-grid` 5.86 px (row5/row7) fora de fase com o
+   legado — exigiria ajuste de conteúdo/spacing e re-measure.
 
 ---
 

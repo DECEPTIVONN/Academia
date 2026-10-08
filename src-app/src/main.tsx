@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import './styles/legacy.css';
 import './styles/globals.css';
 import './styles/design-tokens.css';
-import './styles/dynamic-bg.css';
 import App from './App.tsx';
 import { bootstrap } from '@/core/db/bootstrap';
 

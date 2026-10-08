@@ -96,7 +96,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
-    <div className="section-slide" data-section="dashboard" style={{ display: 'block' }}>
+    <div className="section-slide" data-section="dashboard">
       <div className="dash-container">
 
         {/* ── HEADER CALLING CARD (#dashProfileCard) ── */}

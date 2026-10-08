@@ -70,16 +70,17 @@
   --color-on-secondary-fixed: #002109;
   --color-error: #ffb4ab;
 
-  --font-headline-lg: "Rajdhani", sans-serif;
-  /* O JSON inline (index.html/treino.html) diz "Outfit", mas o build legado
-     (vendor/tailwind.min.css) NÃO gera .font-body-lg/.font-body-md → no
-     runtime o texto dessas classes herda Rajdhani (medido 2026-10-07).
-     Tokens só são usados pelo news-overlay (NewsOverlay.tsx). */
-  --font-body-lg: "Rajdhani", sans-serif;
-  --font-headline-xl: "Rajdhani", sans-serif;
-  --font-card-level: "Rajdhani", sans-serif;
-  --font-headline-md: "Rajdhani", sans-serif;
-  --font-label-caps: "Rajdhani", sans-serif;
-  --font-headline-lg-mobile: "Rajdhani", sans-serif;
-  --font-body-md: "Rajdhani", sans-serif;
+  /* fontFamily do tailwind.config inline do treino.html (fontFamily, ~L87):
+     o Play CDN gera `.font-body-lg{font-family:Outfit}` etc. SEM fallback
+     (arrays ["Outfit"]/["Rajdhani"]) — medido no runtime do legado em
+     2026-10-07 (v4.0.13-typography; corrige o pin v4.0.10 que acreditava em
+     herança de Rajdhani porque o vendor/tailwind.min.css não gera estas classes). */
+  --font-headline-lg: Rajdhani;
+  --font-body-lg: Outfit;
+  --font-headline-xl: Rajdhani;
+  --font-card-level: Rajdhani;
+  --font-headline-md: Rajdhani;
+  --font-label-caps: Rajdhani;
+  --font-headline-lg-mobile: Rajdhani;
+  --font-body-md: Outfit;
 }
