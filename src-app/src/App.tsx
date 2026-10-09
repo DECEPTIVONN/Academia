@@ -93,7 +93,8 @@ export function App() {
 
     const onStart = (e: TouchEvent) => {
       const t = e.target as HTMLElement | null;
-      if (!t) return;
+      // target não-Element (ex.: document/window em eventos sintéticos) não tem closest
+      if (!t || typeof t.closest !== 'function') return;
       if (
         t.closest('.table-scroll-wrap') ||
         t.closest('.month-grid') ||

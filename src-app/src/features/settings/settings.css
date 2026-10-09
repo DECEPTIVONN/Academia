@@ -180,6 +180,24 @@
   color: #fff;
 }
 
+/* v4.4.0 — botão de instalação PWA (estado indisponível/instalado) */
+.set-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
+.set-install {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.set-install .set-btn {
+  flex: 1;
+  min-width: 160px;
+}
+
 .set-icon-btn {
   width: 34px;
   height: 34px;

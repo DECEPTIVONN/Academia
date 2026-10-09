@@ -5,6 +5,13 @@ import './styles/globals.css';
 import './styles/design-tokens.css';
 import App from './App.tsx';
 import { bootstrap } from '@/core/db/bootstrap';
+import { initAutoFullscreen } from '@/lib/auto-fullscreen';
+import { initPwaInstall } from '@/lib/pwa-install';
+
+// Captura do beforeinstallprompt (instalação PWA) + tela cheia automática
+// no primeiro clique/toque (v4.4.0) — precisam estar ativos antes do render.
+initPwaInstall();
+initAutoFullscreen();
 
 // Seed + migração do localStorage legado (v3.5.7) + flush da fila offline.
 // Assíncrono: não bloqueia o primeiro render; a UI escuta 'academia:db-ready'.

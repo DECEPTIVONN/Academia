@@ -39,6 +39,7 @@ import {
   themeDisplayName,
 } from './theme-colors';
 import { ColorPickerModal } from './ColorPickerModal';
+import { getInstallState, promptInstall, type InstallState } from '@/lib/pwa-install';
 import type { HubScreen, HubTile } from './HubShell';
 import './settings.css';
 
@@ -159,6 +160,23 @@ const SvgScrollY = (
   </svg>
 );
 
+const SvgMaximize = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+    <polyline points="15 3 21 3 21 9" />
+    <polyline points="9 21 3 21 3 15" />
+    <line x1="21" y1="3" x2="14" y2="10" />
+    <line x1="3" y1="21" x2="10" y2="14" />
+  </svg>
+);
+
+const SvgInstall = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+    <rect x="6" y="2" width="12" height="20" rx="2" ry="2" />
+    <line x1="12" y1="9" x2="12" y2="14" />
+    <polyline points="9.5 11.5 12 14 14.5 11.5" />
+  </svg>
+);
+
 const SvgVolume = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
@@ -248,6 +266,22 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [navbarMode, setNavbarMode] = useState<string>(
     () => readLS(PREF_KEYS.navbarMode) || 'fixed'
   );
+  const [autoFullscreen, setAutoFullscreen] = useState(
+    () => readLS(PREF_KEYS.autoFullscreen) === 'true'
+  );
+  /* Instalação PWA — estado sincronizado com os eventos do lib/pwa-install */
+  const [installState, setInstallState] = useState<InstallState>(() => getInstallState());
+  useEffect(() => {
+    const syncInstall = () => setInstallState(getInstallState());
+    window.addEventListener('academia:pwa-install-available', syncInstall);
+    window.addEventListener('academia:pwa-installed', syncInstall);
+    window.addEventListener('appinstalled', syncInstall);
+    return () => {
+      window.removeEventListener('academia:pwa-install-available', syncInstall);
+      window.removeEventListener('academia:pwa-installed', syncInstall);
+      window.removeEventListener('appinstalled', syncInstall);
+    };
+  }, []);
   const [prefs, setPrefs] = useState(() => ({
     sounds: readLS(PREF_KEYS.sounds) !== 'false',
     vibration: readLS(PREF_KEYS.vibration) !== 'false',
@@ -286,6 +320,27 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     writeLS(PREF_KEYS.navbarMode, value);
     setNavbarMode(value);
     window.dispatchEvent(new CustomEvent('academia:navbar-mode-changed'));
+  };
+
+  const toggleAutoFullscreen = (checked: boolean) => {
+    writeLS(PREF_KEYS.autoFullscreen, String(checked));
+    setAutoFullscreen(checked);
+    window.dispatchEvent(new CustomEvent('academia:auto-fullscreen-changed'));
+  };
+
+  const handleInstallApp = async () => {
+    const result = await promptInstall();
+    if (result === 'accepted') {
+      showToast('App instalado com sucesso!', 'success');
+      setInstallState(getInstallState());
+    } else if (result === 'dismissed') {
+      showToast('Instalação cancelada.', 'info');
+    } else {
+      showToast(
+        'Instalação indisponível aqui. Use o menu do navegador → "Instalar aplicativo" ou "Adicionar à tela inicial".',
+        'info'
+      );
+    }
   };
 
   const togglePref = (key: keyof typeof prefs, checked: boolean) => {
@@ -359,7 +414,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       desc: 'Cor de destaque, paletas e estilo do cronômetro',
       icon: SvgPalette,
       badge: themeDisplayName(themeKey),
-      keywords: ['cor', 'tema', 'paleta', 'neon', 'personalizado', 'exibicao', 'aparencia', 'cronometro', 'ampulheta', 'radar', 'timer', 'navbar', 'barra', 'navegacao', 'fixa', 'flexivel', 'rolagem', 'scroll'],
+      keywords: ['cor', 'tema', 'paleta', 'neon', 'personalizado', 'exibicao', 'aparencia', 'cronometro', 'ampulheta', 'radar', 'timer', 'navbar', 'barra', 'navegacao', 'fixa', 'flexivel', 'rolagem', 'scroll', 'tela', 'cheia', 'fullscreen', 'telacheia', 'maximizar'],
     },
     {
       id: 'geral',
@@ -367,7 +422,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       desc: 'Sons, vibração, mensagens, status online e modo dev',
       icon: SvgSliders,
       badge: `${activePrefsCount} de 4 ativas`,
-      keywords: ['geral', 'som', 'sons', 'vibracao', 'mensagens', 'online', 'status', 'dev', 'desenvolvedor', 'toggle'],
+      keywords: ['geral', 'som', 'sons', 'vibracao', 'mensagens', 'online', 'status', 'dev', 'desenvolvedor', 'toggle', 'instalar', 'pwa', 'app', 'aplicativo', 'install', 'home'],
     },
     {
       id: 'seguranca',
@@ -576,6 +631,45 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   : 'A navbar fica sempre visível na parte inferior.'}
               </p>
             </section>
+
+            <section className="set-card">
+              <div className="set-card__head">
+                <div>
+                  <div className="set-card__eyebrow">EXIBIÇÃO</div>
+                  <h3 className="set-card__title">Tela Cheia</h3>
+                  <p className="set-card__desc">
+                    Entre em modo tela cheia automaticamente ao abrir o app.
+                  </p>
+                </div>
+              </div>
+              <div className="set-toggles">
+                <div className="set-toggle">
+                  <div className="set-toggle__info">
+                    <span className="set-toggle__icon">{SvgMaximize}</span>
+                    <div>
+                      <span className="set-toggle__label">Tela Cheia Automática</span>
+                      <span className="set-toggle__desc">
+                        Ao recarregar a página, o primeiro clique ou toque em
+                        qualquer lugar da tela aciona o modo tela cheia
+                      </span>
+                    </div>
+                  </div>
+                  <label className="set-switch">
+                    <input
+                      type="checkbox"
+                      checked={autoFullscreen}
+                      onChange={(e) => toggleAutoFullscreen(e.target.checked)}
+                    />
+                    <span className="set-switch__track" />
+                  </label>
+                </div>
+              </div>
+              <p className="set-note" style={{ marginTop: 10 }}>
+                {autoFullscreen
+                  ? 'Ativo: o próximo clique ou toque após recarregar entra em tela cheia. Para sair, pressione ESC.'
+                  : 'Desativo: o app continua na janela normal do navegador.'}
+              </p>
+            </section>
         </>
       ),
     },
@@ -639,6 +733,37 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   </label>
                 </div>
               </div>
+            </section>
+
+            <section className="set-card">
+              <div className="set-card__head">
+                <div>
+                  <div className="set-card__eyebrow">APLICATIVO</div>
+                  <h3 className="set-card__title">Instalar App (PWA)</h3>
+                  <p className="set-card__desc">
+                    Instale o Academia na tela inicial para abrir como um app
+                    independente, mais rápido e 100% offline.
+                  </p>
+                </div>
+              </div>
+              <div className="set-install">
+                <button
+                  type="button"
+                  className="set-btn set-btn--primary"
+                  disabled={installState !== 'available'}
+                  onClick={() => void handleInstallApp()}
+                >
+                  {SvgInstall}
+                  {installState === 'installed' ? 'App instalado' : 'Instalar agora'}
+                </button>
+              </div>
+              <p className="set-note" style={{ marginTop: 10 }}>
+                {installState === 'installed'
+                  ? 'Este app já está instalado neste dispositivo.'
+                  : installState === 'available'
+                    ? 'Toque em "Instalar agora" e confirme o prompt do navegador.'
+                    : 'Seu navegador não ofereceu o prompt. Use o menu do navegador → "Instalar aplicativo" ou "Adicionar à tela inicial".'}
+              </p>
             </section>
         </>
       ),

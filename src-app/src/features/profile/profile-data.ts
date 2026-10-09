@@ -107,6 +107,7 @@ export const PREF_KEYS = {
   messages: 'academia_pref_messages',
   online: 'academia_pref_online',
   navbarMode: 'academia_pref_navbar_mode',
+  autoFullscreen: 'academia_pref_auto_fullscreen',
 } as const;
 
 export function isDevMode(): boolean {
