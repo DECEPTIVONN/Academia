@@ -9,7 +9,7 @@
  * sobrepostos (padding/ tracking/ font-size divergentes).
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export type SectionType = 'progresso' | 'treinos' | 'dashboard' | 'social' | 'loja';
 
@@ -18,10 +18,82 @@ interface BottomNavProps {
   onSelectSection: (section: SectionType) => void;
 }
 
+/* Pref de navbar (SettingsFeature → Exibição → Barra de Navegação).
+   'fixed' = sempre visível (legado); 'flexible' = recolhe ao rolar para
+   baixo e volta ao rolar para cima (threshold de 8 px para evitar
+   micro-tremores em scroll momentum). */
+const NAVBAR_MODE_KEY = 'academia_pref_navbar_mode';
+
 export const BottomNav: React.FC<BottomNavProps> = ({
   activeSection,
   onSelectSection,
 }) => {
+  const navRef = useRef<HTMLElement>(null);
+  const hiddenRef = useRef(false);
+  const lastTopRef = useRef(0);
+
+  useEffect(() => {
+    const isFlexible = () => {
+      try {
+        return localStorage.getItem(NAVBAR_MODE_KEY) === 'flexible';
+      } catch {
+        return false;
+      }
+    };
+
+    const setHidden = (hidden: boolean) => {
+      if (hiddenRef.current === hidden) return;
+      hiddenRef.current = hidden;
+      navRef.current?.classList.toggle('bnav-hidden', hidden);
+    };
+
+    /* Scroll acontece dentro de .section-slide (overflow-y:auto) —
+       escutamos em window capture para pegar qualquer slide montado. */
+    const onScroll = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (!target || !target.classList?.contains('section-slide')) return;
+      if (!isFlexible()) {
+        setHidden(false);
+        return;
+      }
+      const top = target.scrollTop;
+      const last = lastTopRef.current;
+      lastTopRef.current = top;
+      if (top < 8) {
+        /* perto do topo → sempre mostra */
+        setHidden(false);
+      } else if (top > last + 8) {
+        /* rolando para baixo → recolhe */
+        setHidden(true);
+      } else if (top < last - 8) {
+        /* rolando para cima → mostra */
+        setHidden(false);
+      }
+    };
+
+    /* Troca de seção (novo .section-slide) → reseta referência e mostra */
+    const onModeChanged = () => {
+      lastTopRef.current = 0;
+      if (!isFlexible()) setHidden(false);
+    };
+
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('academia:navbar-mode-changed', onModeChanged);
+    return () => {
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('academia:navbar-mode-changed', onModeChanged);
+    };
+  }, []);
+
+  /* Troca de seção → novo slide começa no topo; mostra a navbar e zera a ref */
+  useEffect(() => {
+    lastTopRef.current = 0;
+    if (hiddenRef.current) {
+      hiddenRef.current = false;
+      navRef.current?.classList.remove('bnav-hidden');
+    }
+  }, [activeSection]);
+
   const navItems: { id: SectionType; domId: string; label: string; icon: React.ReactNode }[] = [
     {
       id: 'progresso',
@@ -83,7 +155,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <nav className="bottom-nav" id="bottomNav" role="navigation" aria-label="Navegação principal">
+    <nav ref={navRef} className="bottom-nav" id="bottomNav" role="navigation" aria-label="Navegação principal">
       {navItems.map((item) => {
         const isActive = activeSection === item.id;
 

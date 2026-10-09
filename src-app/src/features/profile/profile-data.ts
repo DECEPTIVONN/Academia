@@ -106,6 +106,7 @@ export const PREF_KEYS = {
   vibration: 'academia_pref_vibration',
   messages: 'academia_pref_messages',
   online: 'academia_pref_online',
+  navbarMode: 'academia_pref_navbar_mode',
 } as const;
 
 export function isDevMode(): boolean {

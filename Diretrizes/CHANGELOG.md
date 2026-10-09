@@ -21,6 +21,18 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.3.2-navbar-flex] - 2026-10-09
+*Nova opção nas Configurações → Exibição → Barra de Navegação: Fixa (comportamento legado, padrão) ou Flexível (recolhe ao deslizar para baixo e volta ao deslizar para cima dentro de .section-slide). Pref persistida em localStorage (academia_pref_navbar_mode); BottomNav alterna .bnav-hidden via listener de scroll em window capture com threshold de 8 px; classe CSS em globals.css (system_map.json → 3.5.29)*
+
+### [Added]
+- **`src-app/src/features/settings/SettingsFeature.tsx`**: seção "Barra de Navegação" na tela `exibicao` com duas opções (`set-opt` Fixa/Flexível) no padrão do Estilo do Cronômetro — `navbarMode` state, `selectNavbarMode()` persiste via `writeLS(PREF_KEYS.navbarMode)` e emite `CustomEvent('academia:navbar-mode-changed')`; ícones `SvgPin` e `SvgScrollY` (SVG stroke viewBox 24, currentColor — regra `Diretrizes/Ícones.md`); keywords do tile `exibicao` expandidas (`navbar`, `barra`, `navegacao`, `fixa`, `flexivel`, `rolagem`, `scroll`).
+- **`src-app/src/features/profile/profile-data.ts`**: `PREF_KEYS.navbarMode = 'academia_pref_navbar_mode'` (valor `'fixed' | 'flexible'`, default `'fixed'`).
+- **`src-app/src/components/BottomNav.tsx`**: lógica de scroll flexível — listener `scroll` em `window` (capture) filtra `.section-slide`, threshold de 8 px (down = esconde, up = mostra, top < 8 = sempre mostra); classe `.bnav-hidden` alternada via `classList.toggle`; troca de `activeSection` reseta e mostra; evento `academia:navbar-mode-changed` reseta quando a pref muda em sessão; modo Fixa nunca adiciona a classe (paridade legada).
+- **`src-app/src/styles/globals.css`**: `.bottom-nav { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1) }` + `.bottom-nav.bnav-hidden { transform: translateY(100%) }` — regra nova, espelho `7-nav-icons.css` intacto.
+
+### [Changed]
+- Verificação CDP (`cdp-test-navbar-flex.mjs`): **13/13 PASS, 0 exceções JS** — pref inicial null/fixed; navbar visível sem bnav-hidden; perfil → Configurações → Sistema de Cores → Flexível; pref salva como `flexible`; opt ativa; scroll down esconde (`bnav-hidden` presente); scroll up mostra; top = mostra; troca de seção mostra; volta para Fixa; modo fixa não esconde ao rolar.
+
 ## [v4.3.1-cr-details-portal] - 2026-10-09
 *Modal CR Details (Detalhes do exercício, aba Montar Ficha) abria fora da viewport no React — o position:fixed do .modal-overlay ficava preso no containing block do .section-strip (will-change:transform). Todos os 6 modais da seção Treinos agora usam createPortal(document.body), mesmo padrão já adotado pelo SocialFeature (system_map.json → 3.5.28)*
 

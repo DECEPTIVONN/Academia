@@ -142,6 +142,23 @@ const SvgHourglass = (
   </svg>
 );
 
+const SvgPin = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
+    <path d="M12 17v5" />
+    <path d="M9 10.8V7a3 3 0 0 1 6 0v3.8" />
+    <path d="M5 11h14v2a7 7 0 0 1-7 7 7 7 0 0 1-7-7v-2z" />
+  </svg>
+);
+
+const SvgScrollY = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
+    <path d="m21 16-4 4-4-4" />
+    <path d="M17 20V4" />
+    <path d="m3 8 4-4 4 4" />
+    <path d="M7 4v16" />
+  </svg>
+);
+
 const SvgVolume = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
@@ -228,6 +245,9 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const [timerStyle, setTimerStyle] = useState(() => readLS('timerStyle') || 'radar');
+  const [navbarMode, setNavbarMode] = useState<string>(
+    () => readLS(PREF_KEYS.navbarMode) || 'fixed'
+  );
   const [prefs, setPrefs] = useState(() => ({
     sounds: readLS(PREF_KEYS.sounds) !== 'false',
     vibration: readLS(PREF_KEYS.vibration) !== 'false',
@@ -260,6 +280,12 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const selectTimer = (value: string) => {
     writeLS('timerStyle', value);
     setTimerStyle(value);
+  };
+
+  const selectNavbarMode = (value: string) => {
+    writeLS(PREF_KEYS.navbarMode, value);
+    setNavbarMode(value);
+    window.dispatchEvent(new CustomEvent('academia:navbar-mode-changed'));
   };
 
   const togglePref = (key: keyof typeof prefs, checked: boolean) => {
@@ -333,7 +359,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       desc: 'Cor de destaque, paletas e estilo do cronômetro',
       icon: SvgPalette,
       badge: themeDisplayName(themeKey),
-      keywords: ['cor', 'tema', 'paleta', 'neon', 'personalizado', 'exibicao', 'aparencia', 'cronometro', 'ampulheta', 'radar', 'timer'],
+      keywords: ['cor', 'tema', 'paleta', 'neon', 'personalizado', 'exibicao', 'aparencia', 'cronometro', 'ampulheta', 'radar', 'timer', 'navbar', 'barra', 'navegacao', 'fixa', 'flexivel', 'rolagem', 'scroll'],
     },
     {
       id: 'geral',
@@ -514,6 +540,41 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <span className="set-opt__label">Ampulheta</span>
                 </button>
               </div>
+            </section>
+
+            <section className="set-card">
+              <div className="set-card__head">
+                <div>
+                  <div className="set-card__eyebrow">EXIBIÇÃO</div>
+                  <h3 className="set-card__title">Barra de Navegação</h3>
+                  <p className="set-card__desc">
+                    Escolha se a navbar inferior fica sempre visível ou se recolhe ao rolar.
+                  </p>
+                </div>
+              </div>
+              <div className="set-opts">
+                <button
+                  type="button"
+                  className={`set-opt ${navbarMode === 'fixed' ? 'set-opt--active' : ''}`}
+                  onClick={() => selectNavbarMode('fixed')}
+                >
+                  {SvgPin}
+                  <span className="set-opt__label">Fixa</span>
+                </button>
+                <button
+                  type="button"
+                  className={`set-opt ${navbarMode === 'flexible' ? 'set-opt--active' : ''}`}
+                  onClick={() => selectNavbarMode('flexible')}
+                >
+                  {SvgScrollY}
+                  <span className="set-opt__label">Flexível</span>
+                </button>
+              </div>
+              <p className="set-note" style={{ marginTop: 10 }}>
+                {navbarMode === 'flexible'
+                  ? 'A navbar recolhe ao deslizar para baixo e volta ao deslizar para cima.'
+                  : 'A navbar fica sempre visível na parte inferior.'}
+              </p>
             </section>
         </>
       ),

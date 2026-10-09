@@ -86,6 +86,19 @@ html, body {
   backdrop-filter: blur(24px);
 }
 
+/* ── v4.3.2-navbar-flex: estado oculto da navbar no modo Flexível ──
+   SettingsFeature → Exibição → Barra de Navegação → "Flexível" grava
+   academia_pref_navbar_mode=flexible; o BottomNav alterna .bnav-hidden
+   conforme a direção do scroll dentro de .section-slide (down = esconde,
+   up = mostra). Só aplica quando a pref está ativa — no modo Fixa
+   (padrão legado) a classe nunca é adicionada. */
+.bottom-nav {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bottom-nav.bnav-hidden {
+  transform: translateY(100%);
+}
+
 /* ── v4.0.13-typography: mesmo caso do .bottom-nav nos demais pares do bundle
    (par `backdrop-filter` + `-webkit-backdrop-filter` deduplicado para só o
    prefixado pelo lightningcss → getComputedStyle ficava `none` onde o legado
