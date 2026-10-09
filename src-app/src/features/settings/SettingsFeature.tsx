@@ -1,9 +1,13 @@
 /**
- * SettingsFeature.tsx — Interface dedicada de Configurações (v4.1.0)
+ * SettingsFeature.tsx — Grupo "Configurações" reutilizável (v4.3.0)
  *
- * Hub com busca + tiles + pilha de navegação (back) no estilo do
- * SettingsStandalone.tsx, renderizado dentro da aba PREFERÊNCIAS do
- * overlay de Perfil. Inclui APENAS configurações que já existiam no site:
+ * v4.1.0: interface dedicada de Configurações renderizada na aba
+ * PREFERÊNCIAS do overlay de Perfil.
+ * v4.3.0: refactorado em `useSettingsGroup()` — o hook devolve
+ * `{ tiles, screens, quickbar, headerActions, modals }` para o
+ * ProfileFeature embutir como o grupo "Configurações" do hub raiz
+ * fullscreen (raiz → grupo → leaf), mantendo os mesmos 4 grupos de
+ * configuração e o visual BEM `set-*`:
  *
  *   • exibicao  → cor de destaque (12 presets + personalizado + seletor
  *                 avançado) e estilo do cronômetro (radar/ampulheta);
@@ -11,7 +15,7 @@
  *                 modo desenvolvedor;
  *   • seguranca → nome, handle, e-mail e senha (useProfileState);
  *   • assinatura→ planos Gratuito / PRO (EM BREVE);
- *   • hub       → backup rápido (exportar/importar JSON).
+ *   • quickbar  → backup rápido (exportar/importar JSON).
  *
  * Cores aplicadas globalmente via theme-colors.ts (variáveis --primary*).
  */
@@ -35,14 +39,25 @@ import {
   themeDisplayName,
 } from './theme-colors';
 import { ColorPickerModal } from './ColorPickerModal';
-import { HubShell, type HubScreen } from './HubShell';
+import type { HubScreen, HubTile } from './HubShell';
 import './settings.css';
 
 type SettingsScreen = 'exibicao' | 'geral' | 'seguranca' | 'assinatura';
 
-export interface SettingsFeatureProps {
+export interface SettingsGroupProps {
   devMode: boolean;
   onToggleDevMode: (checked: boolean) => void;
+}
+
+export interface SettingsGroup {
+  tiles: HubTile[];
+  screens: Record<SettingsScreen, HubScreen>;
+  /** Quick bar de backup (renderizar sob os tiles do grupo) */
+  quickbar: ReactNode;
+  /** Botão Backup do header do grupo */
+  headerActions: ReactNode;
+  /** Modais + input de arquivo (renderizar fora do HubShell) */
+  modals: ReactNode;
 }
 
 /* ── Ícones SVG stroke (Diretrizes/Ícones.md) ── */
@@ -198,7 +213,11 @@ const SvgXSm = (
   </svg>
 );
 
-export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeatureProps) {
+/**
+ * Hook que concentra estado/handlers das configurações e devolve os blocos
+ * prontos para o hub do Perfil embutir como o grupo "Configurações".
+ */
+export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProps): SettingsGroup {
   const { state: profile, update } = useProfileState();
 
   /* Cor de destaque — localStorage é a fonte da verdade */
@@ -307,14 +326,7 @@ export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeaturePro
   const activeHex = activeThemeHex(themeKey, customHex);
   const activePrefsCount = Object.values(prefs).filter(Boolean).length;
 
-  const tiles: {
-    id: SettingsScreen;
-    title: string;
-    desc: string;
-    icon: ReactNode;
-    badge: string;
-    keywords: string[];
-  }[] = [
+  const tiles: HubTile[] = [
     {
       id: 'exibicao',
       title: 'Sistema de Cores',
@@ -693,61 +705,52 @@ export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeaturePro
     },
   };
 
-  return (
-    <>
-      <HubShell
-        eyebrow="ACADEMIA • PREFERÊNCIAS"
-        title="Configurações"
-        sub="Ajustes salvos neste dispositivo"
-        searchPlaceholder="Buscar ajuste (cores, backup, segurança...)"
-        emptyText="Nenhuma configuração encontrada."
-        tiles={tiles}
-        screens={screens}
-        headerActions={
-          <button
-            type="button"
-            className="set-btn"
-            title="Exportar backup JSON"
-            onClick={() => void handleExport()}
-          >
-            {SvgDownload}
-            Backup
-          </button>
-        }
-        hubExtra={
-          /* Quick bar: armazenamento local & portabilidade */
-          <div className="set-quickbar">
-            <div className="set-quickbar__info">
-              <span className="set-quickbar__icon">{SvgDatabase}</span>
-              <div>
-                <div className="set-quickbar__title">Armazenamento Local</div>
-                <p className="set-quickbar__desc">
-                  Exporte ou restaure seus dados em JSON.
-                </p>
-              </div>
-            </div>
-            <div className="set-quickbar__actions">
-              <button
-                type="button"
-                className="set-btn"
-                onClick={() => void handleExport()}
-              >
-                {SvgDownload}
-                Exportar
-              </button>
-              <button
-                type="button"
-                className="set-btn"
-                onClick={() => fileRef.current?.click()}
-              >
-                {SvgUpload}
-                Importar
-              </button>
-            </div>
-          </div>
-        }
-      />
+  const quickbar = (
+    <div className="set-quickbar">
+      <div className="set-quickbar__info">
+        <span className="set-quickbar__icon">{SvgDatabase}</span>
+        <div>
+          <div className="set-quickbar__title">Armazenamento Local</div>
+          <p className="set-quickbar__desc">
+            Exporte ou restaure seus dados em JSON.
+          </p>
+        </div>
+      </div>
+      <div className="set-quickbar__actions">
+        <button
+          type="button"
+          className="set-btn"
+          onClick={() => void handleExport()}
+        >
+          {SvgDownload}
+          Exportar
+        </button>
+        <button
+          type="button"
+          className="set-btn"
+          onClick={() => fileRef.current?.click()}
+        >
+          {SvgUpload}
+          Importar
+        </button>
+      </div>
+    </div>
+  );
 
+  const headerActions = (
+    <button
+      type="button"
+      className="set-btn"
+      title="Exportar backup JSON"
+      onClick={() => void handleExport()}
+    >
+      {SvgDownload}
+      Backup
+    </button>
+  );
+
+  const modals = (
+    <>
       {/* Seletor avançado de cores (portal no body) */}
       {pickerOpen && (
         <ColorPickerModal
@@ -804,6 +807,8 @@ export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeaturePro
       />
     </>
   );
+
+  return { tiles, screens, quickbar, headerActions, modals };
 }
 
-export default SettingsFeature;
+export default useSettingsGroup;

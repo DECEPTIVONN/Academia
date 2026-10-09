@@ -1,18 +1,24 @@
 /**
- * HubShell.tsx — Shell genérico de hub com busca + tiles + telas (v4.2.0)
+ * HubShell.tsx — Shell genérico de hub com busca + tiles + telas (v4.3.0)
  *
- * Extraído da interface de Configurações (v4.1.0, SettingsFeature) para
- * reaproveitar o MESMO estilo em todas as abas do overlay de Perfil:
- * Perfil, Progressão, Personalizar e Preferências.
+ * Extraído da interface de Configurações (v4.1.0, SettingsFeature) e estendido
+ * no v4.3.0 com pilha de navegação de profundidade N (raiz → grupo → leaf),
+ * para o overlay do Perfil virar um hub fullscreen estilo SettingsStandalone:
+ *
+ *   • raiz    → 4 tiles de grupo (Perfil, Progressão, Personalizar, Configurações);
+ *   • grupo   → tela com `tiles` (filhos) + `head`/`extra` opcionais;
+ *   • leaf    → tela com `content` (conteúdo atual).
  *
  * Emite exatamente o DOM BEM `set-*` de settings.css (set-root / set-header /
  * set-eyebrow / set-title / set-sub / set-screen / set-search / set-tiles /
  * set-tile / set-empty) — os checks do cdp-test continuam válidos.
  *
  * Comportamento:
- *   • hub → busca filtra tiles (título, descrição e keywords);
- *   • tile → tela com título próprio + botão "Voltar" no header;
- *   • voltar → hub (busca preservada, estado interno do shell).
+ *   • busca + `hubExtra` apenas na raiz (nos grupos as keywords dos leaves
+ *     ficam nos tiles do grupo, então a busca da raiz encontra tudo);
+ *   • tile → empilha a tela correspondente; "Voltar" desempilha;
+ *   • `headerActions`/`eyebrow` de um screen sobrepõe o do shell; screens
+ *     filho herdam do ancestral mais próximo que os definir.
  */
 
 import { useState, type ReactNode } from 'react';
@@ -29,24 +35,42 @@ export interface HubTile {
 
 export interface HubScreen {
   title: string;
-  content: ReactNode;
+  /** Eyebrow específico da tela (herdado do shell se ausente) */
+  eyebrow?: string;
+  /** Conteúdo da leaf (quando a tela não tem tiles aninhados) */
+  content?: ReactNode;
+  /** Grupo: tiles filhos */
+  tiles?: HubTile[];
+  /** Grupo: telas filhas, chaveadas pelo id do tile */
+  screens?: Record<string, HubScreen>;
+  /** Bloco acima dos tiles (somente telas de grupo) */
+  head?: ReactNode;
+  /** Bloco abaixo dos tiles (somente telas de grupo) */
+  extra?: ReactNode;
+  /** Ações de header da tela (herdadas/ substituem a do shell) */
+  headerActions?: ReactNode;
 }
 
 export interface HubShellProps {
-  /** Ex.: "ACADEMIA • PERFIL" */
+  /** Ex.: "ACADEMIA" */
   eyebrow: string;
-  /** Título exibido no hub */
+  /** Título exibido na raiz */
   title: string;
-  /** Subtítulo exibido apenas no hub */
+  /** Subtítulo exibido apenas na raiz */
   sub?: string;
   searchPlaceholder?: string;
   emptyText?: string;
+  /** Tiles da raiz (grupos) */
   tiles: HubTile[];
+  /** Telas da raiz, chaveadas pelo id do tile de grupo */
   screens: Record<string, HubScreen>;
-  /** Ações do header (ex.: Backup, Salvar) — visíveis no hub e nas telas */
+  /** Ações do header da raiz (ex.: Backup) */
   headerActions?: ReactNode;
-  /** Blocos extras sob os tiles apenas no hub (ex.: quickbar) */
+  /** Blocos extras sob os tiles apenas na raiz (ex.: quickbar) */
   hubExtra?: ReactNode;
+  /** Pilha de navegação controlada (ids de screen, raiz → leaf) */
+  navStack?: string[];
+  onNavStackChange?: (stack: string[]) => void;
 }
 
 /* ── Ícones SVG stroke (Diretrizes/Ícones.md) ── */
@@ -88,79 +112,115 @@ export function HubShell({
   screens,
   headerActions,
   hubExtra,
+  navStack,
+  onNavStackChange,
 }: HubShellProps) {
-  const [screen, setScreen] = useState<string | null>(null);
+  const [internalStack, setInternalStack] = useState<string[]>([]);
   const [search, setSearch] = useState('');
 
-  const active = screen != null ? screens[screen] : undefined;
+  const stack = navStack ?? internalStack;
+  const setStack = (next: string[]) => {
+    setInternalStack(next);
+    onNavStackChange?.(next);
+  };
+
+  /* Resolve a posição atual percorrendo a pilha (raiz → … → leaf) */
+  let screensMap: Record<string, HubScreen> | undefined = screens;
+  let active: HubScreen | undefined;
+  let actionsNow = headerActions;
+  let eyebrowNow = eyebrow;
+  for (const key of stack) {
+    const next: HubScreen | undefined = screensMap?.[key];
+    if (!next) break;
+    active = next;
+    if (next.headerActions !== undefined) actionsNow = next.headerActions;
+    if (next.eyebrow) eyebrowNow = next.eyebrow;
+    screensMap = next.screens;
+  }
+
+  const isRoot = stack.length === 0;
+  const isGroup = !isRoot && active?.tiles !== undefined;
+  const isLeaf = !isRoot && !isGroup;
+
   const q = search.trim().toLowerCase();
-  const filteredTiles =
-    !q
+  const currentTiles = isRoot
+    ? !q
       ? tiles
       : tiles.filter(
           (t) =>
             t.title.toLowerCase().includes(q) ||
             t.desc.toLowerCase().includes(q) ||
             (t.keywords ?? []).some((k) => k.includes(q))
-        );
+        )
+    : (active?.tiles ?? []);
+
+  const canGoBack = stack.length > 0;
+  const goBack = () => setStack(stack.slice(0, -1));
 
   return (
     <div className="set-root">
       {/* ── Header: back (nas telas) + eyebrow + título + ações ── */}
       <header className="set-header">
         <div className="set-header__left">
-          {active && (
+          {canGoBack && (
             <button
               type="button"
               className="set-icon-btn"
               title="Voltar"
               aria-label={`Voltar para ${title}`}
-              onClick={() => setScreen(null)}
+              onClick={goBack}
             >
               {SvgArrowLeft}
             </button>
           )}
           <div>
-            <span className="set-eyebrow">{eyebrow}</span>
+            <span className="set-eyebrow">{eyebrowNow}</span>
             <h2 className="set-title">{active ? active.title : title}</h2>
-            {!active && sub && <div className="set-sub">{sub}</div>}
+            {isRoot && sub && <div className="set-sub">{sub}</div>}
           </div>
         </div>
-        {headerActions && <div className="set-header__actions">{headerActions}</div>}
+        {actionsNow && <div className="set-header__actions">{actionsNow}</div>}
       </header>
 
-      {!active ? (
-        /* ================= HUB ================= */
+      {isLeaf ? (
+        /* ================= LEAF ================= */
+        <div className="set-screen">{active?.content}</div>
+      ) : (
+        /* ================= RAIZ / GRUPO ================= */
         <div className="set-screen">
-          <div className="set-search">
-            <span className="set-search__icon">{SvgSearch}</span>
-            <input
-              type="text"
-              className="set-search__input"
-              placeholder={searchPlaceholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button
-                type="button"
-                className="set-search__clear"
-                aria-label="Limpar busca"
-                onClick={() => setSearch('')}
-              >
-                {SvgX}
-              </button>
-            )}
-          </div>
+          {active?.head}
 
-          {filteredTiles.length > 0 ? (
+          {isRoot && (
+            <div className="set-search">
+              <span className="set-search__icon">{SvgSearch}</span>
+              <input
+                type="text"
+                className="set-search__input"
+                placeholder={searchPlaceholder}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  type="button"
+                  className="set-search__clear"
+                  aria-label="Limpar busca"
+                  onClick={() => setSearch('')}
+                >
+                  {SvgX}
+                </button>
+              )}
+            </div>
+          )}
+
+          {currentTiles.length > 0 ? (
             <div className="set-tiles">
-              {filteredTiles.map((tile) => (
+              {currentTiles.map((tile) => (
                 <button
                   key={tile.id}
                   type="button"
                   className="set-tile"
-                  onClick={() => setScreen(tile.id)}
+                  onClick={() => setStack([...stack, tile.id])}
                 >
                   <span className="set-tile__icon">{tile.icon}</span>
                   <span className="set-tile__body">
@@ -176,11 +236,8 @@ export function HubShell({
             <div className="set-empty">{emptyText}</div>
           )}
 
-          {hubExtra}
+          {isRoot ? hubExtra : active?.extra}
         </div>
-      ) : (
-        /* ================= TELA ================= */
-        <div className="set-screen">{active.content}</div>
       )}
     </div>
   );

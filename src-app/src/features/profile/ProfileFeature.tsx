@@ -1,20 +1,22 @@
 /**
- * ProfileFeature.tsx — Conteúdo do overlay do Perfil (Fase 2)
+ * ProfileFeature.tsx — Overlay do Perfil como hub fullscreen (v4.3.0)
  * Port 1:1 de componentes/secoes/perfil.html + initPerfilTabs (secao-perfil.js)
  * + renderProgresso (secao-progresso.js) + applyProfileCustomization/initPersonalizarTab
  * (secao-customizacao.js). O shell do overlay (header + X) fica no App.tsx.
  *
  * v4.2.0: as abas PERFIL, PROGRESSÃO e PERSONALIZAR viraram hubs com busca +
- * tiles + telas no estilo das Configurações, reutilizando HubShell (mesmo DOM
- * `set-*`). O cartão do perfil deixou de ser fixo acima das abas e virou a
- * tela "Cartão do Perfil" do hub Perfil; o botão SALVAR do Personalizar
- * subiu para o header do hub (padrão Backup das Configurações).
+ * tiles + telas no estilo das Configurações, reutilizando HubShell.
+ * v4.3.0: o overlay perdeu as 4 sub-abas (#perfTabNav) e virou um hub
+ * fullscreen de profundidade 2 (raiz → grupo → leaf) no estilo do
+ * SettingsStandalone: a raiz mostra 4 tiles de grupo (Perfil, Progressão,
+ * Personalizar, Configurações); cada grupo abre seus filhos; cada leaf abre
+ * o conteúdo atual. O HubShell gerencia a pilha de navegação; a busca fica
+ * só na raiz (keywords dos leaves agregadas nos tiles de grupo).
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import { useLocalData } from '@/hooks/useLocalData';
-import { fadeIn, fadeSwap } from '@/lib/animations';
+import { fadeIn } from '@/lib/animations';
 import { useProfileState } from '@/features/profile/useProfileState';
 import {
   FRASES_PRESET,
@@ -29,14 +31,13 @@ import {
   handleText,
   isDevMode,
   isUnlocked,
-  readLS,
   revertLockedCustomizations,
   tituloNome,
   unlockHint,
   writeLS,
 } from '@/features/profile/profile-data';
 import { showToast } from '@/lib/toast';
-import { SettingsFeature } from '@/features/settings/SettingsFeature';
+import { useSettingsGroup } from '@/features/settings/SettingsFeature';
 import { HubShell, type HubScreen, type HubTile } from '@/features/settings/HubShell';
 import { computeRadarStats, getArchetypeBadge } from '@/features/gamification/radar';
 import { useRadarMode } from '@/features/gamification/useRadarFit';
@@ -44,52 +45,10 @@ import { useShareStore } from '@/features/gamification/share-store';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
 import { DEFAULT_PROFILE_CUSTOMIZATION, type ProfileConquista } from '@/core/db/schema';
 
-type MainTab = 'perfil' | 'progressao' | 'personalizar' | 'prefs';
 type ProgSub = 'visao-geral' | 'nivel-xp' | 'conquistas';
 type PersSub = 'identidade' | 'frase' | 'destaque' | 'titulo';
 
-function initialTab(): MainTab {
-  let saved = readLS('academia_perfil_tab');
-  if (saved === 'config') {
-    saved = 'prefs';
-    writeLS('academia_perfil_tab', 'prefs');
-  }
-  return (['perfil', 'progressao', 'personalizar', 'prefs'] as MainTab[]).includes(
-    saved as MainTab
-  )
-    ? (saved as MainTab)
-    : 'perfil';
-}
-
 /* ── SVGs idênticos ao perfil.html ── */
-
-const SvgUser = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-const SvgActivity = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-  </svg>
-);
-
-const SvgEdit = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-    <path d="M12 20h9" />
-    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-  </svg>
-);
-
-const SvgSliders = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-    <line x1="4" y1="6" x2="20" y2="6" />
-    <line x1="4" y1="12" x2="20" y2="12" />
-    <line x1="4" y1="18" x2="20" y2="18" />
-  </svg>
-);
 
 const FlameSvg = (size: number, color = '#f97316') => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={size} height={size} style={{ color }}>
@@ -97,7 +56,7 @@ const FlameSvg = (size: number, color = '#f97316') => (
   </svg>
 );
 
-/* ── Ícones de tile (20px) para os hubs das abas (v4.2.0) ── */
+/* ── Ícones de tile (20px) para os hubs (v4.2.0) ── */
 
 const SvgUser20 = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
@@ -155,6 +114,24 @@ const SvgType20 = (
   </svg>
 );
 
+const SvgEdit20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </svg>
+);
+
+const SvgSliders20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <line x1="4" y1="6" x2="20" y2="6" />
+    <line x1="4" y1="12" x2="20" y2="12" />
+    <line x1="4" y1="18" x2="20" y2="18" />
+    <circle cx="9" cy="6" r="2" />
+    <circle cx="15" cy="12" r="2" />
+    <circle cx="8" cy="18" r="2" />
+  </svg>
+);
+
 const SvgSave = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
@@ -163,15 +140,22 @@ const SvgSave = (
   </svg>
 );
 
+/** Agrega keywords dos tiles filhos para a busca na raiz do hub. */
+const groupKeywords = (tiles: HubTile[], extra: string[] = []): string[] => [
+  ...extra,
+  ...tiles.flatMap((t) => [t.title.toLowerCase(), ...(t.keywords ?? [])]),
+];
+
 export function ProfileFeature() {
   const data = useLocalData();
   const { state: profile, update } = useProfileState();
 
-  const [mainTab, setMainTab] = useState<MainTab>(initialTab);
-
   const [devMode, setDevMode] = useState(() => isDevMode());
 
-  // Rascunhos da aba Personalizar (init único, idem legado)
+  /* Pilha de navegação do hub raiz (raiz → grupo → leaf) */
+  const [navStack, setNavStack] = useState<string[]>([]);
+
+  // Rascunhos do Personalizar (init único, idem legado)
   const [draft, setDraft] = useState({
     nome: '',
     handle: '',
@@ -252,35 +236,6 @@ export function ProfileFeature() {
 
   /* ── Handlers ── */
 
-  /* initPerfilTabs (secao-perfil.js L915-945/976-1001/1007-1026/1038-1063):
-     fadeSwap no conteúdo ativo (120ms) → troca → fadeIn no novo (280ms).
-     O nó legado alvo é o conteúdo da aba selecionada; no React o nó ativo é o
-     único `.perf-*` montado (render condicional), então o swap usa flushSync. */
-  const swapFade = (selector: string, changed: boolean, update: () => void) => {
-    const active = document.querySelector<HTMLElement>(selector);
-    if (!active) {
-      update();
-      return;
-    }
-    if (!changed) {
-      update();
-      fadeIn(active); // legado: performSwap sem fade-out quando já ativa
-      return;
-    }
-    fadeSwap(active, () => {
-      flushSync(update);
-      const target = document.querySelector<HTMLElement>(selector);
-      if (target) fadeIn(target);
-    });
-  };
-
-  const selectMainTab = (tab: MainTab) => {
-    swapFade('.perf-tab-content', tab !== mainTab, () => {
-      writeLS('academia_perfil_tab', tab);
-      setMainTab(tab);
-    });
-  };
-
   const saveIdentity = async () => {
     const nome = draft.nome.trim().toUpperCase() || 'DECEPTIVON';
     const handle = draft.handle.trim() || '@deceptivon';
@@ -315,6 +270,13 @@ export function ProfileFeature() {
       'success'
     );
   };
+
+  /* ── Grupo Configurações (v4.3.0: embutido no hub raiz) ── */
+
+  const settings = useSettingsGroup({
+    devMode,
+    onToggleDevMode: (v) => void toggleDevMode(v),
+  });
 
   /* ── Derivados de UI ── */
 
@@ -369,14 +331,7 @@ export function ProfileFeature() {
     );
   })();
 
-  const mainTabs: { key: MainTab; label: string; icon: typeof SvgUser }[] = [
-    { key: 'perfil', label: 'PERFIL', icon: SvgUser },
-    { key: 'progressao', label: 'PROGRESSÃO', icon: SvgActivity },
-    { key: 'personalizar', label: 'PERSONALIZAR', icon: SvgEdit },
-    { key: 'prefs', label: 'PREFERÊNCIAS', icon: SvgSliders },
-  ];
-
-  /* ── Hubs das abas (v4.2.0): busca + tiles + telas no estilo das Configurações ── */
+  /* ── Telas de grupo: Perfil ── */
 
   const perfilTiles: HubTile[] = [
     {
@@ -406,8 +361,7 @@ export function ProfileFeature() {
   ];
 
   const perfilScreens: Record<string, HubScreen> = {
-    /* Cabeçalho do perfil (perfil.html L1–55) — movido do bloco fixo acima
-       das abas para a tela "Cartão do Perfil" do hub */
+    /* Cabeçalho do perfil (perfil.html L1–55) — a tela "Cartão do Perfil" */
     cartao: {
       title: 'Cartão do Perfil',
       content: (
@@ -420,7 +374,7 @@ export function ProfileFeature() {
                   className="profile-edit-btn"
                   id="btnEditarPerfil"
                   title="Personalizar Perfil"
-                  onClick={() => selectMainTab('personalizar')}
+                  onClick={() => setNavStack(['personalizar', 'identidade'])}
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -718,6 +672,8 @@ export function ProfileFeature() {
     },
   };
 
+  /* ── Telas de grupo: Progressão ── */
+
   const progTiles: HubTile[] = [
     {
       id: 'visao-geral',
@@ -909,6 +865,8 @@ export function ProfileFeature() {
       ),
     },
   };
+
+  /* ── Telas de grupo: Personalizar ── */
 
   const persTiles: HubTile[] = [
     {
@@ -1142,152 +1100,154 @@ export function ProfileFeature() {
     },
   };
 
-  return (
-    <div className="treino-container">
-      <div id="section-perfil" className="main-section" role="tabpanel">
-        <div id="tab-perfil" className="t-tab active" role="tabpanel" style={{ padding: 0 }}>
-          {/* ===== SISTEMA DE ABAS DO PERFIL (L57–77) ===== */}
-          <div
-            className="treino-tabs-section section-subtabs"
-            style={{ position: 'sticky', top: 0, zIndex: 50 }}
+  /* ── Blocos de header/head dos grupos ── */
+
+  const devModeRow = (
+    <div
+      className="pref-row"
+      style={{
+        margin: '0 0 16px 0',
+        background: 'rgba(139, 92, 246, 0.08)',
+        border: '1px dashed var(--primary-light)',
+        padding: '12px 16px',
+        borderRadius: '12px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 4px var(--primary-light))' }}>
+          🛠️
+        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <span
+            className="pref-label"
+            style={{
+              fontFamily: "'Rajdhani', sans-serif",
+              fontWeight: 700,
+              color: '#fff',
+              letterSpacing: '1px',
+              fontSize: '0.95rem',
+            }}
           >
-            <nav className="treino-tab-nav" role="tablist" id="perfTabNav">
-              {mainTabs.map((t) => (
-                <button
-                  key={t.key}
-                  className={`t-tab-btn ${mainTab === t.key ? 'active' : ''}`}
-                  data-perftab={t.key}
-                  role="tab"
-                  aria-selected={mainTab === t.key}
-                  onClick={() => selectMainTab(t.key)}
-                >
-                  {t.icon}
-                  {t.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          <div className="perf-tab-content-wrapper">
-            {/* ========== ABA 1: PERFIL — hub (v4.2.0) ========== */}
-            {mainTab === 'perfil' && (
-              <div id="perf-tab-perfil" className="perf-tab-content active">
-                <HubShell
-                  eyebrow="ACADEMIA • PERFIL"
-                  title="Meu Perfil"
-                  sub="Cartão, ofensivas dos amigos e medalhas"
-                  searchPlaceholder="Buscar seção (cartão, amigos, medalhas)..."
-                  emptyText="Nenhuma seção encontrada."
-                  tiles={perfilTiles}
-                  screens={perfilScreens}
-                />
-              </div>
-            )}
-
-            {/* ========== ABA 2: PROGRESSÃO — hub (v4.2.0) ========== */}
-            {mainTab === 'progressao' && (
-              <div id="perf-tab-progressao" className="perf-tab-content">
-                {/* Modo Desenvolvedor */}
-                <div
-                  className="pref-row"
-                  style={{
-                    margin: '0 0 16px 0',
-                    background: 'rgba(139, 92, 246, 0.08)',
-                    border: '1px dashed var(--primary-light)',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 4px var(--primary-light))' }}>
-                      🛠️
-                    </span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <span
-                        className="pref-label"
-                        style={{
-                          fontFamily: "'Rajdhani', sans-serif",
-                          fontWeight: 700,
-                          color: '#fff',
-                          letterSpacing: '1px',
-                          fontSize: '0.95rem',
-                        }}
-                      >
-                        MODO DESENVOLVEDOR
-                      </span>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                        Libera personalizações, conquistas e maestrias
-                      </span>
-                    </div>
-                  </div>
-                  <label
-                    className="pref-switch"
-                    style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px', marginBottom: 0 }}
-                  >
-                    <input
-                      type="checkbox"
-                      id="devModeToggle"
-                      checked={devMode}
-                      onChange={(e) => void toggleDevMode(e.target.checked)}
-                    />
-                    <span className="pref-slider" />
-                  </label>
-                </div>
-
-                <HubShell
-                  eyebrow="ACADEMIA • PROGRESSÃO"
-                  title="Progressão"
-                  sub="Visão geral, nível/XP e conquistas"
-                  searchPlaceholder="Buscar seção (visão, nível, conquistas)..."
-                  emptyText="Nenhuma seção encontrada."
-                  tiles={progTiles}
-                  screens={progScreens}
-                />
-              </div>
-            )}
-
-            {/* ========== ABA 4: PREFERÊNCIAS (L218–472) ==========
-                Interface dedicada de Configurações (v4.1.0): hub com busca/tiles
-                + telas navegáveis (cores, geral, segurança, assinatura). */}
-            {mainTab === 'prefs' && (
-              <div id="perf-tab-prefs" className="perf-tab-content active">
-                <SettingsFeature devMode={devMode} onToggleDevMode={(v) => void toggleDevMode(v)} />
-              </div>
-            )}
-
-            {/* ========== ABA 3: PERSONALIZAR — hub (v4.2.0) ========== */}
-            {mainTab === 'personalizar' && (
-              <div id="perf-tab-personalizar" className="perf-tab-content active">
-                <HubShell
-                  eyebrow="ACADEMIA • PERSONALIZAR"
-                  title="Personalizar"
-                  sub="Identidade, frase, destaque e título"
-                  searchPlaceholder="Buscar ajuste (nome, handle, frase, título)..."
-                  emptyText="Nenhuma seção encontrada."
-                  tiles={persTiles}
-                  screens={persScreens}
-                  headerActions={
-                    <button
-                      type="button"
-                      className="set-btn"
-                      id="btnSalvarCustomizacaoTab"
-                      title="Salvar alterações"
-                      onClick={() => void saveIdentity()}
-                    >
-                      {SvgSave}
-                      Salvar
-                    </button>
-                  }
-                />
-              </div>
-            )}
-          </div>
+            MODO DESENVOLVEDOR
+          </span>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+            Libera personalizações, conquistas e maestrias
+          </span>
         </div>
       </div>
+      <label
+        className="pref-switch"
+        style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px', marginBottom: 0 }}
+      >
+        <input
+          type="checkbox"
+          id="devModeToggle"
+          checked={devMode}
+          onChange={(e) => void toggleDevMode(e.target.checked)}
+        />
+        <span className="pref-slider" />
+      </label>
+    </div>
+  );
 
+  const saveButton = (
+    <button
+      type="button"
+      className="set-btn"
+      id="btnSalvarCustomizacaoTab"
+      title="Salvar alterações"
+      onClick={() => void saveIdentity()}
+    >
+      {SvgSave}
+      Salvar
+    </button>
+  );
+
+  /* ── Hub raiz: 4 tiles de grupo (v4.3.0) ── */
+
+  const rootTiles: HubTile[] = [
+    {
+      id: 'perfil',
+      title: 'Perfil',
+      desc: 'Cartão, ofensivas dos amigos e medalhas',
+      icon: SvgUser20,
+      badge: pc.nome || 'DECEPTIVON',
+      keywords: groupKeywords(perfilTiles, ['perfil']),
+    },
+    {
+      id: 'progressao',
+      title: 'Progressão',
+      desc: 'Visão geral, nível/XP e conquistas',
+      icon: SvgTrending20,
+      badge: `Nível ${stats.nivel}`,
+      keywords: groupKeywords(progTiles, ['progressao', 'gamificacao']),
+    },
+    {
+      id: 'personalizar',
+      title: 'Personalizar',
+      desc: 'Identidade, frase, destaque e título',
+      icon: SvgEdit20,
+      badge: handleText(pc),
+      keywords: groupKeywords(persTiles, ['personalizar', 'customizacao']),
+    },
+    {
+      id: 'configuracoes',
+      title: 'Configurações',
+      desc: 'Cores, preferências, segurança e assinatura',
+      icon: SvgSliders20,
+      badge: 'Ajustes',
+      keywords: groupKeywords(settings.tiles, ['configuracoes', 'config', 'ajustes', 'preferencias', 'backup']),
+    },
+  ];
+
+  const rootScreens: Record<string, HubScreen> = {
+    perfil: {
+      eyebrow: 'ACADEMIA • PERFIL',
+      title: 'Perfil',
+      tiles: perfilTiles,
+      screens: perfilScreens,
+    },
+    progressao: {
+      eyebrow: 'ACADEMIA • PROGRESSÃO',
+      title: 'Progressão',
+      head: devModeRow,
+      tiles: progTiles,
+      screens: progScreens,
+    },
+    personalizar: {
+      eyebrow: 'ACADEMIA • PERSONALIZAR',
+      title: 'Personalizar',
+      tiles: persTiles,
+      screens: persScreens,
+      headerActions: saveButton,
+    },
+    configuracoes: {
+      eyebrow: 'ACADEMIA • CONFIGURAÇÕES',
+      title: 'Configurações',
+      tiles: settings.tiles,
+      screens: settings.screens,
+      extra: settings.quickbar,
+      headerActions: settings.headerActions,
+    },
+  };
+
+  return (
+    <div className="treino-container">
+      <HubShell
+        eyebrow="ACADEMIA"
+        title="Meu Perfil"
+        sub="Personalize sua jornada"
+        searchPlaceholder="Buscar (perfil, progressão, cores, segurança...)"
+        emptyText="Nenhuma seção encontrada."
+        tiles={rootTiles}
+        screens={rootScreens}
+        navStack={navStack}
+        onNavStackChange={setNavStack}
+      />
+      {settings.modals}
     </div>
   );
 }
