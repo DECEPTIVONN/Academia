@@ -11,7 +11,7 @@ import { ProgressoFeature } from '@/features/training/ProgressoFeature';
 import { SocialFeature } from '@/features/social/SocialFeature';
 import { ConclusaoModal } from '@/features/workout/ConclusaoModal';
 import { ProfileFeature } from '@/features/profile/ProfileFeature';
-import { applyAppTheme, readLS } from '@/features/profile/profile-data';
+import { applySavedTheme } from '@/features/settings/theme-colors';
 import { BottomNav, type SectionType } from '@/components/BottomNav';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
@@ -239,9 +239,10 @@ export function App() {
   }, [isFichaOverlayOpen]);
 
   /* Tema salvo + classes/aria do overlay do Perfil
-     (perfil-overlay.js openPerfilOverlay L37–75 / closePerfilOverlay L78–114) */
+      (perfil-overlay.js openPerfilOverlay L37–75 / closePerfilOverlay L78–114)
+      v4.1.0: restaura preset OU hex personalizado (academia_theme='custom'). */
   useEffect(() => {
-    applyAppTheme(readLS('academia_theme') || 'purple');
+    applySavedTheme();
   }, []);
 
   useEffect(() => {

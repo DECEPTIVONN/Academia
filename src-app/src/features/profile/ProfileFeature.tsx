@@ -11,14 +11,11 @@ import { useLocalData } from '@/hooks/useLocalData';
 import { fadeIn, fadeSwap } from '@/lib/animations';
 import { useProfileState } from '@/features/profile/useProfileState';
 import {
-  APP_THEMES,
   FRASES_PRESET,
   IDENTITY_EMBLEMS,
   SHOWCASE_STATS,
   SPRITESHEET_URL,
-  THEME_TITLES,
   TITULOS,
-  applyAppTheme,
   applyCustomizationGlobals,
   emblemForSlot,
   getBadgeDefinitions,
@@ -31,10 +28,9 @@ import {
   tituloNome,
   unlockHint,
   writeLS,
-  PREF_KEYS,
 } from '@/features/profile/profile-data';
-import { exportBackupData, importBackupFile } from '@/features/profile/backup';
 import { showToast } from '@/lib/toast';
+import { SettingsFeature } from '@/features/settings/SettingsFeature';
 import { computeRadarStats, getArchetypeBadge } from '@/features/gamification/radar';
 import { useRadarMode } from '@/features/gamification/useRadarFit';
 import { useShareStore } from '@/features/gamification/share-store';
@@ -43,7 +39,6 @@ import { DEFAULT_PROFILE_CUSTOMIZATION, type ProfileConquista } from '@/core/db/
 
 type MainTab = 'perfil' | 'progressao' | 'personalizar' | 'prefs';
 type ProgSub = 'visao-geral' | 'nivel-xp' | 'conquistas';
-type PrefsSub = 'config' | 'geral' | 'assinatura' | 'seguranca';
 type PersSub = 'identidade' | 'frase' | 'destaque' | 'titulo';
 
 function initialTab(): MainTab {
@@ -101,20 +96,11 @@ export function ProfileFeature() {
 
   const [mainTab, setMainTab] = useState<MainTab>(initialTab);
   const [progSub, setProgSub] = useState<ProgSub>('visao-geral');
-  const [prefsSub, setPrefsSub] = useState<PrefsSub>('config');
   const [persSub, setPersSub] = useState<PersSub>('identidade');
 
-  const [theme, setTheme] = useState(() => readLS('academia_theme') || 'purple');
   const [devMode, setDevMode] = useState(() => isDevMode());
-  const [timerStyle, setTimerStyle] = useState(() => readLS('timerStyle') || 'radar');
-  const [prefs, setPrefs] = useState(() => ({
-    sounds: readLS(PREF_KEYS.sounds) !== 'false',
-    vibration: readLS(PREF_KEYS.vibration) !== 'false',
-    messages: readLS(PREF_KEYS.messages) !== 'false',
-    online: readLS(PREF_KEYS.online) === 'true',
-  }));
 
-  // Rascunhos da aba Personalizar / campos de Segurança (init único, idem legado)
+  // Rascunhos da aba Personalizar (init único, idem legado)
   const [draft, setDraft] = useState({
     nome: '',
     handle: '',
@@ -122,13 +108,7 @@ export function ProfileFeature() {
     showcaseStat: 'streak',
     titulo: null as string | null,
   });
-  const [sec, setSec] = useState({ nome: '', handle: '', email: '', senha: '' });
   const initedRef = useRef(false);
-
-  // Importação de backup
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const pc = profile?.customization ?? DEFAULT_PROFILE_CUSTOMIZATION;
   const maestrias = (data.legacy?.maestrias ?? {}) as Record<string, { nivel?: number }>;
@@ -197,7 +177,6 @@ export function ProfileFeature() {
       showcaseStat: p.showcaseStat || 'streak',
       titulo: p.titulo ?? null,
     });
-    setSec({ nome: p.nome || '', handle: p.handle || '', email: p.email || '', senha: '' });
   }, [profile]);
 
   /* ── Handlers ── */
@@ -243,18 +222,6 @@ export function ProfileFeature() {
     showToast('Identidade atualizada!', 'success');
   };
 
-  const saveSecurityField = async (
-    field: 'nome' | 'handle' | 'email' | 'senha',
-    value: string,
-    successMsg: string
-  ) => {
-    await update((d) => {
-      d.customization = { ...d.customization, [field]: value };
-    });
-    showToast(successMsg, 'success');
-    if (field === 'senha') setSec((s) => ({ ...s, senha: '' }));
-  };
-
   const toggleDevMode = async (checked: boolean) => {
     writeLS('academia_dev_mode', String(checked));
     setDevMode(checked);
@@ -276,49 +243,6 @@ export function ProfileFeature() {
       checked ? 'Modo desenvolvedor ativado!' : 'Modo desenvolvedor desativado!',
       'success'
     );
-  };
-
-  const handleExport = async () => {
-    try {
-      const result = await exportBackupData();
-      showToast(
-        result === 'shared' ? 'Backup compartilhado!' : 'Dados exportados com sucesso!',
-        'success'
-      );
-    } catch (err) {
-      console.error(err);
-      showToast('Erro ao exportar dados.', 'error');
-    }
-  };
-
-  const handleImportFile = (file: File) => {
-    if (file.size > 20 * 1024 * 1024) {
-      showToast('Arquivo muito grande (máx. 20MB).', 'error');
-      return;
-    }
-    setPendingFile(file);
-    setConfirmOpen(true);
-  };
-
-  const confirmImport = async () => {
-    const file = pendingFile;
-    setConfirmOpen(false);
-    setPendingFile(null);
-    if (!file) return;
-    try {
-      await importBackupFile(file);
-      showToast('Importação bem-sucedida! Atualizando interface...', 'success');
-      document.dispatchEvent(new CustomEvent('academia:db-ready'));
-    } catch (err) {
-      console.error('[importData]', err);
-      showToast(`Erro ao importar: ${(err as Error).message || 'arquivo inválido.'}`, 'error');
-    }
-  };
-
-  const cancelImport = () => {
-    setConfirmOpen(false);
-    setPendingFile(null);
-    showToast('Importação cancelada.', 'info');
   };
 
   /* ── Derivados de UI ── */
@@ -966,501 +890,12 @@ export function ProfileFeature() {
               </div>
             )}
 
-            {/* ========== ABA 4: PREFERÊNCIAS (L218–472) ========== */}
+            {/* ========== ABA 4: PREFERÊNCIAS (L218–472) ==========
+                Interface dedicada de Configurações (v4.1.0): hub com busca/tiles
+                + telas navegáveis (cores, geral, segurança, assinatura). */}
             {mainTab === 'prefs' && (
               <div id="perf-tab-prefs" className="perf-tab-content active">
-                <div className="sub-navbar" id="perfPrefsSubNav">
-                  {(
-                    [
-                      {
-                        key: 'config' as PrefsSub,
-                        title: 'Configurações',
-                        icon: (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93A10 10 0 0 1 19.07 19.07" />
-                            <circle cx="12" cy="12" r="10" />
-                          </svg>
-                        ),
-                      },
-                      {
-                        key: 'geral' as PrefsSub,
-                        title: 'Geral',
-                        icon: (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                            <line x1="4" y1="6" x2="20" y2="6" />
-                            <line x1="4" y1="12" x2="20" y2="12" />
-                            <line x1="4" y1="18" x2="20" y2="18" />
-                          </svg>
-                        ),
-                      },
-                      {
-                        key: 'assinatura' as PrefsSub,
-                        title: 'Assinatura',
-                        icon: (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                          </svg>
-                        ),
-                      },
-                      {
-                        key: 'seguranca' as PrefsSub,
-                        title: 'Segurança',
-                        icon: (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                          </svg>
-                        ),
-                      },
-                    ]
-                  ).map((btn) => (
-                    <button
-                      key={btn.key}
-                      className={`sub-nav-btn ${prefsSub === btn.key ? 'active' : ''}`}
-                      data-perfsubtab2={btn.key}
-                      title={btn.title}
-                      onClick={() => swapFade('.perf-sub-content', btn.key !== prefsSub, () => setPrefsSub(btn.key))}
-                    >
-                      {btn.icon}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Sub-aba: Configurações */}
-                {prefsSub === 'config' && (
-                  <div id="perf-subtab2-config" className="perf-sub-content active">
-                    <div className="theme-section theme-cinza-castelo">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">CONFIGURAÇÕES</div>
-                        <div className="timer-settings">
-                          <h3>Configurações do Cronômetro</h3>
-                          <div className="timer-options">
-                            <label className="timer-option">
-                              <input
-                                type="radio"
-                                name="timerStyle"
-                                value="radar"
-                                checked={timerStyle === 'radar'}
-                                onChange={() => {
-                                  writeLS('timerStyle', 'radar');
-                                  setTimerStyle('radar');
-                                }}
-                              />
-                              <span className="to-card">
-                                <span className="to-icon" style={{ display: 'flex', alignItems: 'center' }}>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12 6 12 12 16 14" />
-                                  </svg>
-                                </span>
-                                <span className="to-lbl">Radar</span>
-                              </span>
-                            </label>
-                            <label className="timer-option">
-                              <input
-                                type="radio"
-                                name="timerStyle"
-                                value="hourglass"
-                                checked={timerStyle === 'hourglass'}
-                                onChange={() => {
-                                  writeLS('timerStyle', 'hourglass');
-                                  setTimerStyle('hourglass');
-                                }}
-                              />
-                              <span className="to-card">
-                                <span className="to-icon" style={{ display: 'flex', alignItems: 'center' }}>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                                    <path d="M5 2h14" />
-                                    <path d="M5 22h14" />
-                                    <path d="M17 2v4a5 5 0 0 1-5 5 5 5 0 0 1-5-5V2" />
-                                    <path d="M17 22v-4a5 5 0 0 0-5-5 5 5 0 0 0-5 5v4" />
-                                  </svg>
-                                </span>
-                                <span className="to-lbl">Ampulheta</span>
-                              </span>
-                            </label>
-                          </div>
-                        </div>
-                        <div className="timer-settings">
-                          <h3>Cor de Energia (Tema)</h3>
-                          <p style={{ fontSize: '.85rem', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
-                            Personalize a cor principal do seu aplicativo.
-                          </p>
-                          <div className="theme-colors" id="themeColors">
-                            {Object.keys(APP_THEMES).map((key) => (
-                              <button
-                                key={key}
-                                className={`t-color ${theme === key ? 'active' : ''}`}
-                                data-theme={key}
-                                style={{ ['--c' as string]: APP_THEMES[key].p }}
-                                title={THEME_TITLES[key] ?? key}
-                                onClick={() => {
-                                  applyAppTheme(key);
-                                  setTheme(key);
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <div className="timer-settings">
-                          <h3>Backup e Dados</h3>
-                          <p style={{ fontSize: '.85rem', color: 'var(--text-tertiary)', marginBottom: '16px' }}>
-                            Exporte seus treinos e histórico para um arquivo ou importe dados de outro
-                            dispositivo.
-                          </p>
-                          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                            <button
-                              className="btn btn-secondary"
-                              data-action="export-data"
-                              style={{
-                                flex: 1,
-                                minWidth: '160px',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                              }}
-                              onClick={() => void handleExport()}
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                                <polyline points="16 6 12 2 8 6" />
-                                <line x1="12" y1="2" x2="12" y2="15" />
-                              </svg>{' '}
-                              EXPORTAR DADOS
-                            </button>
-                            <button
-                              className="btn btn-secondary"
-                              data-action="import-data"
-                              style={{
-                                flex: 1,
-                                minWidth: '160px',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                              }}
-                              onClick={() => fileRef.current?.click()}
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="7 10 12 15 17 10" />
-                                <line x1="12" y1="15" x2="12" y2="3" />
-                              </svg>{' '}
-                              IMPORTAR DADOS
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-aba: Geral */}
-                {prefsSub === 'geral' && (
-                  <div className="perf-sub-content active" id="perf-subtab2-geral">
-                    <div className="theme-section theme-cinza-castelo">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">PREFERÊNCIAS GERAIS</div>
-                        <div className="timer-settings">
-                          <div className="pref-toggle-list">
-                            {(
-                              [
-                                {
-                                  id: 'prefSounds',
-                                  key: 'sounds' as const,
-                                  label: 'Efeitos Sonoros',
-                                  desc: 'Sons ao marcar exercícios e conquistas',
-                                  icon: (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                                    </svg>
-                                  ),
-                                },
-                                {
-                                  id: 'prefVibration',
-                                  key: 'vibration' as const,
-                                  label: 'Vibração',
-                                  desc: 'Feedback háptico ao interagir',
-                                  icon: (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                                      <path d="M12 2a10 10 0 1 0 10 10" />
-                                      <path d="M12 6v6l4 2" />
-                                    </svg>
-                                  ),
-                                },
-                                {
-                                  id: 'prefMessages',
-                                  key: 'messages' as const,
-                                  label: 'Mensagens Motivacionais',
-                                  desc: 'Frases de incentivo ao concluir treinos',
-                                  icon: (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                    </svg>
-                                  ),
-                                },
-                                {
-                                  id: 'prefOnlineStatus',
-                                  key: 'online' as const,
-                                  label: 'Status Online',
-                                  desc: 'Mostrar sua atividade para amigos',
-                                  icon: (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                                      <circle cx="12" cy="12" r="10" />
-                                      <line x1="2" y1="12" x2="22" y2="12" />
-                                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                                    </svg>
-                                  ),
-                                },
-                              ]
-                            ).map((item) => (
-                              <div className="pref-toggle-item" key={item.id}>
-                                <div className="pref-toggle-info">
-                                  {item.icon}
-                                  <div>
-                                    <span className="pref-toggle-label">{item.label}</span>
-                                    <span className="pref-toggle-desc">{item.desc}</span>
-                                  </div>
-                                </div>
-                                <label className="pref-switch">
-                                  <input
-                                    type="checkbox"
-                                    id={item.id}
-                                    checked={prefs[item.key]}
-                                    onChange={(e) => {
-                                      const checked = e.target.checked;
-                                      setPrefs((p) => ({ ...p, [item.key]: checked }));
-                                      writeLS(PREF_KEYS[item.key], String(checked));
-                                    }}
-                                  />
-                                  <span className="pref-slider" />
-                                </label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-aba: Assinatura */}
-                {prefsSub === 'assinatura' && (
-                  <div className="perf-sub-content active" id="perf-subtab2-assinatura">
-                    <div className="theme-section theme-ouro">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">ASSINATURA</div>
-                        <div className="timer-settings">
-                          <div className="subscription-plans">
-                            <div className="plan-card plan-free active-plan">
-                              <div className="plan-badge">ATUAL</div>
-                              <div className="plan-name">Gratuito</div>
-                              <div className="plan-price">
-                                R$ 0<span>/mês</span>
-                              </div>
-                              <ul className="plan-features">
-                                <li>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>{' '}
-                                  Fichas de treino ilimitadas
-                                </li>
-                                <li>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>{' '}
-                                  Calendário de progresso
-                                </li>
-                                <li>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>{' '}
-                                  Conquistas e badges
-                                </li>
-                                <li style={{ opacity: 0.4 }}>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                  </svg>{' '}
-                                  Radar Fit avançado
-                                </li>
-                                <li style={{ opacity: 0.4 }}>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                  </svg>{' '}
-                                  Exportação de dados
-                                </li>
-                              </ul>
-                            </div>
-                            <div className="plan-card plan-pro">
-                              <div className="plan-badge plan-badge--pro">PRO</div>
-                              <div className="plan-name">Academia PRO</div>
-                              <div className="plan-price">
-                                R$ 9<span>/mês</span>
-                              </div>
-                              <ul className="plan-features">
-                                <li>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>{' '}
-                                  Tudo do gratuito
-                                </li>
-                                <li>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>{' '}
-                                  Radar Fit avançado
-                                </li>
-                                <li>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>{' '}
-                                  Exportação de relatórios
-                                </li>
-                                <li>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>{' '}
-                                  Banners e emblemas exclusivos
-                                </li>
-                                <li>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>{' '}
-                                  Suporte prioritário
-                                </li>
-                              </ul>
-                              <button
-                                className="btn btn-primary"
-                                style={{ width: '100%', marginTop: '12px', fontWeight: 800, letterSpacing: '1px' }}
-                              >
-                                EM BREVE
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-aba: Segurança */}
-                {prefsSub === 'seguranca' && (
-                  <div className="perf-sub-content active" id="perf-subtab2-seguranca">
-                    <div className="theme-section theme-cinza-castelo">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">SEGURANÇA E CONTA</div>
-                        <div className="timer-settings">
-                          <div className="security-form">
-                            {(
-                              [
-                                {
-                                  id: 'secNome',
-                                  btnId: 'btnSaveNome',
-                                  field: 'nome' as const,
-                                  label: 'Nome de Exibição',
-                                  type: 'text',
-                                  placeholder: 'Seu nome...',
-                                  icon: (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                      <circle cx="12" cy="7" r="4" />
-                                    </svg>
-                                  ),
-                                },
-                                {
-                                  id: 'secHandle',
-                                  btnId: 'btnSaveHandle',
-                                  field: 'handle' as const,
-                                  label: 'Nome de Usuário (@handle)',
-                                  type: 'text',
-                                  placeholder: '@usuario...',
-                                  icon: (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                      <circle cx="12" cy="7" r="4" />
-                                    </svg>
-                                  ),
-                                },
-                                {
-                                  id: 'secEmail',
-                                  btnId: 'btnSaveEmail',
-                                  field: 'email' as const,
-                                  label: 'E-mail',
-                                  type: 'email',
-                                  placeholder: 'seu@email.com',
-                                  icon: (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                                      <polyline points="22,6 12,13 2,6" />
-                                    </svg>
-                                  ),
-                                },
-                                {
-                                  id: 'secSenha',
-                                  btnId: 'btnSaveSenha',
-                                  field: 'senha' as const,
-                                  label: 'Senha',
-                                  type: 'password',
-                                  placeholder: 'Nova senha...',
-                                  icon: (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                    </svg>
-                                  ),
-                                },
-                              ]
-                            ).map((f) => (
-                              <div className="sec-field-group" key={f.id}>
-                                <label className="sec-label" htmlFor={f.id}>
-                                  {f.icon}
-                                  {f.label}
-                                </label>
-                                <div className="sec-input-row">
-                                  <input
-                                    type={f.type}
-                                    className="sec-input"
-                                    id={f.id}
-                                    placeholder={f.placeholder}
-                                    value={sec[f.field]}
-                                    onChange={(e) => setSec((s) => ({ ...s, [f.field]: e.target.value }))}
-                                  />
-                                  <button
-                                    className="sec-save-btn"
-                                    id={f.btnId}
-                                    title={`Salvar ${f.label}`}
-                                    onClick={() =>
-                                      void saveSecurityField(f.field, sec[f.field], 'Campo atualizado!')
-                                    }
-                                  >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16">
-                                      <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                  </button>
-                                </div>
-                                {f.field === 'senha' && (
-                                  <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '6px', opacity: 0.7 }}>
-                                    🔒 Armazenado localmente no dispositivo.
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <SettingsFeature devMode={devMode} onToggleDevMode={(v) => void toggleDevMode(v)} />
               </div>
             )}
 
@@ -1703,41 +1138,6 @@ export function ProfileFeature() {
         </div>
       </div>
 
-      {/* MODAL CONFIRM IMPORT */}
-      {confirmOpen && (
-        <div className="modal-overlay" id="modalConfirm" style={{ display: 'flex' }}>
-          <div className="modal-confirm">
-            <div className="confirm-icon">⚠️</div>
-            <h3 id="confirmTitle">⚠️ Importar backup?</h3>
-            <p id="confirmMsg">
-              Esta ação irá SUBSTITUIR todos os seus dados atuais (exercícios, histórico,
-              conquistas, fichas e personalização) pelos dados do arquivo selecionado. Esta ação
-              não pode ser desfeita.
-            </p>
-            <div className="confirm-actions">
-              <button className="btn btn-secondary" id="btnConfirmNo" onClick={cancelImport}>
-                Cancelar
-              </button>
-              <button className="btn btn-danger" id="btnConfirmYes" onClick={() => void confirmImport()}>
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <input
-        type="file"
-        ref={fileRef}
-        id="inputImportarJSON"
-        style={{ display: 'none' }}
-        accept=".json"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = '';
-          if (file) handleImportFile(file);
-        }}
-      />
     </div>
   );
 }
