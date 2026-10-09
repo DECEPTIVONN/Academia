@@ -21,6 +21,17 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.3.1-cr-details-portal] - 2026-10-09
+*Modal CR Details (Detalhes do exercício, aba Montar Ficha) abria fora da viewport no React — o position:fixed do .modal-overlay ficava preso no containing block do .section-strip (will-change:transform). Todos os 6 modais da seção Treinos agora usam createPortal(document.body), mesmo padrão já adotado pelo SocialFeature (system_map.json → 3.5.28)*
+
+### [Fixed]
+- **`src-app/src/features/workout/treinos/TreinosModals.tsx`**: helper `toBody = (node) => createPortal(node, document.body)` + envolvimento dos returns de `ConfirmModal`, `ImageModal`, `AerobicoModal`, `CRDetailsModal` e `MaestriaGeralModal` — sem o portal, o `.section-strip` (que tem `will-change: transform` para o translateX da navegação de seções) virava o containing block do `position:fixed` do `.modal-overlay` e o card saía da viewport (medido: x=745 numa tela de 390 px; após o fix: x=24).
+- **`src-app/src/features/workout/treinos/ExercicioFormModal.tsx`**: mesmo helper `toBody` + portal no return de `modalExercicio` — mesmo bug de containing block.
+- Causa-raiz idêntica à já corrigida em `SocialFeature.tsx` (v4.0.14-social-placeholder): qualquer `.modal-overlay` montado dentro de `.section-slide` precisa do portal para `document.body`.
+
+### [Changed]
+- Verificação CDP (`cdp-test-cr-details.mjs`): **23/23 PASS, 0 exceções JS** — nav Treinos → aba Montar Ficha → card menu → Detalhes → modal com nome/level/grupo/classe/descrição preenchidos, 3 dots + 3 panes (Descrição/Stats/Ilustração), 4 itens de stat, atalho de maestria, fechamento via X/ESC, reabertura, atalho EDITAR fecha o modal e abre o form. Screenshots confirmam paridade visual com o modal legado (`modais.html` L952–1031 + `openCRDetails` L1107–1263). DIAG pós-fix: card em x=24.95, y=40, w=340, h=764 (dentro do viewport 390×844), `elemAtCenter: cr-description-box`.
+
 ## [v4.3.0-profile-hub] - 2026-10-09
 *Overlay do Perfil perdeu as 4 sub-abas (#perfTabNav) e virou um hub fullscreen de profundidade 2 no estilo do SettingsStandalone — raiz com 4 tiles de grupo (Perfil, Progressão, Personalizar, Configurações), HubShell com pilha de navegação controlada (navStack), SettingsFeature refactorado no hook useSettingsGroup embutido como grupo, busca só na raiz com keywords dos leaves agregadas (system_map.json → 3.5.27)*
 

@@ -6,6 +6,7 @@
  */
 
 import React, { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Exercise, ExerciseTag, MuscleGroup } from '@/core/db/schema';
 import { showToast } from '@/lib/toast';
 import {
@@ -13,6 +14,10 @@ import {
   saveExerciseRecord,
   uid,
 } from '@/features/workout/treinos/treinos-helpers';
+
+/* Portal para document.body: o .section-strip tem transform/will-change e
+   viraria o containing block do position:fixed do .modal-overlay. */
+const toBody = (node: React.ReactNode) => createPortal(node, document.body);
 
 /* ── Chips de grupo muscular (modais.html L68–140) ── */
 
@@ -238,7 +243,7 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
   const showChart = Boolean(editEx) && hist.length > 0;
   const maxValor = hist.length ? Math.max(...hist.map((h) => h.valor)) : 0;
 
-  return (
+  return toBody(
     <div
       className="modal-overlay"
       id="modalExercicio"

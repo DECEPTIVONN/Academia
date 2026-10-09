@@ -9,9 +9,16 @@
  */
 
 import React, { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { AerobicConfig, Exercise, SheetKey } from '@/core/db/schema';
 import { getMaestriaState, computeMasteryTotals, type MaestriaState } from '@/features/gamification/maestria';
 import type { LegacyRaw } from '@/core/db/queries';
+
+/* Portal para document.body: o .section-strip tem transform/will-change
+   (translateX da navegação de seções) e viraria o containing block do
+   position:fixed do .modal-overlay — o modal sairia da viewport.
+   Mesmo padrão do SocialFeature.tsx. */
+const toBody = (node: React.ReactNode) => createPortal(node, document.body);
 
 const TIER_BY_BADGE = ['none', 'bronze', 'prata', 'ouro'] as const;
 
@@ -25,7 +32,7 @@ export const ConfirmModal: React.FC<{
   onNo: () => void;
 }> = ({ open, title, msg, onYes, onNo }) => {
   if (!open) return null;
-  return (
+  return toBody(
     <div
       className="modal-overlay"
       id="modalConfirm"
@@ -61,7 +68,7 @@ export const ImageModal: React.FC<{ open: boolean; src: string; onClose: () => v
   onClose,
 }) => {
   if (!open) return null;
-  return (
+  return toBody(
     <div
       className="modal-overlay"
       id="modalImage"
@@ -110,7 +117,7 @@ export const AerobicoModal: React.FC<{
 
   if (!open) return null;
 
-  return (
+  return toBody(
     <div
       className="modal-overlay"
       id="modalAerobico"
@@ -265,7 +272,7 @@ export const CRDetailsModal: React.FC<{
     if (diff > 50) setTabIdx((i) => Math.max(0, i - 1));
   };
 
-  return (
+  return toBody(
     <div
       className="modal-overlay"
       id="modalCRDetails"
@@ -427,7 +434,7 @@ export const MaestriaGeralModal: React.FC<{
 
   const { totalXP, rank, pct } = computeMasteryTotals(exercises, legacy);
 
-  return (
+  return toBody(
     <div
       className="modal-overlay"
       id="modalMaestriaGeral"
