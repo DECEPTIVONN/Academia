@@ -3,6 +3,12 @@
  * Port 1:1 de componentes/secoes/perfil.html + initPerfilTabs (secao-perfil.js)
  * + renderProgresso (secao-progresso.js) + applyProfileCustomization/initPersonalizarTab
  * (secao-customizacao.js). O shell do overlay (header + X) fica no App.tsx.
+ *
+ * v4.2.0: as abas PERFIL, PROGRESSÃO e PERSONALIZAR viraram hubs com busca +
+ * tiles + telas no estilo das Configurações, reutilizando HubShell (mesmo DOM
+ * `set-*`). O cartão do perfil deixou de ser fixo acima das abas e virou a
+ * tela "Cartão do Perfil" do hub Perfil; o botão SALVAR do Personalizar
+ * subiu para o header do hub (padrão Backup das Configurações).
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -31,6 +37,7 @@ import {
 } from '@/features/profile/profile-data';
 import { showToast } from '@/lib/toast';
 import { SettingsFeature } from '@/features/settings/SettingsFeature';
+import { HubShell, type HubScreen, type HubTile } from '@/features/settings/HubShell';
 import { computeRadarStats, getArchetypeBadge } from '@/features/gamification/radar';
 import { useRadarMode } from '@/features/gamification/useRadarFit';
 import { useShareStore } from '@/features/gamification/share-store';
@@ -90,13 +97,77 @@ const FlameSvg = (size: number, color = '#f97316') => (
   </svg>
 );
 
+/* ── Ícones de tile (20px) para os hubs das abas (v4.2.0) ── */
+
+const SvgUser20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const SvgAward20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <circle cx="12" cy="8" r="7" />
+    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+  </svg>
+);
+
+const SvgGrid20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
+
+const SvgBolt20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+);
+
+const SvgStar20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 6.91 8.26 12 2" />
+  </svg>
+);
+
+const SvgChat20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const SvgTrending20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+    <polyline points="17 6 23 6 23 12" />
+  </svg>
+);
+
+const SvgType20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <polyline points="4 7 4 4 20 4 20 7" />
+    <line x1="9" y1="20" x2="15" y2="20" />
+    <line x1="12" y1="4" x2="12" y2="20" />
+  </svg>
+);
+
+const SvgSave = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+    <polyline points="17 21 17 13 7 13" />
+    <polyline points="7 3 7 8 15 8" />
+  </svg>
+);
+
 export function ProfileFeature() {
   const data = useLocalData();
   const { state: profile, update } = useProfileState();
 
   const [mainTab, setMainTab] = useState<MainTab>(initialTab);
-  const [progSub, setProgSub] = useState<ProgSub>('visao-geral');
-  const [persSub, setPersSub] = useState<PersSub>('identidade');
 
   const [devMode, setDevMode] = useState(() => isDevMode());
 
@@ -305,11 +376,42 @@ export function ProfileFeature() {
     { key: 'prefs', label: 'PREFERÊNCIAS', icon: SvgSliders },
   ];
 
-  return (
-    <div className="treino-container">
-      <div id="section-perfil" className="main-section" role="tabpanel">
-        <div id="tab-perfil" className="t-tab active" role="tabpanel" style={{ padding: 0 }}>
-          {/* ========== CABEÇALHO DO PERFIL (perfil.html L1–55) ========== */}
+  /* ── Hubs das abas (v4.2.0): busca + tiles + telas no estilo das Configurações ── */
+
+  const perfilTiles: HubTile[] = [
+    {
+      id: 'cartao',
+      title: 'Cartão do Perfil',
+      desc: 'Banner, avatar, estatísticas e ações',
+      icon: SvgUser20,
+      badge: pc.nome || 'DECEPTIVON',
+      keywords: ['perfil', 'cartao', 'avatar', 'banner', 'nome', 'acoes', 'amigos', 'colecao'],
+    },
+    {
+      id: 'ofensivas',
+      title: 'Ofensivas dos Amigos',
+      desc: 'Sequências de treino dos seus amigos',
+      icon: FlameSvg(20, 'currentColor'),
+      badge: '3 amigos',
+      keywords: ['ofensivas', 'amigos', 'streak', 'sequencia'],
+    },
+    {
+      id: 'medalhas',
+      title: 'Medalhas',
+      desc: 'Prévia das medalhas conquistadas',
+      icon: SvgAward20,
+      badge: '3 de 4',
+      keywords: ['medalhas', 'premios', 'ouro', 'prata', 'bronze'],
+    },
+  ];
+
+  const perfilScreens: Record<string, HubScreen> = {
+    /* Cabeçalho do perfil (perfil.html L1–55) — movido do bloco fixo acima
+       das abas para a tela "Cartão do Perfil" do hub */
+    cartao: {
+      title: 'Cartão do Perfil',
+      content: (
+        <div className="perf-sub-content active" id="perf-subtab-cartao">
           <div className="theme-section theme-roxo">
             <div className="theme-bg" />
             <div className="theme-content">
@@ -459,8 +561,8 @@ export function ProfileFeature() {
                   </button>
                   <button
                     className="profile-action-btn profile-action-btn--add"
-            id="btnVerColecao"
-            onClick={() => useMaestriaUi.getState().openColecao()}
+                    id="btnVerColecao"
+                    onClick={() => useMaestriaUi.getState().openColecao()}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -481,7 +583,569 @@ export function ProfileFeature() {
               </div>
             </div>
           </div>
+        </div>
+      ),
+    },
+    ofensivas: {
+      title: 'Ofensivas dos Amigos',
+      content: (
+        <div className="perf-sub-content" id="perf-subtab-ofensivas">
+          <div className="theme-section theme-turquesa">
+            <div className="theme-bg" />
+            <div className="theme-content">
+              <div className="profile-section-title">OFENSIVAS DOS AMIGOS</div>
+              <div className="friends-streaks">
+                <div className="friend-avatar">
+                  👨‍💻
+                  <span
+                    className="friend-streak-badge"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '2px',
+                      padding: '2px 6px',
+                    }}
+                  >
+                    {FlameSvg(10)} 616
+                  </span>
+                </div>
+                <div className="friend-avatar">
+                  👳
+                  <span
+                    className="friend-streak-badge"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '2px',
+                      padding: '2px 6px',
+                    }}
+                  >
+                    {FlameSvg(10)} 82
+                  </span>
+                </div>
+                <div className="friend-avatar">
+                  👵
+                  <span
+                    className="friend-streak-badge"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '2px',
+                      padding: '2px 6px',
+                    }}
+                  >
+                    {FlameSvg(10)} 12
+                  </span>
+                </div>
+                <div
+                  className="friend-add-slot"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    width="14"
+                    height="14"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    medalhas: {
+      title: 'Medalhas',
+      content: (
+        <div className="perf-sub-content" id="perf-subtab-medalhas">
+          <div className="theme-section theme-ouro">
+            <div className="theme-bg" />
+            <div className="theme-content">
+              <div
+                className="profile-section-title"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                MEDALHAS
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  width="12"
+                  height="12"
+                  style={{ opacity: 0.6 }}
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </div>
+              <div className="medals-preview">
+                <div className="medal-item">
+                  <div className="medal-circle">🥇</div>
+                  <span className="medal-name">Veterano</span>
+                </div>
+                <div className="medal-item">
+                  <div className="medal-circle">🥈</div>
+                  <span className="medal-name">Foco Total</span>
+                </div>
+                <div className="medal-item">
+                  <div className="medal-circle">🥉</div>
+                  <span className="medal-name">Madrugador</span>
+                </div>
+                <div className="medal-item">
+                  <div className="medal-circle" style={{ opacity: 0.3, filter: 'grayscale(1)' }}>
+                    🔒
+                  </div>
+                  <span className="medal-name">Lendário</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  };
 
+  const progTiles: HubTile[] = [
+    {
+      id: 'visao-geral',
+      title: 'Visão Geral',
+      desc: 'Ofensiva, XP, liga e pódios',
+      icon: SvgGrid20,
+      badge: `${stats.streak} dias`,
+      keywords: ['visao', 'geral', 'ofensiva', 'streak', 'xp', 'liga', 'podios'],
+    },
+    {
+      id: 'nivel-xp',
+      title: 'Nível e XP',
+      desc: 'Barra de progresso do nível atual',
+      icon: SvgBolt20,
+      badge: `Nível ${stats.nivel}`,
+      keywords: ['nivel', 'xp', 'progresso', 'barra', 'proximo'],
+    },
+    {
+      id: 'conquistas',
+      title: 'Conquistas',
+      desc: 'Badges desbloqueados e bloqueados',
+      icon: SvgStar20,
+      badge: `${badges.filter((b) => b.check || conquistas.includes(b.id)).length} de ${badges.length}`,
+      keywords: ['conquistas', 'badges', 'medalhas', 'premios'],
+    },
+  ];
+
+  const progScreens: Record<ProgSub, HubScreen> = {
+    'visao-geral': {
+      title: 'Visão Geral',
+      content: (
+        <div className="perf-sub-content active" id="perf-subtab-visao-geral">
+          <div className="theme-section theme-roxo">
+            <div className="theme-bg" />
+            <div className="theme-content">
+              <div className="profile-section-title">VISÃO GERAL</div>
+              <div className="overview-grid">
+                <div className="overview-item">
+                  <span
+                    className="ov-icon"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    {FlameSvg(20)}
+                  </span>
+                  <div className="ov-content">
+                    <span className="ov-val" id="profStreak">
+                      {stats.streak + (stats.streak === 1 ? ' dia' : ' dias')}
+                    </span>
+                    <span className="ov-lbl">Ofensiva</span>
+                  </div>
+                </div>
+                <div className="overview-item">
+                  <span
+                    className="ov-icon"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" style={{ color: '#eab308' }}>
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg>
+                  </span>
+                  <div className="ov-content">
+                    <span className="ov-val" id="profXp">
+                      {stats.xp} XP
+                    </span>
+                    <span className="ov-lbl">Total XP</span>
+                  </div>
+                </div>
+                <div className="overview-item">
+                  <span
+                    className="ov-icon"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" style={{ color: '#94a3b8' }}>
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                  </span>
+                  <div className="ov-content">
+                    <span className="ov-val">Prata</span>
+                    <span className="ov-lbl">Liga Atual</span>
+                  </div>
+                </div>
+                <div className="overview-item">
+                  <span
+                    className="ov-icon"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" style={{ color: '#fbbf24' }}>
+                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                      <path d="M4 22h16" />
+                      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                      <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+                    </svg>
+                  </span>
+                  <div className="ov-content">
+                    <span className="ov-val">13 pódios</span>
+                    <span className="ov-lbl">Conquistas</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    'nivel-xp': {
+      title: 'Nível e XP',
+      content: (
+        <div className="perf-sub-content" id="perf-subtab-nivel-xp">
+          <div className="theme-section theme-azul-pico">
+            <div className="theme-bg" />
+            <div className="theme-content">
+              <div className="profile-section-title">SEU NÍVEL</div>
+              <div className="p-card xp-card">
+                <div className="p-card-header">
+                  <h3>
+                    Seu Nível:{' '}
+                    <span className="gradient-text" id="progNivelName">
+                      {stats.nivelName}
+                    </span>
+                  </h3>
+                  <span className="p-card-meta">
+                    Nível <span id="progNivelVal">{stats.nivel}</span>
+                  </span>
+                </div>
+                <div className="xp-bar-wrap">
+                  <div
+                    className="xp-bar-fill"
+                    id="progXpFill"
+                    style={{ width: `${stats.xpPct}%` }}
+                  />
+                </div>
+                <div className="xp-details">
+                  <span>
+                    <span id="progXpAtual">{stats.xp}</span> XP
+                  </span>
+                  <span>
+                    Próximo Nível: <span id="progXpNext">{stats.xpNext}</span> XP
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    conquistas: {
+      title: 'Conquistas',
+      content: (
+        <div className="perf-sub-content" id="perf-subtab-conquistas">
+          <div className="theme-section theme-ouro">
+            <div className="theme-bg" />
+            <div className="theme-content">
+              <div className="profile-section-title">
+                SUAS CONQUISTAS{' '}
+                <i className="fas fa-chevron-right" />
+              </div>
+              <div className="p-card achievements-card">
+                <div className="badges-grid" id="badgesGrid" ref={badgesRef}>
+                  {badges.map((b) => {
+                    const unlocked = b.check || conquistas.includes(b.id);
+                    return (
+                      <div
+                        key={b.id}
+                        className={`badge-item ${unlocked ? 'unlocked' : 'locked'} ${b.special ? 'special' : ''}`}
+                        title={b.desc}
+                        data-id={b.id}
+                        onClick={() => {
+                          if (unlocked) {
+                            useShareStore.getState().openBadge({
+                              icon: b.icon,
+                              name: b.name,
+                              desc: b.desc,
+                            });
+                          }
+                        }}
+                      >
+                        <div className="badge-icon">{b.icon}</div>
+                        <div className="badge-name">{b.name}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  };
+
+  const persTiles: HubTile[] = [
+    {
+      id: 'identidade',
+      title: 'Identidade',
+      desc: 'Nome de exibição e @handle',
+      icon: SvgUser20,
+      badge: handleText(pc),
+      keywords: ['identidade', 'nome', 'handle', 'usuario', 'exibicao'],
+    },
+    {
+      id: 'frase',
+      title: 'Frase de Assinatura',
+      desc: 'Mensagem no cartão e no share card',
+      icon: SvgChat20,
+      badge: draft.assinatura ? 'Com frase' : 'Sem frase',
+      keywords: ['frase', 'assinatura', 'motivacao', 'share', 'citacao'],
+    },
+    {
+      id: 'destaque',
+      title: 'Em Destaque',
+      desc: 'Estatística em destaque no cartão',
+      icon: SvgTrending20,
+      badge: showcaseDef?.label ?? 'Streak',
+      keywords: ['destaque', 'showcase', 'stat', 'estatistica', 'streak'],
+    },
+    {
+      id: 'titulo',
+      title: 'Título',
+      desc: 'Título exibido sob o seu nome',
+      icon: SvgType20,
+      badge: tituloAtivo ?? 'Sem título',
+      keywords: ['titulo', 'rank', 'nome'],
+    },
+  ];
+
+  const persScreens: Record<PersSub, HubScreen> = {
+    identidade: {
+      title: 'Identidade',
+      content: (
+        <div className="perf-sub-content3 active" id="perf-subtab3-identidade">
+          <div className="theme-section theme-roxo">
+            <div className="theme-bg" />
+            <div className="theme-content">
+              <div className="profile-section-title">Identidade</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.65rem',
+                      letterSpacing: '1.5px',
+                      color: 'var(--text-secondary)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      display: 'block',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Nome de Exibição
+                  </label>
+                  <input
+                    id="inputCustomNome"
+                    className="profile-name-input"
+                    type="text"
+                    maxLength={18}
+                    placeholder="SEU NOME"
+                    style={{ width: '100%', maxWidth: '100%' }}
+                    value={draft.nome}
+                    onChange={(e) => setDraft((d) => ({ ...d, nome: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.65rem',
+                      letterSpacing: '1.5px',
+                      color: 'var(--text-secondary)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      display: 'block',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Handle (@usuário)
+                  </label>
+                  <input
+                    id="inputCustomHandle"
+                    className="profile-name-input"
+                    type="text"
+                    maxLength={20}
+                    placeholder="@handle"
+                    style={{ width: '100%', maxWidth: '100%' }}
+                    value={draft.handle}
+                    onChange={(e) => setDraft((d) => ({ ...d, handle: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    frase: {
+      title: 'Frase de Assinatura',
+      content: (
+        <div className="perf-sub-content3 active" id="perf-subtab3-frase">
+          <div className="theme-section theme-roxo">
+            <div className="theme-bg" />
+            <div className="theme-content">
+              <div className="profile-section-title">Frase de Assinatura</div>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
+                Exibida no seu Share Card e cartão de perfil.
+              </p>
+              <input
+                id="inputCustomAssinatura"
+                className="profile-name-input"
+                type="text"
+                maxLength={60}
+                placeholder="Sua frase motivacional..."
+                style={{
+                  width: '100%',
+                  maxWidth: '100%',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.5px',
+                  textTransform: 'none',
+                }}
+                value={draft.assinatura}
+                onChange={(e) => setDraft((d) => ({ ...d, assinatura: e.target.value }))}
+              />
+              <div
+                className="frases-preset"
+                id="frasesPreset"
+                style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}
+              >
+                {FRASES_PRESET.map((f) => (
+                  <button
+                    key={f}
+                    className="frase-preset-btn"
+                    data-frase={f}
+                    type="button"
+                    onClick={() => setDraft((d) => ({ ...d, assinatura: f }))}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    destaque: {
+      title: 'Em Destaque',
+      content: (
+        <div className="perf-sub-content3 active" id="perf-subtab3-destaque">
+          <div className="theme-section theme-ouro">
+            <div className="theme-bg" />
+            <div className="theme-content">
+              <div className="profile-section-title">Em Destaque no Perfil</div>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
+                Escolha 1 conquista para exibir no seu cartão.
+              </p>
+              <div className="showcase-stat-list" id="showcaseStatList">
+                {SHOWCASE_STATS.map((s) => (
+                  <div
+                    key={s.key}
+                    className={`showcase-stat-option ${
+                      (draft.showcaseStat || 'streak') === s.key
+                        ? 'showcase-stat-option--active'
+                        : ''
+                    }`}
+                    data-showcase={s.key}
+                    onClick={() => setDraft((d) => ({ ...d, showcaseStat: s.key }))}
+                  >
+                    <div
+                      className="showcase-stat-option__icon"
+                      dangerouslySetInnerHTML={{ __html: s.icon }}
+                    />
+                    <span className="showcase-stat-option__label">{s.label}</span>
+                    <span className="showcase-stat-option__value">
+                      {s.compute(stats)} {s.unit}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    titulo: {
+      title: 'Título',
+      content: (
+        <div className="perf-sub-content3 active" id="perf-subtab3-titulo">
+          <div className="theme-section theme-ouro">
+            <div className="theme-bg" />
+            <div className="theme-content">
+              <div className="profile-section-title">Título</div>
+              <div className="titulo-list" id="tituloList">
+                {TITULOS.map((t) => {
+                  const unlocked = isUnlocked(t.unlock, stats, devMode, maestrias);
+                  const active = t.id === draft.titulo ? 'titulo-option--active' : '';
+                  const locked = !unlocked ? 'titulo-option--locked' : '';
+                  return (
+                    <div
+                      key={t.id ?? 'sem-titulo'}
+                      className={`titulo-option ${active} ${locked}`}
+                      data-titulo={t.id ?? ''}
+                      data-locked={!unlocked ? 'true' : undefined}
+                      onClick={() => {
+                        if (!unlocked) {
+                          showToast('Título bloqueado!', 'info');
+                          return;
+                        }
+                        setDraft((d) => ({ ...d, titulo: t.id ?? null }));
+                      }}
+                    >
+                      <span className="titulo-option__name">{t.nome}</span>
+                      {!unlocked && t.unlock && (
+                        <span className="titulo-option__hint">{unlockHint(t.unlock)}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  };
+
+  return (
+    <div className="treino-container">
+      <div id="section-perfil" className="main-section" role="tabpanel">
+        <div id="tab-perfil" className="t-tab active" role="tabpanel" style={{ padding: 0 }}>
           {/* ===== SISTEMA DE ABAS DO PERFIL (L57–77) ===== */}
           <div
             className="treino-tabs-section section-subtabs"
@@ -505,130 +1169,22 @@ export function ProfileFeature() {
           </div>
 
           <div className="perf-tab-content-wrapper">
-            {/* ========== ABA 1: PERFIL (L81–113) ========== */}
+            {/* ========== ABA 1: PERFIL — hub (v4.2.0) ========== */}
             {mainTab === 'perfil' && (
               <div id="perf-tab-perfil" className="perf-tab-content active">
-                <div className="theme-section theme-turquesa">
-                  <div className="theme-bg" />
-                  <div className="theme-content">
-                    <div className="profile-section-title">OFENSIVAS DOS AMIGOS</div>
-                    <div className="friends-streaks">
-                      <div className="friend-avatar">
-                        👨‍💻
-                        <span
-                          className="friend-streak-badge"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '2px',
-                            padding: '2px 6px',
-                          }}
-                        >
-                          {FlameSvg(10)} 616
-                        </span>
-                      </div>
-                      <div className="friend-avatar">
-                        👳
-                        <span
-                          className="friend-streak-badge"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '2px',
-                            padding: '2px 6px',
-                          }}
-                        >
-                          {FlameSvg(10)} 82
-                        </span>
-                      </div>
-                      <div className="friend-avatar">
-                        👵
-                        <span
-                          className="friend-streak-badge"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '2px',
-                            padding: '2px 6px',
-                          }}
-                        >
-                          {FlameSvg(10)} 12
-                        </span>
-                      </div>
-                      <div
-                        className="friend-add-slot"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          width="14"
-                          height="14"
-                        >
-                          <line x1="12" y1="5" x2="12" y2="19" />
-                          <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="theme-section theme-ouro">
-                  <div className="theme-bg" />
-                  <div className="theme-content">
-                    <div
-                      className="profile-section-title"
-                      style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                    >
-                      MEDALHAS
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        width="12"
-                        height="12"
-                        style={{ opacity: 0.6 }}
-                      >
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </div>
-                    <div className="medals-preview">
-                      <div className="medal-item">
-                        <div className="medal-circle">🥇</div>
-                        <span className="medal-name">Veterano</span>
-                      </div>
-                      <div className="medal-item">
-                        <div className="medal-circle">🥈</div>
-                        <span className="medal-name">Foco Total</span>
-                      </div>
-                      <div className="medal-item">
-                        <div className="medal-circle">🥉</div>
-                        <span className="medal-name">Madrugador</span>
-                      </div>
-                      <div className="medal-item">
-                        <div className="medal-circle" style={{ opacity: 0.3, filter: 'grayscale(1)' }}>
-                          🔒
-                        </div>
-                        <span className="medal-name">Lendário</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <HubShell
+                  eyebrow="ACADEMIA • PERFIL"
+                  title="Meu Perfil"
+                  sub="Cartão, ofensivas dos amigos e medalhas"
+                  searchPlaceholder="Buscar seção (cartão, amigos, medalhas)..."
+                  emptyText="Nenhuma seção encontrada."
+                  tiles={perfilTiles}
+                  screens={perfilScreens}
+                />
               </div>
             )}
 
-            {/* ========== ABA 2: PROGRESSÃO (L116–215) ========== */}
+            {/* ========== ABA 2: PROGRESSÃO — hub (v4.2.0) ========== */}
             {mainTab === 'progressao' && (
               <div id="perf-tab-progressao" className="perf-tab-content">
                 {/* Modo Desenvolvedor */}
@@ -681,212 +1237,15 @@ export function ProfileFeature() {
                   </label>
                 </div>
 
-                {/* Sub-navbar (L134–144) */}
-                <div className="sub-navbar" id="perfProgressaoSubNav">
-                  {(
-                    [
-                      {
-                        key: 'visao-geral' as ProgSub,
-                        title: 'Visão Geral',
-                        icon: (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                            <rect x="3" y="3" width="7" height="7" rx="1" />
-                            <rect x="14" y="3" width="7" height="7" rx="1" />
-                            <rect x="3" y="14" width="7" height="7" rx="1" />
-                            <rect x="14" y="14" width="7" height="7" rx="1" />
-                          </svg>
-                        ),
-                      },
-                      {
-                        key: 'nivel-xp' as ProgSub,
-                        title: 'Nível e XP',
-                        icon: (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                          </svg>
-                        ),
-                      },
-                      {
-                        key: 'conquistas' as ProgSub,
-                        title: 'Conquistas',
-                        icon: (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                          </svg>
-                        ),
-                      },
-                    ]
-                  ).map((btn) => (
-                    <button
-                      key={btn.key}
-                      className={`sub-nav-btn ${progSub === btn.key ? 'active' : ''}`}
-                      data-perfsubtab={btn.key}
-                      title={btn.title}
-                      onClick={() => swapFade('.perf-sub-content', btn.key !== progSub, () => setProgSub(btn.key))}
-                    >
-                      {btn.icon}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Sub-aba: Visão Geral (L147–190) */}
-                {progSub === 'visao-geral' && (
-                  <div className="perf-sub-content active" id="perf-subtab-visao-geral">
-                    <div className="theme-section theme-roxo">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">VISÃO GERAL</div>
-                        <div className="overview-grid">
-                          <div className="overview-item">
-                            <span
-                              className="ov-icon"
-                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                              {FlameSvg(20)}
-                            </span>
-                            <div className="ov-content">
-                              <span className="ov-val" id="profStreak">
-                                {stats.streak + (stats.streak === 1 ? ' dia' : ' dias')}
-                              </span>
-                              <span className="ov-lbl">Ofensiva</span>
-                            </div>
-                          </div>
-                          <div className="overview-item">
-                            <span
-                              className="ov-icon"
-                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" style={{ color: '#eab308' }}>
-                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                              </svg>
-                            </span>
-                            <div className="ov-content">
-                              <span className="ov-val" id="profXp">
-                                {stats.xp} XP
-                              </span>
-                              <span className="ov-lbl">Total XP</span>
-                            </div>
-                          </div>
-                          <div className="overview-item">
-                            <span
-                              className="ov-icon"
-                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" style={{ color: '#94a3b8' }}>
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                              </svg>
-                            </span>
-                            <div className="ov-content">
-                              <span className="ov-val">Prata</span>
-                              <span className="ov-lbl">Liga Atual</span>
-                            </div>
-                          </div>
-                          <div className="overview-item">
-                            <span
-                              className="ov-icon"
-                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" style={{ color: '#fbbf24' }}>
-                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                                <path d="M4 22h16" />
-                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
-                              </svg>
-                            </span>
-                            <div className="ov-content">
-                              <span className="ov-val">13 pódios</span>
-                              <span className="ov-lbl">Conquistas</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-aba: Nível e XP (L193–205) */}
-                {progSub === 'nivel-xp' && (
-                  <div className="perf-sub-content" id="perf-subtab-nivel-xp">
-                    <div className="theme-section theme-azul-pico">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">SEU NÍVEL</div>
-                        <div className="p-card xp-card">
-                          <div className="p-card-header">
-                            <h3>
-                              Seu Nível:{' '}
-                              <span className="gradient-text" id="progNivelName">
-                                {stats.nivelName}
-                              </span>
-                            </h3>
-                            <span className="p-card-meta">
-                              Nível <span id="progNivelVal">{stats.nivel}</span>
-                            </span>
-                          </div>
-                          <div className="xp-bar-wrap">
-                            <div
-                              className="xp-bar-fill"
-                              id="progXpFill"
-                              style={{ width: `${stats.xpPct}%` }}
-                            />
-                          </div>
-                          <div className="xp-details">
-                            <span>
-                              <span id="progXpAtual">{stats.xp}</span> XP
-                            </span>
-                            <span>
-                              Próximo Nível: <span id="progXpNext">{stats.xpNext}</span> XP
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-aba: Conquistas (L208–213) */}
-                {progSub === 'conquistas' && (
-                  <div className="perf-sub-content" id="perf-subtab-conquistas">
-                    <div className="theme-section theme-ouro">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">
-                          SUAS CONQUISTAS{' '}
-                          <i className="fas fa-chevron-right" />
-                        </div>
-                        <div className="p-card achievements-card">
-                          <div className="badges-grid" id="badgesGrid" ref={badgesRef}>
-                            {badges.map((b) => {
-                              const unlocked = b.check || conquistas.includes(b.id);
-                              return (
-                                <div
-                                  key={b.id}
-                                  className={`badge-item ${unlocked ? 'unlocked' : 'locked'} ${b.special ? 'special' : ''}`}
-                                  title={b.desc}
-                                  data-id={b.id}
-                                  onClick={() => {
-                                    if (unlocked) {
-                                      useShareStore.getState().openBadge({
-                                        icon: b.icon,
-                                        name: b.name,
-                                        desc: b.desc,
-                                      });
-                                    }
-                                  }}
-                                >
-                                  <div className="badge-icon">{b.icon}</div>
-                                  <div className="badge-name">{b.name}</div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <HubShell
+                  eyebrow="ACADEMIA • PROGRESSÃO"
+                  title="Progressão"
+                  sub="Visão geral, nível/XP e conquistas"
+                  searchPlaceholder="Buscar seção (visão, nível, conquistas)..."
+                  emptyText="Nenhuma seção encontrada."
+                  tiles={progTiles}
+                  screens={progScreens}
+                />
               </div>
             )}
 
@@ -899,239 +1258,30 @@ export function ProfileFeature() {
               </div>
             )}
 
-            {/* ========== ABA 3: PERSONALIZAR (L475–540) ========== */}
+            {/* ========== ABA 3: PERSONALIZAR — hub (v4.2.0) ========== */}
             {mainTab === 'personalizar' && (
               <div id="perf-tab-personalizar" className="perf-tab-content active">
-                <div className="sub-navbar" id="perfPersonalizarSubNav">
-                  {(
-                    [
-                      { key: 'identidade' as PersSub, title: 'Identidade' },
-                      { key: 'frase' as PersSub, title: 'Frase de Assinatura' },
-                      { key: 'destaque' as PersSub, title: 'Em Destaque' },
-                      { key: 'titulo' as PersSub, title: 'Título' },
-                    ]
-                  ).map((btn) => (
+                <HubShell
+                  eyebrow="ACADEMIA • PERSONALIZAR"
+                  title="Personalizar"
+                  sub="Identidade, frase, destaque e título"
+                  searchPlaceholder="Buscar ajuste (nome, handle, frase, título)..."
+                  emptyText="Nenhuma seção encontrada."
+                  tiles={persTiles}
+                  screens={persScreens}
+                  headerActions={
                     <button
-                      key={btn.key}
-                      className={`sub-nav-btn ${persSub === btn.key ? 'active' : ''}`}
-                      data-perfsubtab3={btn.key}
-                      title={btn.title}
-                      onClick={() => swapFade('.perf-sub-content3', btn.key !== persSub, () => setPersSub(btn.key))}
+                      type="button"
+                      className="set-btn"
+                      id="btnSalvarCustomizacaoTab"
+                      title="Salvar alterações"
+                      onClick={() => void saveIdentity()}
                     >
-                      {btn.title === 'Identidade'
-                        ? 'Identidade'
-                        : btn.title === 'Frase de Assinatura'
-                          ? 'Frase'
-                          : btn.title === 'Em Destaque'
-                            ? 'Destaque'
-                            : 'Título'}
+                      {SvgSave}
+                      Salvar
                     </button>
-                  ))}
-                </div>
-
-                {/* Sub-aba: Identidade */}
-                {persSub === 'identidade' && (
-                  <div className="perf-sub-content3 active" id="perf-subtab3-identidade">
-                    <div className="theme-section theme-roxo">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">Identidade</div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                          <div>
-                            <label
-                              style={{
-                                fontSize: '0.65rem',
-                                letterSpacing: '1.5px',
-                                color: 'var(--text-secondary)',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                display: 'block',
-                                marginBottom: '6px',
-                              }}
-                            >
-                              Nome de Exibição
-                            </label>
-                            <input
-                              id="inputCustomNome"
-                              className="profile-name-input"
-                              type="text"
-                              maxLength={18}
-                              placeholder="SEU NOME"
-                              style={{ width: '100%', maxWidth: '100%' }}
-                              value={draft.nome}
-                              onChange={(e) => setDraft((d) => ({ ...d, nome: e.target.value }))}
-                            />
-                          </div>
-                          <div>
-                            <label
-                              style={{
-                                fontSize: '0.65rem',
-                                letterSpacing: '1.5px',
-                                color: 'var(--text-secondary)',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                display: 'block',
-                                marginBottom: '6px',
-                              }}
-                            >
-                              Handle (@usuário)
-                            </label>
-                            <input
-                              id="inputCustomHandle"
-                              className="profile-name-input"
-                              type="text"
-                              maxLength={20}
-                              placeholder="@handle"
-                              style={{ width: '100%', maxWidth: '100%' }}
-                              value={draft.handle}
-                              onChange={(e) => setDraft((d) => ({ ...d, handle: e.target.value }))}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-aba: Frase de Assinatura */}
-                {persSub === 'frase' && (
-                  <div className="perf-sub-content3 active" id="perf-subtab3-frase">
-                    <div className="theme-section theme-roxo">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">Frase de Assinatura</div>
-                        <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
-                          Exibida no seu Share Card e cartão de perfil.
-                        </p>
-                        <input
-                          id="inputCustomAssinatura"
-                          className="profile-name-input"
-                          type="text"
-                          maxLength={60}
-                          placeholder="Sua frase motivacional..."
-                          style={{
-                            width: '100%',
-                            maxWidth: '100%',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            letterSpacing: '0.5px',
-                            textTransform: 'none',
-                          }}
-                          value={draft.assinatura}
-                          onChange={(e) => setDraft((d) => ({ ...d, assinatura: e.target.value }))}
-                        />
-                        <div
-                          className="frases-preset"
-                          id="frasesPreset"
-                          style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}
-                        >
-                          {FRASES_PRESET.map((f) => (
-                            <button
-                              key={f}
-                              className="frase-preset-btn"
-                              data-frase={f}
-                              type="button"
-                              onClick={() => setDraft((d) => ({ ...d, assinatura: f }))}
-                            >
-                              {f}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-aba: Em Destaque */}
-                {persSub === 'destaque' && (
-                  <div className="perf-sub-content3 active" id="perf-subtab3-destaque">
-                    <div className="theme-section theme-ouro">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">Em Destaque no Perfil</div>
-                        <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
-                          Escolha 1 conquista para exibir no seu cartão.
-                        </p>
-                        <div className="showcase-stat-list" id="showcaseStatList">
-                          {SHOWCASE_STATS.map((s) => (
-                            <div
-                              key={s.key}
-                              className={`showcase-stat-option ${
-                                (draft.showcaseStat || 'streak') === s.key
-                                  ? 'showcase-stat-option--active'
-                                  : ''
-                              }`}
-                              data-showcase={s.key}
-                              onClick={() => setDraft((d) => ({ ...d, showcaseStat: s.key }))}
-                            >
-                              <div
-                                className="showcase-stat-option__icon"
-                                dangerouslySetInnerHTML={{ __html: s.icon }}
-                              />
-                              <span className="showcase-stat-option__label">{s.label}</span>
-                              <span className="showcase-stat-option__value">
-                                {s.compute(stats)} {s.unit}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-aba: Título */}
-                {persSub === 'titulo' && (
-                  <div className="perf-sub-content3 active" id="perf-subtab3-titulo">
-                    <div className="theme-section theme-ouro">
-                      <div className="theme-bg" />
-                      <div className="theme-content">
-                        <div className="profile-section-title">Título</div>
-                        <div className="titulo-list" id="tituloList">
-                          {TITULOS.map((t) => {
-                            const unlocked = isUnlocked(t.unlock, stats, devMode, maestrias);
-                            const active = t.id === draft.titulo ? 'titulo-option--active' : '';
-                            const locked = !unlocked ? 'titulo-option--locked' : '';
-                            return (
-                              <div
-                                key={t.id ?? 'sem-titulo'}
-                                className={`titulo-option ${active} ${locked}`}
-                                data-titulo={t.id ?? ''}
-                                data-locked={!unlocked ? 'true' : undefined}
-                                onClick={() => {
-                                  if (!unlocked) {
-                                    showToast('Título bloqueado!', 'info');
-                                    return;
-                                  }
-                                  setDraft((d) => ({ ...d, titulo: t.id ?? null }));
-                                }}
-                              >
-                                <span className="titulo-option__name">{t.nome}</span>
-                                {!unlocked && t.unlock && (
-                                  <span className="titulo-option__hint">{unlockHint(t.unlock)}</span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  className="customizacao-modal__save-btn"
-                  id="btnSalvarCustomizacaoTab"
-                  style={{ width: '100%', marginTop: '20px' }}
-                  onClick={() => void saveIdentity()}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16">
-                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                    <polyline points="17 21 17 13 7 13" />
-                    <polyline points="7 3 7 8 15 8" />
-                  </svg>
-                  SALVAR ALTERAÇÕES
-                </button>
+                  }
+                />
               </div>
             )}
           </div>

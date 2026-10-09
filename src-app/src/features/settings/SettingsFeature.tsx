@@ -35,9 +35,10 @@ import {
   themeDisplayName,
 } from './theme-colors';
 import { ColorPickerModal } from './ColorPickerModal';
+import { HubShell, type HubScreen } from './HubShell';
 import './settings.css';
 
-type SettingsScreen = 'main' | 'exibicao' | 'geral' | 'seguranca' | 'assinatura';
+type SettingsScreen = 'exibicao' | 'geral' | 'seguranca' | 'assinatura';
 
 export interface SettingsFeatureProps {
   devMode: boolean;
@@ -45,33 +46,6 @@ export interface SettingsFeatureProps {
 }
 
 /* ── Ícones SVG stroke (Diretrizes/Ícones.md) ── */
-
-const SvgArrowLeft = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
-  </svg>
-);
-
-const SvgSearch = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
-);
-
-const SvgX = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-const SvgChevronRight = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
 
 const SvgPalette = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
@@ -227,9 +201,6 @@ const SvgXSm = (
 export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeatureProps) {
   const { state: profile, update } = useProfileState();
 
-  const [screen, setScreen] = useState<SettingsScreen>('main');
-  const [search, setSearch] = useState('');
-
   /* Cor de destaque — localStorage é a fonte da verdade */
   const [themeKey, setThemeKey] = useState(() => readLS('academia_theme') || 'purple');
   const [customHex, setCustomHex] = useState(
@@ -378,24 +349,6 @@ export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeaturePro
     },
   ];
 
-  const filteredTiles = tiles.filter((t) => {
-    if (!search.trim()) return true;
-    const q = search.trim().toLowerCase();
-    return (
-      t.title.toLowerCase().includes(q) ||
-      t.desc.toLowerCase().includes(q) ||
-      t.keywords.some((k) => k.includes(q))
-    );
-  });
-
-  const screenTitles: Record<SettingsScreen, string> = {
-    main: 'Configurações',
-    exibicao: 'Cores & Exibição',
-    geral: 'Preferências Gerais',
-    seguranca: 'Segurança & Conta',
-    assinatura: 'Assinatura',
-  };
-
   const toggleItems = [
     {
       key: 'sounds' as const,
@@ -454,127 +407,12 @@ export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeaturePro
     },
   ];
 
-  return (
-    <>
-      <div className="set-root">
-        {/* ── Header com back + badge + atalho de backup ── */}
-        <header className="set-header">
-          <div className="set-header__left">
-            {screen !== 'main' && (
-              <button
-                type="button"
-                className="set-icon-btn"
-                title="Voltar"
-                aria-label="Voltar para Configurações"
-                onClick={() => setScreen('main')}
-              >
-                {SvgArrowLeft}
-              </button>
-            )}
-            <div>
-              <span className="set-eyebrow">ACADEMIA • PREFERÊNCIAS</span>
-              <h2 className="set-title">{screenTitles[screen]}</h2>
-              {screen === 'main' && (
-                <div className="set-sub">Ajustes salvos neste dispositivo</div>
-              )}
-            </div>
-          </div>
-          <div className="set-header__actions">
-            <button
-              type="button"
-              className="set-btn"
-              title="Exportar backup JSON"
-              onClick={() => void handleExport()}
-            >
-              {SvgDownload}
-              Backup
-            </button>
-          </div>
-        </header>
-
-        {/* ================= HUB ================= */}
-        {screen === 'main' && (
-          <div className="set-screen">
-            <div className="set-search">
-              <span className="set-search__icon">{SvgSearch}</span>
-              <input
-                type="text"
-                className="set-search__input"
-                placeholder="Buscar ajuste (cores, backup, segurança...)"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search && (
-                <button
-                  type="button"
-                  className="set-search__clear"
-                  aria-label="Limpar busca"
-                  onClick={() => setSearch('')}
-                >
-                  {SvgX}
-                </button>
-              )}
-            </div>
-
-            {filteredTiles.length > 0 ? (
-              <div className="set-tiles">
-                {filteredTiles.map((tile) => (
-                  <button
-                    key={tile.id}
-                    type="button"
-                    className="set-tile"
-                    onClick={() => setScreen(tile.id)}
-                  >
-                    <span className="set-tile__icon">{tile.icon}</span>
-                    <span className="set-tile__body">
-                      <span className="set-tile__title">{tile.title}</span>
-                      <span className="set-tile__desc">{tile.desc}</span>
-                      <span className="set-tile__badge">{tile.badge}</span>
-                    </span>
-                    <span className="set-tile__chev">{SvgChevronRight}</span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="set-empty">Nenhuma configuração encontrada.</div>
-            )}
-
-            {/* Quick bar: armazenamento local & portabilidade */}
-            <div className="set-quickbar">
-              <div className="set-quickbar__info">
-                <span className="set-quickbar__icon">{SvgDatabase}</span>
-                <div>
-                  <div className="set-quickbar__title">Armazenamento Local</div>
-                  <p className="set-quickbar__desc">
-                    Exporte ou restaure seus dados em JSON.
-                  </p>
-                </div>
-              </div>
-              <div className="set-quickbar__actions">
-                <button
-                  type="button"
-                  className="set-btn"
-                  onClick={() => void handleExport()}
-                >
-                  {SvgDownload}
-                  Exportar
-                </button>
-                <button
-                  type="button"
-                  className="set-btn"
-                  onClick={() => fileRef.current?.click()}
-                >
-                  {SvgUpload}
-                  Importar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ================= EXIBIÇÃO & CORES ================= */}
-        {screen === 'exibicao' && (
-          <div className="set-screen">
+  const screens: Record<SettingsScreen, HubScreen> = {
+    /* ================= EXIBIÇÃO & CORES ================= */
+    exibicao: {
+      title: 'Cores & Exibição',
+      content: (
+        <>
             <section className="set-card">
               <div className="set-card__head">
                 <div>
@@ -665,12 +503,15 @@ export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeaturePro
                 </button>
               </div>
             </section>
-          </div>
-        )}
+        </>
+      ),
+    },
 
-        {/* ================= GERAL ================= */}
-        {screen === 'geral' && (
-          <div className="set-screen">
+    /* ================= GERAL ================= */
+    geral: {
+      title: 'Preferências Gerais',
+      content: (
+        <>
             <section className="set-card">
               <div className="set-card__head">
                 <div>
@@ -726,12 +567,15 @@ export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeaturePro
                 </div>
               </div>
             </section>
-          </div>
-        )}
+        </>
+      ),
+    },
 
-        {/* ================= SEGURANÇA ================= */}
-        {screen === 'seguranca' && (
-          <div className="set-screen">
+    /* ================= SEGURANÇA ================= */
+    seguranca: {
+      title: 'Segurança & Conta',
+      content: (
+        <>
             <section className="set-card">
               <div className="set-card__head">
                 <div>
@@ -774,12 +618,15 @@ export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeaturePro
                 </div>
               ))}
             </section>
-          </div>
-        )}
+        </>
+      ),
+    },
 
-        {/* ================= ASSINATURA ================= */}
-        {screen === 'assinatura' && (
-          <div className="set-screen">
+    /* ================= ASSINATURA ================= */
+    assinatura: {
+      title: 'Assinatura',
+      content: (
+        <>
             <section className="set-card">
               <div className="set-card__head">
                 <div>
@@ -841,9 +688,65 @@ export function SettingsFeature({ devMode, onToggleDevMode }: SettingsFeaturePro
                 {SvgShieldCheck} Seus dados permanecem locais, com ou sem PRO.
               </div>
             </section>
+        </>
+      ),
+    },
+  };
+
+  return (
+    <>
+      <HubShell
+        eyebrow="ACADEMIA • PREFERÊNCIAS"
+        title="Configurações"
+        sub="Ajustes salvos neste dispositivo"
+        searchPlaceholder="Buscar ajuste (cores, backup, segurança...)"
+        emptyText="Nenhuma configuração encontrada."
+        tiles={tiles}
+        screens={screens}
+        headerActions={
+          <button
+            type="button"
+            className="set-btn"
+            title="Exportar backup JSON"
+            onClick={() => void handleExport()}
+          >
+            {SvgDownload}
+            Backup
+          </button>
+        }
+        hubExtra={
+          /* Quick bar: armazenamento local & portabilidade */
+          <div className="set-quickbar">
+            <div className="set-quickbar__info">
+              <span className="set-quickbar__icon">{SvgDatabase}</span>
+              <div>
+                <div className="set-quickbar__title">Armazenamento Local</div>
+                <p className="set-quickbar__desc">
+                  Exporte ou restaure seus dados em JSON.
+                </p>
+              </div>
+            </div>
+            <div className="set-quickbar__actions">
+              <button
+                type="button"
+                className="set-btn"
+                onClick={() => void handleExport()}
+              >
+                {SvgDownload}
+                Exportar
+              </button>
+              <button
+                type="button"
+                className="set-btn"
+                onClick={() => fileRef.current?.click()}
+              >
+                {SvgUpload}
+                Importar
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        }
+      />
 
       {/* Seletor avançado de cores (portal no body) */}
       {pickerOpen && (

@@ -21,6 +21,26 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.2.0-profile-hubs] - 2026-10-09
+*Abas PERFIL, PROGRESSÃO e PERSONALIZAR do overlay do Perfil viraram hubs com busca + tiles + telas no estilo das Configurações — shell genérico extraído para `features/settings/HubShell.tsx` (mesmo DOM `set-*`), cartão do perfil movido para dentro do hub, SALVAR do Personalizar no header e sub-navbars removidas (system_map.json → 3.5.26)*
+
+### [Added]
+- **`src-app/src/features/settings/HubShell.tsx` (novo)**: shell genérico de hub (props `eyebrow`/`title`/`sub`/`searchPlaceholder`/`emptyText`/`tiles`/`screens`/`headerActions`/`hubExtra`) que emite exatamente o DOM BEM `set-*` de settings.css (set-root / set-header / set-eyebrow / set-title / set-sub / set-screen / set-search / set-tiles / set-tile / set-empty) com back-stack interno (botão `.set-icon-btn` Voltar nas telas, `aria-label="Voltar para {title}"`), busca que filtra tiles por título/descrição/keywords e estado de busca preservado ao voltar ao hub; ícones SVG stroke ArrowLeft/Search/X/ChevronRight movidos para cá (`Diretrizes/Ícones.md`).
+
+### [Changed]
+- **`src-app/src/features/settings/SettingsFeature.tsx`**: refatorado para montar suas 4 telas (`exibicao`/`geral`/`seguranca`/`assinatura`) sobre o `HubShell` — mesmo DOM e UX (paridade verificada pelos40 checks do cdp-test); saíram daqui os estados `screen`/`search`, `filteredTiles`, `screenTitles` e os4 ícones do shell; tiles, quickbar de backup, modais (picker/confirm) e lógica permanecem inalterados.
+- **`src-app/src/features/profile/ProfileFeature.tsx`**: abas perfil/progressão/personalizar passaram a usar `HubShell` com os conteúdos existentes:
+  - **Perfil** (3 tiles: Cartão do Perfil / Ofensivas dos Amigos / Medalhas): o cartão (banner, avatar, estatísticas, emblemas, showcase, ações) **deixou de ser o bloco fixo acima das abas** e virou a tela "Cartão do Perfil" do hub, envolto em `.perf-sub-content` para herdar margens/animação legadas; telas de ofensivas/medalhas reutilizam os blocos `theme-turquesa`/`theme-ouro` existentes;
+  - **Progressão** (3 tiles: Visão Geral / Nível e XP / Conquistas): a linha Modo Desenvolvedor permanece acima do hub; sub-navbar `.sub-nav-btn` (ids `perfProgressaoSubNav`, `data-perfsubtab`) removida — o conteúdo das3 sub-abas virou telas do hub;
+  - **Personalizar** (4 tiles: Identidade / Frase de Assinatura / Em Destaque / Título): botão `#btnSalvarCustomizacaoTab` subiu para o header do hub (padrão Backup das Configurações: `set-btn` + ícone SVG, id preservado); sub-navbar `perfPersonalizarSubNav` removida;
+  - removidos os estados `progSub`/`persSub` e os `swapFade('.perf-sub-content'/'.perf-sub-content3')` das sub-navs (o `swapFade('.perf-tab-content')` das abas principais permanece); adicionados9 ícones SVG stroke de tile (20 px: user/award/grid/bolt/star/chat/trending/type) + `SvgSave`; prefs segue delegando ao `SettingsFeature`.
+- **`Diretrizes/system_map.json`**: `version` 3.5.25 → **3.5.26**, `last_updated` → 2026-10-09; entrada de `src-app/src/features/settings/` ganha o `HubShell.tsx` e propósito de `ProfileFeature.tsx` atualizado (hubs das abas, cartão movido, sub-navbars removidas).
+
+### Notas (verificação)
+- **Comandos**: `npm run lint` (oxlint) sem avisos · `npx tsc -b` exit 0 · `npm run build` OK (vite + PWA112 entradas) — todos em `src-app/`.
+- **Teste CDP regressão das Configurações (`cdp-test.mjs`, perfil limpo): 40/40 PASS, 0 exceções JS** — paridade do DOM `set-*` com o HubShell confirmada.
+- **Teste CDP dos hubs (novo `cdp-test-hubs.mjs`, perfil limpo): 30/30 PASS, 0 exceções JS** — hub Perfil3 tiles + busca filtra/limpa + card não é mais fixo; telas cartão/ofensivas/medalhas com back; Progressão com dev row acima +3 telas (streak/XP/badges montados); Personalizar4 tiles + SALVAR no header dispara toast `Identidade atualizada!` + preset de frase preenche o input + listas de destaque/título; prefs íntegro (4 tiles + quickbar); mobile390×844;9 screenshots gerados,5 inspecionados visualmente (hub perfil, cartão, progressão, conquistas, personalizar).
+
 ## [v4.1.0-settings] - 2026-10-08
 *Nova interface dedicada de Configurações na aba PREFERÊNCIAS do overlay do Perfil — hub com busca/tiles/backup + 4 telas navegáveis (Cores, Geral, Segurança, Assinatura) no estilo de `SettingsStandalone.tsx`, com sistema de cores aprimorado: 12 presets + cor personalizada (hex) + seletor avançado (SV + matiz + hex) aplicando globalmente (system_map.json → 3.5.25)*
 
