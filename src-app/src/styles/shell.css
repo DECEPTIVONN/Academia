@@ -44,10 +44,12 @@
   justify-content: space-between;
   gap: 12px;
   height: 56px;
-  /* safe-area horizontal: em tela cheia com bordas arredondadas ou
-     camera cutout laterais, 14px puro deixava avatar/botões cortados. */
-  padding: 6px calc(14px + env(safe-area-inset-right, 0px)) 0
-    calc(14px + env(safe-area-inset-left, 0px));
+  /* safe-area horizontal + base 24px: bordas arredondadas de celular
+     em tela cheia cortam mais que o env() reporta — a curvatura do
+     canto (raio ~30–55px) invade a área útil, base maior evita
+     avatar/botões parcialmente recortados. */
+  padding: 6px calc(24px + env(safe-area-inset-right, 0px)) 0
+    calc(24px + env(safe-area-inset-left, 0px));
   background: rgba(10, 5, 20, 0.55);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
