@@ -44,7 +44,10 @@
   justify-content: space-between;
   gap: 12px;
   height: 56px;
-  padding: 6px 14px 0;
+  /* safe-area horizontal: em tela cheia com bordas arredondadas ou
+     camera cutout laterais, 14px puro deixava avatar/botões cortados. */
+  padding: 6px calc(14px + env(safe-area-inset-right, 0px)) 0
+    calc(14px + env(safe-area-inset-left, 0px));
   background: rgba(10, 5, 20, 0.55);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
