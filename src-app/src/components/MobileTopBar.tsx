@@ -1,15 +1,14 @@
 /**
  * MobileTopBar.tsx — Top Bar de utilitários do mobile (< 1024px)
  *
- * Port adaptado do `MobileTopBar` do NavigationShellStandalone.tsx de referência,
+ * Port fiel ao `MobileTopBar` do NavigationShellStandalone.tsx de referência,
  * no design system do Academia (tokens roxos, glassmorphism, BEM `.top-bar*`):
+ *   • barra FIXED translúcida por cima do conteúdo (sem texto de marca);
  *   • esquerda: avatar (atalho direto para o overlay do Perfil);
- *   • centro: marca ACADEMIA / WORKOUT TRACKER;
  *   • direita: busca geral unificada + alternador de tela cheia.
  *
- * Layout em `lg:hidden` via CSS (shell.css) — no desktop quem aparece é a
- * Sidebar HUD. O elemento é item de fluxo da coluna flex do App (não fixed),
- * então nada rola por baixo dele.
+ * No desktop (≥ 1024px) some via CSS (shell.css) — quem aparece é a
+ * Sidebar HUD. Como é fixed, o `.shell-body` compensa com padding-top.
  */
 
 import React from 'react';
@@ -40,15 +39,10 @@ export const MobileTopBar: React.FC<MobileTopBarProps> = ({
         className="top-bar__avatar"
         onClick={onOpenProfile}
         aria-label={`Abrir perfil de ${nome}`}
-        title="Meu Perfil"
+        title="Abrir Perfil"
       >
         {initial}
       </button>
-
-      <div className="top-bar__brand" aria-hidden="true">
-        <span className="top-bar__brand-main">Academia</span>
-        <span className="top-bar__brand-sub">Workout Tracker</span>
-      </div>
 
       <div className="top-bar__actions">
         <button
@@ -56,7 +50,7 @@ export const MobileTopBar: React.FC<MobileTopBarProps> = ({
           className="top-bar__btn"
           onClick={onOpenSearch}
           aria-label="Buscar em tudo"
-          title="Buscar geral (Ctrl+K)"
+          title="Buscar Geral (Ctrl+K)"
         >
           {SvgSearch}
         </button>
@@ -65,7 +59,7 @@ export const MobileTopBar: React.FC<MobileTopBarProps> = ({
           className={isFullscreen ? 'top-bar__btn top-bar__btn--active' : 'top-bar__btn'}
           onClick={onToggleFullscreen}
           aria-label={isFullscreen ? 'Sair da tela cheia' : 'Ativar tela cheia'}
-          title={isFullscreen ? 'Sair de tela cheia' : 'Modo tela cheia'}
+          title="Modo Tela Cheia"
         >
           {isFullscreen ? SvgMinimize : SvgMaximize}
         </button>
