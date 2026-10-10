@@ -1,0 +1,261 @@
+/* ============================================================
+   search.css — Busca Geral Unificada (v4.6.0-shell)
+   Command-palette glass no design system do Academia (BEM `.gs-*`).
+   ============================================================ */
+
+.gs-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10vh 16px 24px;
+}
+
+.gs-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 2, 12, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: gsFade 0.16s ease;
+}
+
+.gs-panel {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  max-height: 74vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(12, 7, 24, 0.96);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 40px rgba(139, 92, 246, 0.12);
+  overflow: hidden;
+  animation: gsPop 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes gsFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes gsPop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Head: ícone + input + dica ── */
+.gs-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.16);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.gs-head__icon {
+  display: flex;
+  color: var(--primary-light);
+  flex-shrink: 0;
+}
+.gs-head__icon svg {
+  stroke: currentColor;
+}
+
+.gs-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-family);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.gs-input::placeholder {
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.gs-kbd {
+  font-family: var(--font-family);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 3px 7px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.gs-kbd--sm {
+  padding: 1px 5px;
+  font-size: 0.56rem;
+}
+
+/* ── Lista ── */
+.gs-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+}
+
+.gs-group + .gs-group {
+  margin-top: 6px;
+}
+
+.gs-group__label {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--primary-light);
+  padding: 10px 10px 6px;
+}
+
+.gs-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  font-family: var(--font-family);
+}
+
+.gs-item--active {
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: var(--text);
+}
+
+.gs-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  color: var(--primary-light);
+  flex-shrink: 0;
+}
+.gs-item__icon svg {
+  stroke: currentColor;
+}
+
+.gs-item__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.gs-item__title {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.15;
+}
+
+.gs-item__desc {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.gs-item__kind {
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+.gs-item--active .gs-item__kind {
+  color: var(--primary-light);
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+.gs-mark {
+  background: rgba(139, 92, 246, 0.28);
+  color: var(--primary-light);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.gs-empty {
+  padding: 34px 16px;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+.gs-empty strong {
+  color: var(--primary-light);
+}
+
+/* ── Rodapé de dicas ── */
+.gs-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 16px;
+  border-top: 1px solid rgba(139, 92, 246, 0.14);
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+@media (max-width: 640px) {
+  .gs-overlay {
+    padding-top: 7vh;
+  }
+  .gs-foot {
+    display: none;
+  }
+}

@@ -13,6 +13,16 @@ import { ConclusaoModal } from '@/features/workout/ConclusaoModal';
 import { ProfileFeature } from '@/features/profile/ProfileFeature';
 import { applySavedTheme } from '@/features/settings/theme-colors';
 import { BottomNav, type SectionType } from '@/components/BottomNav';
+import { MobileTopBar } from '@/components/MobileTopBar';
+import { DesktopSidebar } from '@/components/DesktopSidebar';
+import { GlobalSearchOverlay } from '@/features/search/GlobalSearchOverlay';
+import type { SearchItem } from '@/features/search/search-index';
+import { LockScreen } from '@/features/lock/LockScreen';
+import { useAppLock } from '@/features/lock/useAppLock';
+import { useLockStore } from '@/features/lock/lock-store';
+import { useTreinosStore } from '@/features/workout/treinos/treinos-store';
+import { PREF_KEYS, readLS, writeLS } from '@/features/profile/profile-data';
+import { useCrossBrowserFullscreen } from '@/lib/fullscreen';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
 import { loadLocalData, getTodayTreino, selectSheetEntry } from '@/core/db/queries';
@@ -20,9 +30,12 @@ import { ShareModal } from '@/features/gamification/ShareModal';
 import { useShareStore } from '@/features/gamification/share-store';
 import { ColecaoModals } from '@/features/gamification/ColecaoModals';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
-import { fadeIn, fadeSwap } from '@/lib/animations';
+import { fadeIn, slideSwap, type SlideDirection } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
 import type { SheetKey } from '@/core/db/schema';
+
+/* Ordem canônica das seções (usada pelo slide direcional e pelo swipe) */
+const SECTIONS_ORDER: SectionType[] = ['progresso', 'treinos', 'dashboard', 'social', 'loja'];
 
 export function App() {
   const [activeSection, setActiveSection] = useState<SectionType>('dashboard');
@@ -60,7 +73,9 @@ export function App() {
     }, 450);
   }, []);
 
-  /* nav.js L135-152: fadeSwap na seção ativa → troca → fadeIn na nova */
+  /* nav.js L135-152 → v4.6.0-shell: transição DIRECIONAL (slide) no lugar do
+     fadeSwap legado — sai p/ esquerda e a nova seção entra da direita (ou o
+     espelho ao navegar "pra trás"), spring-ish no mobile e cúbica no desktop. */
   const navigateSection = useCallback(
     (sec: SectionType) => {
       if (sec === activeSection) {
@@ -69,23 +84,127 @@ export function App() {
       }
       if (animatingRef.current) return;
       animatingRef.current = true;
+      // Guarda cobre a animação inteira (saída 200–220ms + entrada 320–340ms)
       window.setTimeout(() => {
         animatingRef.current = false;
-      }, 150);
-      fadeSwap(mainRef.current, () => {
-        setActiveSection(sec);
-        document.dispatchEvent(new CustomEvent('sectionchange', { detail: sec }));
-        repairSectionRaster();
-      });
+      }, 580);
+      const from = SECTIONS_ORDER.indexOf(activeSection);
+      const to = SECTIONS_ORDER.indexOf(sec);
+      const direction: SlideDirection = to >= from ? 'forward' : 'backward';
+      const strip = mainRef.current?.querySelector<HTMLElement>('.section-strip') ?? null;
+      slideSwap(
+        strip,
+        () => {
+          setActiveSection(sec);
+          document.dispatchEvent(new CustomEvent('sectionchange', { detail: sec }));
+          repairSectionRaster();
+        },
+        direction
+      );
     },
     [activeSection, repairSectionRaster]
+  );
+
+  /* ===== v4.6.0-shell: casca adaptativa + busca global + lock ===== */
+
+  const { isFullscreen, toggleFullscreen } = useCrossBrowserFullscreen();
+  const locked = useLockStore((s) => s.locked);
+  useAppLock();
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  /* Sidebar HUD fixada expandida (pref academia_pref_sidebar_pinned) */
+  const [sidebarPinned, setSidebarPinned] = useState(
+    () => readLS(PREF_KEYS.sidebarPinned) === 'true'
+  );
+
+  const toggleSidebarPin = useCallback(() => {
+    setSidebarPinned((prev) => {
+      const next = !prev;
+      writeLS(PREF_KEYS.sidebarPinned, String(next));
+      return next;
+    });
+  }, []);
+
+  /* Ctrl/Cmd+K abre/fecha a Busca Geral (não enquanto o app estiver travado) */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (!locked) setIsSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [locked]);
+
+  /* ESC fecha a busca quando ela está aberta (guarda do overlay do Perfil) */
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSearchOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isSearchOpen]);
+
+  /* Resultado escolhido na busca → seção, hub profundo ou seção Treinos */
+  const handleSearchPick = useCallback(
+    (item: SearchItem) => {
+      setIsSearchOpen(false);
+
+      /* Configuração/grupo do hub → abre o Perfil já na tela pedida
+         (ProfileFeature escuta 'academia:profile-nav') */
+      if (item.kind === 'config') {
+        setIsPerfilClosing(false);
+        setIsPerfilOverlayOpen(true);
+        window.setTimeout(() => {
+          document.dispatchEvent(
+            new CustomEvent('academia:profile-nav', { detail: item.stack })
+          );
+        }, 0);
+        return;
+      }
+
+      /* Para navegar fora do hub, fecha o Perfil SEM o "volta ao Dashboard"
+         do closePerfilOverlay legado (o destino é outro) */
+      if (isPerfilOverlayOpen) {
+        setIsPerfilClosing(false);
+        setIsPerfilOverlayOpen(false);
+      }
+
+      if (item.kind === 'secao') {
+        if (item.section) navigateSection(item.section);
+        return;
+      }
+
+      /* Exercício/Ficha → dirige o store persistente da seção Treinos
+         (sobrevive ao unmount, como os módulos do legado) */
+      const st = useTreinosStore.getState();
+      if (item.kind === 'exercicio') {
+        st.setMainTab('exercicios');
+        st.setSubTab('exercicios-lista');
+        st.setFilter('all');
+        st.setSearch(item.exerciseName ?? '');
+        navigateSection('treinos');
+        return;
+      }
+      if (item.kind === 'ficha') {
+        st.setMainTab('montar');
+        if (item.sheetKey) {
+          st.setDeckLetter(item.sheetKey);
+          st.setDeckPage(['F', 'G', 'H', 'I', 'J'].includes(item.sheetKey) ? 2 : 1);
+        }
+        st.setDeckSearch('');
+        navigateSection('treinos');
+      }
+    },
+    [navigateSection, isPerfilOverlayOpen]
   );
 
   /* nav.js L207–298: swipe horizontal por threshold (20% da largura ou 150px)
      com as mesmas exclusões de alvo. Divergência aceita (CHANGELOG v4.0.6-phase4):
      sem arrasto contínuo da fita — apenas detecção de intenção + troca no fim. */
   useEffect(() => {
-    const sectionsOrder: SectionType[] = ['progresso', 'treinos', 'dashboard', 'social', 'loja'];
     let startX = 0;
     let startY = 0;
     let dragging = false;
@@ -131,9 +250,9 @@ export function App() {
       const diffX = e.changedTouches[0].clientX - startX;
       const threshold = window.innerWidth * 0.2;
       if (Math.abs(diffX) > threshold || Math.abs(diffX) > 150) {
-        const idx = sectionsOrder.indexOf(activeSection);
-        if (diffX < 0 && idx < sectionsOrder.length - 1) navigateSection(sectionsOrder[idx + 1]);
-        else if (diffX > 0 && idx > 0) navigateSection(sectionsOrder[idx - 1]);
+        const idx = SECTIONS_ORDER.indexOf(activeSection);
+        if (diffX < 0 && idx < SECTIONS_ORDER.length - 1) navigateSection(SECTIONS_ORDER[idx + 1]);
+        else if (diffX > 0 && idx > 0) navigateSection(SECTIONS_ORDER[idx - 1]);
         else navigateSection(activeSection);
       } else {
         navigateSection(activeSection); // volta pro lugar (snap)
@@ -263,9 +382,10 @@ export function App() {
     }, 240);
   }, []);
 
-  /* ESC fecha o overlay do Perfil (perfil-overlay.js L125–130) */
+  /* ESC fecha o overlay do Perfil (perfil-overlay.js L125–130)
+     v4.6.0-shell: cede à Busca Geral quando ela está aberta */
   useEffect(() => {
-    if (!isPerfilOverlayOpen) return;
+    if (!isPerfilOverlayOpen || isSearchOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !isPerfilClosing) {
         e.preventDefault();
@@ -274,7 +394,7 @@ export function App() {
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [isPerfilOverlayOpen, isPerfilClosing, closePerfilOverlay]);
+  }, [isPerfilOverlayOpen, isPerfilClosing, closePerfilOverlay, isSearchOpen]);
 
   return (
     <AuthProvider>
@@ -296,6 +416,37 @@ export function App() {
         </div>
 
         <div className="relative z-10 flex flex-col h-full">
+          {/* ====== TOP BAR MOBILE (v4.6.0-shell) ======
+              < 1024px: avatar/busca/tela cheia (escondida no desktop via
+              shell.css; no desktop quem aparece é a Sidebar HUD). */}
+          <MobileTopBar
+            onOpenProfile={() => setIsPerfilOverlayOpen(true)}
+            onOpenSearch={() => setIsSearchOpen(true)}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
+          />
+
+          {/* ====== SIDEBAR HUD DESKTOP (v4.6.0-shell) ======
+              ≥ 1024px: 76px colapsada / 264px expandida (hover ou pin). */}
+          <DesktopSidebar
+            activeSection={activeSection}
+            onSelectSection={navigateSection}
+            onOpenProfile={() => setIsPerfilOverlayOpen(true)}
+            onOpenSearch={() => setIsSearchOpen(true)}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
+            onLockApp={() => useLockStore.getState().lock()}
+            pinned={sidebarPinned}
+            onTogglePin={toggleSidebarPin}
+          />
+
+          {/* shell-body compensa a largura da Sidebar HUD no desktop
+              (padding-left via shell.css) */}
+          <div
+            className={`shell-body flex-1 min-h-0 flex flex-col${
+              sidebarPinned ? ' shell-body--pinned' : ''
+            }`}
+          >
           {/* Conteúdo Principal (Slide / Seção) — v4.0.13: altura definite
               (h-full → main flex → .section-viewport flex:1 min-h-0) para que
               .section-slide{height:100%} resolva como no legado
@@ -369,6 +520,7 @@ export function App() {
             </div>
             </div>
           </main>
+          </div>
 
           {/* ====== PERFIL OVERLAY ======
               Estrutura 1:1 com treino.html L265–281 + perfil-overlay.css.
@@ -500,6 +652,21 @@ export function App() {
             activeSection={activeSection}
             onSelectSection={navigateSection}
           />
+
+          {/* ====== BUSCA GERAL UNIFICADA (v4.6.0-shell) ======
+              Ctrl/Cmd+K ou botões de busca; ESC fecha; ↑/↓/Enter navegam.
+              Montada apenas quando aberta (estado limpo a cada abertura). */}
+          {isSearchOpen && (
+            <GlobalSearchOverlay
+              open={isSearchOpen}
+              onClose={() => setIsSearchOpen(false)}
+              onPick={handleSearchPick}
+            />
+          )}
+
+          {/* ====== TELA DE BLOQUEIO (v4.6.0-shell) ======
+              z-index 1200 — acima de todos os overlays/modais. */}
+          <LockScreen />
         </div>
 
         {/* Container de toasts (treino.html L1326 — herda animações do CSS legado) */}

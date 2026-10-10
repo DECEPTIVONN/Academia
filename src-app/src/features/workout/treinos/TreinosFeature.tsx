@@ -181,6 +181,11 @@ export const TreinosFeature: React.FC = () => {
   const iconClickRef = useRef(false);
   const blurTimerRef = useRef<number | null>(null);
 
+  /* v4.6.0-shell: a Busca Geral unificada define `search` no store — com
+     query o input fica expandido mesmo sem passar pelo ícone (derivado
+     durante o render, sem efeito). */
+  const showSearch = expanded || !!search.trim();
+
   const onSearchIconMouseDown = () => {
     iconClickRef.current = true;
   };
@@ -194,7 +199,7 @@ export const TreinosFeature: React.FC = () => {
   };
 
   const onSearchIconClick = () => {
-    if (expanded) {
+    if (showSearch) {
       setExpanded(false);
       setSearch('');
       document.getElementById('searchInput')?.blur();
@@ -363,7 +368,7 @@ export const TreinosFeature: React.FC = () => {
             style={subTab === 'exercicios-lista' ? undefined : { display: 'none' }}
           >
             <div className="ex-toolbar premium-toolbar">
-              <div className={`ex-search-box collapsible${expanded ? ' expanded' : ''}`} id="exSearchContainer">
+              <div className={`ex-search-box collapsible${showSearch ? ' expanded' : ''}`} id="exSearchContainer">
                 <span className="ex-search-icon" onMouseDown={onSearchIconMouseDown} onClick={onSearchIconClick}>
                   {SEARCH_ICON}
                 </span>

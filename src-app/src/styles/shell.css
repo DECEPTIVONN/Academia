@@ -1,0 +1,559 @@
+/* ============================================================
+   shell.css — Casca adaptativa Mobile/Desktop (v4.6.0-shell)
+   ============================================================
+
+   Separação responsiva por breakpoint `lg` (1024px), no espírito do
+   NavigationShellStandalone.tsx de referência, mas 100% no design system
+   do Academia (tokens roxos, glassmorphism, BEM, sem cores hardcoded):
+
+   • < 1024px (MOBILE)  → Top Bar fixo no fluxo (avatar/busca/tela cheia)
+                          + Bottom Nav legada (inalterada).
+   • ≥ 1024px (DESKTOP) → Sidebar HUD esquerda (76px colapsada / 264px
+                          expandida) com perfil, XP, seções e utilitários;
+                          Bottom Nav oculta e slides com largura 100%
+                          (o 100vw legado estouraria sob a sidebar).
+
+   BEM: .top-bar* / .side-hud* / .shell-body*
+   ============================================================ */
+
+/* ---------- Utilidades de layout shell ---------- */
+.shell-body {
+  position: relative;
+}
+
+/* ============================================================
+   TOP BAR MOBILE (< 1024px)
+   ============================================================ */
+.top-bar {
+  position: relative;
+  z-index: 350;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 56px;
+  padding: 0 12px;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: rgba(10, 5, 20, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--card-border);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.top-bar__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--card-border);
+  background: var(--gradient);
+  color: #fff;
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  flex-shrink: 0;
+}
+.top-bar__avatar:hover {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 12px var(--shadow);
+}
+.top-bar__avatar:active {
+  transform: scale(0.92);
+}
+
+.top-bar__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  min-width: 0;
+}
+.top-bar__brand-main {
+  font-family: var(--font-family);
+  font-size: 0.92rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--text);
+  text-transform: uppercase;
+}
+.top-bar__brand-sub {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: var(--primary-light);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.top-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-bar__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  padding: 0;
+}
+.top-bar__btn:hover {
+  color: var(--text);
+  background: var(--card-hover);
+  border-color: var(--primary);
+}
+.top-bar__btn:active {
+  transform: scale(0.92);
+}
+.top-bar__btn--active {
+  color: var(--primary-light);
+  border-color: var(--primary);
+  box-shadow: 0 0 10px var(--shadow);
+}
+.top-bar__btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
+@media (min-width: 1024px) {
+  .top-bar {
+    display: none;
+  }
+}
+
+/* ============================================================
+   DESKTOP SIDEBAR HUD (≥ 1024px)
+   ============================================================ */
+.side-hud {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .side-hud {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 400;
+    display: flex;
+    flex-direction: column;
+    width: 76px;
+    background: rgba(8, 4, 16, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid var(--card-border);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    overflow: hidden;
+  }
+  .side-hud--expanded {
+    width: 264px;
+  }
+
+  /* Conteúdo compensa a largura da sidebar (fixa ou colapsada) */
+  .shell-body {
+    padding-left: 76px;
+    transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .shell-body--pinned {
+    padding-left: 264px;
+  }
+
+  /* O legado usa 500vw/100vw na fita; com a sidebar o 100vw estouraria
+     para a direita (recortado pelo overflow:hidden do viewport). */
+  .section-strip {
+    width: 100%;
+  }
+  .section-slide {
+    width: 100%;
+  }
+
+  /* Sem a Bottom Nav, os 260px de folga legados viram espaço morto */
+  .section-slide .treino-container {
+    padding-bottom: 72px !important;
+  }
+  .bottom-nav {
+    display: none;
+  }
+}
+
+/* ---------- Cabeçalho: avatar + nome + fixar ---------- */
+.side-hud__head {
+  padding: 16px 12px 12px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.14);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.side-hud__head-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.side-hud--expanded .side-hud__head-row {
+  justify-content: space-between;
+}
+
+.side-hud__profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: opacity 0.2s ease;
+}
+.side-hud__profile:hover {
+  opacity: 0.85;
+}
+.side-hud__profile:active {
+  transform: scale(0.96);
+}
+
+.side-hud__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--card-border);
+  background: var(--gradient);
+  color: #fff;
+  font-family: var(--font-family);
+  font-size: 1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.25);
+}
+
+.side-hud__id {
+  min-width: 0;
+  overflow: hidden;
+}
+.side-hud__name {
+  display: block;
+  font-family: var(--font-family);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+.side-hud__level {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--primary-light);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.side-hud__pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+.side-hud__pin:hover {
+  color: var(--text);
+  background: var(--overlay);
+}
+.side-hud__pin--on {
+  color: var(--primary-light);
+  background: rgba(139, 92, 246, 0.14);
+  border-color: var(--card-border);
+}
+.side-hud__pin svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+}
+
+/* ---------- Micro barra de XP + ofensiva ---------- */
+.side-hud__xp-wrap {
+  margin-top: 12px;
+  overflow: hidden;
+}
+.side-hud__xp-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  overflow: hidden;
+}
+.side-hud__xp-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--gradient);
+  box-shadow: 0 0 8px var(--shadow);
+  transition: width 0.4s ease;
+}
+.side-hud__xp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--text-tertiary);
+  font-family: var(--font-family);
+}
+.side-hud__streak {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--primary-light);
+}
+.side-hud__streak svg {
+  width: 11px;
+  height: 11px;
+  stroke: currentColor;
+  animation: sideHudPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes sideHudPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+
+/* Quando colapsada, o perfil vira só o avatar centralizado */
+.side-hud:not(.side-hud--expanded) .side-hud__head {
+  padding: 16px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.side-hud:not(.side-hud--expanded) .side-hud__id,
+.side-hud:not(.side-hud--expanded) .side-hud__pin,
+.side-hud:not(.side-hud--expanded) .side-hud__xp-wrap {
+  display: none;
+}
+
+/* ---------- Navegação ---------- */
+.side-hud__nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+}
+
+.side-hud__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  font-family: var(--font-family);
+}
+.side-hud:not(.side-hud--expanded) .side-hud__item {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.side-hud__item:hover {
+  color: var(--text);
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.16);
+}
+
+.side-hud__item--active {
+  color: var(--primary-light);
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: inset 0 0 10px rgba(139, 92, 246, 0.1);
+}
+.side-hud__item--active::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 25%;
+  height: 50%;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: var(--primary-light);
+  box-shadow: 0 0 8px var(--primary);
+}
+
+.side-hud__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.side-hud__icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  transition: filter 0.25s ease;
+}
+.side-hud__item--active .side-hud__icon svg {
+  filter: drop-shadow(0 0 6px var(--primary));
+}
+
+.side-hud__label {
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  line-height: 1.15;
+}
+.side-hud__label-main {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.side-hud__label-desc {
+  display: block;
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+/* ---------- Utilitários inferiores ---------- */
+.side-hud__utils {
+  flex-shrink: 0;
+  padding: 10px;
+  border-top: 1px solid rgba(139, 92, 246, 0.14);
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.side-hud__util {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  font-family: var(--font-family);
+}
+.side-hud:not(.side-hud--expanded) .side-hud__util {
+  justify-content: center;
+  padding: 9px 0;
+}
+.side-hud__util:hover {
+  color: var(--text);
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.18);
+}
+.side-hud__util--accent:hover {
+  color: var(--primary-light);
+  background: rgba(139, 92, 246, 0.14);
+}
+.side-hud__util-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.side-hud__util-icon svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+}
+.side-hud__util-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.side-hud__util--on .side-hud__util-icon {
+  color: var(--primary-light);
+  filter: drop-shadow(0 0 5px var(--primary));
+}
+
+.side-hud__foot {
+  text-align: center;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.22);
+  text-transform: uppercase;
+  padding-top: 4px;
+}
+
+/* Labels só aparecem expandida (evita corte no estado colapsado) */
+.side-hud:not(.side-hud--expanded) .side-hud__label,
+.side-hud:not(.side-hud--expanded) .side-hud__util-label,
+.side-hud:not(.side-hud--expanded) .side-hud__foot {
+  display: none;
+}
+/* Colapsada: sem gap de flex entre ícone e label (ícone centralizado) */
+.side-hud:not(.side-hud--expanded) .side-hud__item,
+.side-hud:not(.side-hud--expanded) .side-hud__util {
+  gap: 0;
+}

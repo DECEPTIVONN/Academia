@@ -1,0 +1,290 @@
+/* ============================================================
+   lock.css — Tela de Bloqueio do App (v4.6.0-shell)
+   BEM `.lock*` · wallpaper da orientação atual · glass card roxo
+   ============================================================ */
+
+.lock {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: lockIn 0.24s ease;
+}
+
+@keyframes lockIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lock__wall {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.lock__shade {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(10, 5, 20, 0.35), rgba(5, 2, 12, 0.86) 75%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.lock__card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(360px, calc(100vw - 32px));
+  padding: 26px 22px 22px;
+  background: rgba(10, 5, 20, 0.72);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  border-radius: 24px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), 0 0 50px rgba(139, 92, 246, 0.14);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+/* ── Marca ── */
+.lock__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.lock__brand-icon {
+  display: flex;
+  color: var(--primary-light);
+  filter: drop-shadow(0 0 10px var(--primary));
+  margin-bottom: 8px;
+}
+.lock__brand-icon svg {
+  stroke: currentColor;
+}
+.lock__brand-main {
+  font-family: var(--font-family);
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.lock__brand-sub {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--primary-light);
+  margin-top: 5px;
+}
+
+/* ── Relógio ── */
+.lock__time {
+  font-family: var(--font-family);
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text);
+  line-height: 1;
+  margin-top: 18px;
+  text-shadow: 0 0 24px rgba(139, 92, 246, 0.35);
+  font-variant-numeric: tabular-nums;
+}
+.lock__date {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: capitalize;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+}
+
+/* ── PIN ── */
+.lock__pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 22px;
+  min-height: 54px;
+}
+.lock__pin--err {
+  animation: lockShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes lockShake {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  80% {
+    transform: translateX(4px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-7px);
+  }
+  40%,
+  60% {
+    transform: translateX(7px);
+  }
+}
+
+.lock__dots {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  height: 18px;
+}
+
+.lock__dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid rgba(192, 132, 252, 0.55);
+  background: transparent;
+  transition: all 0.15s ease;
+}
+.lock__dot--filled {
+  background: var(--primary-light);
+  border-color: var(--primary-light);
+  box-shadow: 0 0 10px var(--shadow);
+  transform: scale(1.1);
+}
+.lock__dot--ghost {
+  opacity: 0.25;
+}
+
+.lock__err {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #fb7185;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  height: 14px;
+}
+.lock__err--show {
+  opacity: 1;
+}
+
+/* ── Teclado numérico ── */
+.lock__pad {
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.lock__key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  border-radius: 16px;
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text);
+  font-family: var(--font-family);
+  font-size: 1.45rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+.lock__key:hover {
+  background: rgba(139, 92, 246, 0.16);
+  border-color: rgba(139, 92, 246, 0.45);
+}
+.lock__key:active {
+  transform: scale(0.93);
+  background: rgba(139, 92, 246, 0.28);
+}
+.lock__key--spacer {
+  visibility: hidden;
+  pointer-events: none;
+}
+.lock__key--fn {
+  color: var(--text-secondary);
+}
+.lock__key--fn svg {
+  stroke: currentColor;
+}
+
+/* ── Biometria fake ── */
+.lock__bio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  padding: 10px 18px 8px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--primary-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.lock__bio svg {
+  stroke: currentColor;
+  filter: drop-shadow(0 0 8px var(--shadow));
+}
+.lock__bio:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+.lock__bio:disabled {
+  cursor: default;
+  opacity: 0.9;
+}
+.lock__bio-label {
+  font-family: var(--font-family);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.lock__bio--scan svg {
+  animation: lockScan 1s ease-in-out infinite;
+}
+
+@keyframes lockScan {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.7;
+  }
+}
+
+/* Mobile: teclado um pouco mais compacto em telas baixas */
+@media (max-height: 720px) {
+  .lock__time {
+    font-size: 2.4rem;
+    margin-top: 12px;
+  }
+  .lock__pad {
+    gap: 8px;
+  }
+  .lock__key {
+    height: 48px;
+  }
+  .lock__card {
+    padding-top: 20px;
+  }
+}

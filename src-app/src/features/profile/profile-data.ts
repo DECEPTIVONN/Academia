@@ -116,6 +116,8 @@ export const PREF_KEYS = {
   lockWallHorizontal: 'academia_pref_lock_wall_horizontal',
   workoutReminder: 'academia_pref_workout_reminder',
   workoutReminderTime: 'academia_pref_workout_reminder_time',
+  /* v4.6.0-shell — Sidebar HUD fixada expandida no desktop */
+  sidebarPinned: 'academia_pref_sidebar_pinned',
 } as const;
 
 export function isDevMode(): boolean {

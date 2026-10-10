@@ -41,6 +41,14 @@ import {
 } from './theme-colors';
 import { ColorPickerModal } from './ColorPickerModal';
 import { getInstallState, promptInstall, type InstallState } from '@/lib/pwa-install';
+import { WALL_PRESETS } from '@/features/lock/lock-wallpapers';
+import {
+  clearPin,
+  getPinLength,
+  lockApp,
+  lockPrefsChanged,
+  savePin,
+} from '@/features/lock/lock-store';
 import type { HubScreen, HubTile } from './HubShell';
 import './settings.css';
 
@@ -306,12 +314,8 @@ const SvgLaptop = (
   </svg>
 );
 
-const WALL_PRESETS = [
-  { id: 'neon', name: 'Neon', bg: 'linear-gradient(160deg, rgba(var(--primary-rgb, 139, 92, 246), 0.65), #0a0a10 70%)' },
-  { id: 'grafite', name: 'Grafite', bg: 'linear-gradient(160deg, #3f3f46, #0a0a10 70%)' },
-  { id: 'violeta', name: 'Violeta', bg: 'linear-gradient(160deg, #8b5cf6, #0a0a10 70%)' },
-  { id: 'magenta', name: 'Magenta', bg: 'linear-gradient(160deg, #d946ef, #0a0a10 70%)' },
-];
+/* WALL_PRESETS agora vem de @/features/lock/lock-wallpapers (v4.6.0-shell —
+   fonte única compartilhada com a tela de bloqueio). */
 
 const LOCK_TIMEOUTS = [
   { v: '60', l: '1 min' },
@@ -375,7 +379,8 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     online: readLS(PREF_KEYS.online) === 'true',
   }));
 
-  /* Placeholders de Segurança/Notificações — prefs salvas, sem efeito real */
+  /* Segurança/Notificações — prefs salvas; o Bloqueio do App passou a ter
+     efeito real na v4.6.0-shell (PIN + inatividade + biometria fake). */
   const [lock, setLock] = useState<LockState>(() => ({
     enabled: readLS(PREF_KEYS.appLockEnabled) === 'true' ? 'true' : 'false',
     biometric: readLS(PREF_KEYS.appLockBiometric) === 'true' ? 'true' : 'false',
@@ -385,6 +390,13 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     reminder: readLS(PREF_KEYS.workoutReminder) === 'true' ? 'true' : 'false',
     reminderTime: readLS(PREF_KEYS.workoutReminderTime) || '18:00',
   }));
+
+  /* v4.6.0-shell — fluxo do PIN local (4–6 dígitos) */
+  const [pinLen, setPinLen] = useState(() => getPinLength());
+  const [pinFormOpen, setPinFormOpen] = useState(false);
+  const [pinDraft, setPinDraft] = useState('');
+  const [pinConfirm, setPinConfirm] = useState('');
+  const [pinError, setPinError] = useState('');
 
   /* Campos de segurança (init único quando o estado carrega) */
   const [sec, setSec] = useState({ nome: '', handle: '', email: '', senha: '' });
@@ -448,6 +460,59 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const updateLock = (key: LockKey, value: string) => {
     setLock((l) => ({ ...l, [key]: value }));
     writeLS(PREF_KEYS[LOCK_PREF_MAP[key]], value);
+    /* v4.6.0-shell: re-arma o timer de inatividade e o estado do lock */
+    lockPrefsChanged();
+
+    /* Ligar o bloqueio sem PIN definido → abre a criação do PIN na hora */
+    if (key === 'enabled' && value === 'true' && getPinLength() === 0) {
+      setPinFormOpen(true);
+      setPinError('');
+    }
+    /* Desligar → o app destrava (e o formulário de PIN fecha) */
+    if (key === 'enabled' && value === 'false') {
+      setPinFormOpen(false);
+    }
+  };
+
+  /* ── PIN local: cria/altera/remove (v4.6.0-shell) ── */
+
+  const resetPinForm = () => {
+    setPinDraft('');
+    setPinConfirm('');
+    setPinError('');
+    setPinFormOpen(false);
+  };
+
+  const submitPin = () => {
+    const digits = pinDraft.trim();
+    if (!/^\d{4,6}$/.test(digits)) {
+      setPinError('Use de 4 a 6 dígitos numéricos.');
+      return;
+    }
+    if (digits !== pinConfirm.trim()) {
+      setPinError('Os PINs não coincidem.');
+      return;
+    }
+    savePin(digits);
+    setPinLen(digits.length);
+    writeLS(PREF_KEYS.appLockEnabled, 'true');
+    setLock((l) => ({ ...l, enabled: 'true' }));
+    lockPrefsChanged();
+    resetPinForm();
+    showToast(
+      pinLen > 0 ? 'PIN alterado com sucesso.' : 'Bloqueio ativado! O app pedirá o PIN ao abrir.',
+      'success'
+    );
+  };
+
+  const removePin = () => {
+    clearPin();
+    setPinLen(0);
+    writeLS(PREF_KEYS.appLockEnabled, 'false');
+    setLock((l) => ({ ...l, enabled: 'false' }));
+    lockPrefsChanged();
+    resetPinForm();
+    showToast('PIN removido — bloqueio do app desativado.', 'info');
   };
 
   const saveSecurityField = async (
@@ -686,7 +751,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       title: 'Segurança e Acesso à Conta',
       desc: 'Bloqueio do app, biometria, inatividade e wallpaper',
       icon: SvgShield,
-      badge: lock.enabled === 'true' ? 'Bloqueio Ativo' : 'Desativado',
+      badge: lock.enabled === 'true' && pinLen > 0 ? 'Bloqueio Ativo' : 'Desativado',
       keywords: [
         'seguranca', 'bloqueio', 'senha', 'pin', 'biometria', 'digital',
         'impressao', 'inatividade', 'wallpaper', 'tela de bloqueio',
@@ -922,10 +987,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             <div className="set-card__head">
               <div>
                 <div className="set-card__eyebrow">SEGURANÇA</div>
-                <h3 className="set-card__title">
-                  Bloqueio do App
-                  <span className="set-badge-soon">EM BREVE</span>
-                </h3>
+                <h3 className="set-card__title">Bloqueio do App</h3>
                 <p className="set-card__desc">
                   Proteja seus dados com senha local e autenticação por biometria.
                 </p>
@@ -989,9 +1051,93 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 ))}
               </div>
             </div>
+            {/* ── PIN local + ações do lock (v4.6.0-shell) ── */}
+            <div className="set-field" style={{ marginTop: 14, marginBottom: 0 }}>
+              <label className="set-field__label">
+                {SvgLock}
+                PIN do App
+              </label>
+
+              {pinFormOpen ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={6}
+                    className="set-input"
+                    placeholder="Novo PIN (4 a 6 dígitos)"
+                    value={pinDraft}
+                    onChange={(e) => setPinDraft(e.target.value.replace(/\D/g, ''))}
+                  />
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={6}
+                    className="set-input"
+                    placeholder="Repita o PIN"
+                    value={pinConfirm}
+                    onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ''))}
+                  />
+                  {pinError && (
+                    <span className="set-note" style={{ color: '#fb7185', marginTop: 0 }}>
+                      {pinError}
+                    </span>
+                  )}
+                  <div className="set-install" style={{ marginTop: 0 }}>
+                    <button type="button" className="set-btn set-btn--primary" onClick={submitPin}>
+                      Salvar PIN
+                    </button>
+                    <button type="button" className="set-btn" onClick={resetPinForm}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : pinLen > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span className="set-note" style={{ marginTop: 0 }}>
+                    PIN de {pinLen} dígitos definido neste dispositivo.
+                  </span>
+                  <div className="set-install" style={{ marginTop: 0, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="set-btn"
+                      onClick={() => {
+                        setPinDraft('');
+                        setPinConfirm('');
+                        setPinError('');
+                        setPinFormOpen(true);
+                      }}
+                    >
+                      Alterar PIN
+                    </button>
+                    <button type="button" className="set-btn" onClick={removePin}>
+                      Remover PIN
+                    </button>
+                    <button
+                      type="button"
+                      className="set-btn set-btn--primary"
+                      onClick={() => lockApp()}
+                      title="Travar o app imediatamente"
+                    >
+                      {SvgLock}
+                      Trancar Agora
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="set-install" style={{ marginTop: 0 }}>
+                  <button type="button" className="set-btn set-btn--primary" onClick={() => setPinFormOpen(true)}>
+                    Criar PIN
+                  </button>
+                </div>
+              )}
+            </div>
+
             <p className="set-note" style={{ marginTop: 10 }}>
-              Em breve: as preferências ficam salvas neste dispositivo, mas o
-              bloqueio ainda não tem efeito.
+              O app trava ao abrir e após o intervalo de inatividade escolhido acima.
+              Tudo fica salvo apenas neste dispositivo.
             </p>
           </section>
 
@@ -999,10 +1145,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             <div className="set-card__head">
               <div>
                 <div className="set-card__eyebrow">PERSONALIZAÇÃO</div>
-                <h3 className="set-card__title">
-                  Wallpaper da Tela de Bloqueio
-                  <span className="set-badge-soon">EM BREVE</span>
-                </h3>
+                <h3 className="set-card__title">Wallpaper da Tela de Bloqueio</h3>
                 <p className="set-card__desc">
                   Escolha o visual da tela de bloqueio em orientação vertical e horizontal.
                 </p>
@@ -1013,7 +1156,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               {wallCard('h')}
             </div>
             <p className="set-note" style={{ marginTop: 10 }}>
-              Em breve: o wallpaper escolhido será exibido na tela de bloqueio do app.
+              Aplicado na próxima tela de bloqueio, conforme a orientação do dispositivo.
             </p>
           </section>
 

@@ -154,6 +154,18 @@ export function ProfileFeature() {
   /* Pilha de navegação do hub raiz (raiz → grupo → leaf) */
   const [navStack, setNavStack] = useState<string[]>([]);
 
+  /* v4.6.0-shell: navegação profunda vinda da Busca Geral unificada —
+     o App abre o overlay do Perfil e despacha 'academia:profile-nav'
+     com a pilha de screens do HubShell (ex.: ['seguranca']). */
+  useEffect(() => {
+    const onProfileNav = (e: Event) => {
+      const stack = (e as CustomEvent<string[] | undefined>).detail;
+      if (Array.isArray(stack)) setNavStack(stack);
+    };
+    document.addEventListener('academia:profile-nav', onProfileNav);
+    return () => document.removeEventListener('academia:profile-nav', onProfileNav);
+  }, []);
+
   // Rascunhos do Personalizar (init único, idem legado)
   const [draft, setDraft] = useState({
     nome: '',
