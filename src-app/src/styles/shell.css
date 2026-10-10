@@ -20,7 +20,8 @@
 .shell-body {
   position: relative;
   /* Top Bar mobile é fixed (paridade com a referência) — o conteúdo
-     precisa começar abaixo dela; no desktop o padding é zerado. */
+     precisa começar abaixo dela; no desktop o padding é zerado.
+     A fórmula casa com a altura REAL da barra (height calc abaixo). */
   padding-top: calc(56px + env(safe-area-inset-top, 0px));
 }
 
@@ -29,10 +30,9 @@
    ============================================================
    Barra FIXED translúcida por cima do conteúdo (paridade com o
    MobileTopBar do NavigationShellStandalone.tsx de referência):
-   sem texto de marca, só avatar à esquerda e ações à direita;
-   o .shell-body compensa com padding-top para o conteúdo começar
-   abaixo dela — e em tela cheia ela flutua de forma orgânica
-   sobre o fundo dinâmico.
+   sem texto de marca, só avatar à esquerda e ações à direita,
+   itens alinhados ao TOPO da barra (flex-start — em tela cheia
+   com notch o safe-area não deve empurrá-los para baixo).
    ============================================================ */
 .top-bar {
   position: fixed;
@@ -41,12 +41,13 @@
   right: 0;
   z-index: 350;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  /* min-height (não height): em tela cheia com notch, o
-     env(safe-area-inset-top) empurra o conteúdo para baixo —
-     com height fixo os botões estouravam para fora da barra. */
+  /* height calc (não min-height): garante altura determinística
+     = 56px de conteúdo + safe-area; o .shell-body usa a mesma
+     fórmula, então não há folga nem estouro. */
+  height: calc(56px + env(safe-area-inset-top, 0px));
   min-height: 56px;
   padding: 0 14px;
   padding-top: env(safe-area-inset-top, 0px);
@@ -127,6 +128,19 @@
   .top-bar {
     display: none;
   }
+}
+
+/* ============================================================
+   OVERRIDE: sub-abas da aba Treinos
+   ============================================================
+   O legado (7-nav-icons.css) dá margin-top de
+   calc(20px + env(safe-area-inset-top)) em .section-subtabs —
+   mas o safe-area JÁ é coberto pelo padding-top do .shell-body.
+   Em tela cheia com notch isso duplicava o inset e criava um
+   vazio enorme entre a barra e as sub-abas. Mantém só os 20px.
+   ============================================================ */
+.section-subtabs {
+  margin-top: 20px;
 }
 
 /* ============================================================

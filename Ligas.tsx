@@ -1634,29 +1634,31 @@ export default function LigasStandalone({
   // ============================================================================
 
   return (
-    <div id="tab-social-standalone-panel" className="w-full space-y-4 relative font-sans text-white">
-      {/* Estilos Auxiliares Standalone */}
+    <div id="tab-social-panel" className="w-full space-y-4 relative font-sans text-white">
+      {/* Estilos Auxiliares Standalone (Fontes, Scrollbars e Animações) */}
       <style>{`
-        @keyframes standalone-flash-effect {
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;600;800&family=Rajdhani:wght@500;600;700;950&family=Space+Grotesk:wght@500;700&family=Montserrat:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap');
+
+        @keyframes flash-effect {
           0% { opacity: 1; }
           100% { opacity: 0; }
         }
         .animate-flash-effect {
-          animation: standalone-flash-effect 0.4s ease-out forwards;
+          animation: flash-effect 0.4s ease-out forwards;
         }
-        #tab-social-standalone-panel ::-webkit-scrollbar {
+        #tab-social-panel ::-webkit-scrollbar {
           width: 6px;
           height: 6px;
         }
-        #tab-social-standalone-panel ::-webkit-scrollbar-track {
+        #tab-social-panel ::-webkit-scrollbar-track {
           background: rgba(15, 23, 42, 0.3);
         }
-        #tab-social-standalone-panel ::-webkit-scrollbar-thumb {
-          background: rgba(99, 102, 241, 0.35);
+        #tab-social-panel ::-webkit-scrollbar-thumb {
+          background: rgba(99, 102, 241, 0.3);
           border-radius: 4px;
         }
-        #tab-social-standalone-panel ::-webkit-scrollbar-thumb:hover {
-          background: rgba(99, 102, 241, 0.55);
+        #tab-social-panel ::-webkit-scrollbar-thumb:hover {
+          background: rgba(99, 102, 241, 0.5);
         }
       `}</style>
 
@@ -1852,6 +1854,7 @@ export default function LigasStandalone({
                       exit={{ opacity: 0, scale: 0.95, y: -10 }}
                       transition={{ duration: 0.15 }}
                       className="absolute right-0 top-[44px] z-50 w-52 bg-slate-950 border-4 border-slate-900 rounded-[2rem] p-4 shadow-[0_15px_40px_rgba(0,0,0,0.85)] flex flex-col gap-2.5 select-none"
+                      id="alliance-filters-popover-menu"
                     >
                       <div className="absolute right-[16px] -top-[12px] w-5 h-5 bg-slate-950 border-t-4 border-l-4 border-slate-900 rotate-45 rounded-tl z-50 pointer-events-none" />
 
@@ -1930,12 +1933,12 @@ export default function LigasStandalone({
             </div>
 
             {/* Lista de Amigos / Membros */}
-            <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 z-10">
+            <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 z-10" id="community-list-scroller">
               {sortedList.map((item, index) => {
                 const rank = index + 1;
                 const isTop3 = rank <= 3;
                 const isBot3 = rank >= 8;
-                const isSelf = item.name === (profile.username || 'GABRIEL GS');
+                const isSelf = item.name === 'GABRIEL GS' || item.name === profile.username;
 
                 let rankBadgeClass = 'text-slate-400 bg-slate-900 border-slate-850';
                 if (rank === 1)
@@ -2098,6 +2101,7 @@ export default function LigasStandalone({
           <div
             ref={chatScrollerRef}
             className="h-[calc(100vh-320px)] sm:h-[calc(100vh-300px)] min-h-[440px] overflow-y-auto space-y-4 px-1 scrollbar-thin scroll-smooth"
+            id="clan-chat-scroller"
           >
             {messages.map((msg) => (
               <div
@@ -2128,7 +2132,7 @@ export default function LigasStandalone({
           </div>
 
           {/* Respostas Rápidas */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none" id="quick-chat-chips">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 flex items-center gap-0.5">
               <Smile className="w-3.5 h-3.5 text-indigo-500" /> Rápido:
             </span>
@@ -2152,11 +2156,13 @@ export default function LigasStandalone({
               value={typedMessage}
               onChange={(e) => setTypedMessage(e.target.value)}
               className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-slate-600"
+              id="clan-chat-input-text-field"
             />
             <button
               type="submit"
               disabled={!typedMessage.trim()}
               className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              id="clan-chat-send-submit-btn"
             >
               <Send className="w-4 h-4" />
             </button>
