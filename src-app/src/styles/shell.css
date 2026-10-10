@@ -20,9 +20,8 @@
 .shell-body {
   position: relative;
   /* Top Bar mobile é fixed (paridade com a referência) — o conteúdo
-     precisa começar abaixo dela; no desktop o padding é zerado.
-     A fórmula casa com a altura REAL da barra (height calc abaixo). */
-  padding-top: calc(56px + env(safe-area-inset-top, 0px));
+     precisa começar abaixo dela; no desktop o padding é zerado. */
+  padding-top: 56px;
 }
 
 /* ============================================================
@@ -31,8 +30,8 @@
    Barra FIXED translúcida por cima do conteúdo (paridade com o
    MobileTopBar do NavigationShellStandalone.tsx de referência):
    sem texto de marca, só avatar à esquerda e ações à direita,
-   itens alinhados ao TOPO da barra (flex-start — em tela cheia
-   com notch o safe-area não deve empurrá-los para baixo).
+   altura fixa 56px (sem safe-area no height — em tela cheia o
+   inset podia inflar a barra), itens colados no topo (flex-start).
    ============================================================ */
 .top-bar {
   position: fixed;
@@ -44,13 +43,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  /* height calc (não min-height): garante altura determinística
-     = 56px de conteúdo + safe-area; o .shell-body usa a mesma
-     fórmula, então não há folga nem estouro. */
-  height: calc(56px + env(safe-area-inset-top, 0px));
-  min-height: 56px;
-  padding: 0 14px;
-  padding-top: env(safe-area-inset-top, 0px);
+  height: 56px;
+  padding: 6px 14px 0;
   background: rgba(10, 5, 20, 0.55);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
