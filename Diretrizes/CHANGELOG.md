@@ -21,6 +21,18 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.5.1-hub-root-settings] - 2026-10-09
+*Os 5 tiles que viviam dentro do grupo "Configurações" foram promovidos à raiz do hub do Perfil, ao lado de Perfil, Progressão e Personalizar — o tile "Configurações" foi removido. A raiz agora tem 8 tiles (Perfil, Progressão, Personalizar, Sua Conta, Segurança e Acesso à Conta, Notificações, Esquema de Cores e Personalização, Acessibilidade/Exibição e PWA) + linha vermelha "Sair da Conta" (hubExtra da raiz). Botão "Backup" (headerActions) movido para o cabeçalho de Sua Conta. Cada tela de configuração ganhou eyebrow próprio (CONTA/SEGURANÇA/NOTIFICAÇÕES/CORES/EXIBIÇÃO). system_map.json → 3.5.32*
+
+### [Changed]
+- **`src-app/src/features/profile/ProfileFeature.tsx`**: raiz do hub — tile "Configurações" removido; `...settings.tiles` espalhado diretamente em `rootTiles` (o tile `conta` ganha keywords recursivas via `screenKeywords()`); `...settings.screens` espalhado em `rootScreens` (sem a tela-pai `configuracoes`); `hubExtra={settings.rootExtra}` move a linha "Sair da Conta" para a raiz; `SvgSliders20` removido (ficou órfão).
+- **`src-app/src/features/settings/SettingsFeature.tsx`**: `rootExtra` e `headerActions` movidos para antes de `screens` (o `headerActions`/Backup é referenciado dentro da tela `conta`); eyebrows novos nas 5 telas (`ACADEMIA • CONTA/SEGURANÇA/NOTIFICAÇÕES/CORES/EXIBIÇÃO`); `conta` recebe `headerActions` (botão Backup).
+
+### Notas (verificação)
+- **Comandos**: `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK — todos em `src-app/`.
+- **Teste CDP (novo `cdp-test-hub-root.mjs`, dev :5173, perfil limpo, 390×844): 32/32 PASS, 0 exceções JS** — raiz com 8 tiles e SEM tile "Configurações"; Sua Conta/Segurança/Notificações/Cores/Exibição abrem direto da raiz; header de Sua Conta tem botão Backup; badge Segurança vira "Bloqueio Ativo"; busca "wallpaper"/"biometria"/"lembrete"/"backup" encontra o tile certo na raiz; 5 screenshots inspecionados (`%TEMP%\opencode\shots-hub-root`).
+- **Escopo**: apenas `src-app/` + docs (`CHANGELOG.md`, `system_map.json` → 3.5.32) — legado intocado.
+
 ## [v4.5.0-settings-reorg] - 2026-10-09
 *Hub de Configurações reorganizado no estilo do `SettingsStandalone.tsx` de referência (tipografia/design BEM `set-*` atuais mantidos): nova raiz com 5 tiles — "Sua Conta" (grupo: Informações da Conta, Alterar Senha, Exportar/Restaurar Backup, Desativar Conta placeholder), "Segurança e Acesso à Conta" (bloqueio do app, biometria, inatividade, wallpaper de bloqueio vertical/horizontal e dispositivos — placeholders com prefs salvas + aviso "Em breve"), "Notificações" (lembrete de horário de treino placeholder + Mensagens Motivacionais real), "Esquema de Cores e Personalização" (12 presets + tom personalizado + seletor, movido da antiga tela de Exibição) e "Acessibilidade, Exibição e PWA" (tela cheia, cronômetro, Navbar, Instalar PWA, sons/vibração/online, modo dev); linha vermelha "Sair da Conta" no fim da raiz; tile "Assinatura" removido (system_map.json → 3.5.31)*
 

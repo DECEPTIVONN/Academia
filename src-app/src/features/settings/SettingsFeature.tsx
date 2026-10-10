@@ -751,10 +751,40 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     },
   ];
 
+  const rootExtra = (
+    <button
+      type="button"
+      className="set-logout"
+      onClick={() =>
+        showToast('Sessão local: não há login remoto para sair — em breve!', 'info')
+      }
+    >
+      {SvgLogOut}
+      <span className="set-logout__body">
+        <span className="set-logout__title">Sair da Conta</span>
+        <span className="set-logout__desc">Desconecte a sessão local deste dispositivo</span>
+      </span>
+    </button>
+  );
+
+  const headerActions = (
+    <button
+      type="button"
+      className="set-btn"
+      title="Exportar backup JSON"
+      onClick={() => void handleExport()}
+    >
+      {SvgDownload}
+      Backup
+    </button>
+  );
+
   const screens: Record<string, HubScreen> = {
     /* ================= SUA CONTA (GRUPO) ================= */
     conta: {
+      eyebrow: 'ACADEMIA • CONTA',
       title: 'Sua Conta',
+      headerActions,
       tiles: contaTiles,
       screens: {
         informacoes: {
@@ -884,6 +914,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
 
     /* ================= SEGURANÇA (PLACEHOLDERS) ================= */
     seguranca: {
+      eyebrow: 'ACADEMIA • SEGURANÇA',
       title: 'Segurança e Acesso à Conta',
       content: (
         <>
@@ -1029,6 +1060,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
 
     /* ================= NOTIFICAÇÕES ================= */
     notificacoes: {
+      eyebrow: 'ACADEMIA • NOTIFICAÇÕES',
       title: 'Notificações',
       content: (
         <section className="set-card">
@@ -1110,6 +1142,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
 
     /* ================= ESQUEMA DE CORES ================= */
     cores: {
+      eyebrow: 'ACADEMIA • CORES',
       title: 'Esquema de Cores e Personalização',
       content: (
         <section className="set-card">
@@ -1169,6 +1202,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
 
     /* ================= ACESSIBILIDADE, EXIBIÇÃO E PWA ================= */
     exibicao: {
+      eyebrow: 'ACADEMIA • EXIBIÇÃO',
       title: 'Acessibilidade, Exibição e PWA',
       content: (
         <>
@@ -1379,34 +1413,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       ),
     },
   };
-
-  const rootExtra = (
-    <button
-      type="button"
-      className="set-logout"
-      onClick={() =>
-        showToast('Sessão local: não há login remoto para sair — em breve!', 'info')
-      }
-    >
-      {SvgLogOut}
-      <span className="set-logout__body">
-        <span className="set-logout__title">Sair da Conta</span>
-        <span className="set-logout__desc">Desconecte a sessão local deste dispositivo</span>
-      </span>
-    </button>
-  );
-
-  const headerActions = (
-    <button
-      type="button"
-      className="set-btn"
-      title="Exportar backup JSON"
-      onClick={() => void handleExport()}
-    >
-      {SvgDownload}
-      Backup
-    </button>
-  );
 
   const modals = (
     <>

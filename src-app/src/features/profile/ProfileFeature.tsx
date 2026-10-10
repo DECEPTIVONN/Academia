@@ -121,17 +121,6 @@ const SvgEdit20 = (
   </svg>
 );
 
-const SvgSliders20 = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-    <line x1="4" y1="6" x2="20" y2="6" />
-    <line x1="4" y1="12" x2="20" y2="12" />
-    <line x1="4" y1="18" x2="20" y2="18" />
-    <circle cx="9" cy="6" r="2" />
-    <circle cx="15" cy="12" r="2" />
-    <circle cx="8" cy="18" r="2" />
-  </svg>
-);
-
 const SvgSave = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
@@ -1176,7 +1165,7 @@ export function ProfileFeature() {
     </button>
   );
 
-  /* ── Hub raiz: 4 tiles de grupo (v4.3.0) ── */
+  /* ── Hub raiz (v4.5.1: tiles de Configurações promovidos à raiz) ── */
 
   const rootTiles: HubTile[] = [
     {
@@ -1203,17 +1192,15 @@ export function ProfileFeature() {
       badge: handleText(pc),
       keywords: groupKeywords(persTiles, ['personalizar', 'customizacao']),
     },
-    {
-      id: 'configuracoes',
-      title: 'Configurações',
-      desc: 'Conta, segurança, notificações, cores e PWA',
-      icon: SvgSliders20,
-      badge: 'Ajustes',
-      keywords: [
-        ...groupKeywords(settings.tiles, ['configuracoes', 'config', 'ajustes', 'preferencias', 'backup']),
-        ...settings.tiles.flatMap((t) => screenKeywords(settings.screens[t.id])),
-      ],
-    },
+    /* Configurações (v4.5.0) — direto na raiz, sem tile "Configurações" */
+    ...settings.tiles.map((t) =>
+      t.id === 'conta'
+        ? {
+            ...t,
+            keywords: [...(t.keywords ?? []), ...screenKeywords(settings.screens.conta)],
+          }
+        : t
+    ),
   ];
 
   const rootScreens: Record<string, HubScreen> = {
@@ -1237,14 +1224,7 @@ export function ProfileFeature() {
       screens: persScreens,
       headerActions: saveButton,
     },
-    configuracoes: {
-      eyebrow: 'ACADEMIA • CONFIGURAÇÕES',
-      title: 'Configurações',
-      tiles: settings.tiles,
-      screens: settings.screens,
-      extra: settings.rootExtra,
-      headerActions: settings.headerActions,
-    },
+    ...settings.screens,
   };
 
   return (
@@ -1257,6 +1237,7 @@ export function ProfileFeature() {
         emptyText="Nenhuma seção encontrada."
         tiles={rootTiles}
         screens={rootScreens}
+        hubExtra={settings.rootExtra}
         navStack={navStack}
         onNavStackChange={setNavStack}
       />
