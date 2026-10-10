@@ -44,7 +44,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  height: 56px;
+  /* min-height (não height): em tela cheia com notch, o
+     env(safe-area-inset-top) empurra o conteúdo para baixo —
+     com height fixo os botões estouravam para fora da barra. */
+  min-height: 56px;
   padding: 0 14px;
   padding-top: env(safe-area-inset-top, 0px);
   background: rgba(10, 5, 20, 0.55);
@@ -52,6 +55,7 @@
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   user-select: none;
+  box-sizing: border-box;
 }
 
 .top-bar__avatar {
