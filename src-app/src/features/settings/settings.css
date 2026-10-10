@@ -784,6 +784,192 @@
   box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 139, 92, 246), 0.35);
 }
 
+/* ---------- v4.5.0: badge "EM BREVE", chips, wallpaper, logout, time ---------- */
+
+.set-badge-soon {
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: var(--warning, #fbbf24);
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.set-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.set-chip {
+  padding: 8px 12px;
+  background: var(--set-panel-2);
+  border: 1px solid var(--set-line);
+  border-radius: 12px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--set-dim);
+  transition: all 0.2s ease;
+}
+
+.set-chip:hover {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+  color: #fff;
+}
+
+.set-chip--active {
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  color: var(--primary-light);
+  box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.2);
+}
+
+.set-wall-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 560px) {
+  .set-wall-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.set-wall-card {
+  padding: 12px;
+  background: var(--set-panel-2);
+  border: 1px solid var(--set-line);
+  border-radius: 14px;
+}
+
+.set-wall-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.set-wall-card__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #cfcfe0;
+}
+
+.set-wall-preview {
+  border-radius: 12px;
+  border: 1px solid var(--set-line);
+  background: #101018;
+  margin-bottom: 10px;
+}
+
+.set-wall-preview--v {
+  aspect-ratio: 9 / 16;
+  max-width: 104px;
+  margin-inline: auto;
+}
+
+.set-wall-preview--h {
+  aspect-ratio: 16 / 9;
+}
+
+.set-wall-presets {
+  display: flex;
+  gap: 8px;
+}
+
+.set-wall-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  transition: all 0.2s ease;
+}
+
+.set-wall-dot:hover {
+  transform: scale(1.1);
+}
+
+.set-wall-dot--active {
+  border-color: var(--primary);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 0 10px rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+}
+
+.set-time {
+  background: var(--set-panel-2);
+  border: 1px solid var(--set-line);
+  border-radius: 12px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--set-mono);
+  font-size: 0.74rem;
+  color-scheme: dark;
+  transition: all 0.2s ease;
+}
+
+.set-time:focus {
+  outline: none;
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.65);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 139, 92, 246), 0.15);
+}
+
+.set-logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  margin-top: 14px;
+  padding: 14px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 16px;
+  color: #f87171;
+  transition: all 0.2s ease;
+}
+
+.set-logout:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.55);
+  transform: translateY(-1px);
+}
+
+.set-logout__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.set-logout__title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #f87171;
+}
+
+.set-logout__desc {
+  font-size: 0.68rem;
+  color: rgba(248, 113, 113, 0.7);
+}
+
 /* ---------- Segurança (campos) ---------- */
 
 .set-field {
@@ -860,119 +1046,6 @@
   font-size: 0.66rem;
   color: var(--set-dim-2);
   margin-top: 7px;
-}
-
-/* ---------- Assinatura (planos) ---------- */
-
-.set-plans {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-}
-
-@media (min-width: 640px) {
-  .set-plans {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.set-plan {
-  position: relative;
-  padding: 16px;
-  background: var(--set-panel-2);
-  border: 1px solid var(--set-line);
-  border-radius: 18px;
-}
-
-.set-plan--active {
-  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.55);
-  background:
-    linear-gradient(180deg, rgba(var(--primary-rgb, 139, 92, 246), 0.14), transparent 55%),
-    var(--set-panel-2);
-}
-
-.set-plan--pro {
-  border-color: rgba(251, 191, 36, 0.4);
-}
-
-.set-plan__badge {
-  position: absolute;
-  top: -9px;
-  left: 16px;
-  font-size: 0.56rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--gradient);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-}
-
-.set-plan__badge--pro {
-  background: var(--gradient-gold);
-  color: #241a02;
-}
-
-.set-plan__name {
-  margin-top: 6px;
-  font-size: 0.9rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #fff;
-}
-
-.set-plan__price {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: #fff;
-  margin: 7px 0 11px;
-}
-
-.set-plan__price span {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--set-dim);
-}
-
-.set-plan__features {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.set-plan__features li {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 0.73rem;
-  line-height: 1.35;
-  color: #c9c9da;
-}
-
-.set-plan__features li svg {
-  color: var(--primary-light);
-  margin-top: 2px;
-}
-
-.set-plan__features li.set-plan__feature--off {
-  opacity: 0.45;
-}
-
-.set-plan__features li.set-plan__feature--off svg {
-  color: #f87171;
-}
-
-.set-plan__cta {
-  width: 100%;
-  margin-top: 14px;
-  letter-spacing: 0.16em;
-  font-weight: 900;
 }
 
 /* ---------- Modal: seletor de cores ---------- */

@@ -146,6 +146,16 @@ const groupKeywords = (tiles: HubTile[], extra: string[] = []): string[] => [
   ...tiles.flatMap((t) => [t.title.toLowerCase(), ...(t.keywords ?? [])]),
 ];
 
+/** Agrega keywords recursivamente das telas aninhadas (v4.5.0). */
+const screenKeywords = (screen?: HubScreen): string[] => {
+  if (!screen?.tiles) return [];
+  return screen.tiles.flatMap((t) => [
+    t.title.toLowerCase(),
+    ...(t.keywords ?? []),
+    ...screenKeywords(screen.screens?.[t.id]),
+  ]);
+};
+
 export function ProfileFeature() {
   const data = useLocalData();
   const { state: profile, update } = useProfileState();
@@ -1196,10 +1206,13 @@ export function ProfileFeature() {
     {
       id: 'configuracoes',
       title: 'Configurações',
-      desc: 'Cores, preferências, segurança e assinatura',
+      desc: 'Conta, segurança, notificações, cores e PWA',
       icon: SvgSliders20,
       badge: 'Ajustes',
-      keywords: groupKeywords(settings.tiles, ['configuracoes', 'config', 'ajustes', 'preferencias', 'backup']),
+      keywords: [
+        ...groupKeywords(settings.tiles, ['configuracoes', 'config', 'ajustes', 'preferencias', 'backup']),
+        ...settings.tiles.flatMap((t) => screenKeywords(settings.screens[t.id])),
+      ],
     },
   ];
 
@@ -1229,7 +1242,7 @@ export function ProfileFeature() {
       title: 'Configurações',
       tiles: settings.tiles,
       screens: settings.screens,
-      extra: settings.quickbar,
+      extra: settings.rootExtra,
       headerActions: settings.headerActions,
     },
   };

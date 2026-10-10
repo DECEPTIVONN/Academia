@@ -108,6 +108,14 @@ export const PREF_KEYS = {
   online: 'academia_pref_online',
   navbarMode: 'academia_pref_navbar_mode',
   autoFullscreen: 'academia_pref_auto_fullscreen',
+  /* v4.5.0 — placeholders de Segurança/Notificações (salvos, sem efeito real) */
+  appLockEnabled: 'academia_pref_app_lock_enabled',
+  appLockBiometric: 'academia_pref_app_lock_biometric',
+  appLockTimeout: 'academia_pref_app_lock_timeout',
+  lockWallVertical: 'academia_pref_lock_wall_vertical',
+  lockWallHorizontal: 'academia_pref_lock_wall_horizontal',
+  workoutReminder: 'academia_pref_workout_reminder',
+  workoutReminderTime: 'academia_pref_workout_reminder_time',
 } as const;
 
 export function isDevMode(): boolean {
