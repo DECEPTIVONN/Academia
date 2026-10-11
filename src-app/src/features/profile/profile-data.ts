@@ -107,6 +107,9 @@ export const PREF_KEYS = {
   messages: 'academia_pref_messages',
   online: 'academia_pref_online',
   navbarMode: 'academia_pref_navbar_mode',
+  /* v4.8.3-navbars — formato visual da barra inferior mobile:
+     'straight' = reta (legado); 'oval' = curva neon (NavigationShellStandalone) */
+  navbarShape: 'academia_pref_navbar_shape',
   autoFullscreen: 'academia_pref_auto_fullscreen',
   /* v4.5.0 — placeholders de Segurança/Notificações (salvos, sem efeito real) */
   appLockEnabled: 'academia_pref_app_lock_enabled',

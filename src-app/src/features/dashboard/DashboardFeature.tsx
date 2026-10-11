@@ -37,12 +37,18 @@ interface DashboardFeatureProps {
   onNavigate: (section: string) => void;
   onOpenFicha: (letter: SheetKey) => void;
   onOpenPerfil: () => void;
+  /* v4.8.3-navbars: estado dos overlays Missões/Notícias liftado para o App
+     (a drawer mobile consegue abri-los de qualquer seção) */
+  overlay: 'missions' | 'news' | null;
+  onOverlayChange: (v: 'missions' | 'news' | null) => void;
 }
 
 export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   onNavigate,
   onOpenFicha,
   onOpenPerfil,
+  overlay,
+  onOverlayChange,
 }) => {
   const { exercises, sheets, history, legacy } = useLocalData();
   /* Identidade vem do profileState (fonte única pós-edição no Perfil);
@@ -51,8 +57,9 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   const pc = profile?.customization;
 
   const [selectorOpen, setSelectorOpen] = useState(false);
-  const [missionsOpen, setMissionsOpen] = useState(false);
-  const [newsOpen, setNewsOpen] = useState(false);
+  /* v4.8.3-navbars: overlays Missões/Notícias controlados pelo App */
+  const missionsOpen = overlay === 'missions';
+  const newsOpen = overlay === 'news';
   /* Modo do radar global (legado: currentRadarMode compartilhado) */
   const radarMode = useRadarMode((s) => s.mode);
   const setRadarMode = useRadarMode((s) => s.setMode);
@@ -195,7 +202,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                   aria-label="Notícias"
                   onClick={(e) => {
                     stop(e);
-                    setNewsOpen(true);
+                    onOverlayChange('news');
                   }}
                 >
                   <span className="material-symbols-outlined text-[24px]">calendar_today</span>
@@ -235,7 +242,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
               role="button"
               onClick={(e) => {
                 stop(e);
-                setMissionsOpen(true);
+                onOverlayChange('missions');
               }}
             >
               <div className="font-label-caps text-[9px] bg-black/70 px-2 py-0.5 rounded text-white/90 uppercase whitespace-nowrap mb-0.5 mr-0">
@@ -432,10 +439,10 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
       />
 
       {/* Overlay de Missões (treino.html L903-1254) */}
-      <MissionsOverlay open={missionsOpen} onClose={() => setMissionsOpen(false)} />
+      <MissionsOverlay open={missionsOpen} onClose={() => onOverlayChange(null)} />
 
       {/* Overlay de Notícias (treino.html L303-427) — acionado pelo #dashBtnNoticias */}
-      <NewsOverlay open={newsOpen} onClose={() => setNewsOpen(false)} />
+      <NewsOverlay open={newsOpen} onClose={() => onOverlayChange(null)} />
     </div>
   );
 };

@@ -57,7 +57,7 @@ const SECTIONS: SearchItem[] = [
 const CONFIGS: SearchItem[] = [
   { id: 'cfg:seguranca', kind: 'config', title: 'Segurança e Bloqueio', desc: 'Senha do app, biometria, inatividade e wallpaper', stack: ['seguranca'], keywords: ['bloqueio', 'senha', 'pin', 'biometria', 'digital', 'inatividade', 'lock'] },
   { id: 'cfg:cores', kind: 'config', title: 'Cor de Destaque', desc: 'Tema e cor personalizada do app', stack: ['cores'], keywords: ['cor', 'tema', 'custom', 'roxo', 'acento'] },
-  { id: 'cfg:exibicao', kind: 'config', title: 'Exibição', desc: 'Navbar, tela cheia automática e timer', stack: ['exibicao'], keywords: ['navbar', 'tela cheia', 'fullscreen', 'timer', 'modo'] },
+  { id: 'cfg:exibicao', kind: 'config', title: 'Exibição', desc: 'Navbar, formato da barra, tela cheia automática e timer', stack: ['exibicao'], keywords: ['navbar', 'barra', 'formato', 'oval', 'reta', 'tela cheia', 'fullscreen', 'timer', 'modo'] },
   { id: 'cfg:notificacoes', kind: 'config', title: 'Notificações', desc: 'Lembrete de treino e avisos', stack: ['notificacoes'], keywords: ['lembrete', 'aviso', 'push', 'treino'] },
   { id: 'cfg:conta', kind: 'config', title: 'Conta', desc: 'Informações, senha, backup e restaurar', stack: ['conta'], keywords: ['conta', 'perfil', 'backup', 'exportar', 'restaurar', 'senha'] },
   { id: 'cfg:perfil', kind: 'config', title: 'Perfil', desc: 'Cartão, ofensivas e medalhas', stack: ['perfil'], keywords: ['cartao', 'ofensivas', 'medalhas', 'amigos'] },

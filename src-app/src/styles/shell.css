@@ -165,11 +165,13 @@
     display: flex;
     flex-direction: column;
     width: 76px;
-    background: rgba(8, 4, 16, 0.92);
+    /* v4.8.3-navbars: preto AMOLED (era roxo rgba(8, 4, 16, 0.92)) —
+       bordas neutras claras, padrão NavigationShellStandalone */
+    background: rgba(3, 3, 4, 0.97);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-right: 1px solid var(--card-border);
-    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4);
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
     overflow: hidden;
@@ -210,8 +212,8 @@
 /* ---------- Cabeçalho: avatar + nome + fixar ---------- */
 .side-hud__head {
   padding: 16px 12px 12px;
-  border-bottom: 1px solid rgba(139, 92, 246, 0.14);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
   flex-shrink: 0;
 }
 
@@ -253,7 +255,8 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  border: 2px solid var(--card-border);
+  /* Acento no tema do usuário (padrão reference: laranja/30) */
+  border: 2px solid rgba(var(--primary-rgb, 139, 92, 246), 0.35);
   /* Neutro — igual ao .top-bar__avatar: tema não afeta o emblema. */
   background: #1c1b1b;
   color: #fff;
@@ -424,15 +427,16 @@
 
 .side-hud__item:hover {
   color: var(--text);
-  background: rgba(139, 92, 246, 0.08);
-  border-color: rgba(139, 92, 246, 0.16);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.08);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
 }
 
+/* Ativo: filete neon lateral + tint da cor escolhida no Perfil (tema) */
 .side-hud__item--active {
   color: var(--primary-light);
-  background: rgba(139, 92, 246, 0.14);
-  border-color: rgba(139, 92, 246, 0.35);
-  box-shadow: inset 0 0 10px rgba(139, 92, 246, 0.1);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  box-shadow: inset 0 0 10px rgba(var(--primary-rgb, 139, 92, 246), 0.1);
 }
 .side-hud__item--active::before {
   content: '';
@@ -492,8 +496,8 @@
 .side-hud__utils {
   flex-shrink: 0;
   padding: 10px;
-  border-top: 1px solid rgba(139, 92, 246, 0.14);
-  background: rgba(0, 0, 0, 0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -519,12 +523,12 @@
 }
 .side-hud__util:hover {
   color: var(--text);
-  background: rgba(139, 92, 246, 0.08);
-  border-color: rgba(139, 92, 246, 0.18);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.08);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
 }
 .side-hud__util--accent:hover {
   color: var(--primary-light);
-  background: rgba(139, 92, 246, 0.14);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
 }
 .side-hud__util-icon {
   display: flex;
@@ -637,4 +641,286 @@
     margin-top: 0;
     align-self: start;
   }
+}
+
+/* ============================================================
+   BOTTOM NAV — MODO OVAL + ITEM MENU (v4.8.3-navbars)
+   ============================================================
+   Formato 'oval' (academia_pref_navbar_shape): curva neon no topo, port
+   do MobileCurvedNavbar do NavigationShellStandalone.tsx. O SVG fica
+   absolute atrás dos botões (herdados do 7-nav-icons.css); o preenchimento
+   e o traço seguem o tema do usuário (--primary). Em modo 'straight'
+   (reta legado) nada muda além do 1º item Menu, que usa o .bnav-btn
+   comum. Labels: no oval só o ativo + o Menu mostram texto (padrão
+   reference; 6 itens em 390px ficariam apertados com todos visíveis).
+   ============================================================ */
+.bottom-nav.bnav-oval {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: none;
+  box-shadow: none;
+  height: 92px;
+  min-height: 92px;
+  padding: 10px 4px calc(8px + env(safe-area-inset-bottom));
+  align-items: flex-start;
+  justify-content: space-around;
+}
+
+.bnav-oval__curve {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 -8px 16px rgba(var(--primary-rgb, 139, 92, 246), 0.25));
+}
+.bnav-oval__curve-fill {
+  fill: rgba(10, 8, 20, 0.98);
+}
+.bnav-oval__curve-stroke {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 1.5;
+}
+
+/* Labels ocultos fora do ativo (e no Menu, sempre visível) */
+.bnav-oval .bnav-label {
+  opacity: 0;
+  transition: opacity 0.25s ease, color 0.3s ease;
+}
+.bnav-oval .bnav-btn.active .bnav-label,
+.bnav-oval .bnav-btn--menu .bnav-label {
+  opacity: 1;
+}
+
+/* Pílula neon inferior no lugar do dot superior (padrão reference) */
+.bnav-oval .bnav-active-dot {
+  top: auto;
+  bottom: 2px;
+  width: 24px;
+  height: 2px;
+  border-radius: 999px;
+}
+
+/* ============================================================
+   DRAWER LATERAL MOBILE (v4.8.3-navbars)
+   ============================================================
+   Aberta pelo item Menu (1º da barra inferior). Port adaptado do
+   MobileDrawer do NavigationShellStandalone.tsx no design system do
+   Academia (tema via --primary-rgb). z-index 950: acima da nav (200) e
+   dos modais comuns, abaixo do LockScreen (1200).
+   ============================================================ */
+.mdw {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: flex;
+}
+.mdw__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.mdw__panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 288px;
+  max-width: 85vw;
+  height: 100%;
+  padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+  background: #0a0814;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 4px 0 28px rgba(0, 0, 0, 0.6);
+}
+.mdw__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.mdw__eyebrow {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--primary-light);
+  font-family: var(--font-family);
+}
+.mdw__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.mdw__close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+/* Cartão de perfil */
+.mdw__profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font-family: var(--font-family);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.mdw__profile:hover {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.06);
+}
+.mdw__avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  background: #1c1b1b;
+  color: #fff;
+}
+.mdw__id {
+  min-width: 0;
+}
+.mdw__name {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mdw__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.mdw__level {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--primary-light);
+}
+.mdw__xp,
+.mdw__streak {
+  font-size: 0.6rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* Lista de atalhos */
+.mdw__nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mdw__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-family);
+  transition: all 0.2s ease;
+}
+.mdw__item:hover {
+  color: var(--text);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.08);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
+}
+.mdw__item--active {
+  color: var(--primary-light);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.32);
+  box-shadow: inset 0 0 10px rgba(var(--primary-rgb, 139, 92, 246), 0.08);
+}
+.mdw__item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.mdw__item-icon svg {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+}
+.mdw__item--active .mdw__item-icon svg {
+  filter: drop-shadow(0 0 6px var(--primary));
+}
+.mdw__item-text {
+  min-width: 0;
+}
+.mdw__item-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mdw__item-desc {
+  display: block;
+  margin-top: 1px;
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Rodapé: tela cheia */
+.mdw__foot {
+  padding-top: 12px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.mdw__item--foot .mdw__item-desc {
+  display: none;
 }

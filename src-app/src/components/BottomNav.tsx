@@ -7,15 +7,24 @@
  * competem com o CSS do mesmo arquivo, e no App (Tailwind v4 em @layer) elas
  * perderiam para as regras não camadeadas do CSS legado, gerando labels
  * sobrepostos (padding/ tracking/ font-size divergentes).
+ *
+ * v4.8.3-navbars:
+ *   • 1º item da barra = Menu (hamburger) → abre a drawer lateral
+ *     (MobileDrawer — perfil, busca, atalhos e tela cheia);
+ *   • formato da barra controlado por academia_pref_navbar_shape:
+ *     'straight' = reta legado; 'oval' = curva neon (shell.css .bnav-oval,
+ *     port do MobileCurvedNavbar do NavigationShellStandalone.tsx).
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export type SectionType = 'progresso' | 'treinos' | 'dashboard' | 'social' | 'loja';
 
 interface BottomNavProps {
   activeSection: SectionType;
   onSelectSection: (section: SectionType) => void;
+  /** v4.8.3 — item Menu (1º da barra) abre a drawer lateral */
+  onOpenMenu: () => void;
 }
 
 /* Pref de navbar (SettingsFeature → Exibição → Barra de Navegação).
@@ -23,14 +32,32 @@ interface BottomNavProps {
    baixo e volta ao rolar para cima (threshold de 8 px para evitar
    micro-tremores em scroll momentum). */
 const NAVBAR_MODE_KEY = 'academia_pref_navbar_mode';
+/* v4.8.3 — formato visual: 'straight' (reta legado) | 'oval' (curva neon) */
+const NAVBAR_SHAPE_KEY = 'academia_pref_navbar_shape';
+
+const SvgMenu = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
 
 export const BottomNav: React.FC<BottomNavProps> = ({
   activeSection,
   onSelectSection,
+  onOpenMenu,
 }) => {
   const navRef = useRef<HTMLElement>(null);
   const hiddenRef = useRef(false);
   const lastTopRef = useRef(0);
+  const [shape, setShape] = useState<string>(() => {
+    try {
+      return localStorage.getItem(NAVBAR_SHAPE_KEY) || 'straight';
+    } catch {
+      return 'straight';
+    }
+  });
 
   useEffect(() => {
     const isFlexible = () => {
@@ -83,6 +110,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('academia:navbar-mode-changed', onModeChanged);
     };
+  }, []);
+
+  /* Formato (reta/oval) — reage ao seletor das Configurações em tempo real */
+  useEffect(() => {
+    const onShapeChanged = () => {
+      try {
+        setShape(localStorage.getItem(NAVBAR_SHAPE_KEY) || 'straight');
+      } catch {
+        setShape('straight');
+      }
+    };
+    window.addEventListener('academia:navbar-shape-changed', onShapeChanged);
+    return () => window.removeEventListener('academia:navbar-shape-changed', onShapeChanged);
   }, []);
 
   /* Troca de seção → novo slide começa no topo; mostra a navbar e zera a ref */
@@ -154,8 +194,50 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     },
   ];
 
+  const isOval = shape === 'oval';
+
   return (
-    <nav ref={navRef} className="bottom-nav" id="bottomNav" role="navigation" aria-label="Navegação principal">
+    <nav
+      ref={navRef}
+      className={isOval ? 'bottom-nav bnav-oval' : 'bottom-nav'}
+      id="bottomNav"
+      role="navigation"
+      aria-label="Navegação principal"
+    >
+      {/* Curva neon de fundo (modo oval) — port do MobileCurvedNavbar */}
+      {isOval && (
+        <svg
+          className="bnav-oval__curve"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            className="bnav-oval__curve-fill"
+            d="M 0 30 Q 50 0 100 30 L 100 100 L 0 100 Z"
+          />
+          <path
+            className="bnav-oval__curve-stroke"
+            d="M 0 30 Q 50 0 100 30"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      )}
+
+      {/* 1º item: Menu (drawer lateral) — em ambos os formatos */}
+      <button
+        type="button"
+        className="bnav-btn bnav-btn--menu"
+        data-section="menu"
+        id="bnavMenu"
+        aria-label="Menu"
+        onClick={onOpenMenu}
+      >
+        <div className="bnav-icon">{SvgMenu}</div>
+        <span className="bnav-label">Menu</span>
+        <div className="bnav-active-dot" />
+      </button>
+
       {navItems.map((item) => {
         const isActive = activeSection === item.id;
 

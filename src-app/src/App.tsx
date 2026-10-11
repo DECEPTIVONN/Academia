@@ -14,6 +14,7 @@ import { ProfileFeature } from '@/features/profile/ProfileFeature';
 import { applySavedTheme } from '@/features/settings/theme-colors';
 import { BottomNav, type SectionType } from '@/components/BottomNav';
 import { MobileTopBar } from '@/components/MobileTopBar';
+import { MobileDrawer } from '@/components/MobileDrawer';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { GlobalSearchOverlay } from '@/features/search/GlobalSearchOverlay';
 import type { SearchItem } from '@/features/search/search-index';
@@ -40,6 +41,10 @@ const SECTIONS_ORDER: SectionType[] = ['progresso', 'treinos', 'dashboard', 'soc
 
 export function App() {
   const [activeSection, setActiveSection] = useState<SectionType>('dashboard');
+  /* v4.8.3-navbars: overlay do Dashboard (Missões/Notícias) liftado para o
+     App — a drawer mobile consegue abri-los de qualquer seção. Limpo em
+     navigateSection ao sair do Início (não reabre ao voltar). */
+  const [dashOverlay, setDashOverlay] = useState<'missions' | 'news' | null>(null);
   const [isFichaOverlayOpen, setIsFichaOverlayOpen] = useState(false);
   const [isPerfilOverlayOpen, setIsPerfilOverlayOpen] = useState(false);
   const [isPerfilClosing, setIsPerfilClosing] = useState(false);
@@ -82,6 +87,8 @@ export function App() {
      atual — interrupção natural). Clique na seção ativa assenta em casa. */
   const navigateSection = useCallback(
     (sec: SectionType) => {
+      /* v4.8.3: sair do Início descarta o overlay pendente */
+      if (sec !== 'dashboard') setDashOverlay(null);
       if (sec === activeSection) {
         snapSlideHome(stripX, stripOpacity);
         fadeIn(mainRef.current);
@@ -122,6 +129,38 @@ export function App() {
       writeLS(PREF_KEYS.sidebarPinned, String(next));
       return next;
     });
+  }, []);
+
+  /* ====== v4.8.3-navbars: drawer mobile + overlays do Dashboard ======
+     A drawer (item Menu da barra inferior) abre Busca/Progresso/Notícias/
+     Missões/Configurações. O estado de dashOverlay vive no topo do App
+     (acima) para que navigateSection possa limpá-lo ao sair do Início. */
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  /* Notícias/Missões a partir da drawer: fecha o Perfil (se aberto), navega
+     ao Início e abre o overlay. Se já está no Início, só abre. */
+  const openDashOverlay = useCallback(
+    (which: 'missions' | 'news') => {
+      setIsDrawerOpen(false);
+      if (isPerfilOverlayOpen) {
+        setIsPerfilClosing(false);
+        setIsPerfilOverlayOpen(false);
+      }
+      navigateSection('dashboard');
+      setDashOverlay(which);
+    },
+    [navigateSection, isPerfilOverlayOpen]
+  );
+
+  /* Configurações a partir da drawer → hub do Perfil na raiz
+     (ProfileFeature escuta 'academia:profile-nav'; pilha vazia = raiz) */
+  const openProfileSettings = useCallback(() => {
+    setIsDrawerOpen(false);
+    setIsPerfilClosing(false);
+    setIsPerfilOverlayOpen(true);
+    window.setTimeout(() => {
+      document.dispatchEvent(new CustomEvent('academia:profile-nav', { detail: [] }));
+    }, 0);
   }, []);
 
   /* Ctrl/Cmd+K abre/fecha a Busca Geral (não enquanto o app estiver travado) */
@@ -227,6 +266,7 @@ export function App() {
         t.closest('.modal-overlay') ||
         t.closest('.perfil-overlay') ||
         t.closest('.ficha-overlay') ||
+        t.closest('.mdw') ||
         (t.closest('[draggable="true"]') && t.closest('#tab-montar')) ||
         t.tagName.toLowerCase() === 'input' ||
         t.tagName.toLowerCase() === 'textarea'
@@ -503,6 +543,8 @@ export function App() {
                 onNavigate={(sec) => navigateSection(sec as SectionType)}
                 onOpenFicha={handleOpenFicha}
                 onOpenPerfil={() => setIsPerfilOverlayOpen(true)}
+                overlay={dashOverlay}
+                onOverlayChange={setDashOverlay}
               />
             )}
 
@@ -682,6 +724,36 @@ export function App() {
           <BottomNav
             activeSection={activeSection}
             onSelectSection={navigateSection}
+            onOpenMenu={() => setIsDrawerOpen(true)}
+          />
+
+          {/* ====== DRAWER LATERAL MOBILE (v4.8.3-navbars) ======
+              Aberta pelo item Menu (1º da barra inferior). */}
+          <MobileDrawer
+            open={isDrawerOpen}
+            onClose={() => setIsDrawerOpen(false)}
+            activeSection={activeSection}
+            onSelectSection={(sec) => {
+              setIsDrawerOpen(false);
+              navigateSection(sec);
+            }}
+            onOpenSearch={() => {
+              setIsDrawerOpen(false);
+              setIsSearchOpen(true);
+            }}
+            onOpenProfile={() => {
+              setIsDrawerOpen(false);
+              setIsPerfilClosing(false);
+              setIsPerfilOverlayOpen(true);
+            }}
+            onOpenNews={() => openDashOverlay('news')}
+            onOpenMissions={() => openDashOverlay('missions')}
+            onOpenSettings={openProfileSettings}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={() => {
+              setIsDrawerOpen(false);
+              toggleFullscreen();
+            }}
           />
 
           {/* ====== BUSCA GERAL UNIFICADA (v4.6.0-shell) ======

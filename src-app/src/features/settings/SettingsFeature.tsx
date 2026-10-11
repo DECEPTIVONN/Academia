@@ -190,6 +190,25 @@ const SvgScrollY = (
   </svg>
 );
 
+/* v4.8.3-navbars — formato da barra inferior (reta / oval) */
+const SvgBarStraight = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
+    <path d="M3 16h18" />
+    <path d="M6 12V8" />
+    <path d="M12 12V8" />
+    <path d="M18 12V8" />
+  </svg>
+);
+
+const SvgBarCurve = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
+    <path d="M3 14c3-6 15-6 18 0" />
+    <path d="M6 11V8" />
+    <path d="M12 9.5V7" />
+    <path d="M18 11V8" />
+  </svg>
+);
+
 const SvgMaximize = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
     <polyline points="15 3 21 3 21 9" />
@@ -356,6 +375,10 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [navbarMode, setNavbarMode] = useState<string>(
     () => readLS(PREF_KEYS.navbarMode) || 'fixed'
   );
+  /* v4.8.3-navbars — formato visual da barra inferior mobile */
+  const [navbarShape, setNavbarShape] = useState<string>(
+    () => readLS(PREF_KEYS.navbarShape) || 'straight'
+  );
   const [autoFullscreen, setAutoFullscreen] = useState(
     () => readLS(PREF_KEYS.autoFullscreen) === 'true'
   );
@@ -429,6 +452,12 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     writeLS(PREF_KEYS.navbarMode, value);
     setNavbarMode(value);
     window.dispatchEvent(new CustomEvent('academia:navbar-mode-changed'));
+  };
+
+  const selectNavbarShape = (value: string) => {
+    writeLS(PREF_KEYS.navbarShape, value);
+    setNavbarShape(value);
+    window.dispatchEvent(new CustomEvent('academia:navbar-shape-changed'));
   };
 
   const toggleAutoFullscreen = (checked: boolean) => {
@@ -1424,7 +1453,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 <div className="set-card__eyebrow">EXIBIÇÃO</div>
                 <h3 className="set-card__title">Barra de Navegação</h3>
                 <p className="set-card__desc">
-                  Escolha se a navbar inferior fica sempre visível ou se recolhe ao rolar.
+                  Comportamento e formato da barra inferior de navegação.
                 </p>
               </div>
             </div>
@@ -1450,6 +1479,39 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               {navbarMode === 'flexible'
                 ? 'A navbar recolhe ao deslizar para baixo e volta ao deslizar para cima.'
                 : 'A navbar fica sempre visível na parte inferior.'}
+            </p>
+
+            {/* v4.8.3-navbars — formato visual (reta / oval) */}
+            <div className="set-card__head" style={{ marginTop: 22 }}>
+              <div>
+                <h3 className="set-card__title">Formato da Barra</h3>
+                <p className="set-card__desc">
+                  Visual da barra inferior: clássica (reta) ou curva neon.
+                </p>
+              </div>
+            </div>
+            <div className="set-opts">
+              <button
+                type="button"
+                className={`set-opt ${navbarShape === 'straight' ? 'set-opt--active' : ''}`}
+                onClick={() => selectNavbarShape('straight')}
+              >
+                {SvgBarStraight}
+                <span className="set-opt__label">Reta</span>
+              </button>
+              <button
+                type="button"
+                className={`set-opt ${navbarShape === 'oval' ? 'set-opt--active' : ''}`}
+                onClick={() => selectNavbarShape('oval')}
+              >
+                {SvgBarCurve}
+                <span className="set-opt__label">Oval</span>
+              </button>
+            </div>
+            <p className="set-note" style={{ marginTop: 10 }}>
+              {navbarShape === 'oval'
+                ? 'Barra com curva neon no topo e destaque do item ativo no tema escolhido.'
+                : 'Barra clássica reta, como no layout original.'}
             </p>
           </section>
 
