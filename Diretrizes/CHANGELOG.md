@@ -21,6 +21,17 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.7.1-ligas-theme] - 2026-10-10
+*Aba Social passa a responder à cor escolhida pelo usuário nas Configurações (tema `--primary*`), seguindo o mesmo padrão de acentos de `settings.css` — só cores, sem mudança de design/layout. Hardcodes purple/indigo/violet/fuchsia viraram tokens `--primary`/`rgba(var(--primary-rgb,…))` ou utilitários `.ligas-*` já existentes; paletas de avatar e cores semânticas (emerald/rose/amber) mantidas como conteúdo.*
+
+### [Changed]
+- **`src-app/src/features/social/social.css`**: `.soc-root` ganha aliases `--soc-accent`, `--soc-accent-light`, `--soc-accent-dark`, `--soc-accent-rgb`, `--soc-accent-soft`, `--soc-accent-line`, `--soc-accent-strong`, `--soc-accent-glow` apontando para `var(--primary*)` do tema ativo; rgba hardcoded (hero, guilda, msg self, scrollbars) → `rgba(var(--primary-rgb, 139, 92, 246), X)`; novo bloco "Acentos sensíveis ao tema" com utilitários `.ligas-text-accent`, `.ligas-bg-accent`, `.ligas-bg-soft`, `.ligas-bg-soft-strong`, `.ligas-border-accent`, `.ligas-border-accent-strong`, `.ligas-glow`, `.ligas-glow-strong`, `.ligas-gradient`, `.ligas-bubble-self`, `.ligas-role-pill`, `.ligas-btn-primary`, `.ligas-filter-active`, `.ligas-input:focus`.
+- **`src-app/src/features/social/LigasFeature.tsx`**: acentos purple/indigo substituídos por tokens tema — linha self da lista, nome/XP self, anel/borda de divisão ativa, `JoinPrompt` botão/glow, controles de teste, portal de fim de temporada (step 1+2 e botões "Continuar"), diamantes de navegação ativos, toggle semanal/mensal, banner do clã, borda/botão filtros, sub-aba Amigos/Membros (underline + borda), botão câmera, chat (role pill, bolha self, input, send), header da liga semanal e `AddFriendModal`. Paletas de avatar (`avatarColor`) e cores semânticas intencionais preservadas.
+
+### [Notas]
+- Escopo só cores — system_map segue 3.5.33.
+- Verificação: `npx tsc -b` exit 0 · `npx oxlint src` 0 findings · `npm run build` OK (2.76 s).
+
 ## [v4.7.0-ligas-social] - 2026-10-10
 *Aba Social substituída integralmente pelo conteúdo de `Ligas.tsx` (Amigos / Guilda / Liga Semanal+Mensal), mantendo apenas o background glass e a tipografia Rajdhani do app. Emojis de dados (avatar, bandeira, troféu de divisão) substituídos por SVG stroke conforme `Diretrizes/Ícones.md`.*
 

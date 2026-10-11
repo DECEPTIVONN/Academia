@@ -208,7 +208,7 @@ function rankBadgeClass(rank: number): string {
 
 function rowTone(isSelf: boolean, isTop3: boolean, isBot3: boolean): string {
   if (isSelf)
-    return 'bg-gradient-to-r from-purple-950/60 via-slate-900/90 to-indigo-950/60 border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/10';
+    return 'ligas-self-row bg-gradient-to-r from-[rgba(var(--primary-rgb,139,92,246),0.35)] via-slate-900/90 to-[rgba(var(--primary-rgb,139,92,246),0.2)] ligas-border-accent-strong ligas-glow ring-1 ring-[rgba(var(--primary-rgb,139,92,246),0.12)]';
   if (isTop3) return 'bg-emerald-950/5 border-emerald-900/15 hover:bg-slate-900/30';
   if (isBot3) return 'bg-rose-950/5 border-rose-900/15 hover:bg-slate-900/30';
   return 'bg-transparent border-transparent hover:bg-slate-900/20';
@@ -254,7 +254,7 @@ function ParticipantRow({
         </div>
         <div>
           <div className="flex items-center gap-1.5">
-            <span className={`text-xs font-black ${isSelf ? 'text-purple-300' : 'text-white'}`}>{item.name}</span>
+            <span className={`text-xs font-black ${isSelf ? 'ligas-text-accent' : 'text-white'}`}>{item.name}</span>
             <span title="País">
               <FlagIcon flag={flag} size={12} className="text-slate-400" />
             </span>
@@ -266,7 +266,7 @@ function ParticipantRow({
       </div>
       <div className="text-right shrink-0">
         <span
-          className={`text-xs font-black font-mono tracking-tight ${isSelf ? 'text-purple-400' : 'text-slate-300'}`}
+          className={`text-xs font-black font-mono tracking-tight ${isSelf ? 'ligas-text-accent' : 'text-slate-300'}`}
         >
           {showXpLabel ? `${item.xp} XP` : item.xp}
         </span>
@@ -335,9 +335,9 @@ function DivisionPath({
           const sizeCls = variant === 'weekly' ? 'w-11 h-11' : 'w-10 h-10';
           const activeRing =
             variant === 'weekly'
-              ? 'scale-115 ring-4 ring-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.5)]'
-              : 'ring-2 ring-purple-500/50 scale-110 shadow-lg';
-          const activeBorder = variant === 'weekly' ? 'border-indigo-400/40' : '';
+              ? 'scale-115 ring-4 ring-[rgba(var(--primary-rgb,139,92,246),0.25)] ligas-glow-strong'
+              : 'ring-2 ring-[rgba(var(--primary-rgb,139,92,246),0.5)] scale-110 shadow-lg';
+          const activeBorder = variant === 'weekly' ? 'border-[rgba(var(--primary-rgb,139,92,246),0.45)]' : '';
 
           return (
             <div key={div} className="flex flex-col items-center gap-1.5 relative z-10">
@@ -390,9 +390,9 @@ function JoinPrompt({
   const btn =
     accent === 'amber'
       ? 'from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-[0_4px_0_#92400e]'
-      : 'from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white shadow-[0_4px_0_#3730a3]';
-  const ring = accent === 'amber' ? 'border-amber-500/20' : 'border-indigo-500/20';
-  const glow = accent === 'amber' ? 'from-amber-500/5' : 'from-indigo-500/5';
+      : 'ligas-btn-primary';
+  const ring = accent === 'amber' ? 'border-amber-500/20' : 'ligas-border-accent';
+  const glow = accent === 'amber' ? 'from-amber-500/5' : 'from-[rgba(var(--primary-rgb,139,92,246),0.06)]';
 
   return (
     <div className="p-6 border border-slate-900 bg-slate-950/20 rounded-[2rem] text-center space-y-5 shadow-2xl relative overflow-hidden">
@@ -436,7 +436,7 @@ function LeagueTestControls({
     <div className="p-3 bg-slate-950/40 border border-slate-900 rounded-2xl flex items-center gap-2.5 select-none justify-center">
       <button
         onClick={onSimulate}
-        className="flex-1 py-2.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 font-black text-[11px] uppercase tracking-wide transition-all cursor-pointer block text-center active:scale-95"
+        className="flex-1 py-2.5 rounded-xl ligas-bg-soft-strong border border-[rgba(var(--primary-rgb,139,92,246),0.3)] ligas-text-accent font-black text-[11px] uppercase tracking-wide transition-all cursor-pointer block text-center active:scale-95"
       >
         Simular Partida (+XP)
       </button>
@@ -581,8 +581,8 @@ function SeasonEndPortal({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] bg-[rgba(10,5,20,0.92)] backdrop-blur-sm p-6 text-white flex flex-col justify-between overflow-hidden select-none shadow-2xl animate-fade-in overflow-y-auto">
-      <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/20 via-transparent to-slate-950/90 pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.06),transparent_80%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[rgba(var(--primary-rgb,139,92,246),0.12)] via-transparent to-slate-950/90 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb,139,92,246),0.06),transparent_80%)] pointer-events-none" />
 
       {step === 1 && (
         <div className="flex-1 flex flex-col justify-between max-w-md mx-auto w-full py-4 relative z-10">
@@ -608,7 +608,7 @@ function SeasonEndPortal({
                 Placar Final {monthly ? 'Mensal - ' : ''}Divisão {oldDivision}
               </p>
             </div>
-            <div className="border border-indigo-950/80 bg-slate-950/45 rounded-3xl p-3.5 max-h-[340px] overflow-y-auto space-y-2 shadow-xl">
+            <div className="border border-[rgba(var(--primary-rgb,139,92,246),0.25)] bg-slate-950/45 rounded-3xl p-3.5 max-h-[340px] overflow-y-auto space-y-2 shadow-xl">
               {participants.length > 0 ? (
                 participants.map((item, index) => {
                   const rankNum = index + 1;
@@ -635,7 +635,7 @@ function SeasonEndPortal({
           <div className="pt-8 w-full">
             <button
               onClick={onNext}
-              className="w-full py-4 bg-indigo-500 hover:bg-indigo-400 text-white font-black text-xs uppercase tracking-wider transition-all duration-150 rounded-2xl shadow-[0_4px_0_#3730a3] active:translate-y-[2px] active:shadow-none cursor-pointer block text-center select-none"
+              className="w-full py-4 ligas-btn-primary font-black text-xs uppercase tracking-wider transition-all duration-150 rounded-2xl active:translate-y-[2px] active:shadow-none cursor-pointer block text-center select-none"
             >
               Continuar
             </button>
@@ -654,9 +654,9 @@ function SeasonEndPortal({
               <LeagueCup division="Locked" size="sm" />
             </div>
             <div className="space-y-4 px-4 max-w-[320px] mx-auto">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 ligas-bg-soft border border-[rgba(var(--primary-rgb,139,92,246),0.2)] rounded-full mb-2">
                 <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-                <span className="text-[9px] font-black text-indigo-300 uppercase tracking-widest leading-none">
+                <span className="text-[9px] font-black ligas-text-accent uppercase tracking-widest leading-none">
                   {monthly ? 'Novo Mês Ativo' : 'Nova Semana Ativa'}
                 </span>
               </div>
@@ -664,7 +664,7 @@ function SeasonEndPortal({
                 {type === 'promotion' ? (
                   <>
                     Você vai competir na{' '}
-                    <span className="text-yellow-400 underline decoration-indigo-500">Divisão {newDivision}</span>{' '}
+                    <span className="text-yellow-400 underline decoration-[var(--primary)]">Divisão {newDivision}</span>{' '}
                     {monthly ? 'este mês' : 'essa semana'}!
                   </>
                 ) : type === 'demotion' ? (
@@ -692,7 +692,7 @@ function SeasonEndPortal({
           <div className="pt-8 w-full">
             <button
               onClick={onNext}
-              className="w-full py-4 bg-indigo-500 hover:bg-indigo-400 text-white font-black text-xs uppercase tracking-wider transition-all duration-150 rounded-2xl shadow-[0_4px_0_#3730a3] active:translate-y-[2px] active:shadow-none cursor-pointer block text-center select-none"
+              className="w-full py-4 ligas-btn-primary font-black text-xs uppercase tracking-wider transition-all duration-150 rounded-2xl active:translate-y-[2px] active:shadow-none cursor-pointer block text-center select-none"
             >
               Continuar
             </button>
@@ -723,9 +723,9 @@ function FilterMenu({
   ) => {
     let bg = '';
     if (active) {
-      if (theme === 'blue') bg = 'from-sky-400 to-blue-600 shadow-[0_4px_0_#1d4ed8]';
+      if (theme === 'blue') bg = 'ligas-filter-active';
       else if (theme === 'gold') bg = 'from-amber-400 to-amber-500 shadow-[0_4px_0_#b45309]';
-      else bg = 'from-indigo-400 to-indigo-600 shadow-[0_4px_0_#4338ca]';
+      else bg = 'from-slate-700 to-slate-800 shadow-[0_4px_0_#1e293b] border-slate-800';
     } else {
       bg = 'from-slate-700 to-slate-800 shadow-[0_4px_0_#1e293b] border-slate-800';
     }
@@ -798,7 +798,7 @@ function FriendRow({
         </div>
         <div>
           <div className="flex items-center gap-1.5">
-            <span className={`text-xs font-black ${isSelf ? 'text-purple-300' : 'text-white'}`}>{item.name}</span>
+            <span className={`text-xs font-black ${isSelf ? 'ligas-text-accent' : 'text-white'}`}>{item.name}</span>
             <span title="País">
               <FlagIcon flag={flag} size={12} className="text-slate-400" />
             </span>
@@ -821,7 +821,7 @@ function FriendRow({
       </div>
       <div className="text-right shrink-0 flex items-center gap-1">
         <Trophy className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
-        <span className={`text-xs font-black font-mono tracking-tight ${isSelf ? 'text-purple-400' : 'text-slate-300'}`}>
+        <span className={`text-xs font-black font-mono tracking-tight ${isSelf ? 'ligas-text-accent' : 'text-slate-300'}`}>
           {item.trophies.toLocaleString()}
         </span>
       </div>
@@ -848,10 +848,10 @@ function AddFriendModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div className="bg-[rgba(24,20,40,0.92)] backdrop-blur border-2 border-indigo-500/40 rounded-3xl p-6 w-full max-w-sm shadow-[0_0_30px_rgba(99,102,241,0.3)]">
+      <div className="bg-[rgba(24,20,40,0.92)] backdrop-blur border-2 border-[rgba(var(--primary-rgb,139,92,246),0.4)] rounded-3xl p-6 w-full max-w-sm shadow-[0_0_30px_rgba(var(--primary-rgb,139,92,246),0.3)]">
         <div className="flex justify-between items-center mb-4">
           <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-            <UserPlus size={16} className="text-indigo-400" />
+            <UserPlus size={16} className="ligas-text-accent" />
             Adicionar Amigo
           </h4>
           <button
@@ -873,12 +873,12 @@ function AddFriendModal({
               placeholder="Ex: TetrisPro"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder:text-slate-600"
+              className="ligas-input w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder:text-slate-600"
             />
           </div>
           <button
             type="submit"
-            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md border-b-2 border-indigo-800 active:border-b-0 active:translate-y-[1px] flex items-center justify-center gap-1"
+            className="w-full py-2.5 ligas-btn-primary rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer border-b-2 border-[var(--primary-dark)] active:border-b-0 active:translate-y-[1px] flex items-center justify-center gap-1"
           >
             <Zap size={14} />
             Confirmar Envio
@@ -912,7 +912,7 @@ function DiamondNav({ active, onGo }: { active: SubTab; onGo: (t: SubTab) => voi
               }}
               className={`relative w-14 h-14 rotate-45 rounded-2xl border-2 flex items-center justify-center transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-400 shadow-[0_0_20px_rgba(139,92,246,0.6)] scale-110'
+                  ? 'ligas-gradient border-[var(--primary-light)] ligas-glow-strong scale-110'
                   : 'bg-slate-900/80 border-slate-700/80 hover:border-slate-500'
               }`}
             >
@@ -1187,7 +1187,7 @@ export function LigasFeature({
   const bannerOrToggle = (
     <div className="flex items-center gap-2.5 w-full">
       {activeSubTab === 'guerra-de-clas' ? (
-        <div className="flex-1 p-1.5 bg-[rgba(20,16,36,0.75)] backdrop-blur border border-purple-500/20 rounded-2xl flex items-center select-none shadow-lg">
+        <div className="flex-1 p-1.5 bg-[rgba(20,16,36,0.75)] backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.2)] rounded-2xl flex items-center select-none shadow-lg">
           <div className="grid grid-cols-2 gap-1.5 w-full">
             <button
               onClick={() => {
@@ -1196,7 +1196,7 @@ export function LigasFeature({
               }}
               className={`py-2 px-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all cursor-pointer select-none flex items-center justify-center gap-1 ${
                 leagueViewType === 'semanal'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md border border-indigo-400/40'
+                  ? 'ligas-gradient text-white shadow-md border border-[rgba(var(--primary-rgb,139,92,246),0.4)]'
                   : 'bg-transparent hover:bg-slate-900/40 text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -1220,7 +1220,7 @@ export function LigasFeature({
           </div>
         </div>
       ) : (
-        <div className="flex-1 p-4 bg-gradient-to-r from-purple-950/70 via-slate-900/60 to-slate-950/70 backdrop-blur border border-purple-900/30 rounded-2xl flex items-center justify-between select-none shadow-md">
+        <div className="flex-1 p-4 bg-gradient-to-r from-[rgba(var(--primary-rgb,139,92,246),0.25)] via-slate-900/60 to-slate-950/70 backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.3)] rounded-2xl flex items-center justify-between select-none shadow-md">
           <div className="flex items-center gap-3">
             <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
               <div className="absolute inset-0 bg-emerald-600 rounded-xl transform rotate-12 border border-yellow-500 shadow-inner" />
@@ -1231,7 +1231,7 @@ export function LigasFeature({
               <h4 className="text-base font-black text-white uppercase tracking-tight leading-none">
                 {profile.clanName || 'Great Warriors'}
               </h4>
-              <p className="text-[10px] text-purple-400 font-semibold mt-1 uppercase tracking-wide">
+              <p className="text-[10px] ligas-text-accent font-semibold mt-1 uppercase tracking-wide">
                 Clã de Elite • 18/50 Membros
               </p>
             </div>
@@ -1266,8 +1266,8 @@ export function LigasFeature({
     <div className="space-y-4">
       <DiamondNav active={activeSubTab} onGo={setActiveSubTab} />
 
-      <div className="w-full bg-[rgba(24,20,40,0.65)] backdrop-blur border border-indigo-950 rounded-[2rem] p-5 shadow-2xl relative overflow-hidden flex flex-col gap-4">
-        <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
+      <div className="w-full bg-[rgba(24,20,40,0.65)] backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.18)] rounded-[2rem] p-5 shadow-2xl relative overflow-hidden flex flex-col gap-4">
+        <div className="absolute inset-0 bg-gradient-to-b from-[rgba(var(--primary-rgb,139,92,246),0.06)] to-transparent pointer-events-none" />
 
         <div className="flex items-center justify-between select-none z-20 relative">
           <h3 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">Aliança</h3>
@@ -1288,7 +1288,7 @@ export function LigasFeature({
                 setShowFilters(!showFilters);
               }}
               className={`p-2.5 rounded-xl transition-all cursor-pointer shadow-md border-b-2 active:border-b-0 active:translate-y-[2px] ${
-                showFilters ? 'bg-purple-600 border-purple-800 text-white hover:bg-purple-500' : 'bg-amber-400 hover:bg-amber-300 border-yellow-600 text-slate-950'
+                showFilters ? 'ligas-bg-accent border-[var(--primary-dark)] text-white' : 'bg-amber-400 hover:bg-amber-300 border-yellow-600 text-slate-950'
               }`}
               title="Filtro Avançado"
             >
@@ -1310,7 +1310,7 @@ export function LigasFeature({
           </AnimatePresence>
         </div>
 
-        <div className="flex justify-center border-b border-indigo-950/40 select-none z-10 pb-1">
+        <div className="flex justify-center border-b border-[rgba(var(--primary-rgb,139,92,246),0.2)] select-none z-10 pb-1">
           <div className="flex gap-6 text-xs font-black uppercase tracking-wider">
             <button
               onClick={() => {
@@ -1321,7 +1321,7 @@ export function LigasFeature({
             >
               Amigos
               {communityTab === 'amigos' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500 rounded-full" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] rounded-full" />
               )}
             </button>
             <button
@@ -1333,7 +1333,7 @@ export function LigasFeature({
             >
               Membros do Clã
               {communityTab === 'membros' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500 rounded-full" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] rounded-full" />
               )}
             </button>
           </div>
@@ -1360,7 +1360,7 @@ export function LigasFeature({
           </button>
           <button
             onClick={handleCameraClick}
-            className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl flex items-center justify-center transition-all cursor-pointer shadow-md border-b-4 border-indigo-800 active:border-b-0 active:translate-y-[2px]"
+            className="p-3 ligas-btn-primary rounded-2xl flex items-center justify-center transition-all cursor-pointer border-b-4 border-[var(--primary-dark)] active:border-b-0 active:translate-y-[2px]"
             title="Capturar Arena"
           >
             <Camera size={16} />
@@ -1388,8 +1388,8 @@ export function LigasFeature({
             className={`flex flex-col gap-1 max-w-[85%] ${msg.isSelf ? 'ml-auto items-end' : 'mr-auto items-start'}`}
           >
             <div className="flex items-center gap-1.5 select-none text-[10px] font-bold">
-              <span className={msg.isSelf ? 'text-indigo-400' : 'text-slate-300'}>{msg.sender}</span>
-              <span className="px-1 py-0.2 rounded text-[8px] bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 font-black">
+              <span className={msg.isSelf ? 'ligas-text-accent' : 'text-slate-300'}>{msg.sender}</span>
+              <span className="px-1 py-0.2 rounded text-[8px] ligas-role-pill font-black">
                 {msg.role}
               </span>
               <span className="text-[9px] text-slate-500 font-mono">({msg.trophies})</span>
@@ -1397,7 +1397,7 @@ export function LigasFeature({
             <div
               className={`px-3 py-2 rounded-2xl text-xs font-medium ${
                 msg.isSelf
-                  ? 'bg-purple-600/20 text-white rounded-tr-none border border-purple-500/30'
+                  ? 'ligas-bubble-self text-white rounded-tr-none'
                   : 'bg-slate-900/80 text-slate-200 rounded-tl-none border border-slate-800'
               }`}
             >
@@ -1410,7 +1410,7 @@ export function LigasFeature({
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none">
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 flex items-center gap-0.5">
-          <Smile className="w-3.5 h-3.5 text-indigo-500" /> Rápido:
+          <Smile className="w-3.5 h-3.5 ligas-text-accent" /> Rápido:
         </span>
         {QUICK_REPLIES.map((reply) => (
           <button
@@ -1430,12 +1430,12 @@ export function LigasFeature({
           placeholder="Digite sua mensagem para o clã..."
           value={typedMessage}
           onChange={(e) => setTypedMessage(e.target.value)}
-          className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-slate-600"
+          className="ligas-input flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder:text-slate-600"
         />
         <button
           type="submit"
           disabled={!typedMessage.trim()}
-          className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="px-4 py-2.5 ligas-btn-primary rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center shrink-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           <Send className="w-4 h-4" />
         </button>
@@ -1449,23 +1449,23 @@ export function LigasFeature({
     <div className="space-y-4">
       {leagueViewType === 'semanal' ? (
         <>
-          <div className="p-4 bg-gradient-to-br from-indigo-950/80 via-slate-900/70 to-slate-950/80 backdrop-blur border border-indigo-500/25 rounded-2xl flex flex-col sm:flex-row items-center justify-between select-none gap-3 shadow-lg relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.1),transparent_50%)] pointer-events-none" />
+          <div className="p-4 bg-gradient-to-br from-[rgba(var(--primary-rgb,139,92,246),0.22)] via-slate-900/70 to-slate-950/80 backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.28)] rounded-2xl flex flex-col sm:flex-row items-center justify-between select-none gap-3 shadow-lg relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(var(--primary-rgb,139,92,246),0.1),transparent_50%)] pointer-events-none" />
             <div className="flex items-center gap-3">
               <DivisionIcon kind={DIVISION_COLORS[leagueState.division].icon} size={36} />
               <div>
                 <h4 className="text-lg font-black text-white uppercase tracking-tight leading-none">
                   Divisão {leagueState.division}
                 </h4>
-                <p className="text-[10px] text-indigo-400 font-bold mt-1.5 uppercase tracking-wider flex items-center gap-1">
+                <p className="text-[10px] ligas-text-accent font-bold mt-1.5 uppercase tracking-wider flex items-center gap-1">
                   <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
                   Liga Semanal Ativa
                 </p>
               </div>
             </div>
             <div className="px-3.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-full flex items-center gap-1.5 shrink-0">
-              <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="text-xs font-black text-indigo-300 font-mono">
+              <Calendar className="w-3.5 h-3.5 ligas-text-accent" />
+              <span className="text-xs font-black ligas-text-accent font-mono">
                 {leagueState.joined ? `${leagueState.daysRemaining} DIAS` : '1 SEMANA'}
               </span>
             </div>

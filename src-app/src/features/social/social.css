@@ -24,6 +24,17 @@
   --soc-line: rgba(255, 255, 255, 0.08);
   --soc-gold-line: rgba(251, 191, 36, 0.35);
   --soc-gold-glow: rgba(251, 191, 36, 0.25);
+
+  /* Acento sensível ao tema do usuário (padrão Settings):
+     --primary-rgb é só JS (applySavedTheme), por isso o fallback roxo. */
+  --soc-accent: var(--primary);
+  --soc-accent-light: var(--primary-light);
+  --soc-accent-dark: var(--primary-dark);
+  --soc-accent-rgb: var(--primary-rgb, 139, 92, 246);
+  --soc-accent-soft: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  --soc-accent-line: rgba(var(--primary-rgb, 139, 92, 246), 0.3);
+  --soc-accent-strong: rgba(var(--primary-rgb, 139, 92, 246), 0.55);
+  --soc-accent-glow: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
 }
 
 .soc {
@@ -209,7 +220,7 @@
   gap: 16px;
   margin-bottom: 24px;
   padding: 20px 24px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(10, 5, 20, 0.6));
+  background: linear-gradient(135deg, rgba(var(--primary-rgb, 139, 92, 246), 0.18), rgba(10, 5, 20, 0.6));
   border: 1px solid var(--card-border);
   border-radius: var(--radius-xl);
   backdrop-filter: blur(14px);
@@ -796,7 +807,7 @@
   gap: 20px;
   margin-bottom: 24px;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(109, 40, 217, 0.35), rgba(10, 5, 20, 0.6));
+  background: linear-gradient(135deg, rgba(var(--primary-rgb, 139, 92, 246), 0.35), rgba(10, 5, 20, 0.6));
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   backdrop-filter: blur(14px);
@@ -927,7 +938,7 @@
 
 .soc-msg--mine {
   align-self: flex-end;
-  background: rgba(139, 92, 246, 0.18);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
   border-color: var(--border);
 }
 
@@ -1292,9 +1303,109 @@
   background: rgba(15, 23, 42, 0.3);
 }
 .ligas-root ::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.3);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.3);
   border-radius: 4px;
 }
 .ligas-root ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+}
+
+/* ---------- Acentos sensíveis ao tema (padrão Settings) ----------
+   Só cor — não altera layout. Fallback roxo = primeiro paint
+   antes de applySavedTheme() gravar --primary-rgb no boot. */
+
+.ligas-text-accent {
+  color: var(--primary-light);
+}
+
+.ligas-bg-accent {
+  background: var(--primary);
+}
+
+.ligas-bg-accent:hover {
+  background: var(--primary-light);
+}
+
+.ligas-bg-soft {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+}
+
+.ligas-bg-soft-strong {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.22);
+}
+
+.ligas-bg-soft-strong:hover {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+.ligas-border-accent {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+.ligas-border-accent-strong {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.55);
+}
+
+.ligas-glow {
+  box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.2);
+}
+
+.ligas-glow-strong {
+  box-shadow: 0 0 20px rgba(var(--primary-rgb, 139, 92, 246), 0.55);
+}
+
+.ligas-gradient {
+  background: var(--gradient);
+}
+
+/* Bolha "minha mensagem" no chat */
+.ligas-bubble-self {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+/* Pill de role no chat */
+.ligas-role-pill {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.15);
+  color: var(--primary-light);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.25);
+}
+
+/* CTA sólido (Continuar / Simular / Enviar) */
+.ligas-btn-primary {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--primary-dark);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.ligas-btn-primary:hover {
+  background: var(--primary-light);
+}
+
+.ligas-btn-primary:active {
+  box-shadow: none;
+  transform: translateY(2px);
+}
+
+/* Filtro ativo (menu Ordenar por) */
+.ligas-filter-active {
+  background: linear-gradient(to bottom, var(--primary-light), var(--primary));
+  box-shadow: 0 4px 0 var(--primary-dark);
+  color: #fff;
+}
+
+.ligas-filter-active:hover {
+  box-shadow: 0 5px 0 var(--primary-dark);
+}
+
+/* Foco de input no padrão Settings */
+.ligas-input {
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ligas-input:focus {
+  outline: none;
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.65);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 139, 92, 246), 0.15);
 }
