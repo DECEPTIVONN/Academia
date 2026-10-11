@@ -5,8 +5,8 @@
  * NavigationShellStandalone.tsx de referência, no design system do Academia:
  *   • colapsada (76px) → expande no hover OU fixada pelo pin da preferência
  *     `academia_pref_sidebar_pinned` (persistida entre sessões);
- *   • head: avatar (abre o Perfil) + nome/nível + fixar + micro barra de XP
- *     com contagem da ofensiva (dados do useLocalData — queries legadas);
+ *   • head: avatar com o emblema do perfil (abre o Perfil) + nome/nível + fixar
+ *     + micro barra de XP com contagem da ofensiva (dados do useLocalData);
  *   • nav: as 5 seções com ícones stroke (parity com a BottomNav);
  *   • utils: busca (Ctrl/Cmd+K), tela cheia, bloquear app + versão.
  *
@@ -20,6 +20,7 @@ import { useProfileState } from '@/features/profile/useProfileState';
 import { getLevel, getStreak, getXp } from '@/core/db/queries';
 import type { SectionType } from '@/components/BottomNav';
 import { NavSectionItems } from '@/components/nav-section-items';
+import { ProfileEmblem } from '@/components/ProfileEmblem';
 import {
   SvgFlame,
   SvgLock,
@@ -59,7 +60,6 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   const { history } = useLocalData();
 
   const nome = state?.customization?.nome?.trim() || 'Atleta';
-  const initial = nome.charAt(0).toUpperCase();
 
   const xp = getXp(history);
   const level = getLevel(xp);
@@ -85,7 +85,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
             title="Meu Perfil"
           >
             <span className="side-hud__avatar" aria-hidden="true">
-              {initial}
+              <ProfileEmblem customization={state?.customization} />
             </span>
             <span className="side-hud__id">
               <span className="side-hud__name">{nome}</span>

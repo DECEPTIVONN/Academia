@@ -63,6 +63,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -243,6 +245,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
   width: 38px;
   height: 38px;
   border-radius: 50%;

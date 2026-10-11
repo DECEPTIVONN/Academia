@@ -4,7 +4,7 @@
  * Port fiel ao `MobileTopBar` do NavigationShellStandalone.tsx de referência,
  * no design system do Academia (tokens roxos, glassmorphism, BEM `.top-bar*`):
  *   • barra FIXED translúcida por cima do conteúdo (sem texto de marca);
- *   • esquerda: avatar (atalho direto para o overlay do Perfil);
+ *   • esquerda: avatar com o emblema do perfil (atalho para o overlay do Perfil);
  *   • direita: busca geral unificada + alternador de tela cheia.
  *
  * No desktop (≥ 1024px) some via CSS (shell.css) — quem aparece é a
@@ -13,6 +13,7 @@
 
 import React from 'react';
 import { useProfileState } from '@/features/profile/useProfileState';
+import { ProfileEmblem } from '@/components/ProfileEmblem';
 import { SvgMaximize, SvgMinimize, SvgSearch } from '@/components/nav-items';
 
 interface MobileTopBarProps {
@@ -30,7 +31,6 @@ export const MobileTopBar: React.FC<MobileTopBarProps> = ({
 }) => {
   const { state } = useProfileState();
   const nome = state?.customization?.nome?.trim() || 'Atleta';
-  const initial = nome.charAt(0).toUpperCase();
 
   return (
     <header className="top-bar" id="mobileTopBar">
@@ -41,7 +41,7 @@ export const MobileTopBar: React.FC<MobileTopBarProps> = ({
         aria-label={`Abrir perfil de ${nome}`}
         title="Abrir Perfil"
       >
-        {initial}
+        <ProfileEmblem customization={state?.customization} />
       </button>
 
       <div className="top-bar__actions">

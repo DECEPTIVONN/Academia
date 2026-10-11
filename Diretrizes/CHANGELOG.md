@@ -21,6 +21,55 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.7.4-pwa-icon-unificado] - 2026-10-11
+*Novo ícone unificado: a instalação do site como PWA e o launcher do app Android/Capacitor passam a usar **o mesmo ícone** — canvas branco arredondado (estilo do ícone do Capacitor) com o logo Decepticon centralizado em tile preto. Antes as superfícies divergiam: o PWA usava o Decepticon full-bleed preto (`icon-192/512.png`) e o Android ainda tinha o template genérico do Capacitor (branco + raio azul, nunca atualizado desde a criação do projeto em 14/07/2026).*
+
+### [Added]
+- **Ícone unificado (fonte única gerada de `D.jpg`)** — composição 1024×1024: quadrado branco arredondado (raio ~20%) + tile preto arredondado centralizado (~66% do canvas) + logo Decepticon. Derivados aplicados em:
+  - **PWA**: `src-app/public/assets/icons/icon-192.png` e `icon-512.png` (manifest do `vite-plugin-pwa`, `purpose: maskable any` — o logo ocupa a safe zone central, então o recorte circular/squircle do launcher não corta a marca).
+  - **Android/Capacitor**: `android/app/src/main/res/mipmap-*/ic_launcher.png` (composite completo, 5 densidades mdpi→xxxhdpi), `ic_launcher_round.png` (variante circular) e `ic_launcher_foreground.png` (foreground com fundo transparente do adaptive-icon; o `ic_launcher_background.xml` já era `#FFFFFF`).
+  - **Bundle Android**: `android/app/src/main/assets/public/assets/icons/` atualizado com `npx cap sync android` (mesmos arquivos do `src-app/dist`).
+- **`src-app/index.html`**: `<link rel="apple-touch-icon" href="/assets/icons/icon-192.png">` — a instalação PWA no iOS passa a usar o mesmo ícone unificado.
+
+### [Notas]
+- Regenerar o ícone em outro tamanho: proporções do composite (branco full-bleed + tile 66% + inset ~3%) a partir de `D.jpg` (736×736, logo sobre preto — o fundo preto do JPG funde com o tile).
+- `D.jpg` segue como favicon da aba (`<link rel="icon">`) — é o mesmo logo, sem mudança.
+- Pasta `android/` é gitignored (mipmaps valem para builds locais); o que entra no git é `src-app/public/assets/icons/` + `src-app/index.html`.
+- Verificação: `npm run build` OK (dist com `icon-192.png` 18.065 B / `icon-512.png` 103.368 B idênticos aos gerados) · `npx cap sync android` OK · `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · manifesto gerado mantém os mesmos caminhos (só o conteúdo dos PNGs mudou).
+- **`Diretrizes/system_map.json`**: `version` 3.5.35 → **3.5.36**; entradas de `vite.config.ts` e `index.html` atualizadas.
+
+## [v4.7.3-progresso-dayhist] - 2026-10-11
+*Restauração do modal **"Treinos do Dia"** da aba Progresso no React: clicar num dia com histórico no calendário mensal abre o modal legado (duração total + treinos do dia com lista de exercícios). O código já existia mas o modal ficava **invisível** — o `will-change: transform` de `.section-strip` fazia do `.modal-overlay` (position: fixed) um elemento posicionado relativo à fita de 500vw (`rect.x=775` numa tela de 390 px). Correção só em `src-app/src/features/training/ProgressoFeature.tsx` (system_map.json → version 3.5.35).*
+
+### [Fixed]
+- **`src-app/src/features/training/ProgressoFeature.tsx` — os 3 modais da aba Progresso fora da viewport** (`#modalDayHist`, `#modalVolumeDetails`, `#modalRadarGuide`): agora renderizados via `createPortal(..., document.body)` (helper `toBody`, mesmo padrão de `TreinosModals`/`ExercicioFormModal`/`Ligas`/`NewsOverlay`). Causa raiz confirmada por probe CDP antes/depois: `.section-strip` (7-nav-icons.css L27/L33) tem `will-change: transform` → containing block do `position: fixed` → o overlay (`z-index: 1000`) era posicionado dentro da fita horizontal, invisível.
+- **Lock de `body.overflow`**: novo efeito fecha o scroll do body enquanto qualquer um dos 3 modais estiver aberto (`selectedDate && dayRow`, `volumeDetailGroup`, `showRadarGuide`) e restaura no cleanup — fecha o known_gap "#modalDayHist sem lock de overflow" (paridade com `openModal/closeModal` de `secao-ficha.js` L560–568).
+
+### [Changed]
+- **Paridade de conteúdo do `#modalDayHist`**: restaurado o bullet `•` antes do nome de cada treino (`<strong style="color: var(--primary-light)">•</strong>`) e o emoji `⏱️` do cabeçalho de duração, iguais ao legado.
+
+### [Notas]
+- **Cor — sem CSS novo**: `.day-hist-duration` (4-gamificacao.css L809) já usa `background: var(--primary); color: #000` e o label/bullets usam `var(--primary-light)`, então o modal acompanha o tema escolhido pelo usuário (verificado com tema `green` → pill `rgb(34,197,94)` = `--primary: #22c55e`).
+- **`Diretrizes/system_map.json`**: `version` 3.5.34 → **3.5.35**, `last_updated` 2026-10-11; `react_app.known_gaps` atualizado (gap do `#modalDayHist` resolvido; portal + lock nos 3 modais).
+- Verificação: `npx tsc -b` exit 0 · `npx oxlint src` 0 findings · `npm run build` OK · CDP probe pós-fix: modal `rect {x:16,y:254,w:358,h:336}` visível em 390 px, `body.overflow=hidden` ao abrir e restaurado ao fechar pelo X, conteúdo `⏱️ DURAÇÃO TOTAL … TREINO B • Puxada Frente (3×10) …`, os 3 modais confirmados como filhos de `document.body` · screenshot `dayhist_after.png` conferido (tema green).
+
+## [v4.7.2-evofit-splash-nav] - 2026-10-11
+*Três ajustes de identidade: a splash passa a exibir o **logo "EVO FIT"** e a **barra de carregamento usa a skin de barra escolhida pelo usuário** (a mesma das barras do app), e o **avatar da Top Bar mobile e da Sidebar HUD desktop passa a exibir o emblema do perfil** em vez da inicial do nome. Escopo só `src-app/` (system_map.json → version 3.5.34).*
+
+### [Changed]
+- **`src-app/index.html` — splash**: `.splash-screen__logo-text` `ACADEMIA` → **`EVO FIT`** (subtítulo `WORKOUT TRACKER` inalterado). `#splashFill` ganha a classe **`progress-fill`** (mesma das barras do app) → herda automaticamente as ~34 skins de `body[data-bar-skin]` do `8-customizacao.css` (gradientes, pseudo-elementos, animações) **e** o override inline de `applyBarSkinToDOM`, sem duplicar CSS nem mexer nos espelhos legados. O script de saída agora espera `body[data-bar-skin]` antes de preencher (poll de 50 ms, máx. 1 s) — assim a splash abre já com a skin real do perfil, não com o roxo padrão.
+- **`src-app/src/features/profile/ProfileFeature.tsx`**: `applyCustomizationGlobals(pc)` só roda com o estado real carregado (`if (!profile) return`) — antes os defaults do carregamento setavam `data-bar-skin="default"` e liberavam a splash cedo; agora o atributo significa "skin real aplicada".
+- **`src-app/src/components/MobileTopBar.tsx`** e **`src-app/src/components/DesktopSidebar.tsx`**: o avatar passa a renderizar `<ProfileEmblem customization={state?.customization}/>` no lugar da inicial do nome (sem perfil carregado cai no emblema padrão `prestigio-1`, sem flicker de letra).
+- **`src-app/src/styles/shell.css`**: `.top-bar__avatar` e `.side-hud__avatar` ganham `position: relative` + `overflow: hidden` (recorte circular do emblema/sprite).
+
+### [Added]
+- **`src-app/src/components/ProfileEmblem.tsx` (novo)**: emblema de identidade partilhado — port de `applyProfileCustomization` (`secao-customizacao.js` L371–396) já replicado em `DashboardFeature`/`ProfileFeature`: wrapper `.profile-avatar__emblem-wrapper` com `mix-blend-mode: screen` (+ `animate-pulse` quando `mainEmblemPulse !== false`), sprite da planilha (`SPRITESHEET_URL`, 300% + offset %) ou imagem direta.
+
+### [Notas]
+- **Fonte de verdade da skin**: `profileState.customization.barSkin` (IDB). O `localStorage.academia_treino` é só o snapshot da migração (o React grava a customização em IDB) — por isso a splash espera o bundle aplicar o atributo em vez de ler o localStorage.
+- **`Diretrizes/system_map.json`**: `version` 3.5.33 → **3.5.34**, `last_updated` 2026-10-11; entradas de `src-app/index.html`, `MobileTopBar.tsx`, `DesktopSidebar.tsx`, `shell.css` atualizadas e nova entrada de `ProfileEmblem.tsx`.
+- Verificação: `npx tsc -b` exit 0 · `npx oxlint src` 0 findings · `npm run build` OK · CDP **`verify_skin_nav.js` 14/14 PASS** (splash sai com fill 100%; `body[data-bar-skin]=default` e depois `=fire` com gradiente `rgb(255,77,0)→rgb(255,208,0)` já no preenchimento; `#splashFill` com `.progress-fill`; logo "EVO FIT"; `.top-bar__avatar` e `.side-hud__avatar` com `<img>` do emblema) · screenshots `nav_topbar_mobile.png` / `nav_sidebar_desktop.png` conferidos.
+
 ## [v4.7.1-ligas-theme] - 2026-10-10
 *Aba Social passa a responder à cor escolhida pelo usuário nas Configurações (tema `--primary*`), seguindo o mesmo padrão de acentos de `settings.css` — só cores, sem mudança de design/layout. Hardcodes purple/indigo/violet/fuchsia viraram tokens `--primary`/`rgba(var(--primary-rgb,…))` ou utilitários `.ligas-*` já existentes; paletas de avatar e cores semânticas (emerald/rose/amber) mantidas como conteúdo.*
 

@@ -8,6 +8,7 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocalData } from '@/hooks/useLocalData';
 import { fadeIn } from '@/lib/animations';
 import {
@@ -25,6 +26,12 @@ import { useShareStore } from '@/features/gamification/share-store';
 import { buildVolumeLineChartSvg } from './volume-line-chart';
 
 type CalView = 'monthly' | 'weekly';
+
+/* Portal para document.body (padrão de TreinosModals/ExercicioFormModal/Social):
+   o .section-strip tem `will-change: transform` e passa a ser o containing
+   block do `position: fixed` — sem o portal o .modal-overlay é posicionado
+   dentro da fita de 500vw e some fora da viewport. */
+const toBody = (node: React.ReactNode) => createPortal(node, document.body);
 
 const MONTH_NAMES = [
   'JANEIRO',
@@ -485,6 +492,19 @@ export const ProgressoFeature: React.FC = () => {
   /* ===== Modal do dia ===== */
   const dayRow = selectedDate ? histMap.get(selectedDate) : undefined;
   const dayKeys = keysOfDay(dayRow);
+
+  /* openModal legado (secao-ficha.js L560–568): trava o scroll do body enquanto
+   um modal da seção está aberto e restaura o valor anterior no fechamento. */
+  const anyProgressModalOpen =
+    Boolean(selectedDate && dayRow) || Boolean(volumeDetailGroup) || showRadarGuide;
+  useEffect(() => {
+    if (!anyProgressModalOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [anyProgressModalOpen]);
 
   const shiftMonth = (delta: number) =>
     setViewDate((d) => new Date(d.getFullYear(), d.getMonth() + delta, 1));
@@ -1225,7 +1245,7 @@ export const ProgressoFeature: React.FC = () => {
       </div>
 
       {/* ===== Modal: Histórico do Dia ===== */}
-      {dayRow && selectedDate && (
+      {dayRow && selectedDate && toBody(
         <div className="modal-overlay" id="modalDayHist" style={{ display: 'flex' }}>
           <div className="modal-form" style={{ maxWidth: 400, padding: 24 }}>
             <div className="modal-form-header" style={{ marginBottom: 16 }}>
@@ -1254,7 +1274,7 @@ export const ProgressoFeature: React.FC = () => {
             >
               {dayRow.durationMin ? (
                 <div className="day-hist-duration">
-                  ⏱ DURAÇÃO TOTAL: {formatSeconds(dayRow.durationMin * 60)}
+                  {'⏱️'} DURAÇÃO TOTAL: {formatSeconds(dayRow.durationMin * 60)}
                 </div>
               ) : null}
               {dayKeys.map((letter) => {
@@ -1286,7 +1306,8 @@ export const ProgressoFeature: React.FC = () => {
                       {list.length > 0
                         ? list.map((ex) => (
                             <div key={ex.id}>
-                              <strong style={{ color: 'var(--primary-light)' }}></strong> {ex.name}{' '}
+                              <strong style={{ color: 'var(--primary-light)' }}>•</strong>{' '}
+                              {ex.name}{' '}
                               <span style={{ fontSize: '0.8rem' }}>
                                 ({ex.sets}×{ex.reps})
                               </span>
@@ -1303,7 +1324,7 @@ export const ProgressoFeature: React.FC = () => {
       )}
 
       {/* ===== MODAL: DETALHES DE VOLUME (modais.html L829–855) ===== */}
-      <div
+      {toBody(<div
         className="modal-overlay"
         id="modalVolumeDetails"
         style={{ display: volumeDetail ? 'flex' : 'none' }}
@@ -1435,10 +1456,10 @@ export const ProgressoFeature: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>)}
 
       {/* ===== MODAL: GUIA DO RADAR (modais.html L649–737) ===== */}
-      <div
+      {toBody(<div
         className="modal-overlay"
         id="modalRadarGuide"
         style={{ display: showRadarGuide ? 'flex' : 'none' }}
@@ -1669,7 +1690,7 @@ export const ProgressoFeature: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>)}
     </div>
   );
 };

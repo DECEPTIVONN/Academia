@@ -204,10 +204,14 @@ export function ProfileFeature() {
     [data, radarMode, radarTier]
   );
 
-  /* Aplica atributos globais (body data-bar/card-skin + banner do Dashboard) */
+  /* Aplica atributos globais (body data-bar/card-skin + banner do Dashboard).
+     Só com o estado real carregado: sem perfil ainda, os defaults fariam a
+     splash (index.html) preencher a barra com a skin errada — ela espera
+     `body[data-bar-skin]`, que aqui passa a significar "skin real aplicada". */
   useEffect(() => {
+    if (!profile) return;
     applyCustomizationGlobals(pc);
-  }, [pc]);
+  }, [pc, profile]);
 
   /* Persiste as conquistas naturalmente desbloqueadas e abre o share card
      (renderBadges L1226–1248: saveDB + setTimeout(openShareBadge, 1000)) */
