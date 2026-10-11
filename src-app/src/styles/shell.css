@@ -69,7 +69,10 @@
   height: 32px;
   border-radius: 50%;
   border: 1px solid var(--card-border);
-  background: var(--gradient);
+  /* Neutro (mesmo #1c1b1b do #dash-profile-avatar): o tema NÃO pode tingir
+     o emblema — mix-blend-mode: screen sobre --gradient colorido lavava a
+     imagem com a cor primária (v4.8.0-premium-motion). */
+  background: #1c1b1b;
   color: #fff;
   font-family: var(--font-family);
   font-size: 0.85rem;
@@ -251,13 +254,14 @@
   height: 38px;
   border-radius: 50%;
   border: 2px solid var(--card-border);
-  background: var(--gradient);
+  /* Neutro — igual ao .top-bar__avatar: tema não afeta o emblema. */
+  background: #1c1b1b;
   color: #fff;
   font-family: var(--font-family);
   font-size: 1rem;
   font-weight: 800;
   flex-shrink: 0;
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.35);
 }
 
 .side-hud__id {

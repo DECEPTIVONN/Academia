@@ -16,9 +16,16 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './missions-overlay.css';
 
 type MsTab = 'daily' | 'weekly' | 'guides';
+
+/* Portal para document.body: o .section-strip tem `will-change: transform` e
+   passa a ser o containing block de `position: fixed` (mesma causa-raiz dos
+   modais da Progresso, v4.7.3) — sem o portal o overlay inteiro (inset:0 +
+   max-width 420 centralizado) saía da viewport. */
+const toBody = (node: React.ReactNode) => createPortal(node, document.body);
 
 interface MissionsOverlayProps {
   open: boolean;
@@ -181,7 +188,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
     };
   }, [open]);
 
-  return (
+  return toBody(
     <div
       id="missions-overlay"
       className="missions-overlay"

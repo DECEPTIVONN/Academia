@@ -30,7 +30,8 @@ import { ShareModal } from '@/features/gamification/ShareModal';
 import { useShareStore } from '@/features/gamification/share-store';
 import { ColecaoModals } from '@/features/gamification/ColecaoModals';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
-import { fadeIn, slideSwap, type SlideDirection } from '@/lib/animations';
+import { fadeIn, slideSwap, snapSlideHome, holdSlide, type SlideDirection } from '@/lib/animations';
+import { motion, useMotionValue } from 'motion/react';
 import { showToast } from '@/lib/toast';
 import type { SheetKey } from '@/core/db/schema';
 
@@ -48,8 +49,10 @@ export function App() {
   const isMaestriaUiOpen = useMaestriaUi((s) => s.colecaoOpen || s.maestriaExId !== null);
   const perfilScrollRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
-  /* Guarda de animação (nav.js isAnimating): evita troca dupla durante o fade */
-  const animatingRef = useRef(false);
+  /* v4.8.0-premium-motion: MotionValues da fita (.section-strip) — springs
+     do Motion retargetam a partir da posição/velocidade atuais (interrompível). */
+  const stripX = useMotionValue(0);
+  const stripOpacity = useMotionValue(1);
 
   /* v4.0.13-typography: reparo do raster stale do primeiro paint da seção.
      O primeiro paint de uma seção montada depois do boot (ex.: Progresso ao
@@ -73,27 +76,23 @@ export function App() {
     }, 450);
   }, []);
 
-  /* nav.js L135-152 → v4.6.0-shell: transição DIRECIONAL (slide) no lugar do
-     fadeSwap legado — sai p/ esquerda e a nova seção entra da direita (ou o
-     espelho ao navegar "pra trás"), spring-ish no mobile e cúbica no desktop. */
+  /* nav.js L135-152 → v4.6.0-shell (slide direcional) → v4.8.0-premium-motion:
+     transição em SPRING sobre os MotionValues da fita. SEM guarda de re-entrada:
+     um clique no meio da animação retargeta a mesma mola (absorve a velocidade
+     atual — interrupção natural). Clique na seção ativa assenta em casa. */
   const navigateSection = useCallback(
     (sec: SectionType) => {
       if (sec === activeSection) {
+        snapSlideHome(stripX, stripOpacity);
         fadeIn(mainRef.current);
         return;
       }
-      if (animatingRef.current) return;
-      animatingRef.current = true;
-      // Guarda cobre a animação inteira (saída 200–220ms + entrada 320–340ms)
-      window.setTimeout(() => {
-        animatingRef.current = false;
-      }, 580);
       const from = SECTIONS_ORDER.indexOf(activeSection);
       const to = SECTIONS_ORDER.indexOf(sec);
       const direction: SlideDirection = to >= from ? 'forward' : 'backward';
-      const strip = mainRef.current?.querySelector<HTMLElement>('.section-strip') ?? null;
       slideSwap(
-        strip,
+        stripX,
+        stripOpacity,
         () => {
           setActiveSection(sec);
           document.dispatchEvent(new CustomEvent('sectionchange', { detail: sec }));
@@ -102,7 +101,7 @@ export function App() {
         direction
       );
     },
-    [activeSection, repairSectionRaster]
+    [activeSection, repairSectionRaster, stripX, stripOpacity]
   );
 
   /* ===== v4.6.0-shell: casca adaptativa + busca global + lock ===== */
@@ -201,12 +200,18 @@ export function App() {
     [navigateSection, isPerfilOverlayOpen]
   );
 
-  /* nav.js L207–298: swipe horizontal por threshold (20% da largura ou 150px)
-     com as mesmas exclusões de alvo. Divergência aceita (CHANGELOG v4.0.6-phase4):
-     sem arrasto contínuo da fita — apenas detecção de intenção + troca no fim. */
+  /* nav.js L207–298 + v4.8.0-premium-motion: ARRESTO CONTÍNUO com as mesmas
+     exclusões de alvo. O dedo move a fita em tempo real (MotionValue); no
+     release a decisão combina posição (20% da largura ou 150px) E velocidade
+     do gesto (fling ≥ 550 px/s). O snap de volta e a troca usam springs que
+     absorvem a velocidade atual — interrupção natural (agarra no meio do
+     movimento e o gesto novo herda a inércia). */
   useEffect(() => {
     let startX = 0;
     let startY = 0;
+    let lastX = 0;
+    let lastT = 0;
+    let velocity = 0; // px/s (positivo = dedo p/ direita)
     let dragging = false;
     let dir: 'h' | 'v' | null = null;
 
@@ -227,20 +232,38 @@ export function App() {
         t.tagName.toLowerCase() === 'textarea'
       )
         return;
-      if (animatingRef.current) return;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
+      const touch = e.touches[0];
+      startX = lastX = touch.clientX;
+      startY = touch.clientY;
+      lastT = performance.now();
+      velocity = 0;
       dragging = true;
       dir = null;
     };
 
     const onMove = (e: TouchEvent) => {
       if (!dragging) return;
-      const diffX = e.touches[0].clientX - startX;
-      const diffY = e.touches[0].clientY - startY;
+      const touch = e.touches[0];
+      const diffX = touch.clientX - startX;
+      const diffY = touch.clientY - startY;
       if (!dir && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
         dir = Math.abs(diffX) > Math.abs(diffY) ? 'h' : 'v';
+        // Eixo horizontal confirmado → o gesto ASSUME a fita (interrompe
+        // qualquer spring em voo mantendo a posição atual)
+        if (dir === 'h') holdSlide();
       }
+      if (dir !== 'h') return;
+
+      const now = performance.now();
+      const dt = now - lastT;
+      if (dt > 0) velocity = (touch.clientX - lastX) / (dt / 1000);
+      lastX = touch.clientX;
+      lastT = now;
+
+      // Borracha nas bordas: sem seção vizinha → resistência (não segue 1:1)
+      const idx = SECTIONS_ORDER.indexOf(activeSection);
+      const atEdge = (idx <= 0 && diffX > 0) || (idx >= SECTIONS_ORDER.length - 1 && diffX < 0);
+      stripX.set(atEdge ? diffX * 0.22 : diffX);
     };
 
     const onEnd = (e: TouchEvent) => {
@@ -249,13 +272,17 @@ export function App() {
       if (dir !== 'h') return;
       const diffX = e.changedTouches[0].clientX - startX;
       const threshold = window.innerWidth * 0.2;
-      if (Math.abs(diffX) > threshold || Math.abs(diffX) > 150) {
-        const idx = SECTIONS_ORDER.indexOf(activeSection);
-        if (diffX < 0 && idx < SECTIONS_ORDER.length - 1) navigateSection(SECTIONS_ORDER[idx + 1]);
-        else if (diffX > 0 && idx > 0) navigateSection(SECTIONS_ORDER[idx - 1]);
-        else navigateSection(activeSection);
+      const flung = Math.abs(velocity) > 550;
+      const passed = Math.abs(diffX) > threshold || Math.abs(diffX) > 150;
+      // Fling decide pela velocidade; caso contrário, pela posição
+      const goingNext = flung ? velocity < 0 : diffX < 0;
+      const idx = SECTIONS_ORDER.indexOf(activeSection);
+      const blocked = (goingNext && idx >= SECTIONS_ORDER.length - 1) || (!goingNext && idx <= 0);
+
+      if ((passed || flung) && !blocked) {
+        navigateSection(SECTIONS_ORDER[goingNext ? idx + 1 : idx - 1]);
       } else {
-        navigateSection(activeSection); // volta pro lugar (snap)
+        snapSlideHome(stripX, stripOpacity); // volta pro lugar (spring)
       }
     };
 
@@ -267,7 +294,7 @@ export function App() {
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('touchend', onEnd);
     };
-  }, [activeSection, navigateSection]);
+  }, [activeSection, navigateSection, stripX, stripOpacity]);
 
   const { isActive, startWorkout } = useWorkoutStore();
 
@@ -466,7 +493,11 @@ export function App() {
                 o paint offset de 1–2 device px dos .p-card (medido: JSX strip
                 desde a renderização inicial continuava com os bands); quem
                 zera as regiões é o repairSectionRaster acima (v4.0.13). */}
-            <div className="section-strip">
+            {/* .section-strip 1:1 com o legado (7-nav-icons.css L27–35 e
+                treino.html): wrapper flex-row + will-change:transform —
+                paridade de DOM/estrutura de pintura. v4.8.0: é um motion.div
+                (Motion v12) — x/opacity animados por springs interrompíveis. */}
+            <motion.div className="section-strip" style={{ x: stripX, opacity: stripOpacity }}>
             {activeSection === 'dashboard' && (
               <DashboardFeature
                 onNavigate={(sec) => navigateSection(sec as SectionType)}
@@ -517,7 +548,7 @@ export function App() {
                 </div>
               </div>
             )}
-            </div>
+            </motion.div>
             </div>
           </main>
           </div>

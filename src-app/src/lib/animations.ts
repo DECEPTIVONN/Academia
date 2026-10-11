@@ -1,84 +1,104 @@
 /**
  * animations.ts — Utilitários de transição de seção
- * fadeIn: re-dispara a classe `ui-fade-in` (280ms) + reinicia stagger dos filhos.
- * fadeSwap: fade-out (120ms) → callback → fade-in (cross-fade de conteúdo).
- * slideSwap (v4.6.0-shell): transição DIRECional via Web Animations API —
- *   sai p/ esquerda e a nova entra da direita (ou o espelho, conforme a ordem
- *   progresso → treinos → dashboard → social → loja).
  *
- * Divergência consciente em relação ao legado (CHANGELOG v4.6.0-shell):
- * o legado troca seções com fadeSwap (120ms + fadeIn). Aqui usamos slide
- * direcional com easing "spring" no mobile (quint-out: pegada de spring SEM
- * overshoot — overshoot negativo vaza o fundo pela borda da fita de 500vw) e
- * cúbica padrão no desktop. O commit do React é forçado com flushSync para
- * que a animação de entrada sobreponha a de saída SEM frame de "pulo".
+ * v4.8.0-premium-motion: slideSwap passa a usar o motor de física do Motion
+ * (Framer Motion, springs) sobre MotionValues ligados ao .section-strip.
+ * Diferenças em relação à versão WAAPI (v4.6.0-shell):
+ *   • springs reais no lugar de cubic-beziers fixos (desktop e mobile);
+ *   • INTERRUPÇÃO NATURA: um novo toque/clique no meio da animação retargeta
+ *     a mesma mola a partir da posição E velocidade atuais — nada reseta;
+ *   • o swipe virou arrasto contínuo (o dedo move a fita em tempo real) e o
+ *     release decide por posição + velocidade (fling), com snap em mola.
+ *
+ * fadeIn/fadeSwap seguem CSS (paridade com as micro-animações legadas).
  */
 
+import { animate, type AnimationPlaybackControls, type MotionValue } from 'motion/react';
 import { flushSync } from 'react-dom';
+import { SPRING_EXIT, SPRING_SETTLE } from '@/lib/motion-presets';
 
 export type SlideDirection = 'forward' | 'backward';
+
+/* Época do swap: cancela commits/finish handlers de swaps superseded. */
+let swapEpoch = 0;
+let running: AnimationPlaybackControls[] = [];
 
 /** Distância do slide (limitada para não "afastar" demais o conteúdo). */
 function slideDistance(): number {
   return Math.min(96, Math.round(window.innerWidth * 0.08));
 }
 
-function isDesktopShell(): boolean {
-  return window.matchMedia?.('(min-width: 1024px)').matches ?? false;
+function stopRunning(): void {
+  running.forEach((c) => c.stop());
+  running = [];
 }
 
+/**
+ * Interrompe qualquer swap em voo (sem commit pendente) e assenta em repouso.
+ * Usado pelo arrasto ao assumir o gesto e pelo clique na seção ativa.
+ */
+export function snapSlideHome(x: MotionValue<number>, opacity: MotionValue<number>): void {
+  swapEpoch += 1;
+  stopRunning();
+  animate(x, 0, SPRING_SETTLE);
+  animate(opacity, 1, SPRING_SETTLE);
+}
+
+/**
+ * Interrompe animações em voo MANTENDO o valor atual (o gesto assume o
+ * controle da fita — sem snap para casa). Commits pendentes são invalidados.
+ */
+export function holdSlide(): void {
+  swapEpoch += 1;
+  stopRunning();
+}
+
+/**
+ * Transição direcional em mola: saída em SPRING_EXIT → commit síncrono do
+ * conteúdo → entrada em SPRING_SETTLE a partir de +sign·dist (o novo slide
+ * entra pelo lado "correto", como um pager).
+ */
 export function slideSwap(
-  strip: HTMLElement | null | undefined,
+  x: MotionValue<number>,
+  opacity: MotionValue<number>,
   updateCallback: () => void,
   direction: SlideDirection
 ): void {
-  if (!strip) {
-    updateCallback();
-    return;
-  }
-
-  // Cancela qualquer animação anterior (evita overlaps em trocas rápidas)
-  const running = strip.getAnimations?.();
-  running?.forEach((a) => a.cancel());
+  const epoch = ++swapEpoch;
+  stopRunning();
 
   const dist = slideDistance();
   const sign = direction === 'forward' ? 1 : -1;
-  const desktop = isDesktopShell();
+  const outDir = -sign;
+  const current = x.get();
 
-  // Mobile: spring-ish (quint-out). Desktop: cúbica padrão de shell.
-  const inEasing = desktop
-    ? 'cubic-bezier(0.4, 0, 0.2, 1)'
-    : 'cubic-bezier(0.22, 1, 0.36, 1)';
-  const outEasing = 'cubic-bezier(0.4, 0, 0.9, 0.4)';
-  const outDur = desktop ? 200 : 220;
-  const inDur = desktop ? 320 : 340;
+  /* Se o arrasto já levou a fita além da borda, NÃO puxa de volta —
+     sai do ponto em que o dedo largou (continuidade do gesto). */
+  const alreadyOut = Math.sign(current) === outDir && Math.abs(current) >= dist;
+  const outTarget = alreadyOut ? current : outDir * dist;
 
-  const out = strip.animate(
-    [
-      { transform: 'translateX(0)', opacity: 1 },
-      { transform: `translateX(${-sign * dist}px)`, opacity: 0.15 },
-    ],
-    { duration: outDur, easing: outEasing, fill: 'forwards' }
-  );
+  const outX = animate(x, outTarget, SPRING_EXIT);
+  const outO = animate(opacity, 0.12, SPRING_EXIT);
+  running = [outX, outO];
 
-  out.onfinish = () => {
-    // Commit síncrono: o DOM já entrega a nova seção antes do próximo paint
+  outX.finished.then(() => {
+    if (epoch !== swapEpoch) return; // superseded por outro swap/arrasto
+    running = [];
+
+    // Commit síncrono: o DOM entrega a nova seção antes do próximo paint
     flushSync(updateCallback);
 
-    // Entrada criada ANTES de cancelar a saída: sem frame de "pulo" no centro
-    const enter = strip.animate(
-      [
-        { transform: `translateX(${sign * dist}px)`, opacity: 0.15 },
-        { transform: 'translateX(0)', opacity: 1 },
-      ],
-      { duration: inDur, easing: inEasing, fill: 'backwards' }
-    );
-    out.cancel();
+    // Entra pelo lado oposto (teleporte com opacity baixa — metáfora pager)
+    x.jump(sign * dist);
+    const inX = animate(x, 0, SPRING_SETTLE);
+    const inO = animate(opacity, 1, SPRING_SETTLE);
+    running = [inX, inO];
 
-    enter.onfinish = () => {
-      enter.cancel(); // estilo base volta (sem resíduo de transform/opacity)
-    };
-  };
+    inX.finished.then(() => {
+      if (epoch !== swapEpoch) return;
+      running = [];
+    });
+  });
 }
 
 export function fadeIn(...elements: (HTMLElement | null | undefined)[]): void {

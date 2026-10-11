@@ -21,6 +21,39 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.8.1-missions-ui] - 2026-10-11
+*A interface de missões da versão legacy (abas DIÁRIAS/SEMANAIS/GUIAS, "MISSÃO DE MAIO", "MISSÕES DO DIA" com contagem regressiva e cards com baús) "não aparecia" na versão React apesar do port 1:1 da Fase 3 existir e estar montado (`#dashBtnMissoes` → `<MissionsOverlay/>`). Causa raiz **idêntica à dos 3 modais da Progresso (v4.7.3)**: o `#missions-overlay` (`position: fixed; inset: 0`) e o `#news-overlay` (mesma estrutura) são montados dentro do `DashboardFeature` → dentro de `.section-strip`, que tem `will-change: transform` (7-nav-icons.css L33) e passa a ser o containing block do fixed — o overlay inteiro (conteúdo centralizado em `max-width: 420px`) era posicionado dentro da fita de 500vw e ficava permanentemente fora da viewport. Ambos agora renderizam via `createPortal(document.body)` (helper `toBody`, mesmo padrão de `TreinosModals`/`ProgressoFeature`/`LigasFeature`). system_map → 3.5.38.*
+
+### [Fixed]
+- **`src-app/src/features/dashboard/MissionsOverlay.tsx` — overlay de missões fora da viewport**: raiz `#missions-overlay` agora sai do DOM-tree da fita via `createPortal(node, document.body)` (helper `toBody`); o restante (CSS, 3 abas, lock de `body.overflow`, reset para daily ao abrir) permanece intacto. Probe CDP antes/depois: com o bug o rect era relativo à fita de 500vw; depois o overlay ocupa a viewport inteira (`0,0,390,844`, parent `BODY`).
+- **`src-app/src/features/news/NewsOverlay.tsx` — mesma causa-raiz, mesmo fix**: `#news-overlay` também era `position: fixed` montado dentro do `DashboardFeature` (dentro da fita) e ficava invisível — agora via `toBody` (lista + detail views + FOOTER_HTML inalterados).
+
+### [Notas]
+- Overlays que já ficavam fora da fita (Perfil/Ficha/Busga/Lock/Conclusão/Foco — montados no `App.tsx` fora do `motion.section-strip`) ou que já portavam (`TreinosModals`, `ExercicioFormModal`, `Ligas`, `ProgressoFeature` v4.7.3, `ColorPickerModal`) não foram tocados.
+- A interface segue **estática por desenho legado** (contadores `0/N` hardcoded — o Vanilla v3.5.7 não tem lógica/reset/XP de missões); o que voltou foi a **visibilidade**, não lógica nova.
+- Verificação: `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · CDP probe **12/12 PASS** (pílula presente; missões retângulo `0,0,390,844` parent BODY; DIÁRIAS "MISSÕES DO DIA", SEMANAIS "MISSÕES DA SEMANA", GUIAS "GUIAS CHEGANDO EM BREVE"; body lock/destravado no open/close; reabre em daily; notícias retângulo na viewport + MOSTRAR MAIS + fecha; 0 erros de JS); screenshot `missions_daily.png` confere 1:1 com os prints do usuário (tabs + X, card 26/40, countdown 9H 15M, 3 cards com baús).
+- **`Diretrizes/system_map.json`**: `version` 3.5.37 → **3.5.38**; entradas de `MissionsOverlay.tsx` e `features/news/` atualizadas com o portal.
+
+## [v4.8.0-premium-motion] - 2026-10-11
+*Dois pedidos: (1) **a cor do tema não afeta mais o emblema/avatar nas navbars** (o `mix-blend-mode: screen` do emblema sobre o `--gradient` colorido do tema lavava a imagem com a cor primária); (2) **navegação entre seções em nível premium** — troca de abas com springs de física (Motion v12 / Framer Motion), arrasto contínuo da fita e **interrupção natural**: um gesto/clique no meio da animação absorve a velocidade atual em vez de resetar. system_map → 3.5.37.*
+
+### [Fixed]
+- **`src-app/src/styles/shell.css` — avatar da Top Bar/Sidebar HUD tingido pelo tema**: `.top-bar__avatar` e `.side-hud__avatar` usavam `background: var(--gradient)`, que o tema do perfil sobrescreve (`profile-data.ts` L97: `--gradient` → gradiente da cor escolhida). Com o fundo colorido, o `mix-blend-mode: screen` do `ProfileEmblem` lavava a imagem (ex.: avatar vermelho quase sem emblema — print do usuário). Fundo agora neutro **`#1c1b1b`** (o mesmo do `#dash-profile-avatar` do dashboard, onde o emblema renderiza com cor verdadeira) + sombra neutra no `.side-hud__avatar` (antes roxa hardcoded `rgba(139,92,246,.25)`).
+
+### [Added]
+- **`src-app/src/lib/motion-presets.ts` (novo)**: springs compartilhados do Motion — `SPRING_SETTLE` (stiffness 400 / damping 36 / mass 0.9, ζ≈0.95: assenta sem overshoot — overshoot do strip de 500vw exporia a borda da fita), `SPRING_EXIT` (520/42, firme e curta para a saída) e `SPRING_SOFT` (micro-interações).
+
+### [Changed]
+- **`src-app/src/lib/animations.ts` — `slideSwap` com física real**: substitui a Web Animations API (cubic-beziers fixos, v4.6.0) por `animate()` do Motion sobre `MotionValue`s de x/opacity da fita. **Interrupção natural**: cada novo swap retargeta a mesma mola a partir da posição E velocidade atuais; épa invalida commits de swaps superseded; se o arrasto já levou a fita além da borda, a saída continua dali (não puxa de volta); `x.jump(+sign·dist)` após o `flushSync` do commit (metáfora de pager). Novos exports `snapSlideHome` e `holdSlide`.
+- **`src-app/src/App.tsx` — navegação premium**: `.section-strip` virou `motion.div` (style x/opacity); `navigateSection` **sem guarda de re-entrada** (cliques rápidos retargetam — o último vence, sem fila); clique na seção ativa assenta em casa via `snapSlideHome`. Swipe horizontal evolui de "detecção de intenção" para **arrasto contínuo**: o dedo move a fita em tempo real (`stripX.set`), com borracha nas bordas (22% quando não há seção vizinha), axis-lock com as mesmas exclusões de alvo do `nav.js` L207–298; no release a decisão combina **posição** (20% da largura ou 150 px) **ou velocidade** (fling ≥ 550 px/s) e o snap/troca herdam a inércia do gesto.
+
+### [Notas]
+- **Zero dependências novas**: o pacote `motion` v12 (Framer Motion) já estava em `package.json` (scaffold + `LigasFeature`).
+- Paridade preservada onde é micro-animação interna: `fadeIn`/`fadeSwap` (Ficha/Treinos/Progresso/Radar/badges) seguem o CSS legado; `BottomNav` continua DOM 1:1 (sem `layoutId` no dot ativo).
+- Divergência consciente do legado: o `fadeSwap` 120 ms de `nav.js` vira slide em mola interrompível (pedido explícito do usuário, nível premium).
+- Verificação: `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · CDP probe **9/9 PASS** (avatares `rgb(28,27,27)`, nav treinos, interrupção com 3 cliques rápidos — último vence —, strip assenta em repouso `transform:none/opacity:1`, clique na seção ativa, 0 erros de JS).
+- **`Diretrizes/system_map.json`**: `version` 3.5.36 → **3.5.37**; entradas de `App.tsx`, `animations.ts` e `shell.css` atualizadas.
+
 ## [v4.7.4-pwa-icon-unificado] - 2026-10-11
 *Novo ícone unificado: a instalação do site como PWA e o launcher do app Android/Capacitor passam a usar **o mesmo ícone** — canvas branco arredondado (estilo do ícone do Capacitor) com o logo Decepticon centralizado em tile preto. Antes as superfícies divergiam: o PWA usava o Decepticon full-bleed preto (`icon-192/512.png`) e o Android ainda tinha o template genérico do Capacitor (branco + raio azul, nunca atualizado desde a criação do projeto em 14/07/2026).*
 
