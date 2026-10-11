@@ -39,3 +39,14 @@ export const SPRING_SOFT: Transition = {
   damping: 24,
   mass: 0.9,
 };
+
+/** Slide lateral da fita mobile (1 viewport) — ~350ms, quase crítico.
+ *  v4.8.3.2: a fita pré-monta as 5 seções (paridade legado) e o x move
+ *  entre índices de viewport; essa mola cobre a distância com glide e
+ *  sem overshoot visível. */
+export const SPRING_SLIDE: Transition = {
+  type: 'spring',
+  stiffness: 380,
+  damping: 38,
+  mass: 1,
+};

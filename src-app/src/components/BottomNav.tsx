@@ -12,8 +12,8 @@
  *   • 1º item da barra = Menu (hamburger) → abre a drawer lateral
  *     (MobileDrawer — perfil, busca, atalhos e tela cheia);
  *   • formato da barra controlado por academia_pref_navbar_shape:
- *     'straight' = reta legado; 'oval' = curva neon (shell.css .bnav-oval,
- *     port do MobileCurvedNavbar do NavigationShellStandalone.tsx);
+ *     'straight' = reta legado (todos os labels); 'oval' = curva neon
+ *     (shell.css .bnav-oval — labels só no ativo, incl. Menu).
  *   • Progresso REMOVIDO da barra (mantido só na sidebar desktop e na
  *     drawer mobile) — a barra fica Menu + 4 seções.
  */

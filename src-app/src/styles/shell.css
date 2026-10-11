@@ -201,6 +201,26 @@
     width: 100%;
   }
 
+  /* v4.8.3.2: no desktop só o slide ativo fica visível (a fita não faz
+     slide lateral aqui — a troca é vertical, ver animations.ts verticalSwap).
+     data-active é setado no .section-strip pelo App.
+     O seletor direto (> .section-slide, 0,2,0) empata com o legado
+     .section-slide[data-section="dashboard"] { display:flex } em
+     secoes/dashboard.css e vence por folha posterior; as regras ativas
+     (0,3,0) vencem o esconder. O dashboard ativo mantém flex (legado). */
+  .section-strip > .section-slide {
+    display: none;
+  }
+  .section-strip[data-active="progresso"] > .section-slide[data-section="progresso"],
+  .section-strip[data-active="treinos"] > .section-slide[data-section="treinos"],
+  .section-strip[data-active="social"] > .section-slide[data-section="social"],
+  .section-strip[data-active="loja"] > .section-slide[data-section="loja"] {
+    display: block;
+  }
+  .section-strip[data-active="dashboard"] > .section-slide[data-section="dashboard"] {
+    display: flex;
+  }
+
   /* Sem a Bottom Nav, os 260px de folga legados viram espaço morto */
   .section-slide .treino-container {
     padding-bottom: 72px !important;
@@ -208,6 +228,17 @@
   .bottom-nav {
     display: none;
   }
+}
+
+/* ============================================================
+   FITA DE SEÇÕES — overrides v4.8.3.2-parity-slide
+   ============================================================
+   O 7-nav-icons.css declara transition: transform 0.48s na fita (legado
+   animava via CSS). No App o MotionValue x escreve o transform a cada
+   frame — a transition re-interpolava cada write e travava o slide
+   (causa-raiz do "tranvada e lenta"). O Motion é a fonte única agora. */
+.section-strip {
+  transition: none;
 }
 
 /* ---------- Cabeçalho: avatar + nome + fixar ---------- */
@@ -652,8 +683,7 @@
    absolute atrás dos botões (herdados do 7-nav-icons.css); o preenchimento
    e o traço seguem o tema do usuário (--primary). Em modo 'straight'
    (reta legado) nada muda além do 1º item Menu, que usa o .bnav-btn
-   comum. Labels: no oval só o ativo + o Menu mostram texto (padrão
-   reference; 6 itens em 390px ficariam apertados com todos visíveis).
+   comum. Labels (v4.8.3.2): no oval só o ATIVO mostra texto — o Menu segue a mesma regra (sem isenção).
    ============================================================ */
 .bottom-nav.bnav-oval {
   background: transparent;
@@ -685,13 +715,14 @@
   stroke-width: 1.5;
 }
 
-/* Labels ocultos fora do ativo (e no Menu, sempre visível) */
+/* Labels ocultos fora do ativo (v4.8.3.2: o Menu também — só o ativo
+   mostra texto, como no reference; antes o Menu estava isento e o label
+   "MENU" ficava sempre visível) */
 .bnav-oval .bnav-label {
   opacity: 0;
   transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), color 0.3s ease;
 }
-.bnav-oval .bnav-btn.active .bnav-label,
-.bnav-oval .bnav-btn--menu .bnav-label {
+.bnav-oval .bnav-btn.active .bnav-label {
   opacity: 1;
 }
 

@@ -21,6 +21,27 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.8.3.2-parity-slide] - 2026-10-11
+
+Paridade de fluidez das transições de seção com o legado (`transitionguide.md`): a fita de seções passa a ser pré-montada (500vw, o legado nunca remontava), o Motion é a única fonte do `translateX` (a transition CSS do legado travava cada frame), o desktop troca o conteúdo de baixo para cima (verticalSwap) em vez de deslizar lateralmente e o modo oval da BottomNav mostra o label só no item ativo (o "MENU" deixa de ficar sempre visível). `system_map.json` → 3.5.42.
+
+### Added
+- `App.tsx`: as 5 seções (`progresso,treinos,dashboard,social,loja` de `SECTIONS_ORDER`) ficam **pré-montadas** dentro da fita `.section-strip` com `data-active` e `style={{ x: stripX }}` (stripOpacity removido); helpers `isDesktopNav()`/`slideBaseX(idx)`; `navigateSection` desktop = `flushSync` no início + `verticalSwap`, mobile = `slideSwap(stripX, slideBaseX(to), commit)`; resize faz `jump` do x; swipe usa base absoluta.
+- `animations.ts`: reescrito — `slideSwap(x, targetX, updateCallback)` (commit do estado no INÍCIO do gesto para a nav acompanhar o slide), `snapSlideHome(x, targetX)`, `holdSlide()`, `verticalSwap(el)` (WAAPI `translateY(18px)+opacity`, 300 ms, `cubic-bezier(0.25,1,0.5,1)`); `SPRING_SLIDE` { stiffness: 380, damping: 38, mass: 1 } em `motion-presets.ts`.
+- `shell.css`: desktop ≥1024px — `.section-strip > .section-slide { display: none }` (0,2,0 empata com o `display:flex` legado de `secoes/dashboard.css` e vence por folha posterior) + regras `data-active` mostrando só o ativo (`block`, dashboard mantém `flex`); `.section-strip { transition: none }` (causa-raiz do "tranvada": a transition de 0.48s do `7-nav-icons.css` re-interpolava cada frame escrito pelo MotionValue x).
+
+### Changed
+- `shell.css`: modo oval da BottomNav — removida a isenção que mantinha o label do Menu sempre visível; agora só o item ativo mostra label no oval (`.bnav-oval .bnav-btn.active .bnav-label { opacity: 1 }`); o modo reto segue com todos os labels visíveis (paridade legado).
+- `App.tsx`/`animations.ts`: troca de seção mobile = slide lateral puro da fita pré-montada (sem remount no meio do gesto — o legado mantinha todas as seções no DOM); desktop = conteúdo de baixo para cima conforme `transitionguide.md`.
+
+### Fixed
+- Desktop com múltiplos slides visíveis após a mudança de `data-active` (o `display: flex` de `legacy-style/treino/secoes/dashboard.css:7` vencia o `display: none` genérico) — resolvido com o seletor direto `.section-strip > .section-slide` (shell.css).
+
+### Removed
+- `stripOpacity`/`SlideDirection` (App.tsx, animations.ts) — desnecessários com o Motion como fonte única do x.
+
+Verificação: `npx tsc -b` exit 0 · `npx oxlint src` 0 warnings · `npm run build` OK · CDP `probe_4832.js` **5/5 PASS** (pré-montagem + strip 500vw + transition none; slide até -innerWidth sem remount; oval com label do Menu opacity 0; desktop só com o ativo visível; verticalSwap running no desktop), 0 erros de JS.
+
 ## [v4.8.3.1-nav-polish] - 2026-10-11
 
 Ajustes de UX/animação pedidos em revisão da v4.8.3-navbars: Progresso sai da barra inferior mobile (fica só na sidebar desktop e na drawer), auto-fullscreen persistente, sidebar sem o atalho de teclado visível e molas calibradas para fluidez premium (transitionguide.md). `system_map.json` → 3.5.41.

@@ -31,13 +31,22 @@ import { ShareModal } from '@/features/gamification/ShareModal';
 import { useShareStore } from '@/features/gamification/share-store';
 import { ColecaoModals } from '@/features/gamification/ColecaoModals';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
-import { fadeIn, slideSwap, snapSlideHome, holdSlide, type SlideDirection } from '@/lib/animations';
+import { fadeIn, slideSwap, snapSlideHome, holdSlide, verticalSwap } from '@/lib/animations';
 import { motion, useMotionValue } from 'motion/react';
+import { flushSync } from 'react-dom';
 import { showToast } from '@/lib/toast';
 import type { SheetKey } from '@/core/db/schema';
 
-/* Ordem canônica das seções (usada pelo slide direcional e pelo swipe) */
+/* Ordem canônica das seções (ordem dos slides na fita + swipe) */
 const SECTIONS_ORDER: SectionType[] = ['progresso', 'treinos', 'dashboard', 'social', 'loja'];
+
+/* Desktop ≥1024px: fita estática (x=0) + transição vertical do conteúdo */
+const isDesktopNav = (): boolean =>
+  typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches;
+
+/* x base da fita para um índice de seção: mobile = -idx × innerWidth
+   (paridade com o transform do nav.js legado); desktop = 0. */
+const slideBaseX = (idx: number): number => (isDesktopNav() ? 0 : -idx * window.innerWidth);
 
 export function App() {
   const [activeSection, setActiveSection] = useState<SectionType>('dashboard');
@@ -54,10 +63,12 @@ export function App() {
   const isMaestriaUiOpen = useMaestriaUi((s) => s.colecaoOpen || s.maestriaExId !== null);
   const perfilScrollRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
-  /* v4.8.0-premium-motion: MotionValues da fita (.section-strip) — springs
-     do Motion retargetam a partir da posição/velocidade atuais (interrompível). */
-  const stripX = useMotionValue(0);
-  const stripOpacity = useMotionValue(1);
+  /* v4.8.0-premium-motion → v4.8.3.2: MotionValue x da fita (.section-strip).
+     As 5 seções ficam pré-montadas (paridade legado) e o x move entre
+     índices de viewport no mobile; no desktop fica 0 (transição vertical). */
+  const stripX = useMotionValue(
+    isDesktopNav() ? 0 : -SECTIONS_ORDER.indexOf('dashboard') * window.innerWidth
+  );
 
   /* v4.0.13-typography: reparo do raster stale do primeiro paint da seção.
      O primeiro paint de uma seção montada depois do boot (ex.: Progresso ao
@@ -81,35 +92,48 @@ export function App() {
     }, 450);
   }, []);
 
-  /* nav.js L135-152 → v4.6.0-shell (slide direcional) → v4.8.0-premium-motion:
-     transição em SPRING sobre os MotionValues da fita. SEM guarda de re-entrada:
-     um clique no meio da animação retargeta a mesma mola (absorve a velocidade
-     atual — interrupção natural). Clique na seção ativa assenta em casa. */
+  /* nav.js L135-152 → v4.8.3.2-parity-slide: as 5 seções estão pré-montadas
+     na fita (500vw legado) — no mobile a troca é um slide lateral puro até
+     o índice de viewport da seção destino (sem remount no meio do caminho);
+     no desktop a fita fica em x=0 e o conteúdo entra de baixo para cima
+     (verticalSwap, transitionguide.md). SEM guarda de re-entrada: um clique
+     no meio da animação retargeta a mesma mola (interrupção natural). */
   const navigateSection = useCallback(
     (sec: SectionType) => {
       /* v4.8.3: sair do Início descarta o overlay pendente */
       if (sec !== 'dashboard') setDashOverlay(null);
       if (sec === activeSection) {
-        snapSlideHome(stripX, stripOpacity);
+        snapSlideHome(stripX, slideBaseX(SECTIONS_ORDER.indexOf(sec)));
         fadeIn(mainRef.current);
         return;
       }
-      const from = SECTIONS_ORDER.indexOf(activeSection);
       const to = SECTIONS_ORDER.indexOf(sec);
-      const direction: SlideDirection = to >= from ? 'forward' : 'backward';
-      slideSwap(
-        stripX,
-        stripOpacity,
-        () => {
-          setActiveSection(sec);
-          document.dispatchEvent(new CustomEvent('sectionchange', { detail: sec }));
-          repairSectionRaster();
-        },
-        direction
-      );
+      const commit = () => {
+        setActiveSection(sec);
+        document.dispatchEvent(new CustomEvent('sectionchange', { detail: sec }));
+        repairSectionRaster();
+      };
+      if (isDesktopNav()) {
+        flushSync(commit);
+        verticalSwap(
+          document.querySelector<HTMLElement>(`.section-slide[data-section="${sec}"]`)
+        );
+      } else {
+        slideSwap(stripX, slideBaseX(to), commit);
+      }
     },
-    [activeSection, repairSectionRaster, stripX, stripOpacity]
+    [activeSection, repairSectionRaster, stripX]
   );
+
+  /* Resize/cross viewport: a base da fita muda com innerWidth (e o desktop
+     não tem slide lateral) — reposiciona sem animação. */
+  useEffect(() => {
+    const onResize = () => {
+      stripX.jump(slideBaseX(SECTIONS_ORDER.indexOf(activeSection)));
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [activeSection, stripX]);
 
   /* ===== v4.6.0-shell: casca adaptativa + busca global + lock ===== */
 
@@ -302,8 +326,9 @@ export function App() {
 
       // Borracha nas bordas: sem seção vizinha → resistência (não segue 1:1)
       const idx = SECTIONS_ORDER.indexOf(activeSection);
+      const base = slideBaseX(idx);
       const atEdge = (idx <= 0 && diffX > 0) || (idx >= SECTIONS_ORDER.length - 1 && diffX < 0);
-      stripX.set(atEdge ? diffX * 0.22 : diffX);
+      stripX.set(atEdge ? base + diffX * 0.22 : base + diffX);
     };
 
     const onEnd = (e: TouchEvent) => {
@@ -322,7 +347,7 @@ export function App() {
       if ((passed || flung) && !blocked) {
         navigateSection(SECTIONS_ORDER[goingNext ? idx + 1 : idx - 1]);
       } else {
-        snapSlideHome(stripX, stripOpacity); // volta pro lugar (spring)
+        snapSlideHome(stripX, slideBaseX(idx)); // volta pro lugar (spring)
       }
     };
 
@@ -334,7 +359,7 @@ export function App() {
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('touchend', onEnd);
     };
-  }, [activeSection, navigateSection, stripX, stripOpacity]);
+  }, [activeSection, navigateSection, stripX]);
 
   const { isActive, startWorkout } = useWorkoutStore();
 
@@ -527,18 +552,28 @@ export function App() {
               o <main> opaco e o fundo de diamantes sumia atrás dele. */}
           <main className="treino-page flex-1 min-h-0 flex flex-col" ref={mainRef}>
             <div className="section-viewport">
-            {/* .section-strip 1:1 com o legado (7-nav-icons.css L27–35 e
-                treino.html): wrapper flex-row + will-change:transform —
-                paridade de DOM/estrutura de pintura. Sozinho ele NÃO corrige
-                o paint offset de 1–2 device px dos .p-card (medido: JSX strip
-                desde a renderização inicial continuava com os bands); quem
-                zera as regiões é o repairSectionRaster acima (v4.0.13). */}
-            {/* .section-strip 1:1 com o legado (7-nav-icons.css L27–35 e
-                treino.html): wrapper flex-row + will-change:transform —
-                paridade de DOM/estrutura de pintura. v4.8.0: é um motion.div
-                (Motion v12) — x/opacity animados por springs interrompíveis. */}
-            <motion.div className="section-strip" style={{ x: stripX, opacity: stripOpacity }}>
-            {activeSection === 'dashboard' && (
+            {/* .section-strip 1:1 com o legado (7-nav-icons.css L27–35):
+                500vw com as 5 seções LADO A LADO desde o boot (v4.8.3.2 —
+                o legado nunca remontava seções no swipe; a troca é só
+                translateX). data-active marca a seção visível no DESKTOP
+                (shell.css esconde os inativos; no mobile todos ficam na
+                fita e o viewport recorta). v4.8.0: motion.div com MotionValue
+                x (springs interrompíveis — a transition transform do CSS
+                legado é anulada em shell.css). */}
+            <motion.div className="section-strip" data-active={activeSection} style={{ x: stripX }}>
+              <div className="section-slide" data-section="progresso">
+                <ProgressoFeature />
+              </div>
+
+              {/* .section-slide wrapper 1:1 com o legado (treino.html: cada
+                  slide envolve .treino-container > .main-section) — ativa a
+                  regra .section-slide .treino-container{padding-bottom:260px}
+                  (7-nav-icons.css L56) e o scroll interno com scrollbar 10px. */}
+              <div className="section-slide" data-section="treinos">
+                <TreinosFeature />
+              </div>
+
+              {/* DashboardFeature monta o próprio .section-slide[data-section=dashboard] */}
               <DashboardFeature
                 onNavigate={(sec) => navigateSection(sec as SectionType)}
                 onOpenFicha={handleOpenFicha}
@@ -546,36 +581,16 @@ export function App() {
                 overlay={dashOverlay}
                 onOverlayChange={setDashOverlay}
               />
-            )}
 
-            {activeSection === 'treinos' && (
-              /* .section-slide wrapper 1:1 com o legado (treino.html: cada
-                 slide envolve .treino-container > .main-section) — ativa a
-                 regra .section-slide .treino-container{padding-bottom:260px}
-                 (7-nav-icons.css L56) e o scroll interno com scrollbar 10px. */
-              <div className="section-slide" data-section="treinos">
-                <TreinosFeature />
-              </div>
-            )}
-
-            {activeSection === 'progresso' && (
-              <div className="section-slide" data-section="progresso">
-                <ProgressoFeature />
-              </div>
-            )}
-
-            {activeSection === 'social' && (
-              /* Aba SOCIAL — placeholder de Ligas.html (v4.0.14-social).
-                 SocialFeature monta seu próprio .treino-container.soc-root
-                 + modais; o scroll acontece dentro do .section-slide. */
+              {/* Aba SOCIAL — placeholder de Ligas.html (v4.0.14-social).
+                  SocialFeature monta seu próprio .treino-container.soc-root
+                  + modais; o scroll acontece dentro do .section-slide. */}
               <div className="section-slide" data-section="social">
                 <SocialFeature />
               </div>
-            )}
 
-            {activeSection === 'loja' && (
-              /* Placeholder .section-coming-soon — estrutura 1:1 com
-                 treino.html L197-207 (LOJA) */
+              {/* Placeholder .section-coming-soon — estrutura 1:1 com
+                  treino.html L197-207 (LOJA) */}
               <div className="section-slide" data-section="loja">
                 <div className="treino-container">
                   <div id="section-loja" className="main-section" role="tabpanel">
@@ -589,7 +604,6 @@ export function App() {
                   </div>
                 </div>
               </div>
-            )}
             </motion.div>
             </div>
           </main>
