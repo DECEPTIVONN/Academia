@@ -13,7 +13,9 @@
  *     (MobileDrawer — perfil, busca, atalhos e tela cheia);
  *   • formato da barra controlado por academia_pref_navbar_shape:
  *     'straight' = reta legado; 'oval' = curva neon (shell.css .bnav-oval,
- *     port do MobileCurvedNavbar do NavigationShellStandalone.tsx).
+ *     port do MobileCurvedNavbar do NavigationShellStandalone.tsx);
+ *   • Progresso REMOVIDO da barra (mantido só na sidebar desktop e na
+ *     drawer mobile) — a barra fica Menu + 4 seções.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -134,17 +136,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     }
   }, [activeSection]);
 
+  /* v4.8.3.1: Progresso saiu da barra inferior (mantido na sidebar desktop
+     e na drawer mobile) — a barra fica Menu + Treinos/Início/Social/Loja. */
   const navItems: { id: SectionType; domId: string; label: string; icon: React.ReactNode }[] = [
-    {
-      id: 'progresso',
-      domId: 'bnavProgresso',
-      label: 'Progresso',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-        </svg>
-      ),
-    },
     {
       id: 'treinos',
       domId: 'bnavTreinos',

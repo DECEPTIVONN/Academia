@@ -6,34 +6,36 @@
  * nova animação/alvo assuming um MotionValue em voo, ela parte da posição E da
  * velocidade atuais (absorve o gesto) em vez de resetar.
  *
- * Ajuste (ζ = damping / 2√(stiffness·mass)):
- *   SETTLE  ζ≈0.95 — quase crítico, assenta sem overshoot (overshoot do strip
- *           de 50vw exporia a borda da fita; por isso ~criticodamped).
- *   EXIT    ζ≈1.05 — firme e curto, "empurra" o slide antigo para fora.
+ * Ajuste (ζ = damping / 2√(stiffness·mass)) — calibrados contra o
+ * transitionguide.md (duração-alvo ~300ms, easeInOut suave):
+ *   SETTLE  ζ≈0.87 — quase crítico com micro-overshoot (<1 px na fita);
+ *           período natural ~390 ms → assentamento fluido, sem "travar".
+ *   EXIT    ζ≈0.85 — firme e curto, empurra o slide antigo com leve resiliência.
+ *   SOFT    ζ≈0.85 — micro-interações com toque macio.
  */
 
 import type { Transition } from 'motion/react';
 
-/** Assentamento padrão de seções/abas — suave, sem overshoot visível. */
+/** Assentamento padrão de seções/abas — fluido, overshoot imperceptível. */
 export const SPRING_SETTLE: Transition = {
   type: 'spring',
-  stiffness: 400,
-  damping: 36,
-  mass: 0.9,
+  stiffness: 260,
+  damping: 28,
+  mass: 1,
 };
 
-/** Saída de slide — mais firme/curta que o assentamento. */
+/** Saída de slide — mais firme/curta que o assentamento, com leve resiliência. */
 export const SPRING_EXIT: Transition = {
   type: 'spring',
-  stiffness: 520,
-  damping: 42,
-  mass: 0.9,
+  stiffness: 340,
+  damping: 32,
+  mass: 1,
 };
 
 /** Micro-interações (botões, dots, painéis). */
 export const SPRING_SOFT: Transition = {
   type: 'spring',
-  stiffness: 300,
-  damping: 30,
-  mass: 0.85,
+  stiffness: 220,
+  damping: 24,
+  mass: 0.9,
 };

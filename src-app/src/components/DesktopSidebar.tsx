@@ -8,7 +8,7 @@
  *   • head: avatar com o emblema do perfil (abre o Perfil) + nome/nível + fixar
  *     + micro barra de XP com contagem da ofensiva (dados do useLocalData);
  *   • nav: as 5 seções com ícones stroke (parity com a BottomNav);
- *   • utils: busca (Ctrl/Cmd+K), tela cheia, bloquear app + versão.
+ *   • utils: busca, tela cheia, bloquear app + versão.
  *
  * O hover só alterna o estado expandido; a largura do CONTEÚDO (.shell-body)
  * segue apenas a preferência fixada — sem "pulo" de layout ao passar o mouse.
@@ -126,14 +126,13 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           type="button"
           className="side-hud__item"
           onClick={onOpenSearch}
-          title="Buscar em tudo (Ctrl/Cmd + K)"
+          title="Buscar em tudo"
         >
           <span className="side-hud__icon" aria-hidden="true">
             {SvgSearch}
           </span>
           <span className="side-hud__label">
             <span className="side-hud__label-main">Buscar</span>
-            <span className="side-hud__label-desc">Ctrl/Cmd + K</span>
           </span>
         </button>
         {NavSectionItems.map((item) => (

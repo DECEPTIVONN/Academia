@@ -172,7 +172,8 @@
     -webkit-backdrop-filter: blur(20px);
     border-right: 1px solid rgba(255, 255, 255, 0.07);
     box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* v4.8.3.1: easeOutQuint (transitionguide) — expansão fluida, sem "travar" */
+    transition: width 0.35s cubic-bezier(0.25, 1, 0.5, 1);
     user-select: none;
     overflow: hidden;
   }
@@ -185,7 +186,7 @@
   .shell-body {
     padding-top: 0;
     padding-left: 76px;
-    transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: padding-left 0.35s cubic-bezier(0.25, 1, 0.5, 1);
   }
   .shell-body--pinned {
     padding-left: 264px;
@@ -687,7 +688,7 @@
 /* Labels ocultos fora do ativo (e no Menu, sempre visível) */
 .bnav-oval .bnav-label {
   opacity: 0;
-  transition: opacity 0.25s ease, color 0.3s ease;
+  transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), color 0.3s ease;
 }
 .bnav-oval .bnav-btn.active .bnav-label,
 .bnav-oval .bnav-btn--menu .bnav-label {
@@ -767,7 +768,7 @@
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.28s ease;
 }
 .mdw__close:hover {
   background: rgba(255, 255, 255, 0.06);
@@ -789,7 +790,7 @@
   text-align: left;
   color: inherit;
   font-family: var(--font-family);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.28s ease, background 0.28s ease;
 }
 .mdw__profile:hover {
   border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
@@ -863,7 +864,7 @@
   cursor: pointer;
   text-align: left;
   font-family: var(--font-family);
-  transition: all 0.2s ease;
+  transition: all 0.28s ease;
 }
 .mdw__item:hover {
   color: var(--text);

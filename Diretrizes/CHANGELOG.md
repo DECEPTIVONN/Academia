@@ -21,7 +21,33 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.8.3.1-nav-polish] - 2026-10-11
+
+Ajustes de UX/animação pedidos em revisão da v4.8.3-navbars: Progresso sai da barra inferior mobile (fica só na sidebar desktop e na drawer), auto-fullscreen persistente, sidebar sem o atalho de teclado visível e molas calibradas para fluidez premium (transitionguide.md). `system_map.json` → 3.5.41.
+
+### Added
+- (none)
+
+### Changed
+- **`src-app/src/components/BottomNav.tsx` — Progresso removido da barra inferior**: o item `#bnavProgresso` sai da BottomNav mobile; a barra fica **Menu + Treinos + Início + Social + Loja** (5 botões). Progresso continua acessível no mobile pela **drawer lateral** (item "Progresso") e permanece na sidebar desktop (`nav-section-items.tsx` intocado). `SectionType`/`SECTIONS_ORDER`/swipe inalterados.
+- **`src-app/src/lib/auto-fullscreen.ts` — tela cheia persistente**: com a pref `academia_pref_auto_fullscreen` ligada, os listeners de gesto **não são mais removidos após o 1º sucesso** — se o usuário sair da tela cheia por qualquer motivo (ESC do navegador, botão "Sair da tela cheia", gesto do sistema), o **próximo toque/clique reativa** o modo tela cheia. Removido o listener `fullscreenchange` que desarmava; `syncAutoFullscreen` (evento `academia:auto-fullscreen-changed`) segue como único caminho de arm/desarm em sessão.
+- **`src-app/src/components/DesktopSidebar.tsx` — "Ctrl/Cmd + K" removido**: o desc do item Buscar (`.side-hud__label-desc`) some; fica só o label "Buscar" (o atalho `Ctrl/Cmd+K` continua funcionando — só o texto visível foi removido). `title` simplificado para "Buscar em tudo".
+- **`src-app/src/lib/motion-presets.ts` — molas calibradas (transitionguide.md)**: `SPRING_SETTLE` 400/36/0.9 → **260/28/1** (ζ≈0.87, período ~390 ms — assentamento fluido, overshoot <1 px), `SPRING_EXIT` 520/42/0.9 → **340/32/1** (ζ≈0.85), `SPRING_SOFT` 300/30/0.85 → **220/24/0.9**. Menos rigidez, mais "glide" — interrupção natural preservada.
+- **`src-app/src/lib/animations.ts` — slideSwap menos abrupto**: distance 8%/96px → **10%/120px** (movimento mais legível); opacidade de saída 0.12 → **0.28** (crossfade suave em vez de flash escuro no commit).
+- **`src-app/src/components/MobileDrawer.tsx` — backdrop 0.2s → 0.28s easeOut** (sincronizado com o spring mais macio do painel).
+- **`src-app/src/styles/shell.css` — micro-transições premium**: expansão da sidebar desktop `0.3s cubic-bezier(0.4,0,0.2,1)` → **0.35s cubic-bezier(0.25,1,0.5,1)** (easeOutQuint, idem `padding-left` do `.shell-body`); hover/items da drawer `0.2s` → **0.28s**; label do modo oval `0.25s ease` → **0.3s easeOutQuint**.
+
+### Fixed
+- **Animações "travadas"/pouco fluidas**: causa — springs com stiffness 400–520 (assentamento rígido) + dip de opacidade a 0.12 no meio do swap (flash) + distância curta. Calibrados contra o `transitionguide.md` (duração-alvo ~300 ms, easeInOut suave).
+
+### Notas
+- Verificação: `npx tsc -b` 0 · `npx oxlint src` 0 · `npm run build` OK · CDP probe **5/5 PASS** (`probe_4831.js`: nav sem Progresso com 5 ids corretos, drawer com item Progresso, ESC fecha drawer, sidebar sem "Ctrl", auto-fullscreen re-armado) · **0 erros JS**.
+- Swipe horizontal ainda alcança Progresso (ordem `SECTIONS_ORDER` intacta) — removido apenas o atalho visual da barra.
+
+---
+
 ## [v4.8.3-navbars] - 2026-10-11
+
 *Navbars (mobile + desktop), inspiradas no `NavigationShellStandalone.tsx` de referência: (1) **barra inferior mobile ganha o item Menu como 1º botão** (hamburger) que abre uma **drawer lateral** com foto/perfil no topo, Busca Geral, atalho para a aba Progresso, Notícias, Missões, Configurações e tela cheia no rodapé; (2) **novo formato da barra nas Configurações → Exibição → Barra de Navegação**: Reta (atual, legado) ou **Oval** (curva neon SVG no topo com stroke no tema, labels só no ativo — padrão reference); (3) **sidebar desktop em preto AMOLED** com bordas neutras e **hover/ativo tingidos pela cor do tema do usuário** (`--primary-rgb` em vez de roxo hardcoded). system_map → 3.5.40.*
 
 ### [Added]

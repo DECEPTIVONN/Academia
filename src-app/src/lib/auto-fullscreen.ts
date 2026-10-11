@@ -1,13 +1,13 @@
 /**
- * auto-fullscreen.ts — Tela cheia automática no primeiro gesto (v4.4.0)
+ * auto-fullscreen.ts — Tela cheia automática com persistência (v4.4.0 → v4.8.3.1)
  *
- * Com a pref `academia_pref_auto_fullscreen` ativa, QUALQUER primeiro clique
- * do mouse ou toque (touch) em qualquer lugar da tela, logo após o
- * carregamento/recarga da página, aciona imediatamente o modo de tela cheia
- * do navegador (Fullscreen API no <html>).
+ * Com a pref `academia_pref_auto_fullscreen` ativa, QUALQUER toque/clique
+ * em qualquer lugar da tela entra (ou RETORNA) ao modo de tela cheia.
  *
  * Regras:
- *  • O armamento acontece a cada carregamento de página (recarregar = rearma);
+ *  • permanece armado enquanto a pref estiver ligada — se o usuário sair
+ *    da tela cheia por qualquer motivo (ESC do navegador, botão "Sair da
+ *    tela cheia", gesto do sistema), o PRÓXIMO toque/clique reativa;
  *  • quando a pref muda em sessão, o evento
  *    `academia:auto-fullscreen-changed` (dispatchado pelo SettingsFeature)
  *    arma/desarma em tempo real;
@@ -17,7 +17,7 @@
 
 import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 
-/** Eventos de "primeiro gesto" (pointer + touch + clique), em capture. */
+/** Eventos de gesto (pointer + touch + clique), em capture. */
 const GESTURE_EVENTS = ['pointerdown', 'touchstart', 'click'] as const;
 
 let armed = false;
@@ -52,7 +52,8 @@ function onGesture(): void {
       result.then(
         () => {
           attemptInFlight = false;
-          disarm();
+          // Permanece armado: sair da tela cheia (ESC/botão/gesto) e tocar
+          // de novo reativa automaticamente (v4.8.3.1).
         },
         () => {
           // Navegador recusou (ex.: iOS Safari, política de permissão).
@@ -68,10 +69,6 @@ function onGesture(): void {
   }
 }
 
-function onFullscreenChange(): void {
-  if (document.fullscreenElement === document.documentElement) disarm();
-}
-
 function arm(): void {
   if (armed) return;
   if (readLS(PREF_KEYS.autoFullscreen) !== 'true') return;
@@ -80,7 +77,6 @@ function arm(): void {
   for (const ev of GESTURE_EVENTS) {
     document.addEventListener(ev, onGesture, true);
   }
-  document.addEventListener('fullscreenchange', onFullscreenChange);
 }
 
 function disarm(): void {
@@ -89,7 +85,6 @@ function disarm(): void {
   for (const ev of GESTURE_EVENTS) {
     document.removeEventListener(ev, onGesture, true);
   }
-  document.removeEventListener('fullscreenchange', onFullscreenChange);
 }
 
 /** Reavalia a pref (usado quando ela muda em sessão). */
@@ -100,7 +95,8 @@ export function syncAutoFullscreen(): void {
 
 /**
  * Inicializa no boot da página (chamar uma vez, ex.: main.tsx).
- * Recarregar a página sempre rearma o "primeiro gesto".
+ * Recarregar a página rearma o gesto; com a pref ligada, o listener
+ * permanece ativo até o desarm explícito (pref desligada).
  */
 export function initAutoFullscreen(): void {
   window.addEventListener('academia:auto-fullscreen-changed', syncAutoFullscreen);

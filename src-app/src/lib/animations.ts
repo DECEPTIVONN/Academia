@@ -25,7 +25,7 @@ let running: AnimationPlaybackControls[] = [];
 
 /** Distância do slide (limitada para não "afastar" demais o conteúdo). */
 function slideDistance(): number {
-  return Math.min(96, Math.round(window.innerWidth * 0.08));
+  return Math.min(120, Math.round(window.innerWidth * 0.1));
 }
 
 function stopRunning(): void {
@@ -78,7 +78,7 @@ export function slideSwap(
   const outTarget = alreadyOut ? current : outDir * dist;
 
   const outX = animate(x, outTarget, SPRING_EXIT);
-  const outO = animate(opacity, 0.12, SPRING_EXIT);
+  const outO = animate(opacity, 0.28, SPRING_EXIT);
   running = [outX, outO];
 
   outX.finished.then(() => {
