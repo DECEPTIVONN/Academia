@@ -21,6 +21,28 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.7.0-ligas-social] - 2026-10-10
+*Aba Social substituída integralmente pelo conteúdo de `Ligas.tsx` (Amigos / Guilda / Liga Semanal+Mensal), mantendo apenas o background glass e a tipografia Rajdhani do app. Emojis de dados (avatar, bandeira, troféu de divisão) substituídos por SVG stroke conforme `Diretrizes/Ícones.md`.*
+
+### [Added]
+- **`src-app/src/features/social/ligas-data.ts`**: tipos (`PlayerProfile`, `ClanMessage`, `LeagueState`, `FriendItem`, `AvatarGlyphKey`, `FlagKey`), lógica de ligas semanal/mensal com persistência `localStorage` (`tetris_clash_leagues` / `tetris_clash_leagues_monthly`), geração/simulação de oponentes, `computeSeasonOutcome`, áudio sintetizado (`StandaloneSoundEffects`) e dados de demonstração (amigos, membros, mensagens, quick replies).
+- **`src-app/src/features/social/ligas-icons.tsx`**: glifos SVG stroke — `AvatarGlyph` (20 chaves: crown/star/flame/bolt/skull/ghost/robot/rocket/paw/leaf/moon/sun/shield/sword/gem/wolf/frog/alien/panda/lion), `FlagIcon` (12 países BR/US/MX/FR/JP/AR/ES/IT/CA/DE/GB/CL), `DivisionIcon` (troféus Bronze/Prata/Ouro + gemas Safira/Rubi) — substituem todos os emojis de dados do mock.
+- **`src-app/src/features/social/LigasFeature.tsx`**: port completo de `Ligas.tsx` — 3 sub-abas (Amigos com Aliança/filtros/modais, Guilda com chat local, Liga Semanal+Mensal com portais de fim de temporada), `LeagueCup` SVG 5-lobed, diamantes de navegação, banner do clã, controles de simulação, camera flash; fundos opacos convertidos para glass translúcido; font-imports inline removidos (herda Rajdhani).
+
+### [Changed]
+- **`src-app/src/features/social/SocialFeature.tsx`**: reescrito como re-export de `LigasFeature` (mantém o branch `social` do `App.tsx` sem mudança).
+- **`src-app/src/features/social/social.css`**: bloco `.ligas-root` (flex column gap), animação `flash-effect` da câmera e scrollbars WebKit do chat/listas.
+
+### [Removed]
+- Conteúdo placeholder do mock `Ligas.html` (header stats, Caminho das Ligas com resgates, ranking global/guerra de clãs, doações, modais de duelo/perfil) — substituído pelo `Ligas.tsx`.
+- `social-data.ts` e `social-icons.tsx` órfãos do placeholder anterior (arquivos mantidos no repo para referência; não são mais importados pela aba Social).
+
+### [Notas]
+- Chaves de glifo de avatar expandidas para incluir animais/personagens do mock (`wolf`, `frog`, `alien`, `panda`, `lion`).
+- Liga usa `localStorage` isolado do app (chaves `tetris_clash_*`) — não depende do Dexie/IDB.
+- Portais de fim de temporada usam `createPortal(document.body)` + fundo `rgba(10,5,20,0.92)` + blur (legível sobre o glass).
+- Verificação: `npx tsc -b` exit 0 · `npx oxlint src` 0 findings · `npm run build` OK (47 s).
+
 ## [v4.6.1-topbar-overlay] - 2026-10-10
 *Top Bar mobile alinhada ao `MobileTopBar` do `NavigationShellStandalone.tsx` de referência: removido o texto "ACADEMIA / WORKOUT TRACKER" (só sobram avatar + busca + tela cheia) e a barra passou de `relative` no fluxo para `fixed` translúcida por cima do conteúdo (fundo 55% + blur 14px, borda inferior quase invisível, sem sombra pesada) — integra-se de forma orgânica com o fundo dinâmico, especialmente em tela cheia; `.shell-body` ganhou `padding-top: 56px` no mobile (zerado no desktop ≥1024px) para o conteúdo começar abaixo da barra. Avatar 36→32 px e botões 38→34 px (paridade com a referência). Altura da barra fixada em **56px puro** (sem `env(safe-area-inset-top)` no height/padding — em tela cheia o inset inflava a barra verticalmente); itens colados no topo (`align-items: flex-start` + `padding-top: 6px` de respiro). Eliminada a folga enorme entre barra e aba Treinos em tela cheia: `.section-subtabs` (legado) somava `calc(20px + env(safe-area-inset-top))` de margem, duplicando o inset já coberto pelo `.shell-body` — override em `shell.css` mantém só os 20px.*
 

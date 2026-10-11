@@ -1258,3 +1258,43 @@
     width: auto;
   }
 }
+
+/* ============================================================
+   LIGAS (port de Ligas.tsx — v4.7.0)
+   Mantém glass + Rajdhani; flash de câmera e scroll do chat.
+   ============================================================ */
+
+.ligas-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@keyframes flash-effect {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-flash-effect {
+  animation: flash-effect 0.4s ease-out forwards;
+}
+
+/* Scrollbar do chat / listas (WebKit) */
+.ligas-root ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.ligas-root ::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+}
+.ligas-root ::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+}
+.ligas-root ::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
