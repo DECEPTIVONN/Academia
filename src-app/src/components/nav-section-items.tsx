@@ -28,29 +28,10 @@ const svgProps = {
   height: 20,
 } as const;
 
+/* Ordem das abas no desktop (v4.8.2-desktop-nav-grid), de cima para baixo:
+   Início → Social → Treinos → Progresso → Loja (Buscar fica como primeiro
+   item da nav no DesktopSidebar; a ordem de SWIPE continua SECTIONS_ORDER). */
 export const NavSectionItems: NavSectionItem[] = [
-  {
-    id: 'progresso',
-    label: 'Progresso',
-    desc: 'Histórico, radar e 1RM',
-    icon: (
-      <svg {...svgProps}>
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-      </svg>
-    ),
-  },
-  {
-    id: 'treinos',
-    label: 'Treinos',
-    desc: 'Exercícios e montar ficha',
-    icon: (
-      <svg {...svgProps}>
-        <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11" />
-        <circle cx="4" cy="12" r="1.5" />
-        <circle cx="20" cy="12" r="1.5" />
-      </svg>
-    ),
-  },
   {
     id: 'dashboard',
     label: 'Início',
@@ -71,6 +52,28 @@ export const NavSectionItems: NavSectionItem[] = [
     icon: (
       <svg {...svgProps}>
         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'treinos',
+    label: 'Treinos',
+    desc: 'Exercícios e montar ficha',
+    icon: (
+      <svg {...svgProps}>
+        <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11" />
+        <circle cx="4" cy="12" r="1.5" />
+        <circle cx="20" cy="12" r="1.5" />
+      </svg>
+    ),
+  },
+  {
+    id: 'progresso',
+    label: 'Progresso',
+    desc: 'Histórico, radar e 1RM',
+    icon: (
+      <svg {...svgProps}>
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
     ),
   },

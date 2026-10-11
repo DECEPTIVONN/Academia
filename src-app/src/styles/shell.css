@@ -572,3 +572,69 @@
 .side-hud:not(.side-hud--expanded) .side-hud__util {
   gap: 0;
 }
+
+/* ============================================================
+   INÍCIO (DASHBOARD) DESKTOP — grade em 2 colunas (v4.8.2)
+   ============================================================
+   O layout legado é coluna única de 480px (mobile) — no desktop ficava
+   uma faixa estreita centralizada com muito espaço morto. Em ≥1024px o
+   .dash-container vira uma grade nomeada:
+
+      ┌──────────────┬─────────────────┐
+      │ banner       │                 │
+      ├──────────────┤  arena (radar)  │
+      │ ficha suger. │                 │
+      └──────────────┴─────────────────┘
+
+   Overrides aqui (shell.css importado por último no main.tsx) vencem o
+   espelho legado, inclusive os `!important` do .dash-header-calling-card
+   (mesma importância + especificidade maior + folha posterior).
+   ============================================================ */
+@media (min-width: 1024px) {
+  .section-slide[data-section='dashboard'] .dash-container {
+    max-width: 1120px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-areas:
+      'banner arena'
+      'workout arena';
+    align-content: start;
+    gap: 18px 20px;
+    padding: 20px 28px 48px;
+  }
+
+  /* Banner: para de sangrar para fora do container (margin -18px do
+     mobile) e volta a ter cantos arredondados em todos os lados. */
+  .section-slide[data-section='dashboard']
+    .dash-container
+    .dash-header-calling-card.dash-profile-banner-card {
+    grid-area: banner;
+    margin: 0 !important;
+    border-radius: 24px !important;
+    align-self: start;
+  }
+
+  /* Arena/radar ocupa a coluna direita inteira (span das 2 linhas);
+     o conteúdo flex:1 centraliza e empurra a barra de XP para o pé. */
+  .section-slide[data-section='dashboard'] .dash-container .dash-arena-card {
+    grid-area: arena;
+    margin-top: 0;
+    align-self: stretch;
+  }
+  .section-slide[data-section='dashboard']
+    .dash-container
+    .dash-arena-card
+    .dash-arena-content {
+    flex: 1;
+  }
+
+  /* Ficha sugerida: o margin-top 90px do mobile (overlap sobre o arena)
+     vira gap do grid. */
+  .section-slide[data-section='dashboard']
+    .dash-container
+    .dash-suggested-workout-wrapper {
+    grid-area: workout;
+    margin-top: 0;
+    align-self: start;
+  }
+}

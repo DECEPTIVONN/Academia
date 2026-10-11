@@ -120,8 +120,22 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
         </div>
       </div>
 
-      {/* ── Seções ── */}
+      {/* ── Seções (v4.8.2: Buscar é o 1º item; ordem Início→Social→Treinos→Progresso→Loja) ── */}
       <nav className="side-hud__nav" aria-label="Seções">
+        <button
+          type="button"
+          className="side-hud__item"
+          onClick={onOpenSearch}
+          title="Buscar em tudo (Ctrl/Cmd + K)"
+        >
+          <span className="side-hud__icon" aria-hidden="true">
+            {SvgSearch}
+          </span>
+          <span className="side-hud__label">
+            <span className="side-hud__label-main">Buscar</span>
+            <span className="side-hud__label-desc">Ctrl/Cmd + K</span>
+          </span>
+        </button>
         {NavSectionItems.map((item) => (
           <button
             key={item.id}
@@ -146,15 +160,8 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
         ))}
       </nav>
 
-      {/* ── Utilitários ── */}
+      {/* ── Utilitários (v4.8.2: Buscar saiu daqui — virou o 1º item da nav) ── */}
       <div className="side-hud__utils">
-        <button type="button" className="side-hud__util side-hud__util--accent" onClick={onOpenSearch} title="Buscar em tudo (Ctrl/Cmd + K)">
-          <span className="side-hud__util-icon" aria-hidden="true">
-            {SvgSearch}
-          </span>
-          <span className="side-hud__util-label">Buscar</span>
-        </button>
-
         <button
           type="button"
           className={isFullscreen ? 'side-hud__util side-hud__util--on' : 'side-hud__util'}
@@ -173,7 +180,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           <span className="side-hud__util-icon" aria-hidden="true">
             {SvgLock}
           </span>
-          <span className="side-hud__util-label">Trancar agora</span>
+          <span className="side-hud__util-label">Trancar</span>
         </button>
 
         <div className="side-hud__foot">Academia · v4.6</div>
