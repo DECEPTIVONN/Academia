@@ -1185,3 +1185,9 @@
   outline-offset: 2px;
   box-shadow: 0 0 0 2px var(--primary), 0 0 18px var(--primary);
 }
+
+/* v4.8.4.3-deck-amoled — header do seletor de treinos (Montar Ficha):
+   deck-builder.css:16 usa #150b24 (roxo) !important; aqui vira preto AMOLED. */
+.deck-header {
+  background: #000 !important;
+}

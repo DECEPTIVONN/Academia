@@ -21,6 +21,15 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.8.4.3-deck-amoled] - 2026-10-11
+
+Fundo do seletor de treinos (Montar Ficha) de roxo para preto AMOLED. `system_map.json` → 3.5.46.
+
+### Changed
+- `shell.css`: `.deck-header` (header do deck builder, seletor de letras A–E + ações) → `background: #000 !important` (antes `#150b24` de `deck-builder.css:16`, espelho legado não editado). Trilho `rgba(0,0,0,.3)` e ações seguem translúcidas sobre o preto puro (AMOLED).
+
+Verificação: `npx tsc -b` exit 0 · `npx oxlint src` 0 warnings · `npm run build` OK · CDP `probe_4843.js` **3/3 PASS** (`.deck-header` `rgb(0,0,0)`; seletor de letras A–E montado com ativo; 0 erros de JS).
+
 ## [v4.8.4.2-treinos-frame] - 2026-10-11
 
 Continuação do polish da aba Exercícios (moldura da aba + sub-navbar ainda roxas em `tabs-subnav.css`) e moldura de avatar da top bar mobile. `system_map.json` → 3.5.45.
