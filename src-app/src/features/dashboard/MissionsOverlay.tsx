@@ -41,10 +41,12 @@ const IMG_SILVER =
 const IMG_GOLD =
   'https://lh3.googleusercontent.com/aida/ADBb0uiXLnHc-8e6E4-2Mf5zstmSfnMGbOE248AroAlmh8ifaWceJ7fF80I2d8V4VacgF_uix_-zVn8qmskJdcVp39yh-i3cO1bBvqhyPEy9krEVfhvav0K98y64k7g_CXAoKD1GwXkt8Np8l-meMoBsfjKnGxRl5hovXAWIksYZ7YoP7IBotu1EUgXUqwKiQebz_DnXVNK0b2HY5ooOeO4NiUaMRjJzKG8OFHqHr_-K7Bfb82tJh7pkVy-DkLw';
 
+/* v4.8.4-color-standard: cores inline na paleta das Configurações
+   (painéis #0b0b10, hairlines rgba(255,255,255,0.08), acentos --primary). */
 const CARD_STYLE: React.CSSProperties = {
-  background: 'rgba(10, 5, 20, 0.6)',
+  background: '#0b0b10',
   backdropFilter: 'blur(8px)',
-  border: '1px solid rgba(139, 92, 246, 0.25)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
   borderRadius: 12,
   padding: 16,
   display: 'flex',
@@ -60,7 +62,7 @@ const COUNTER_STYLE: React.CSSProperties = {
   fontWeight: 700,
   fontSize: 14,
   letterSpacing: '0.1em',
-  color: 'rgba(203, 195, 215, 1)',
+  color: '#8a8a9c',
   whiteSpace: 'nowrap',
   fontVariantNumeric: 'tabular-nums',
 };
@@ -68,10 +70,10 @@ const COUNTER_STYLE: React.CSSProperties = {
 const BAR_TRACK_STYLE: React.CSSProperties = {
   position: 'relative',
   width: '100%',
-  background: '#353534',
+  background: '#14141b',
   height: 6,
   overflow: 'hidden',
-  border: '1px solid rgba(0,0,0,0.2)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
   borderRadius: 9999,
 };
 
@@ -79,9 +81,15 @@ const IMG_STYLE: React.CSSProperties = {
   width: '100%',
   height: '100%',
   objectFit: 'contain',
-  border: '2px solid #8b5cf6',
+  border: '2px solid var(--primary)',
   borderRadius: 8,
-  filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.6))',
+  filter: 'drop-shadow(0 0 8px rgba(var(--primary-rgb, 139, 92, 246), 0.6))',
+};
+
+/* Fill das barras de progresso: acento do tema (era rosa/verde/âmbar fixos) */
+const FILL_STYLE: React.CSSProperties = {
+  background: 'var(--primary)',
+  boxShadow: '0 0 8px rgba(var(--primary-rgb, 139, 92, 246), 0.5)',
 };
 
 /* Card de missão (article.ms-hover-lift + barra + contador + baú) */
@@ -133,16 +141,16 @@ function ClockChip({ label, dim }: { label: string; dim?: boolean }) {
     <div
       style={
         dim
-          ? { display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(203, 195, 215, 0.7)' }
+          ? { display: 'flex', alignItems: 'center', gap: 4, color: '#8a8a9c' }
           : {
               display: 'flex',
               alignItems: 'center',
               gap: 4,
               color: 'white',
-              background: 'rgba(42, 42, 42, 0.8)',
+              background: '#14141b',
               padding: '4px 8px',
               borderRadius: 6,
-              border: '1px solid rgba(73, 68, 84, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
             }
       }
     >
@@ -222,10 +230,10 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
             justifyContent: 'space-between',
             alignItems: 'flex-end',
             padding: '32px 16px 0 16px',
-            background: 'rgba(42, 42, 42, 0.4)',
+            background: 'rgba(11, 11, 16, 0.85)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
-            borderBottom: '1px solid rgba(139, 92, 246, 0.25)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
           }}
         >
@@ -274,30 +282,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
             </button>
           </div>
           {/* Close Action */}
-          <button
-            onClick={onClose}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'rgba(147,0,10,0.4)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'rgba(147,0,10,0.2)';
-            }}
-            style={{
-              marginBottom: 12,
-              width: 40,
-              height: 40,
-              background: 'rgba(147, 0, 10, 0.2)',
-              color: '#ffb4ab',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 8,
-              border: '1px solid rgba(255,180,171,0.3)',
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-              backdropFilter: 'blur(8px)',
-            }}
-          >
+          <button onClick={onClose} className="ms-close-btn">
             <span className="material-symbols-outlined">close</span>
           </button>
         </header>
@@ -318,10 +303,10 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
           {/* Persistent Monthly Mission (estático: L1076-1103) */}
           <section
             style={{
-              background: 'rgba(10, 5, 20, 0.6)',
+              background: '#0b0b10',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
-              border: '1px solid rgba(139, 92, 246, 0.25)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: 12,
               padding: 20,
               boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
@@ -337,7 +322,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                 right: '-20%',
                 width: 256,
                 height: 256,
-                background: 'rgba(160, 120, 255, 0.2)',
+                background: 'rgba(var(--primary-rgb, 139, 92, 246), 0.35)',
                 filter: 'blur(48px)',
                 borderRadius: '50%',
                 pointerEvents: 'none',
@@ -373,24 +358,23 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
               style={{
                 position: 'relative',
                 width: '100%',
-                background: '#353534',
+                background: '#14141b',
                 height: 16,
                 marginBottom: 12,
                 overflow: 'hidden',
-                border: '1px solid rgba(73, 68, 84, 0.5)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
                 borderRadius: 9999,
               }}
             >
               <div
-                className="progress-fill"
                 style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
                   height: '100%',
-                  background: '#ec4899',
-                  boxShadow: '0 0 12px rgba(236, 72, 153, 0.6)',
+                  background: 'var(--primary)',
+                  boxShadow: '0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.5)',
                   width: '65%',
                   borderRadius: 9999,
                   overflow: 'hidden',
@@ -425,7 +409,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                   fontFamily: "'Inter', sans-serif",
                   fontSize: 16,
                   lineHeight: 1.6,
-                  color: 'rgba(203, 195, 215, 0.8)',
+                  color: '#8a8a9c',
                 }}
               >
                 Ganhe 40 pontos de missão
@@ -437,7 +421,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                   fontSize: 14,
                   letterSpacing: '0.1em',
                   color: 'white',
-                  background: '#201f1f',
+                  background: '#14141b',
                   padding: '2px 8px',
                   borderRadius: 4,
                 }}
@@ -484,31 +468,19 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
               <MissionCard
                 title="Ganhe 10 XP"
                 counter="0 / 10"
-                barClass="progress-fill"
-                barStyle={{
-                  background: '#ec4899',
-                  boxShadow: '0 0 8px rgba(236, 72, 153, 0.5)',
-                }}
+                barStyle={FILL_STYLE}
                 image={IMG_WOODEN}
               />
               <MissionCard
                 title="Faça 2 lições"
                 counter="0 / 2"
-                barClass="progress-fill"
-                barStyle={{
-                  background: '#ec4899',
-                  boxShadow: '0 0 8px rgba(236, 72, 153, 0.5)',
-                }}
+                barStyle={FILL_STYLE}
                 image={IMG_SILVER}
               />
               <MissionCard
                 title="Vença uma partida de xadrez"
                 counter="0 / 1"
-                barClass="progress-fill"
-                barStyle={{
-                  background: '#ec4899',
-                  boxShadow: '0 0 8px rgba(236, 72, 153, 0.5)',
-                }}
+                barStyle={FILL_STYLE}
                 image={IMG_GOLD}
               />
 
@@ -516,7 +488,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                 style={{
                   marginTop: 16,
                   paddingTop: 8,
-                  borderTop: '1px solid rgba(139, 92, 246, 0.075)',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                   textAlign: 'center',
                 }}
               >
@@ -526,7 +498,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                     fontWeight: 700,
                     fontSize: 14,
                     letterSpacing: '0.2em',
-                    color: 'rgba(203, 195, 215, 0.5)',
+                    color: '#5d5d70',
                     textTransform: 'uppercase',
                   }}
                 >
@@ -560,26 +532,19 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
               <MissionCard
                 title="Complete 5 treinos"
                 counter="0 / 5"
-                barStyle={{
-                  background: 'linear-gradient(90deg, #00b954, #4ae176)',
-                  boxShadow: '0 0 8px rgba(74, 225, 118, 0.5)',
-                }}
+                barStyle={FILL_STYLE}
                 image={IMG_WOODEN}
               />
               <MissionCard
                 title="Ganhe 50 pontos de maestria"
                 counter="0 / 50"
-                barClass="progress-fill"
-                barStyle={{
-                  background: '#ec4899',
-                  boxShadow: '0 0 8px rgba(236, 72, 153, 0.5)',
-                }}
+                barStyle={FILL_STYLE}
                 image={IMG_SILVER}
               />
               <MissionCard
                 title="Participe de 1 torneio"
                 counter="0 / 1"
-                barStyle={{ background: 'linear-gradient(90deg, #ca801e, #ffb869)' }}
+                barStyle={FILL_STYLE}
                 image={IMG_GOLD}
               />
 
@@ -587,7 +552,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                 style={{
                   marginTop: 24,
                   paddingTop: 16,
-                  borderTop: '1px solid rgba(139, 92, 246, 0.075)',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -600,7 +565,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                     fontWeight: 700,
                     fontSize: 14,
                     letterSpacing: '0.1em',
-                    color: 'rgba(203, 195, 215, 0.6)',
+                    color: '#8a8a9c',
                     textAlign: 'center',
                     textTransform: 'uppercase',
                   }}
@@ -623,8 +588,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                         top: 0,
                         left: 0,
                         height: '100%',
-                        background: '#4ae176',
-                        boxShadow: '0 0 8px rgba(74, 225, 118, 0.4)',
+                        ...FILL_STYLE,
                         width: '0%',
                         borderRadius: 9999,
                       }}
@@ -635,7 +599,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                       fontFamily: "'Rajdhani', sans-serif",
                       fontWeight: 700,
                       fontSize: 10,
-                      color: 'rgba(203, 195, 215, 0.7)',
+                      color: '#8a8a9c',
                       letterSpacing: '-0.05em',
                     }}
                   >
@@ -658,10 +622,10 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
             >
               <article
                 style={{
-                  background: 'rgba(10, 5, 20, 0.5)',
+                  background: '#0b0b10',
                   backdropFilter: 'blur(24px)',
                   WebkitBackdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(139, 92, 246, 0.25)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: 12,
                   padding: 32,
                   display: 'flex',
@@ -679,7 +643,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                     style={{
                       position: 'absolute',
                       inset: 0,
-                      background: 'rgba(208, 188, 255, 0.2)',
+                      background: 'rgba(var(--primary-rgb, 139, 92, 246), 0.35)',
                       filter: 'blur(32px)',
                       borderRadius: '50%',
                     }}
@@ -688,8 +652,8 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
                     className="material-symbols-outlined"
                     style={{
                       fontSize: 60,
-                      color: '#d0bcff',
-                      filter: 'drop-shadow(0 0 15px rgba(208, 188, 255, 0.6))',
+                      color: 'var(--primary-light)',
+                      filter: 'drop-shadow(0 0 15px rgba(var(--primary-rgb, 139, 92, 246), 0.6))',
                       position: 'relative',
                       zIndex: 10,
                       fontVariationSettings: "'FILL' 1",

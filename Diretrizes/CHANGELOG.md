@@ -21,6 +21,20 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.8.4-color-standard] - 2026-10-11
+
+Padronização de cores com a interface de Configurações (`features/settings/settings.css` — painéis near-black `#07070b`/`#0b0b10`/`#0e0e14`, hairlines `rgba(255,255,255,0.08)`, acentos sempre em `--primary`/`--primary-rgb`, dim `#8a8a9c`/`#5d5d70`): top bar mobile totalmente transparente, modal de Detalhes do exercício (CRDetails) e overlay de Missões. `system_map.json` → 3.5.43.
+
+### Changed
+- `shell.css` `.top-bar`: mobile **totalmente transparente** — `background: transparent`, sem `backdrop-filter` e sem `border-bottom` (avatar/botões mantêm seus fundos de vidro; pedido do usuário).
+- `shell.css` (novo bloco no final): **override de cores do modal CRDetails** na paleta settings (modais.css é espelho legado — não editado): raiz `#0b0b10`, header/footer/stats/descrição `#0b0b10`/`#0e0e14` + hairlines, glow/borda neon/acentos via `--primary-rgb` (acompanha o tema), `.cr-close` e `.cr-maestria-shortcut` no estilo `.set-icon-btn`, `.cr-card-level-badge` como chip primary, `.cr-header-info h2` `#fff` sólido (sem gradiente roxo), `.cr-btn-upgrade` (EDITAR EXERCÍCIO) na variante primary com `!important` vencendo os do legado; geometria/animações 1:1.
+- `missions-overlay.css` + `MissionsOverlay.tsx`: fundo `#0a0514` → `#07070b`, header/cards `#0b0b10` + hairline, aba ativa `#a078ff`/`#340080` → `var(--primary)` com texto near-black, inativa/dim `#8a8a9c`, trilhos `#14141b`, **fills de progresso rosa/verde/âmbar → `var(--primary)`** (const `FILL_STYLE`), botão fechar vermelho → classe `.ms-close-btn` estilo `.set-icon-btn` (handlers inline de hover removidos), glows e sombras via `--primary-rgb`, divisores `rgba(255,255,255,0.08)`; geometria/animações intactas.
+
+### Removed
+- `MissionsOverlay.tsx`: classe `progress-fill` das barras de missão — as skins de barra (`body[data-bar-skin] .progress-fill !important` em `8-customizacao.css`) venciam o inline e quebravam a padronização; agora o fill segue o tema (`var(--primary)`).
+
+Verificação: `npx tsc -b` exit 0 · `npx oxlint src` 0 warnings · `npm run build` OK · CDP `probe_484.js` **4/4 PASS** (top-bar `rgba(0,0,0,0)`/sem blur/borda; missões com overlay `rgb(7,7,11)`, aba ativa `rgb(139,92,246)`, cards `rgb(11,11,16)`, fill primary; CRDetails `#0b0b10` + botão EDITAR primary `#c084fc`; 0 erros de JS).
+
 ## [v4.8.3.2-parity-slide] - 2026-10-11
 
 Paridade de fluidez das transições de seção com o legado (`transitionguide.md`): a fita de seções passa a ser pré-montada (500vw, o legado nunca remontava), o Motion é a única fonte do `translateX` (a transition CSS do legado travava cada frame), o desktop troca o conteúdo de baixo para cima (verticalSwap) em vez de deslizar lateralmente e o modo oval da BottomNav mostra o label só no item ativo (o "MENU" deixa de ficar sempre visível). `system_map.json` → 3.5.42.

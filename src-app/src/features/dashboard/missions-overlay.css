@@ -1,12 +1,15 @@
-/* missions-overlay.css — extraido verbatim de treino.html L905-1038 (Fase 3) */
+/* missions-overlay.css — extraido verbatim de treino.html L905-1038 (Fase 3)
+   v4.8.4-color-standard: só CORES padronizadas com features/settings/settings.css
+   (near-black #07070b/#0b0b10, hairlines rgba(255,255,255,0.08), acentos em
+   --primary/--primary-rgb, dim #8a8a9c/#5d5d70); geometria/animações intactas. */
             .missions-overlay {
                 position: fixed;
                 inset: 0;
                 z-index: 9999;
                 overflow-y: auto;
                 overflow-x: hidden;
-                color: #e5e2e1;
-                background-color: #0a0514;
+                color: #e8e8f2;
+                background-color: #07070b;
             }
             .missions-overlay .arena-bg {
                 position: fixed;
@@ -15,7 +18,7 @@
                 width: 100vw;
                 height: 100vh;
                 z-index: -1;
-                background-color: #0a0514;
+                background-color: #07070b;
                 background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKNhRMaQRBLOVDBSB6Y9zT6KeBJWTqJPEV8J2oYo-rVytUTbwYxpbDvv-oFgvbcL0s3HZbx1u2-zE3dDusALTGWv-XHMJdBgB0kiQwjuObalYwkuGE9k0A3vWLlVUrOE67rOuoNJdIB9eVlCueLZKfBEj3IpCPqqMP0o5L0gZ_19_XyZExy3782vyuqY73W9URvgrTuhkjTY38O8rbMIf4kAWswYgRs_pn8sxUNv-yo-1VEGJcSTiCeoved-e8aoZjOr84kvHd7gY');
                 background-repeat: repeat;
                 animation: msBgScroll 60s linear infinite;
@@ -27,7 +30,7 @@
             .missions-overlay .ms-bg-overlay {
                 position: absolute;
                 inset: 0;
-                background: linear-gradient(to bottom, rgba(10,5,20,0.15) 0%, rgba(10,5,20,0.5) 100%);
+                background: linear-gradient(to bottom, rgba(7,7,11,0.15) 0%, rgba(7,7,11,0.5) 100%);
                 backdrop-filter: blur(0.5px);
                 -webkit-backdrop-filter: blur(0.5px);
             }
@@ -52,16 +55,16 @@
                 cursor: pointer;
                 border: none;
                 background: transparent;
-                color: rgba(203, 195, 215, 0.7);
+                color: #8a8a9c;
             }
             .missions-overlay .ms-tab-btn.active {
-                background: #a078ff;
-                color: #340080;
+                background: var(--primary);
+                color: #07070b;
                 border-radius: 12px 12px 0 0;
-                box-shadow: 0 -4px 15px rgba(160, 120, 255, 0.3);
+                box-shadow: 0 -4px 15px rgba(var(--primary-rgb, 139, 92, 246), 0.3);
             }
             .missions-overlay .ms-tab-btn:hover:not(.active) {
-                color: #d0bcff;
+                color: #fff;
             }
             .missions-overlay .ms-tab-indicator {
                 position: absolute;
@@ -84,8 +87,28 @@
             }
             .missions-overlay .ms-hover-lift:hover {
                 transform: scale(1.02);
-                box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
-                border-color: rgba(192, 132, 252, 0.5);
+                box-shadow: 0 10px 20px rgba(var(--primary-rgb, 139, 92, 246), 0.4);
+                border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+            }
+
+            /* Fechar (v4.8.4): estilo .set-icon-btn do settings */
+            .missions-overlay .ms-close-btn {
+                margin-bottom: 12px;
+                width: 40px;
+                height: 40px;
+                background: #14141b;
+                color: #8a8a9c;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .missions-overlay .ms-close-btn:hover {
+                color: #fff;
+                border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
             }
 
             /* Progress bar shimmer */
