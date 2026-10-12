@@ -56,7 +56,8 @@ import { ConnectedDevices } from '@/features/sync/ConnectedDevices';
 import { useAuthModalStore } from '@/features/auth/auth-modal-store';
 import { useAuth } from '@/core/auth/use-auth';
 import { supabase, isSupabaseConfigured } from '@/core/supabase';
-import { isSyncConfigured } from '@/core/sync/supabase-client';
+import { isSyncConfigured, getSyncKey } from '@/core/sync/supabase-client';
+import { ProfileEmblem } from '@/components/ProfileEmblem';
 import './settings.css';
 
 export interface SettingsGroupProps {
@@ -372,18 +373,14 @@ const SvgLaptop = (
   </svg>
 );
 
+const SvgPlay = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+    <polygon points="5 3 19 12 5 21 5 3" />
+  </svg>
+);
+
 /* WALL_PRESETS agora vem de @/features/lock/lock-wallpapers (v4.6.0-shell —
    fonte única compartilhada com a tela de bloqueio). */
-
-const LOCK_TIMEOUTS = [
-  { v: '60', l: '1 min' },
-  { v: '120', l: '2 min' },
-  { v: '300', l: '5 min' },
-  { v: '600', l: '10 min' },
-  { v: '900', l: '15 min' },
-  { v: '1800', l: '30 min' },
-  { v: '-1', l: 'Sempre Logado' },
-];
 
 const LOCK_PREF_MAP = {
   enabled: 'appLockEnabled',
@@ -471,13 +468,14 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [showPinConfirm, setShowPinConfirm] = useState(false);
 
   /* Campos de segurança (init único quando o estado carrega) */
-  const [sec, setSec] = useState({ nome: '', handle: '', email: '', senha: '' });
+  const [sec, setSec] = useState({ nome: '', handle: '', email: '', senha: '', photo: '' });
+  const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);
   const secInitedRef = useRef(false);
   useEffect(() => {
     if (!profile || secInitedRef.current) return;
     secInitedRef.current = true;
     const p = profile.customization;
-    setSec({ nome: p.nome || '', handle: p.handle || '', email: p.email || '', senha: '' });
+    setSec({ nome: p.nome || '', handle: p.handle || '', email: p.email || '', senha: '', photo: p.photo || '' });
   }, [profile]);
 
   /* Backup */
@@ -598,7 +596,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   };
 
   const saveSecurityField = async (
-    field: 'nome' | 'handle' | 'email' | 'senha',
+    field: 'nome' | 'handle' | 'email' | 'senha' | 'photo',
     value: string
   ) => {
     await update((d) => {
@@ -667,65 +665,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     }
   };
 
-  const secFields = [
-    {
-      field: 'nome' as const,
-      label: 'Nome de Exibição',
-      type: 'text',
-      placeholder: 'Seu nome...',
-      icon: SvgUser,
-    },
-    {
-      field: 'handle' as const,
-      label: 'Nome de Usuário (@handle)',
-      type: 'text',
-      placeholder: '@usuario...',
-      icon: SvgUser,
-    },
-    {
-      field: 'email' as const,
-      label: 'E-mail',
-      type: 'email',
-      placeholder: 'seu@email.com',
-      icon: SvgMail,
-    },
-    {
-      field: 'senha' as const,
-      label: 'Senha',
-      type: 'password',
-      placeholder: 'Nova senha...',
-      icon: SvgLockSm,
-    },
-  ];
-
-  const renderSecField = (f: (typeof secFields)[number]) => (
-    <div className="set-field" key={f.field}>
-      <label className="set-field__label" htmlFor={`setSec-${f.field}`}>
-        {f.icon}
-        {f.label}
-      </label>
-      <div className="set-field__row">
-        <input
-          id={`setSec-${f.field}`}
-          type={f.type}
-          className="set-input"
-          placeholder={f.placeholder}
-          value={sec[f.field]}
-          onChange={(e) => setSec((s) => ({ ...s, [f.field]: e.target.value }))}
-        />
-        <button
-          type="button"
-          className="set-save"
-          title={`Salvar ${f.label}`}
-          aria-label={`Salvar ${f.label}`}
-          onClick={() => void saveSecurityField(f.field, sec[f.field])}
-        >
-          {SvgCheck}
-        </button>
-      </div>
-    </div>
-  );
-
   const wallCard = (kind: 'v' | 'h') => {
     const key: LockKey = kind === 'v' ? 'wallV' : 'wallH';
     const current = WALL_PRESETS.find((p) => p.id === lock[key]) ?? WALL_PRESETS[0];
@@ -774,6 +713,14 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       desc: 'Senha local de acesso ao perfil',
       icon: SvgLock,
       keywords: ['senha', 'password', 'alterar', 'credencial', 'protecao'],
+    },
+    /* v4.9.3-settings — atalho "Dispositivos conectados" (reference) */
+    {
+      id: 'dispositivos',
+      title: 'Dispositivos Conectados',
+      desc: 'Veja em quais aparelhos ou navegadores sua conta está conectada.',
+      icon: SvgLaptop,
+      keywords: ['dispositivos', 'conectados', 'aparelhos', 'celular', 'computador'],
     },
     {
       id: 'exportar',
@@ -824,6 +771,18 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         'dispositivos', 'sessoes', 'aparelhos', 'privacidade',
       ],
     },
+    /* v4.9.3-settings — tile "Dispositivos conectados" no nível raiz (reference) */
+    {
+      id: 'dispositivos',
+      title: 'Dispositivos Conectados',
+      desc: 'Veja e gerencie celulares, computadores e navegadores em que sua conta está ativa.',
+      icon: SvgLaptop,
+      badge: 'Dispositivos',
+      keywords: [
+        'dispositivos', 'conectados', 'aparelhos', 'celular', 'computador',
+        'navegador', 'sessao', 'sessoes', 'qr', 'pareamento',
+      ],
+    },
     {
       id: 'notificacoes',
       title: 'Notificações',
@@ -832,7 +791,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       badge: lock.reminder === 'true' ? 'Lembrete ativo' : 'Silenciadas',
       keywords: [
         'notificacoes', 'lembrete', 'treino', 'horario', 'alarme',
-        'mensagens', 'motivacionais', 'frases', 'incentivo',
+        'mensagens', 'motivacionais', 'frases', 'incentivo', 'pwa',
       ],
     },
     {
@@ -857,6 +816,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         'pwa', 'instalar', 'app', 'aplicativo', 'install', 'cronometro',
         'timer', 'ampulheta', 'radar', 'navbar', 'barra', 'navegacao',
         'sons', 'som', 'vibracao', 'online', 'status', 'dev', 'desenvolvedor',
+        'idioma', 'language', 'pt', 'en',
       ],
     },
     /* v4.9.0-sync — nuvem (Supabase) + telas personalizadas */
@@ -952,16 +912,189 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         informacoes: {
           title: 'Informações da Conta',
           content: (
-            <section className="set-card">
-              <div className="set-card__head">
-                <div>
-                  <div className="set-card__eyebrow">CONTA</div>
-                  <h3 className="set-card__title">Informações da Conta</h3>
-                  <p className="set-card__desc">Dados salvos localmente neste dispositivo.</p>
+            <>
+              {/* v4.9.3-settings — Integração Google (reference) */}
+              <section className="set-card">
+                <div className="set-card__head">
+                  <div>
+                    <div className="set-card__eyebrow">INTEGRAÇÃO</div>
+                    <h3 className="set-card__title">Integração Google</h3>
+                    <p className="set-card__desc">
+                      Conecte sua conta Google para sincronizar seus dados de perfil.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              {secFields.filter((f) => f.field !== 'senha').map(renderSecField)}
-            </section>
+                {user ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {SvgLogIn}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{user.email || 'Usuário Google'}</p>
+                        <p style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono, monospace)' }}>Conta conectada</p>
+                      </div>
+                    </div>
+                    <button type="button" className="set-btn" onClick={() => void handleSignOut()}>
+                      Desconectar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                      Conecte sua conta do Google para sincronizar seus dados de perfil e acessos.
+                    </p>
+                    <button type="button" className="set-btn set-btn--primary" onClick={() => openAuthModal()}>
+                      {SvgLogIn}
+                      Conectar Google
+                    </button>
+                  </div>
+                )}
+              </section>
+
+              {/* v4.9.3-settings — Customizador de Foto de Perfil (reference) */}
+              <section className="set-card">
+                <div className="set-card__head">
+                  <div>
+                    <div className="set-card__eyebrow">FOTO DE PERFIL</div>
+                    <h3 className="set-card__title">Foto de Perfil</h3>
+                    <p className="set-card__desc">
+                      Personalize sua foto de perfil com URL, presets ou upload.
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(63, 63, 70, 0.8)', flexShrink: 0 }}>
+                    <ProfileEmblem customization={profile?.customization} />
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <input
+                      type="url"
+                      className="set-input"
+                      placeholder="URL da imagem ou cole aqui..."
+                      value={sec.photo || ''}
+                      onChange={(e) => setSec((s) => ({ ...s, photo: e.target.value }))}
+                    />
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 10 }}>
+                      <button
+                        type="button"
+                        style={{ background: 'transparent', border: 0, color: 'var(--primary, #f97316)', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-mono, monospace)' }}
+                        onClick={() => setShowAvatarDropdown((v) => !v)}
+                      >
+                        {showAvatarDropdown ? 'Fechar presets' : 'Escolher presets'}
+                      </button>
+                      <span style={{ color: 'var(--text-tertiary)' }}>•</span>
+                      <label style={{ color: 'var(--text-secondary)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-mono, monospace)' }}>
+                        {SvgUpload}
+                        <span>Carregar Arquivo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                if (typeof reader.result === 'string') {
+                                  setSec((s) => ({ ...s, photo: reader.result as string }));
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                {showAvatarDropdown && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8, marginTop: 12, padding: 12, background: 'rgba(24, 24, 27, 0.6)', borderRadius: 12, border: '1px solid rgba(63, 63, 70, 0.8)' }}>
+                    {[
+                      'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=150',
+                      'https://images.unsplash.com/photo-1608155686393-8fdd966d784d?q=80&w=150',
+                      'https://images.unsplash.com/photo-1584290860587-211bfb66aa0f?q=80&w=150',
+                      'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=150',
+                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150',
+                      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150',
+                    ].map((preset, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          setSec((s) => ({ ...s, photo: preset }));
+                          setShowAvatarDropdown(false);
+                        }}
+                        style={{ aspectRatio: '1', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(63, 63, 70, 0.8)', cursor: 'pointer', padding: 0, background: 'transparent' }}
+                      >
+                        <img src={preset} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* Campos: Nome, Handle e E-mail (reference: single submit) */}
+              <section className="set-card">
+                <div className="set-card__head">
+                  <div>
+                    <div className="set-card__eyebrow">CONTA</div>
+                    <h3 className="set-card__title">Informações da Conta</h3>
+                    <p className="set-card__desc">Dados salvos localmente neste dispositivo.</p>
+                  </div>
+                </div>
+                <form onSubmit={(e) => { e.preventDefault(); void saveSecurityField('nome', sec.nome); }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div className="set-field">
+                    <label className="set-field__label" htmlFor="setSec-nome">
+                      {SvgUser}
+                      Nome
+                    </label>
+                    <input
+                      id="setSec-nome"
+                      type="text"
+                      className="set-input"
+                      placeholder="Seu nome..."
+                      value={sec.nome}
+                      onChange={(e) => setSec((s) => ({ ...s, nome: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="set-field">
+                    <label className="set-field__label" htmlFor="setSec-handle">
+                      {SvgUser}
+                      Nome de Usuário (@handle)
+                    </label>
+                    <input
+                      id="setSec-handle"
+                      type="text"
+                      className="set-input"
+                      placeholder="@usuario..."
+                      value={sec.handle}
+                      onChange={(e) => setSec((s) => ({ ...s, handle: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="set-field">
+                    <label className="set-field__label" htmlFor="setSec-email">
+                      {SvgMail}
+                      E-mail
+                    </label>
+                    <input
+                      id="setSec-email"
+                      type="email"
+                      className="set-input"
+                      placeholder="seu@email.com"
+                      value={sec.email}
+                      onChange={(e) => setSec((s) => ({ ...s, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <button type="submit" className="set-btn set-btn--primary" style={{ width: '100%' }}>
+                    Salvar Informações
+                  </button>
+                </form>
+              </section>
+            </>
           ),
         },
         senha: {
@@ -975,10 +1108,42 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <p className="set-card__desc">Defina a senha local de acesso ao seu perfil.</p>
                 </div>
               </div>
-              {secFields.filter((f) => f.field === 'senha').map(renderSecField)}
-              <p className="set-note" style={{ marginTop: 10 }}>
-                🔒 Armazenado localmente no dispositivo.
-              </p>
+              {/* v4.9.3-settings — Info box explicando usuário vs bloqueio (reference) */}
+              <div style={{ padding: 16, background: 'rgba(9, 9, 11, 0.8)', border: '1px solid rgba(63, 63, 70, 0.8)', borderRadius: 12, marginBottom: 16 }}>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                  Sua <strong style={{ color: 'var(--text)' }}>Senha de Usuário</strong> é utilizada para autenticar seu perfil e proteger suas configurações pessoais. Ela é totalmente independente da <strong style={{ color: 'var(--primary, #f97316)' }}>Senha de Bloqueio do App</strong>.
+                </p>
+              </div>
+              <form onSubmit={(e) => { e.preventDefault(); void saveSecurityField('senha', sec.senha); }} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div className="set-field" style={{ marginBottom: 0 }}>
+                  <label className="set-field__label" htmlFor="setSec-senha">
+                    {SvgLockSm}
+                    Nova Senha da Conta
+                  </label>
+                  <div className="set-input-wrap">
+                    <input
+                      id="setSec-senha"
+                      type={showPinDraft ? 'text' : 'password'}
+                      className="set-input"
+                      placeholder="Defina a nova senha do usuário"
+                      value={sec.senha}
+                      onChange={(e) => setSec((s) => ({ ...s, senha: e.target.value }))}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="set-eye"
+                      onClick={() => setShowPinDraft((v) => !v)}
+                      aria-label={showPinDraft ? 'Ocultar senha' : 'Mostrar senha'}
+                    >
+                      {SvgEye}
+                    </button>
+                  </div>
+                </div>
+                <button type="submit" className="set-btn set-btn--primary" style={{ width: '100%' }}>
+                  Salvar Senha do Usuário
+                </button>
+              </form>
             </section>
           ),
         },
@@ -1071,15 +1236,62 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             </section>
           ),
         },
+        /* v4.9.3-settings — atalho "Dispositivos conectados" dentro de Sua Conta */
+        dispositivos: {
+          title: 'Dispositivos Conectados',
+          content: <ConnectedDevices />,
+        },
       },
     },
 
-    /* ================= SEGURANÇA (PLACEHOLDERS) ================= */
+    /* ================= DISPOSITIVOS CONECTADOS (v4.9.3-settings) ================= */
+    dispositivos: {
+      eyebrow: 'ACADEMIA • DISPOSITIVOS',
+      title: 'Dispositivos Conectados',
+      content: <ConnectedDevices />,
+    },
+
+    /* ================= SEGURANÇA ================= */
     seguranca: {
       eyebrow: 'ACADEMIA • SEGURANÇA',
-      title: 'Segurança e Acesso à Conta',
+      title: 'Segurança e Sincronização',
       content: (
         <>
+          {/* v4.9.3-settings — Card 1: STATUS DA SINCRONIZAÇÃO (reference) */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">SINCRONIZAÇÃO</div>
+                <h3 className="set-card__title">Status da Sincronização</h3>
+                <p className="set-card__desc">
+                  Chave de sincronização criptografada e status do perfil.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono, monospace)', color: 'var(--text)', margin: 0 }}>
+                  {getSyncKey()}
+                </p>
+                <p style={{ fontSize: 10, color: '#34d399', fontFamily: 'var(--font-mono, monospace)', marginTop: 4 }}>
+                  {cloudConfigured ? 'Perfil sincronizado em nuvem ativo' : 'Modo local — sem nuvem configurada'}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="set-btn"
+                onClick={() => {
+                  navigator.clipboard.writeText(getSyncKey());
+                  showToast('Chave de sincronização copiada!', 'success');
+                }}
+              >
+                {SvgDatabase}
+                Copiar Chave
+              </button>
+            </div>
+          </section>
+
+          {/* Card 2: App Lock master toggle + Testar Bloqueio */}
           <section className="set-card">
             <div className="set-card__head">
               <div>
@@ -1114,7 +1326,14 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 <div className="set-toggle__info">
                   <span className="set-toggle__icon">{SvgFingerprint}</span>
                   <div>
-                    <span className="set-toggle__label">Bloqueio por Impressão Digital</span>
+                    <span className="set-toggle__label">
+                      Bloqueio por Impressão Digital
+                      {lock.biometric === 'true' && (
+                        <span className="set-badge" style={{ marginLeft: 8, fontSize: 8, background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '2px 8px', borderRadius: 999, fontFamily: 'var(--font-mono, monospace)', textTransform: 'uppercase' }}>
+                          Ativado
+                        </span>
+                      )}
+                    </span>
                     <span className="set-toggle__desc">
                       Desbloqueio com digital, Touch ID ou Windows Hello
                     </span>
@@ -1130,153 +1349,274 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 </label>
               </div>
             </div>
-            <div className="set-field" style={{ marginTop: 14, marginBottom: 0 }}>
-              <label className="set-field__label">
-                {SvgTimer}
-                Intervalo de Inatividade
-              </label>
-              <div className="set-chips">
-                {LOCK_TIMEOUTS.map((o) => (
-                  <button
-                    key={o.v}
-                    type="button"
-                    className={`set-chip ${lock.timeout === o.v ? 'set-chip--active' : ''}`}
-                    onClick={() => updateLock('timeout', o.v)}
-                  >
-                    {o.l}
-                  </button>
-                ))}
+            {/* v4.9.3-settings — Botão "Testar Bloqueio Agora" (reference) */}
+            {lock.enabled === 'true' && (
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(63, 63, 70, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono, monospace)' }}>
+                  Testar mecanismo de bloqueio:
+                </span>
+                <button
+                  type="button"
+                  className="set-btn"
+                  style={{ color: 'var(--primary, #f97316)', borderColor: 'rgba(var(--primary-rgb, 249, 115, 22), 0.3)', background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)' }}
+                  onClick={() => lockApp()}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>{SvgPlay}</span>
+                  Testar Bloqueio Agora
+                </button>
               </div>
-            </div>
-            {/* ── Senha de bloqueio local + ações do lock (v4.9.0-sync) ── */}
-            <div className="set-field" style={{ marginTop: 14, marginBottom: 0 }}>
-              <label className="set-field__label">
-                {SvgLock}
-                Senha de Bloqueio
-              </label>
-
-              {pinFormOpen ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div className="set-input-wrap">
-                    <input
-                      type={showPinDraft ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      maxLength={32}
-                      className="set-input"
-                      placeholder="Nova senha (mín. 4 caracteres)"
-                      value={pinDraft}
-                      onChange={(e) => setPinDraft(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="set-eye"
-                      onClick={() => setShowPinDraft((v) => !v)}
-                      aria-label={showPinDraft ? 'Ocultar senha' : 'Mostrar senha'}
-                    >
-                      {SvgEye}
-                    </button>
-                  </div>
-                  <div className="set-input-wrap">
-                    <input
-                      type={showPinConfirm ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      maxLength={32}
-                      className="set-input"
-                      placeholder="Repita a senha"
-                      value={pinConfirm}
-                      onChange={(e) => setPinConfirm(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="set-eye"
-                      onClick={() => setShowPinConfirm((v) => !v)}
-                      aria-label={showPinConfirm ? 'Ocultar senha' : 'Mostrar senha'}
-                    >
-                      {SvgEye}
-                    </button>
-                  </div>
-                  {pinError && (
-                    <span className="set-note" style={{ color: '#fb7185', marginTop: 0 }}>
-                      {pinError}
-                    </span>
-                  )}
-                  <div className="set-install" style={{ marginTop: 0 }}>
-                    <button type="button" className="set-btn set-btn--primary" onClick={submitPin}>
-                      Salvar Senha
-                    </button>
-                    <button type="button" className="set-btn" onClick={resetPinForm}>
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : pinLen > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <span className="set-note" style={{ marginTop: 0 }}>
-                    Senha de {pinLen} caractere{pinLen > 1 ? 's' : ''} definida neste dispositivo.
-                  </span>
-                  <div className="set-install" style={{ marginTop: 0, flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      className="set-btn"
-                      onClick={() => {
-                        setPinDraft('');
-                        setPinConfirm('');
-                        setPinError('');
-                        setPinFormOpen(true);
-                      }}
-                    >
-                      Alterar Senha
-                    </button>
-                    <button type="button" className="set-btn" onClick={removePin}>
-                      Remover Senha
-                    </button>
-                    <button
-                      type="button"
-                      className="set-btn set-btn--primary"
-                      onClick={() => lockApp()}
-                      title="Travar o app imediatamente"
-                    >
-                      {SvgLock}
-                      Trancar Agora
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="set-install" style={{ marginTop: 0 }}>
-                  <button type="button" className="set-btn set-btn--primary" onClick={() => setPinFormOpen(true)}>
-                    Criar Senha
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <p className="set-note" style={{ marginTop: 10 }}>
-              O app trava ao abrir e após o intervalo de inatividade escolhido acima.
-              Tudo fica salvo apenas neste dispositivo.
-            </p>
+            )}
           </section>
 
+          {/* Card 4: Slider de Inatividade (reference: 1–60) */}
+          {lock.enabled === 'true' && (
+            <section className="set-card">
+              <div className="set-card__head">
+                <div>
+                  <div className="set-card__eyebrow">INATIVIDADE</div>
+                  <h3 className="set-card__title">Tempo de Inatividade para Bloqueio</h3>
+                  <p className="set-card__desc">
+                    O app trava automaticamente após o intervalo escolhido.
+                  </p>
+                </div>
+                <span style={{ fontSize: 12, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--primary, #f97316)', background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)', padding: '4px 10px', borderRadius: 8, border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)' }}>
+                  {lock.timeout === '-1' ? 'Sempre Logado' : `${Math.round(Number(lock.timeout) / 60)} min`}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="60"
+                step="1"
+                value={lock.timeout === '-1' ? 5 : Math.round(Number(lock.timeout) / 60)}
+                onChange={(e) => updateLock('timeout', String(Number(e.target.value) * 60))}
+                style={{ width: '100%', accentColor: 'var(--primary, #f97316)', background: 'rgba(24, 24, 27, 0.8)', height: 8, borderRadius: 8, cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                {[1, 5, 15, 30, 60].map((mins) => (
+                  <button
+                    key={mins}
+                    type="button"
+                    className={`set-chip ${lock.timeout === String(mins * 60) ? 'set-chip--active' : ''}`}
+                    onClick={() => updateLock('timeout', String(mins * 60))}
+                  >
+                    {mins} min
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className={`set-chip ${lock.timeout === '-1' ? 'set-chip--active' : ''}`}
+                  onClick={() => updateLock('timeout', '-1')}
+                >
+                  Nunca (Sempre Logado)
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* Card 5: Gerenciar Senha de Bloqueio do App (reference layout) */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">SENHA</div>
+                <h3 className="set-card__title">Senha de Bloqueio do App</h3>
+                <p className="set-card__desc">
+                  Senha local para desbloquear o aplicativo.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="set-btn"
+                onClick={() => {
+                  setPinDraft('');
+                  setPinConfirm('');
+                  setPinError('');
+                  setPinFormOpen(true);
+                }}
+              >
+                Alterar Senha
+              </button>
+            </div>
+
+            {pinFormOpen ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                <div className="set-input-wrap">
+                  <input
+                    type={showPinDraft ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    maxLength={32}
+                    className="set-input"
+                    placeholder="Nova senha (mín. 4 caracteres)"
+                    value={pinDraft}
+                    onChange={(e) => setPinDraft(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="set-eye"
+                    onClick={() => setShowPinDraft((v) => !v)}
+                    aria-label={showPinDraft ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {SvgEye}
+                  </button>
+                </div>
+                <div className="set-input-wrap">
+                  <input
+                    type={showPinConfirm ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    maxLength={32}
+                    className="set-input"
+                    placeholder="Repita a senha"
+                    value={pinConfirm}
+                    onChange={(e) => setPinConfirm(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="set-eye"
+                    onClick={() => setShowPinConfirm((v) => !v)}
+                    aria-label={showPinConfirm ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {SvgEye}
+                  </button>
+                </div>
+                {pinError && (
+                  <span className="set-note" style={{ color: '#fb7185', marginTop: 0 }}>
+                    {pinError}
+                  </span>
+                )}
+                <div className="set-install" style={{ marginTop: 0 }}>
+                  <button type="button" className="set-btn set-btn--primary" onClick={submitPin}>
+                    Salvar Nova Senha de Bloqueio
+                  </button>
+                  <button type="button" className="set-btn" onClick={resetPinForm}>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : pinLen > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                <span className="set-note" style={{ marginTop: 0 }}>
+                  Senha de {pinLen} caractere{pinLen > 1 ? 's' : ''} definida neste dispositivo.
+                </span>
+                <div className="set-install" style={{ marginTop: 0, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="set-btn"
+                    onClick={() => {
+                      setPinDraft('');
+                      setPinConfirm('');
+                      setPinError('');
+                      setPinFormOpen(true);
+                    }}
+                  >
+                    Alterar Senha
+                  </button>
+                  <button type="button" className="set-btn" onClick={removePin}>
+                    Remover Senha
+                  </button>
+                  <button
+                    type="button"
+                    className="set-btn set-btn--primary"
+                    onClick={() => lockApp()}
+                    title="Travar o app imediatamente"
+                  >
+                    {SvgLock}
+                    Trancar Agora
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="set-install" style={{ marginTop: 12 }}>
+                <button type="button" className="set-btn set-btn--primary" onClick={() => setPinFormOpen(true)}>
+                  Criar Senha
+                </button>
+              </div>
+            )}
+          </section>
+
+          {/* Card 6: Wallpapers com Upload/Remover/URL (reference) */}
           <section className="set-card">
             <div className="set-card__head">
               <div>
                 <div className="set-card__eyebrow">PERSONALIZAÇÃO</div>
-                <h3 className="set-card__title">Wallpaper da Tela de Bloqueio</h3>
+                <h3 className="set-card__title">Papéis de Parede da Tela de Bloqueio</h3>
                 <p className="set-card__desc">
                   Escolha o visual da tela de bloqueio em orientação vertical e horizontal.
                 </p>
               </div>
+              <span style={{ fontSize: 9, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+                Desktop & Mobile
+              </span>
             </div>
             <div className="set-wall-grid">
               {wallCard('v')}
               {wallCard('h')}
             </div>
+            {/* v4.9.3-settings — Upload/Remover/URL por orientação (reference) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 16 }}>
+              {(['h', 'v'] as const).map((kind) => {
+                const storageKey = kind === 'v' ? 'mbc_lock_mobile' : 'mbc_lock_desktop';
+                const customVal = localStorage.getItem(storageKey) || '';
+                return (
+                  <div key={kind} style={{ padding: 12, background: 'rgba(24, 24, 27, 0.4)', border: '1px solid rgba(63, 63, 70, 0.8)', borderRadius: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <span style={{ fontSize: 10, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                      {kind === 'v' ? 'Celular / Mobile (Vertical)' : 'Computador / Desktop (Horizontal)'}
+                    </span>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <label style={{ flex: 1, padding: '6px 12px', background: 'rgba(39, 39, 42, 0.8)', border: '1px solid rgba(63, 63, 70, 0.6)', borderRadius: 8, textAlign: 'center', fontSize: 10, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        {SvgUpload}
+                        <span>Upload</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) {
+                              const r = new FileReader();
+                              r.onloadend = () => {
+                                localStorage.setItem(storageKey, r.result as string);
+                                lockPrefsChanged();
+                                showToast('Imagem aplicada!', 'success');
+                              };
+                              r.readAsDataURL(f);
+                            }
+                          }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          localStorage.removeItem(storageKey);
+                          lockPrefsChanged();
+                          showToast('Imagem removida.', 'info');
+                        }}
+                        style={{ padding: '6px 12px', background: 'rgba(127, 29, 29, 0.2)', border: '1px solid rgba(127, 29, 29, 0.3)', color: '#f87171', borderRadius: 8, fontSize: 10, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                    <input
+                      type="url"
+                      className="set-input"
+                      placeholder="URL da imagem..."
+                      defaultValue={customVal}
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        if (v) {
+                          localStorage.setItem(storageKey, v);
+                          lockPrefsChanged();
+                          showToast('URL aplicada!', 'success');
+                        }
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
             <p className="set-note" style={{ marginTop: 10 }}>
               Aplicado na próxima tela de bloqueio, conforme a orientação do dispositivo.
             </p>
           </section>
-
-          {/* v4.9.0-sync — lista real de dispositivos (registry da nuvem) */}
-          <ConnectedDevices />
         </>
       ),
     },
@@ -1300,80 +1640,177 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       eyebrow: 'ACADEMIA • NOTIFICAÇÕES',
       title: 'Notificações',
       content: (
-        <section className="set-card">
-          <div className="set-card__head">
-            <div>
-              <div className="set-card__eyebrow">ALERTAS</div>
-              <h3 className="set-card__title">Notificações e Lembretes</h3>
-              <p className="set-card__desc">
-                Escolha o que o app avisa durante a sua rotina.
-              </p>
+        <>
+          {/* v4.9.3-settings — Master Card: Notificações PWA (reference) */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">SISTEMA</div>
+                <h3 className="set-card__title">Notificações do Sistema & Segundo Plano (PWA)</h3>
+                <p className="set-card__desc">
+                  Ative notificações nativas do navegador para alertas em segundo plano.
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="set-toggles">
-            <div className="set-toggle">
-              <div className="set-toggle__info">
-                <span className="set-toggle__icon">{SvgTimer}</span>
-                <div>
-                  <span className="set-toggle__label">
-                    Lembrete de Horário de Treino
-                    <span className="set-badge-soon" style={{ marginLeft: 7 }}>
-                      EM BREVE
+            <div className="set-toggles">
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgBell}</span>
+                  <div>
+                    <span className="set-toggle__label">Ativar Notificações</span>
+                    <span className="set-toggle__desc">
+                      Solicita permissão do navegador para enviar notificações
                     </span>
-                  </span>
-                  <span className="set-toggle__desc">
-                    Receba um lembrete diário no horário do seu treino
-                  </span>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  className="set-btn set-btn--primary"
+                  onClick={() => {
+                    if (typeof Notification !== 'undefined') {
+                      void Notification.requestPermission().then((perm) => {
+                        if (perm === 'granted') {
+                          new Notification('Notificações Ativas!', {
+                            body: 'O Academia enviará seus alertas e lembretes em segundo plano.',
+                            icon: '/icon-192.png',
+                          });
+                          showToast('Permissão de notificações concedida!', 'success');
+                        } else {
+                          showToast('Permissão negada nas preferências do navegador.', 'error');
+                        }
+                      });
+                    } else {
+                      showToast('Notificações simuladas ativadas!', 'info');
+                    }
+                  }}
+                >
+                  Ativar
+                </button>
               </div>
-              <label className="set-switch">
-                <input
-                  type="checkbox"
-                  checked={lock.reminder === 'true'}
-                  onChange={(e) => updateLock('reminder', String(e.target.checked))}
-                />
-                <span className="set-switch__track" />
-              </label>
-            </div>
-            <div className="set-toggle">
-              <div className="set-toggle__info">
-                <span className="set-toggle__icon">{SvgChat}</span>
-                <div>
-                  <span className="set-toggle__label">Mensagens Motivacionais</span>
-                  <span className="set-toggle__desc">
-                    Frases de incentivo ao concluir treinos
-                  </span>
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgBell}</span>
+                  <div>
+                    <span className="set-toggle__label">Testar Disparo</span>
+                    <span className="set-toggle__desc">
+                      Envia uma notificação de teste imediata
+                    </span>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  className="set-btn"
+                  onClick={() => {
+                    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                      new Notification('⏰ Teste de Alarme Academia', {
+                        body: 'Disparo de notificação em segundo plano testado com sucesso!',
+                        icon: '/icon-192.png',
+                      });
+                    } else {
+                      showToast('⚡ Teste de alerta disparado na interface!', 'info');
+                    }
+                  }}
+                >
+                  Testar
+                </button>
               </div>
-              <label className="set-switch">
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgGlobe}</span>
+                  <div>
+                    <span className="set-toggle__label">Segundo Plano</span>
+                    <span className="set-toggle__desc">
+                      Receber alertas mesmo com o app fechado
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={prefs.online}
+                    onChange={(e) => togglePref('online', e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">ALERTAS</div>
+                <h3 className="set-card__title">Notificações e Lembretes</h3>
+                <p className="set-card__desc">
+                  Escolha o que o app avisa durante a sua rotina.
+                </p>
+              </div>
+            </div>
+            <div className="set-toggles">
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgTimer}</span>
+                  <div>
+                    <span className="set-toggle__label">
+                      Lembrete de Horário de Treino
+                      <span className="set-badge-soon" style={{ marginLeft: 7 }}>
+                        EM BREVE
+                      </span>
+                    </span>
+                    <span className="set-toggle__desc">
+                      Receba um lembrete diário no horário do seu treino
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={lock.reminder === 'true'}
+                    onChange={(e) => updateLock('reminder', String(e.target.checked))}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgChat}</span>
+                  <div>
+                    <span className="set-toggle__label">Mensagens Motivacionais</span>
+                    <span className="set-toggle__desc">
+                      Frases de incentivo ao concluir treinos
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={prefs.messages}
+                    onChange={(e) => togglePref('messages', e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+            </div>
+            {lock.reminder === 'true' && (
+              <div className="set-field" style={{ marginTop: 14, marginBottom: 0 }}>
+                <label className="set-field__label">
+                  {SvgTimer}
+                  Horário do Lembrete
+                </label>
                 <input
-                  type="checkbox"
-                  checked={prefs.messages}
-                  onChange={(e) => togglePref('messages', e.target.checked)}
+                  type="time"
+                  className="set-time"
+                  value={lock.reminderTime}
+                  onChange={(e) => updateLock('reminderTime', e.target.value)}
                 />
-                <span className="set-switch__track" />
-              </label>
-            </div>
-          </div>
-          {lock.reminder === 'true' && (
-            <div className="set-field" style={{ marginTop: 14, marginBottom: 0 }}>
-              <label className="set-field__label">
-                {SvgTimer}
-                Horário do Lembrete
-              </label>
-              <input
-                type="time"
-                className="set-time"
-                value={lock.reminderTime}
-                onChange={(e) => updateLock('reminderTime', e.target.value)}
-              />
-            </div>
-          )}
-          <p className="set-note" style={{ marginTop: 10 }}>
-            Em breve: o lembrete de treino será enviado por notificações do
-            sistema no horário definido.
-          </p>
-        </section>
+              </div>
+            )}
+            <p className="set-note" style={{ marginTop: 10 }}>
+              Em breve: o lembrete de treino será enviado por notificações do
+              sistema no horário definido.
+            </p>
+          </section>
+        </>
       ),
     },
 
@@ -1677,6 +2114,63 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <span className="set-switch__track" />
                 </label>
               </div>
+            </div>
+          </section>
+
+          {/* v4.9.3-settings — Esquema de Cores row (reference) */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">PERSONALIZAÇÃO</div>
+                <h3 className="set-card__title">Esquema de Cores</h3>
+                <p className="set-card__desc">
+                  Escolha a cor de destaque do aplicativo.
+                </p>
+              </div>
+              <button type="button" className="set-btn" onClick={() => setPickerOpen(true)}>
+                {SvgPalette}
+                Personalizar
+              </button>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span
+                style={{ width: 24, height: 24, borderRadius: 8, background: activeHex, border: '1px solid rgba(63, 63, 70, 0.8)' }}
+              />
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{themeDisplayName(themeKey)}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono, monospace)' }}>{activeHex}</div>
+              </div>
+            </div>
+          </section>
+
+          {/* v4.9.3-settings — Idioma do Sistema (reference) */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">IDIOMA</div>
+                <h3 className="set-card__title">Idioma do Sistema</h3>
+                <p className="set-card__desc">
+                  Escolha o idioma de exibição do aplicativo.
+                </p>
+              </div>
+            </div>
+            <div className="set-field" style={{ marginBottom: 0 }}>
+              <label className="set-field__label" htmlFor="setLang">
+                {SvgGlobe}
+                Idioma
+              </label>
+              <select
+                id="setLang"
+                className="set-input"
+                value={readLS('academia_lang') || 'pt'}
+                onChange={(e) => {
+                  writeLS('academia_lang', e.target.value);
+                  showToast(`Idioma definido como ${e.target.value === 'pt' ? 'Português' : 'English'}.`, 'success');
+                }}
+              >
+                <option value="pt">Português (BR)</option>
+                <option value="en">English (US)</option>
+              </select>
             </div>
           </section>
         </>

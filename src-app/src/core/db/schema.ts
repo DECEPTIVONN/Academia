@@ -247,6 +247,8 @@ export interface ProfileCustomization {
   senha?: string;
   /** Ano de "AQUI DESDE" (legado usa '2024' como fallback) */
   since?: string;
+  /** v4.9.3-settings — URL ou data-URL da foto de perfil customizada */
+  photo?: string;
 }
 
 /** Conquista gravada em `db.conquistas` — string (id fixo) ou objeto datado. */

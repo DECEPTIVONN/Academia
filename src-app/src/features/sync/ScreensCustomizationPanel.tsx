@@ -118,6 +118,12 @@ const SvgEyeOff = (
   </svg>
 );
 
+const SvgKeyRound = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+  </svg>
+);
+
 interface ImageCardProps {
   title: string;
   tag: string;
@@ -341,7 +347,7 @@ export function ScreensCustomizationPanel() {
         </div>
       </section>
 
-      {/* ══ Prévia de bloqueio — classes reais do LockScreen (v4.9.2-telas) ══ */}
+      {/* ══ Prévia de bloqueio — classes reais do LockScreen (v4.9.2-telas / v4.9.3-lock) ══ */}
       {preview === 'lock' &&
         createPortal(
           <div className="lock" role="dialog" aria-modal="true" aria-label="Prévia da tela de bloqueio">
@@ -359,19 +365,44 @@ export function ScreensCustomizationPanel() {
               }
             />
             <div className="lock__shade" />
+
+            {/* Micro-mesh radial grid (decor) */}
+            <div className="lock__mesh" aria-hidden="true" />
+
+            {/* Glow rings (decor) */}
+            <div className="lock__glow lock__glow--top" aria-hidden="true" />
+            <div className="lock__glow lock__glow--bottom" aria-hidden="true" />
+
+            {/* Side rails (desktop only) */}
+            <div className="lock__rail lock__rail--left" aria-hidden="true">
+              <span className="lock__rail-text">SECURE SHELL</span>
+              <span className="lock__rail-dot" />
+              <span className="lock__rail-text">LOCK ACTIVE</span>
+            </div>
+            <div className="lock__rail lock__rail--right" aria-hidden="true">
+              <span className="lock__rail-text">DATA SHIELDED</span>
+              <span className="lock__rail-dot lock__rail-dot--green" />
+              <span className="lock__rail-text">v2.4.0-PROT</span>
+            </div>
+
             <div className="lock__card">
+              {/* Watermark de cadeado (decor) */}
+              <div className="lock__watermark" aria-hidden="true">
+                {SvgLockBadge}
+              </div>
+
+              {/* Badge dinâmico (fingerprint vs shield) */}
               <span className="lock__badge">
                 {SvgFingerPill}
                 Desbloqueio • Academia
               </span>
 
+              {/* Avatar com aura giratória neon */}
               <div className="lock__avatar">
+                <div className="lock__avatar-aura" aria-hidden="true" />
                 <div className="lock__avatar-img">
                   <ProfileEmblem customization={profile?.customization} />
                 </div>
-                <span className="lock__avatar-lock" aria-hidden="true">
-                  {SvgLockBadge}
-                </span>
               </div>
 
               <h2 className="lock__name">{nome || 'Academia'}</h2>
@@ -397,7 +428,9 @@ export function ScreensCustomizationPanel() {
                   disabled={scanning}
                   aria-label="Desbloquear com impressão digital (prévia)"
                 >
-                  {SvgFingerBig}
+                  <div className="lock__bio-sensor">
+                    {SvgFingerBig}
+                  </div>
                   <span className="lock__bio-title">
                     {scanning ? 'Verificando…' : 'Desbloquear com Digital'}
                   </span>
@@ -413,11 +446,14 @@ export function ScreensCustomizationPanel() {
                 }}
               >
                 <div className="lock__pw">
+                  <span className="lock__pw-icon" aria-hidden="true">
+                    {SvgKeyRound}
+                  </span>
                   <input
                     type={showPw ? 'text' : 'password'}
                     value={pw}
                     onChange={(e) => setPw(e.target.value)}
-                    placeholder="Digite sua senha"
+                    placeholder="••••••••"
                     autoComplete="off"
                     maxLength={32}
                     aria-label="Senha de bloqueio (prévia)"
@@ -433,7 +469,7 @@ export function ScreensCustomizationPanel() {
                   </button>
                 </div>
                 <button type="submit" className="lock__submit" disabled={scanning || !pw}>
-                  Desbloquear
+                  Entrar com Senha
                 </button>
               </form>
 

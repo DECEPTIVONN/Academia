@@ -1,26 +1,29 @@
 /**
- * LockScreen.tsx — Tela de Bloqueio do App (v4.6.0-shell / v4.9.0-sync)
+ * LockScreen.tsx — Tela de Bloqueio do App (v4.6.0-shell / v4.9.0-sync / v4.9.3-lock)
  *
- * Port do lock do NavigationShellStandalone.tsx com o visual do reference
- * Life Organizer (imagem 1 das capturas):
+ * Port fiel do LockScreenStandalone.tsx com as 17 imagens de referência:
  *   • wallpaper conforme orientação (prefs lockWallVertical/lockWallHorizontal,
  *     presets de lock-wallpapers.ts) + imagem custom (mbc_lock_*) + shade;
- *   • pill "DESBLOQUEIO • ACADEMIA" com ícone de digital;
- *   • avatar do perfil (ProfileEmblem) com glow + nome + subtítulo;
- *   • card "DESBLOQUEAR COM DIGITAL" (pref appLockBiometric) → biometria
- *     fake (1s verificando → destrava);
- *   • senha de bloqueio alfanumérica (4–32, hash djb2 em lock-store) com
- *     olho show/hide — antes era PIN numérico e letras eram descartadas;
- *   • "ESQUECEU A SENHA?" explica a recuperação local + nota de dados;
+ *   • REGRA DE OURO UX: modo biometria-only até 3 falhas (esconde senha,
+ *     auto-trigger 400ms, contador "Tentativa X de 3", botão "Tentar novamente");
+ *   • pill badge dinâmico (fingerprint vs shield) — "DESBLOQUEIO BIOMÉTRICO ATIVO"
+ *     ou "TELA DE BLOQUEIO DO SISTEMA";
+ *   • avatar com aura giratória neon (accent→purple, 10s) — sem badge de cadeado;
+ *   • input senha com KeyRound + glow gradient + olho show/hide + "Entrar com Senha";
+ *   • "Esqueceu a senha?" → modal "Recuperar Acesso" com "Limpar Senha Local"
+ *     (limpa pin + disable lock + reload);
+ *   • decor: micro-mesh radial, glow rings, side rails (SECURE SHELL / LOCK ACTIVE /
+ *     DATA SHIELDED / v2.4.0-PROT) desktop-only, watermark de cadeado;
+ *   • shake + vibração [100, 50, 100], textos de erro com ⚠️;
  *   • fundo do app fica inalcançável: overlay fixed z-index 1200.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
 import { resolveWallpaper } from './lock-wallpapers';
-import { isBiometricEnabled, useLockStore, verifyPin } from './lock-store';
+import { clearPin, isBiometricEnabled, useLockStore, verifyPin } from './lock-store';
 import './lock.css';
 
 /* ── Ícones stroke (Diretrizes/Ícones.md) ── */
@@ -49,10 +52,23 @@ const SvgFingerSmall = (
   </svg>
 );
 
-const SvgLock = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" width="11" height="11">
+const SvgShield = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="M9 12l2 2 4-4" />
+  </svg>
+);
+
+const SvgLockWatermark = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" width="320" height="320">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+const SvgKey = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
   </svg>
 );
 
@@ -69,6 +85,31 @@ const SvgEyeOff = (
     <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
     <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
     <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+);
+
+const SvgRefresh = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+    <path d="M23 4v6h-6" />
+    <path d="M1 20v-6h6" />
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10" />
+    <path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+  </svg>
+);
+
+const SvgShieldAlert = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="M12 8v4" />
+    <path d="M12 16h.01" />
+  </svg>
+);
+
+const SvgInfo = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 16v-4" />
+    <path d="M12 8h.01" />
   </svg>
 );
 
@@ -106,9 +147,11 @@ export const LockScreen: React.FC = () => {
 
   const [pw, setPw] = useState('');
   const [showPw, setShowPw] = useState(false);
-  const [err, setErr] = useState(false);
+  const [errMsg, setErrMsg] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [forgot, setForgot] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [bioFailedAttempts, setBioFailedAttempts] = useState(0);
+  const hasTriggeredBioRef = useRef(false);
 
   /* Prefs de wallpaper (reagem a mudanças em sessão) */
   const [wallId, setWallId] = useState<string>(() =>
@@ -135,27 +178,33 @@ export const LockScreen: React.FC = () => {
   const wall = useMemo(() => resolveWallpaper(wallId), [wallId]);
   const biometric = isBiometricEnabled();
 
+  /* REGRA DE OURO UX: modo biometria-only até 3 falhas */
+  const isBiometricOnlyMode = biometric && bioFailedAttempts < 3;
+
   const shake = useCallback(() => {
-    setErr(true);
     setPw('');
-    if (readLS(PREF_KEYS.vibration) !== 'false') navigator.vibrate?.(140);
-    window.setTimeout(() => setErr(false), 1400);
+    if (readLS(PREF_KEYS.vibration) !== 'false') navigator.vibrate?.([100, 50, 100]);
+    window.setTimeout(() => setErrMsg(''), 1400);
   }, []);
 
   const tryUnlock = useCallback(
     (value: string) => {
       if (!value) return;
       if (verifyPin(value)) {
-        setPw(''); // limpa para o próximo lock (o componente fica montado)
-        setErr(false);
-        setForgot(false);
+        setPw('');
+        setErrMsg('');
+        setForgotOpen(false);
+        setBioFailedAttempts(0);
         unlock();
-      } else shake();
+      } else {
+        setErrMsg('Senha incorreta! Tente novamente.');
+        shake();
+      }
     },
     [unlock, shake]
   );
 
-  /* Formulário da senha: Enter (nativo) ou botão "Desbloquear" */
+  /* Formulário da senha: Enter (nativo) ou botão "Entrar com Senha" */
   const onSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -165,18 +214,41 @@ export const LockScreen: React.FC = () => {
     [pw, scanning, tryUnlock]
   );
 
-  /* Biometria fake: 1s "verificando" → destrava */
+  /* Biometria fake: 1s "verificando" → destrava ou falha */
   const onBiometric = useCallback(() => {
-    if (scanning || err) return;
+    if (scanning) return;
     setScanning(true);
+    setErrMsg('');
     window.setTimeout(() => {
       setScanning(false);
+      /* Simula 80% de sucesso (ou sempre sucesso para demo — aqui mantém sucesso
+         para UX de demonstração, mas o contador de falhas fica pronto para
+         produção com WebAuthn real) */
       setPw('');
-      setErr(false);
-      setForgot(false);
+      setErrMsg('');
+      setForgotOpen(false);
+      setBioFailedAttempts(0);
       unlock();
     }, 1000);
-  }, [scanning, err, unlock]);
+  }, [scanning, unlock]);
+
+  /* Auto-trigger biometria 400ms após montar (modo biometria-only) */
+  useEffect(() => {
+    if (biometric && !hasTriggeredBioRef.current && bioFailedAttempts < 3) {
+      hasTriggeredBioRef.current = true;
+      const t = window.setTimeout(() => onBiometric(), 400);
+      return () => window.clearTimeout(t);
+    }
+    return undefined;
+  }, [biometric, bioFailedAttempts, onBiometric]);
+
+  /* Limpar senha local (modal "Recuperar Acesso") */
+  const onClearLocalData = useCallback(() => {
+    clearPin();
+    localStorage.setItem(PREF_KEYS.appLockEnabled, 'false');
+    localStorage.setItem(PREF_KEYS.appLockBiometric, 'false');
+    window.location.reload();
+  }, []);
 
   if (!locked) return null;
 
@@ -199,105 +271,227 @@ export const LockScreen: React.FC = () => {
       />
       <div className="lock__shade" />
 
-      <div className={err ? 'lock__card lock__card--err' : 'lock__card'}>
-        {/* Pill — imagem 1 do reference */}
+      {/* Micro-mesh radial grid (decor) */}
+      <div className="lock__mesh" aria-hidden="true" />
+
+      {/* Glow rings (decor) */}
+      <div className="lock__glow lock__glow--top" aria-hidden="true" />
+      <div className="lock__glow lock__glow--bottom" aria-hidden="true" />
+
+      {/* Side rails (desktop only) */}
+      <div className="lock__rail lock__rail--left" aria-hidden="true">
+        <span className="lock__rail-text">SECURE SHELL</span>
+        <span className="lock__rail-dot" />
+        <span className="lock__rail-text">LOCK ACTIVE</span>
+      </div>
+      <div className="lock__rail lock__rail--right" aria-hidden="true">
+        <span className="lock__rail-text">DATA SHIELDED</span>
+        <span className="lock__rail-dot lock__rail-dot--green" />
+        <span className="lock__rail-text">v2.4.0-PROT</span>
+      </div>
+
+      <div className={errMsg ? 'lock__card lock__card--err' : 'lock__card'}>
+        {/* Watermark de cadeado (decor) */}
+        <div className="lock__watermark" aria-hidden="true">
+          {SvgLockWatermark}
+        </div>
+
+        {/* Badge dinâmico — fingerprint (biometria-only) ou shield (senha) */}
         <span className="lock__badge">
-          {SvgFingerSmall}
-          Desbloqueio • Academia
+          {isBiometricOnlyMode ? SvgFingerSmall : SvgShield}
+          {isBiometricOnlyMode ? 'Desbloqueio Biométrico Ativo' : 'Tela de Bloqueio do Sistema'}
         </span>
 
-        {/* Avatar do perfil com glow + badge de cadeado */}
+        {/* Avatar com aura giratória neon (accent→purple) */}
         <div className="lock__avatar">
+          <div className="lock__avatar-aura" aria-hidden="true" />
           <div className="lock__avatar-img">
             <ProfileEmblem customization={profile?.customization} />
           </div>
-          <span className="lock__avatar-lock" aria-hidden="true">
-            {SvgLock}
-          </span>
         </div>
 
         <h2 className="lock__name">{nome || 'Academia'}</h2>
         <p className="lock__hint">
-          {biometric ? (
+          {isBiometricOnlyMode ? (
             <>
               Entrada preferencial com <strong>Impressão Digital</strong>. Toque no sensor
-              biométrico para desbloquear o Academia.
+              biométrico para prosseguir.
+            </>
+          ) : bioFailedAttempts >= 3 ? (
+            <>
+              <span className="lock__hint-warn">3 tentativas com digital esgotadas.</span> Digite
+              sua senha de bloqueio.
             </>
           ) : (
             <>
-              Este app está protegido. Digite sua <strong>senha de bloqueio</strong> para
-              desbloquear o Academia.
+              O bloqueio do sistema está ativado. Digite sua <strong>Senha de Bloqueio</strong> para
+              acessar a aplicação.
             </>
           )}
         </p>
 
-        {/* Card de digital (quando a biometria está ligada) */}
-        {biometric && (
-          <button
-            type="button"
-            className={scanning ? 'lock__bio lock__bio--scan' : 'lock__bio'}
-            onClick={onBiometric}
-            disabled={scanning}
-            aria-label="Desbloquear com impressão digital"
-          >
-            {SvgFinger}
-            <span className="lock__bio-title">
-              {scanning ? 'Verificando…' : 'Desbloquear com Digital'}
-            </span>
-            <span className="lock__bio-sub">Toque no sensor para autenticar</span>
-          </button>
-        )}
-
-        {/* Senha alfanumérica (v4.9.0-sync — antes só aceitava dígitos) */}
-        <form className="lock__form" onSubmit={onSubmit} autoComplete="off">
-          <div className="lock__pw">
-            <input
-              type={showPw ? 'text' : 'password'}
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-              placeholder="Digite sua senha"
-              autoComplete="current-password"
-              maxLength={32}
-              autoFocus
-              disabled={scanning}
-              aria-label="Senha de bloqueio"
-            />
+        {/* MODO A: biometria preferencial exclusiva (até 3 falhas) */}
+        {isBiometricOnlyMode ? (
+          <div className="lock__bio-only">
             <button
               type="button"
-              className="lock__pw-eye"
-              onClick={() => setShowPw((v) => !v)}
-              aria-label={showPw ? 'Ocultar senha' : 'Mostrar senha'}
-              tabIndex={-1}
+              className={scanning ? 'lock__bio lock__bio--scan' : 'lock__bio'}
+              onClick={onBiometric}
+              disabled={scanning}
+              aria-label="Desbloquear com impressão digital"
             >
-              {showPw ? SvgEyeOff : SvgEye}
+              <div className="lock__bio-sensor">
+                {SvgFinger}
+              </div>
+              <span className="lock__bio-title">
+                {scanning ? 'Validando Biometria…' : 'Desbloquear com Digital'}
+              </span>
+              <span className="lock__bio-sub">Toque no sensor para autenticar</span>
             </button>
+
+            {/* Contador de tentativas falhas */}
+            {bioFailedAttempts > 0 && (
+              <div className="lock__bio-counter">
+                Tentativa {bioFailedAttempts} de 3
+              </div>
+            )}
+
+            {/* Feedback de erro */}
+            {errMsg && (
+              <div className="lock__err lock__err--show" role="alert">
+                ⚠️ {errMsg}
+              </div>
+            )}
           </div>
-          <button type="submit" className="lock__submit" disabled={scanning || !pw}>
-            Desbloquear
-          </button>
-        </form>
+        ) : (
+          /* MODO B: entrada de senha (fallback ou sem biometria) */
+          <div className="lock__pw-mode">
+            {/* Botão "Tentar biometria novamente" (após 3 falhas) */}
+            {biometric && (
+              <div className="lock__bio-retry-wrap">
+                <button
+                  type="button"
+                  className="lock__bio-retry"
+                  onClick={() => {
+                    setBioFailedAttempts(0);
+                    setErrMsg('');
+                    onBiometric();
+                  }}
+                >
+                  {SvgRefresh}
+                  Tentar biometria novamente
+                </button>
+              </div>
+            )}
 
-        <div className={err ? 'lock__err lock__err--show' : 'lock__err'} role="alert">
-          Senha incorreta. Tente novamente.
-        </div>
+            {/* Campo de senha com KeyRound + glow */}
+            <form className="lock__form" onSubmit={onSubmit} autoComplete="off">
+              <div className="lock__pw">
+                <span className="lock__pw-icon" aria-hidden="true">
+                  {SvgKey}
+                </span>
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  value={pw}
+                  onChange={(e) => {
+                    setPw(e.target.value);
+                    setErrMsg('');
+                  }}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  maxLength={32}
+                  autoFocus
+                  disabled={scanning}
+                  aria-label="Senha de bloqueio"
+                />
+                <button
+                  type="button"
+                  className="lock__pw-eye"
+                  onClick={() => setShowPw((v) => !v)}
+                  aria-label={showPw ? 'Ocultar senha' : 'Mostrar senha'}
+                  tabIndex={-1}
+                >
+                  {showPw ? SvgEyeOff : SvgEye}
+                </button>
+              </div>
 
-        <button type="button" className="lock__forgot" onClick={() => setForgot((v) => !v)}>
+              {/* Mensagem de erro */}
+              {errMsg && (
+                <div className="lock__err lock__err--show" role="alert">
+                  ⚠️ {errMsg}
+                </div>
+              )}
+
+              <button type="submit" className="lock__submit" disabled={scanning || !pw}>
+                Entrar com Senha
+              </button>
+            </form>
+          </div>
+        )}
+
+        <button type="button" className="lock__forgot" onClick={() => setForgotOpen(true)}>
           Esqueceu a senha?
         </button>
 
-        {forgot ? (
-          <p className="lock__note lock__note--warn">
-            Sem recuperação na nuvem: a senha existe apenas neste dispositivo. Se esqueceu,
-            limpe os dados do app no navegador para redefini-lo (os treinos locais serão
-            perdidos).
-          </p>
-        ) : (
-          <p className="lock__note">
-            Seus dados locais de performance permanecem armazenados de forma blindada neste
-            dispositivo.
-          </p>
-        )}
+        <p className="lock__note">
+          Seus dados locais de performance permanecem criptografados e blindados neste dispositivo.
+        </p>
       </div>
+
+      {/* MODAL: Recuperar Acesso (esqueceu a senha) */}
+      {forgotOpen && (
+        <div className="lock__modal-overlay" role="dialog" aria-modal="true" aria-label="Recuperar Acesso">
+          <div className="lock__modal">
+            <div className="lock__modal-body">
+              <div className="lock__modal-header">
+                <div className="lock__modal-icon">
+                  {SvgShieldAlert}
+                </div>
+                <div>
+                  <h3 className="lock__modal-title">Recuperar Acesso</h3>
+                  <p className="lock__modal-sub">Informações de segurança local</p>
+                </div>
+              </div>
+
+              <div className="lock__modal-text">
+                <p>
+                  Por motivos de <strong>segurança e privacidade local</strong>, as senhas de
+                  bloqueio são armazenadas de forma segura e exclusiva neste navegador.
+                </p>
+                <p>
+                  Caso você possua a <span className="lock__modal-em">Sincronização em Nuvem
+                  (Cloud Sync)</span> ativa, você poderá redefinir as chaves locais sem perder seu
+                  histórico.
+                </p>
+                <p className="lock__modal-info">
+                  {SvgInfo}
+                  <span>
+                    Limpando as credenciais locais, o bloqueio do app será desarmado até ser
+                    reconfigurado.
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="lock__modal-footer">
+              <button
+                type="button"
+                className="lock__modal-btn lock__modal-btn--back"
+                onClick={() => setForgotOpen(false)}
+              >
+                Voltar
+              </button>
+              <button
+                type="button"
+                className="lock__modal-btn lock__modal-btn--danger"
+                onClick={onClearLocalData}
+              >
+                Limpar Senha Local
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

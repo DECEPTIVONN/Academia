@@ -1,8 +1,16 @@
 /* ============================================================
-   lock.css — Tela de Bloqueio do App (v4.6.0-shell / v4.9.0-sync)
+   lock.css — Tela de Bloqueio do App (v4.6.0-shell / v4.9.0-sync / v4.9.3-lock)
    BEM `.lock*` · wallpaper da orientação atual · glass card com
    acento na COR DO TEMA do usuário (var(--primary) / --primary-rgb),
-   espelhando o reference Life Organizer (imagem 1).
+   espelhando o reference LockScreenStandalone.tsx (17 imagens):
+   - micro-mesh radial grid decorativo;
+   - glow rings (accent + purple blur);
+   - side rails desktop (SECURE SHELL / LOCK ACTIVE / DATA SHIELDED / v2.4.0-PROT);
+   - watermark de cadeado gigante ao fundo;
+   - avatar com aura giratória neon (accent→purple, 10s);
+   - modo biometria-only (esconde senha até 3 falhas, contador, retry);
+   - input senha com KeyRound + glow gradient;
+   - modal "Recuperar Acesso" com "Limpar Senha Local".
    ============================================================ */
 
 .lock {
@@ -30,6 +38,16 @@
   inset: 0;
   background-size: cover;
   background-position: center;
+  animation: lockWallZoom 15s ease-out forwards;
+}
+
+@keyframes lockWallZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
 }
 
 .lock__shade {
@@ -40,6 +58,88 @@
   -webkit-backdrop-filter: blur(3px);
 }
 
+/* ── Micro-mesh radial grid (decor) ── */
+.lock__mesh {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ── Glow rings (decor) ── */
+.lock__glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.lock__glow--top {
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 520px;
+  height: 520px;
+  background: var(--primary, #f97316);
+  filter: blur(130px);
+  opacity: 0.2;
+}
+.lock__glow--bottom {
+  bottom: 25%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  width: 600px;
+  height: 600px;
+  background: rgba(168, 85, 247, 0.1);
+  filter: blur(150px);
+}
+
+/* ── Side rails (desktop only, decor) ── */
+.lock__rail {
+  position: absolute;
+  top: 48px;
+  bottom: 48px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(63, 63, 70, 0.4), transparent);
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 48px 0;
+  pointer-events: none;
+}
+.lock__rail--left {
+  left: 32px;
+}
+.lock__rail--right {
+  right: 32px;
+}
+.lock__rail-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  color: #71717a;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  writing-mode: vertical-lr;
+  opacity: 0.7;
+}
+.lock__rail-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary, #f97316);
+}
+.lock__rail-dot--green {
+  background: rgba(16, 185, 129, 0.6);
+}
+
+@media (min-width: 768px) {
+  .lock__rail {
+    display: flex;
+  }
+}
+
+/* ── Card principal ── */
 .lock__card {
   position: relative;
   z-index: 1;
@@ -82,16 +182,30 @@
   }
 }
 
-/* ── Pill "Desbloqueio • Academia" ── */
+/* ── Watermark de cadeado (decor) ── */
+.lock__watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.05;
+  pointer-events: none;
+}
+.lock__watermark svg {
+  color: var(--primary, #f97316);
+}
+
+/* ── Badge dinâmico (fingerprint vs shield) ── */
 .lock__badge {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 7px 14px;
   border-radius: 999px;
-  background: rgba(var(--primary-rgb, 249, 115, 22), 0.12);
-  border: 1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.38);
-  color: var(--primary-light, #fb923c);
+  background: rgba(9, 9, 11, 0.8);
+  border: 1px solid rgba(63, 63, 70, 0.8);
+  color: #d4d4d8;
   font-family: var(--font-family);
   font-size: 0.6rem;
   font-weight: 800;
@@ -99,43 +213,47 @@
   text-transform: uppercase;
 }
 .lock__badge svg {
-  color: var(--primary-light, #fb923c);
+  color: var(--primary, #f97316);
 }
 
-/* ── Avatar + glow + badge de cadeado ── */
+/* ── Avatar com aura giratória neon (accent→purple) ── */
 .lock__avatar {
   position: relative;
   margin-top: 18px;
-  width: 74px;
-  height: 74px;
+  width: 112px;
+  height: 112px;
 }
+.lock__avatar-aura {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: linear-gradient(to top right, var(--primary, #f97316), #a855f7);
+  filter: blur(8px);
+  opacity: 0.8;
+  animation: lockAuraSpin 10s linear infinite;
+}
+
+@keyframes lockAuraSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .lock__avatar-img {
-  width: 74px;
-  height: 74px;
+  position: absolute;
+  inset: 2px;
   border-radius: 50%;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid var(--primary, #f97316);
-  box-shadow: 0 0 26px rgba(var(--primary-rgb, 249, 115, 22), 0.5),
-    0 0 60px rgba(var(--primary-rgb, 249, 115, 22), 0.22);
+  background: #0a0a0d;
+  border: 1px solid rgba(63, 63, 70, 0.8);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.lock__avatar-lock {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--primary, #f97316);
-  color: #101014;
-  border: 2px solid rgba(9, 9, 11, 0.92);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  z-index: 10;
 }
 
 /* ── Nome + subtítulo ── */
@@ -147,6 +265,7 @@
   letter-spacing: 0.5px;
   color: var(--text);
   text-align: center;
+  text-transform: uppercase;
 }
 .lock__hint {
   margin-top: 6px;
@@ -159,52 +278,85 @@
   color: var(--text-tertiary);
 }
 .lock__hint strong {
-  color: var(--primary-light, #fb923c);
+  color: var(--text);
   font-weight: 800;
 }
+.lock__hint-warn {
+  color: #fbbf24;
+  font-weight: 700;
+}
 
-/* ── Card de digital ── */
+/* ── Modo A: biometria-only (container) ── */
+.lock__bio-only {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 16px;
+}
+
+/* ── Card de digital (com sensor gradiente) ── */
 .lock__bio {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 10px;
   width: 100%;
-  margin-top: 16px;
-  padding: 15px 16px 13px;
-  border-radius: 18px;
-  border: 1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.30);
-  background: rgba(var(--primary-rgb, 249, 115, 22), 0.08);
-  color: var(--primary-light, #fb923c);
+  padding: 20px 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(63, 63, 70, 0.8);
+  background: rgba(9, 9, 11, 0.8);
+  color: #fafafa;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-.lock__bio svg {
-  stroke: currentColor;
-  filter: drop-shadow(0 0 10px rgba(var(--primary-rgb, 249, 115, 22), 0.55));
+  transition: all 0.3s ease;
 }
 .lock__bio:hover {
-  background: rgba(var(--primary-rgb, 249, 115, 22), 0.15);
-  border-color: rgba(var(--primary-rgb, 249, 115, 22), 0.5);
+  background: rgba(24, 24, 27, 0.9);
+  border-color: rgba(63, 63, 70, 1);
 }
 .lock__bio:disabled {
   cursor: default;
 }
-.lock__bio-title {
-  font-family: var(--font-family);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 1.8px;
-  text-transform: uppercase;
-  margin-top: 4px;
+
+/* Sensor central de impressão digital */
+.lock__bio-sensor {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.lock__bio-sub {
-  font-size: 0.58rem;
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  color: var(--text-tertiary);
+.lock__bio-sensor::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: var(--primary, #f97316);
+  filter: blur(8px);
+  opacity: 0.6;
+  transition: all 0.3s ease;
 }
-.lock__bio--scan svg {
+.lock__bio:hover .lock__bio-sensor::before {
+  opacity: 1;
+  transform: scale(1.1);
+}
+.lock__bio-sensor svg {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  padding: 18px;
+  background: linear-gradient(135deg, var(--primary, #f97316) 0%, #ea580c 100%);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 25px rgba(var(--primary-rgb, 249, 115, 22), 0.4);
+  color: #fff;
+  stroke-width: 2.2;
+  transition: transform 0.3s ease;
+}
+.lock__bio:hover .lock__bio-sensor svg {
+  transform: scale(1.05);
+}
+.lock__bio--scan .lock__bio-sensor svg {
   animation: lockScan 1s ease-in-out infinite;
 }
 
@@ -220,62 +372,163 @@
   }
 }
 
+.lock__bio-title {
+  font-family: var(--font-family);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+.lock__bio-sub {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--text-tertiary);
+}
+
+/* Contador de tentativas falhas */
+.lock__bio-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ── Modo B: senha (container) ── */
+.lock__pw-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 16px;
+}
+
+/* Botão "Tentar biometria novamente" */
+.lock__bio-retry-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+.lock__bio-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.4);
+  background: rgba(24, 24, 27, 0.8);
+  color: var(--primary, #f97316);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.lock__bio-retry:hover {
+  background: rgba(39, 39, 42, 0.8);
+}
+
 /* ── Formulário da senha ── */
 .lock__form {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  margin-top: 16px;
 }
+
+/* Glow gradient no wrapper do input */
 .lock__pw {
   position: relative;
   display: flex;
 }
+.lock__pw::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  background: linear-gradient(to right, rgba(var(--primary-rgb, 249, 115, 22), 0.25), rgba(168, 85, 247, 0.25));
+  filter: blur(4px);
+  opacity: 0.4;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.lock__pw:focus-within::before {
+  opacity: 1;
+}
+
+/* Ícone KeyRound à esquerda */
+.lock__pw-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.25);
+  background: rgba(var(--primary-rgb, 249, 115, 22), 0.08);
+  color: var(--primary, #f97316);
+}
+
 .lock__pw input {
+  position: relative;
   width: 100%;
-  padding: 12px 42px 12px 14px;
+  padding: 14px 48px 14px 44px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.28);
+  background: rgba(9, 9, 11, 0.8);
+  border: 1px solid rgba(63, 63, 70, 0.8);
   color: var(--text);
-  font-family: var(--font-family);
-  font-size: 0.86rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  transition: all 0.18s ease;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.6em;
+  text-align: center;
+  transition: all 0.3s ease;
 }
 .lock__pw input::placeholder {
-  color: var(--text-tertiary);
-  letter-spacing: 0.04em;
-  font-weight: 500;
+  color: #3f3f46;
+  letter-spacing: 0.6em;
+  font-weight: 800;
 }
 .lock__pw input:focus {
   outline: none;
-  border-color: var(--primary, #f97316);
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 249, 115, 22), 0.18);
+  border-color: rgba(63, 63, 70, 1);
+  background: #000;
 }
 .lock__pw-eye {
   position: absolute;
-  right: 7px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: var(--text-tertiary);
+  color: #52525b;
   cursor: pointer;
   padding: 0;
   transition: all 0.15s ease;
 }
 .lock__pw-eye:hover {
-  color: var(--text);
-  background: rgba(var(--primary-rgb, 249, 115, 22), 0.14);
+  color: #d4d4d8;
+  background: rgba(63, 63, 70, 0.4);
 }
 .lock__pw-eye svg {
   stroke: currentColor;
@@ -283,19 +536,19 @@
 
 .lock__submit {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   border: 0;
   border-radius: 12px;
-  background: var(--primary, #f97316);
-  color: #101014;
+  background: linear-gradient(135deg, var(--primary, #f97316) 0%, #ea580c 100%);
+  color: #fff;
   font-family: var(--font-family);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 900;
-  letter-spacing: 2px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.18s ease;
-  box-shadow: 0 10px 26px rgba(var(--primary-rgb, 249, 115, 22), 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(var(--primary-rgb, 249, 115, 22), 0.25);
 }
 .lock__submit:hover {
   filter: brightness(1.08);
@@ -311,47 +564,187 @@
 
 /* ── Erro / esqueceu a senha / nota ── */
 .lock__err {
-  font-size: 0.68rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.6px;
-  color: #fb7185;
-  margin-top: 8px;
+  letter-spacing: 1px;
+  color: #f87171;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(127, 29, 29, 0.2);
+  border: 1px solid rgba(127, 29, 29, 0.2);
   opacity: 0;
   transition: opacity 0.15s ease;
-  height: 14px;
 }
 .lock__err--show {
   opacity: 1;
 }
 
 .lock__forgot {
-  margin-top: 12px;
+  margin-top: 16px;
   padding: 4px 8px;
   border: 0;
   background: transparent;
-  color: var(--text-tertiary);
+  color: #71717a;
   font-family: var(--font-family);
   font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 1.6px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
   transition: color 0.15s ease;
 }
 .lock__forgot:hover {
-  color: var(--primary-light, #fb923c);
+  color: #fb923c;
 }
 
 .lock__note {
   margin-top: 10px;
-  font-size: 0.58rem;
+  font-size: 9px;
   line-height: 1.6;
   font-weight: 500;
   text-align: center;
-  color: rgba(255, 255, 255, 0.34);
+  color: #52525b;
+  max-width: 280px;
 }
-.lock__note--warn {
-  color: #fdba74;
+
+/* ── Modal "Recuperar Acesso" ── */
+.lock__modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.lock__modal {
+  width: 100%;
+  max-width: 384px;
+  background: #09090c;
+  border: 1px solid rgba(63, 63, 70, 0.8);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+  text-align: left;
+}
+
+.lock__modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lock__modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lock__modal-icon {
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(var(--primary-rgb, 249, 115, 22), 0.08);
+  color: var(--primary, #f97316);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lock__modal-title {
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.lock__modal-sub {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: #71717a;
+  margin-top: 2px;
+}
+
+.lock__modal-text {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 12px;
+  color: #a1a1aa;
+  line-height: 1.6;
+}
+
+.lock__modal-text strong {
+  color: #e4e4e7;
+  font-weight: 600;
+}
+
+.lock__modal-em {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.lock__modal-info {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(24, 24, 27, 0.6);
+  border: 1px solid rgba(39, 39, 42, 0.8);
+  color: #71717a;
+  font-size: 10px;
+}
+.lock__modal-info svg {
+  color: var(--primary, #f97316);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.lock__modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  background: rgba(24, 24, 27, 0.4);
+  border-top: 1px solid rgba(39, 39, 42, 0.8);
+}
+
+.lock__modal-btn {
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-family: var(--font-family);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lock__modal-btn--back {
+  background: rgba(24, 24, 27, 0.8);
+  color: #a1a1aa;
+}
+.lock__modal-btn--back:hover {
+  background: rgba(39, 39, 42, 0.8);
+  color: #fff;
+}
+
+.lock__modal-btn--danger {
+  background: #dc2626;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+.lock__modal-btn--danger:hover {
+  background: #b91c1c;
 }
 
 /* Mobile: card mais compacto em telas baixas */
@@ -362,24 +755,20 @@
   }
   .lock__avatar {
     margin-top: 12px;
-    width: 62px;
-    height: 62px;
-  }
-  .lock__avatar-img {
-    width: 62px;
-    height: 62px;
+    width: 96px;
+    height: 96px;
   }
   .lock__name {
     margin-top: 10px;
     font-size: 1rem;
   }
   .lock__bio {
-    margin-top: 12px;
-    padding: 11px 14px 10px;
+    padding: 14px 12px;
   }
-  .lock__bio svg {
-    width: 32px;
-    height: 32px;
+  .lock__bio-sensor svg {
+    width: 64px;
+    height: 64px;
+    padding: 14px;
   }
   .lock__form {
     margin-top: 12px;

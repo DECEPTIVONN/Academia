@@ -20,6 +20,26 @@ interface ProfileEmblemProps {
 }
 
 export const ProfileEmblem: React.FC<ProfileEmblemProps> = ({ customization }) => {
+  /* v4.9.3-settings — foto customizada (photo) tem prioridade sobre o emblema */
+  if (customization?.photo) {
+    return (
+      <img
+        src={customization.photo}
+        alt="Foto de perfil"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          borderRadius: '50%',
+        }}
+        referrerPolicy="no-referrer"
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.display = 'none';
+        }}
+      />
+    );
+  }
+
   const emblem = IDENTITY_EMBLEMS.find(
     (e) => e.id === (customization?.mainEmblem || 'prestigio-1')
   );
