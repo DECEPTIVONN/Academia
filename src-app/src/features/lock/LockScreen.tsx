@@ -23,7 +23,7 @@ import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
 import { resolveWallpaper } from './lock-wallpapers';
-import { clearPin, isBiometricEnabled, useLockStore, verifyPin } from './lock-store';
+import { clearPin, isBiometricEnabled, useLockStore, verifyBiometric, verifyPin } from './lock-store';
 import './lock.css';
 
 /* ── Ícones stroke (Diretrizes/Ícones.md) ── */
@@ -214,22 +214,30 @@ export const LockScreen: React.FC = () => {
     [pw, scanning, tryUnlock]
   );
 
-  /* Biometria fake: 1s "verificando" → destrava ou falha */
-  const onBiometric = useCallback(() => {
+  /* Biometria REAL via WebAuthn (platform authenticator) */
+  const onBiometric = useCallback(async () => {
     if (scanning) return;
     setScanning(true);
     setErrMsg('');
-    window.setTimeout(() => {
+    try {
+      const ok = await verifyBiometric();
       setScanning(false);
-      /* Simula 80% de sucesso (ou sempre sucesso para demo — aqui mantém sucesso
-         para UX de demonstração, mas o contador de falhas fica pronto para
-         produção com WebAuthn real) */
-      setPw('');
-      setErrMsg('');
-      setForgotOpen(false);
-      setBioFailedAttempts(0);
-      unlock();
-    }, 1000);
+      if (ok) {
+        setPw('');
+        setErrMsg('');
+        setForgotOpen(false);
+        setBioFailedAttempts(0);
+        unlock();
+      } else {
+        setBioFailedAttempts((n) => n + 1);
+        setErrMsg('Falha na biometria. Tente novamente ou use a senha.');
+        if (readLS(PREF_KEYS.vibration) !== 'false') navigator.vibrate?.([100, 50, 100]);
+      }
+    } catch {
+      setScanning(false);
+      setBioFailedAttempts((n) => n + 1);
+      setErrMsg('Erro na biometria. Use a senha de bloqueio.');
+    }
   }, [scanning, unlock]);
 
   /* Auto-trigger biometria 400ms após montar (modo biometria-only) */

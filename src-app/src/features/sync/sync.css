@@ -156,7 +156,6 @@
   background: var(--sy-accent);
   border-color: var(--sy-accent);
   color: #fff;
-  box-shadow: 0 6px 22px -6px rgba(var(--primary-rgb, 249, 115, 22), 0.45);
 }
 .sy-btn--primary:hover {
   background: var(--sy-accent-strong);

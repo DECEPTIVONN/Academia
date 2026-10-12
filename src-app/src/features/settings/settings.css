@@ -172,7 +172,6 @@
   background: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
   border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.55);
   color: var(--primary-light);
-  box-shadow: 0 0 16px rgba(var(--primary-rgb, 139, 92, 246), 0.2);
 }
 
 .set-btn--primary:hover {
@@ -532,7 +531,6 @@
 .set-preset--active {
   border-color: var(--primary);
   background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
-  box-shadow: 0 0 14px rgba(var(--primary-rgb, 139, 92, 246), 0.25);
 }
 
 .set-preset__dot {
@@ -645,7 +643,6 @@
   border-color: var(--primary);
   background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
   color: var(--primary-light);
-  box-shadow: 0 0 14px rgba(var(--primary-rgb, 139, 92, 246), 0.22);
 }
 
 .set-opt__label {
@@ -773,7 +770,6 @@
 .set-switch input:checked + .set-switch__track {
   background: var(--primary);
   border-color: var(--primary-dark);
-  box-shadow: 0 0 10px rgba(var(--primary-rgb, 139, 92, 246), 0.5);
 }
 
 .set-switch input:checked + .set-switch__track::before {
@@ -828,7 +824,6 @@
   border-color: var(--primary);
   background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
   color: var(--primary-light);
-  box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.2);
 }
 
 .set-wall-grid {

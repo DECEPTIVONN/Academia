@@ -1,16 +1,16 @@
 /**
- * ConnectedDevices.tsx — Dispositivos Conectados (v4.9.0-sync / v4.9.3-settings)
+ * ConnectedDevices.tsx — Dispositivos Conectados (v4.10.0)
  *
  * Port fiel da Section 3 do SettingsInterfacesStandalone.tsx ligada ao registry
- * real do sync-manager (user_sync :DEVICES):
- *   • banner esmeralda "Conectar Novos Aparelhos" + botão "Conectar dispositivo"
- *     (abre modal com QR Code visual + código de pareamento + countdown);
- *   • lista "STATUS DO DISPOSITIVO" com ícone, nome/customName, badge
- *     "SESSÃO ATUAL" para o dispositivo ativo, meta (browser•os•lastActive) e
- *     chevron que abre o modal de edição;
- *   • modal de edição: renomear + info box (Navegador/SO/Status) +
- *     "Salvar Nome" + "Desconectar Este Aparelho" (apenas não-atual);
- *   • nota de segurança com criptografia de ponta a ponta.
+ * real do sync-manager (user_sync :DEVICES), seguindo as referências:
+ *   • banner full-width esmeralda "CONECTAR NOVOS APARELHOS" + botão grande
+ *     verde "CONECTAR DISPOSITIVO" (abre modal com input de código 6 dígitos);
+ *   • lista "STATUS DO DISPOSITIVO" com cards arredondados, ícone centralizado,
+ *     badge "SESSÃO ATUAL" para o dispositivo ativo (borda emerald) e chevron;
+ *   • modal "EDITAR DISPOSITIVO": ícone centralizado, nome, RENOMEAR + input +
+ *     verde Salvar, linhas info (relogio/globo/escudo), vermelho DESCONECTAR;
+ *   • modal "CONECTAR NOVOS APARELHOS": input código 6 dígitos + verde Autorizar
+ *     + divisor "OU SIMULAR APARELHO DE TESTE" + botão "Simular Novo Aparelho".
  */
 
 import { useEffect, useState } from 'react';
@@ -34,7 +34,7 @@ const SvgMonitor = (
 );
 
 const SvgSmartphone = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
     <rect x="7" y="2" width="10" height="20" rx="2" ry="2" />
     <line x1="12" y1="18" x2="12.01" y2="18" />
   </svg>
@@ -47,15 +47,8 @@ const SvgTablet = (
   </svg>
 );
 
-const SvgLaptop = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-    <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9" />
-    <path d="M2 16h20" />
-  </svg>
-);
-
 const SvgQr = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
     <rect x="3" y="3" width="7" height="7" />
     <rect x="14" y="3" width="7" height="7" />
     <rect x="3" y="14" width="7" height="7" />
@@ -92,11 +85,24 @@ const SvgTrash = (
   </svg>
 );
 
-const SvgInfo = (
+const SvgClock = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
     <circle cx="12" cy="12" r="10" />
-    <path d="M12 16v-4" />
-    <path d="M12 8h.01" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const SvgGlobe = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+);
+
+const SvgShield = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
 
@@ -112,27 +118,11 @@ export function ConnectedDevices() {
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [editName, setEditName] = useState('');
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [connectCountdown, setConnectCountdown] = useState(300);
-  const [pairingCode] = useState(() => {
-    const n = Math.floor(100000 + Math.random() * 900000);
-    return `${String(n).slice(0, 3)} - ${String(n).slice(3)}`;
-  });
+  const [pairCode, setPairCode] = useState('');
 
-  /* Carrega a lista ao montar (a lista vive no useDevicesStore) */
   useEffect(() => {
     void loadDevices();
   }, []);
-
-  /* Temporizador regressivo para o QR Code de novo aparelho */
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (showConnectModal && connectCountdown > 0) {
-      interval = setInterval(() => {
-        setConnectCountdown((c) => (c > 0 ? c - 1 : 0));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [showConnectModal, connectCountdown]);
 
   const startEdit = (d: Device) => {
     setEditingDevice(d);
@@ -152,60 +142,74 @@ export function ConnectedDevices() {
     }
   };
 
-  const formatCountdown = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m}:${String(sec).padStart(2, '0')}`;
-  };
-
   return (
     <div className="sy-root">
       <section className="sy-card">
-        {/* v4.9.3-settings — Banner esmeralda "Conectar Novos Aparelhos" (reference) */}
+        {/* v4.10.0 — Banner full-width esmeralda (reference img 4) */}
         <div style={{
+          padding: '20px 18px',
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(5, 150, 105, 0.12) 100%)',
+          border: '1px solid rgba(16, 185, 129, 0.3)',
+          borderRadius: 14,
+          marginBottom: 20,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          padding: '12px 16px',
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)',
-          border: '1px solid rgba(16, 185, 129, 0.25)',
-          borderRadius: 12,
-          marginBottom: 16,
+          flexDirection: 'column',
+          gap: 14,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ padding: 8, borderRadius: 10, background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
-              {SvgLaptop}
+            <div style={{
+              padding: 10,
+              borderRadius: 12,
+              background: 'rgba(16, 185, 129, 0.2)',
+              color: '#34d399',
+              flexShrink: 0,
+            }}>
+              {SvgSmartphone}
             </div>
             <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: '#34d399', margin: 0 }}>Conectar Novos Aparelhos</p>
-              <p style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono, monospace)', marginTop: 2 }}>
-                Escaneie o QR Code para adicionar um dispositivo
+              <p style={{ fontSize: 12, fontWeight: 800, color: '#34d399', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Conectar Novos Aparelhos
+              </p>
+              <p style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono, monospace)', marginTop: 4, lineHeight: 1.4 }}>
+                Adicione outro dispositivo usando um código de pareamento de 6 dígitos.
               </p>
             </div>
           </div>
           <button
             type="button"
-            className="sy-btn sy-btn--sm"
-            style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399' }}
-            onClick={() => {
-              setConnectCountdown(300);
-              setShowConnectModal(true);
+            style={{
+              width: '100%',
+              padding: '10px 16px',
+              background: 'rgba(16, 185, 129, 0.25)',
+              border: '1px solid rgba(16, 185, 129, 0.5)',
+              borderRadius: 10,
+              color: '#34d399',
+              fontSize: 11,
+              fontWeight: 800,
+              fontFamily: 'var(--font-mono, monospace)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
             }}
+            onClick={() => setShowConnectModal(true)}
           >
             {SvgQr}
-            Conectar dispositivo
+            Conectar Dispositivo
           </button>
         </div>
 
+        {/* Header */}
         <div className="sy-card__head">
           <div className="sy-card__head-left">
             <span className="sy-card__icon">{SvgMonitor}</span>
             <div>
               <h3 className="sy-card__title">Dispositivos Conectados</h3>
               <p className="sy-card__desc">
-                Gerencie onde sua conta está ativa. As sessões se sincronizam
-                automaticamente em segundo plano.
+                Gerenciamento de aparelhos da conta. Toque em um dispositivo para definir um novo nome ou desconectá-lo.
               </p>
             </div>
           </div>
@@ -229,7 +233,7 @@ export function ConnectedDevices() {
           </div>
         </div>
 
-        {/* v4.9.3-settings — Label "STATUS DO DISPOSITIVO" (reference) */}
+        {/* Label STATUS DO DISPOSITIVO (reference img 4) */}
         <p style={{
           fontSize: 9,
           fontFamily: 'var(--font-mono, monospace)',
@@ -280,11 +284,11 @@ export function ConnectedDevices() {
                     )}
                   </div>
                   <div className="sy-dev__meta">
-                    <span>{d.lastActive}</span>
+                    <span>{d.browser || ''}{d.os ? ` • ${d.os}` : ''}</span>
+                    <span>• {d.lastActive}</span>
                   </div>
                 </div>
               </div>
-
               <span style={{ color: 'var(--text-tertiary)', flexShrink: 0 }}>
                 {SvgChevron}
               </span>
@@ -298,20 +302,25 @@ export function ConnectedDevices() {
           )}
         </div>
 
-        {/* v4.9.3-settings — Nota de criptografia (reference) */}
-        <p style={{
+        {/* Nota de criptografia (reference img 4) */}
+        <div style={{
           marginTop: 16,
-          fontSize: 10,
-          color: 'var(--text-tertiary)',
-          fontFamily: 'var(--font-mono, monospace)',
-          textAlign: 'center',
-          lineHeight: 1.5,
+          padding: '10px 14px',
+          background: 'rgba(16, 185, 129, 0.06)',
+          border: '1px solid rgba(16, 185, 129, 0.15)',
+          borderRadius: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
         }}>
-          🔒 Todos os dados são protegidos com criptografia de ponta a ponta.
-        </p>
+          <span style={{ color: '#34d399', flexShrink: 0 }}>{SvgShield}</span>
+          <p style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono, monospace)', margin: 0, lineHeight: 1.5 }}>
+            Todos os dados são protegidos com criptografia de ponta a ponta.
+          </p>
+        </div>
       </section>
 
-      {/* v4.9.3-settings — Modal: Conectar Novo Dispositivo (QR + código + countdown) */}
+      {/* Modal: Conectar Novo Dispositivo (reference img 6 — input 6 dígitos, sem QR) */}
       {showConnectModal && (
         <div className="sy-modal" role="dialog" aria-modal="true" aria-label="Conectar Novo Dispositivo">
           <div className="sy-modal__panel">
@@ -325,87 +334,88 @@ export function ConnectedDevices() {
             </button>
             <div className="sy-modal__head">
               <h3 className="sy-modal__title">Conectar Novo Dispositivo</h3>
-              <p className="sy-modal__desc">Escaneie o QR Code ou use o código de pareamento</p>
             </div>
+
             <div>
-              {/* QR Code visual (placeholder) */}
-              <div style={{
-                width: 160,
-                height: 160,
-                margin: '0 auto',
-                padding: 16,
-                background: '#fff',
-                borderRadius: 16,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+              <label style={{
+                fontSize: 10,
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                color: 'var(--sy-dim)',
+                textTransform: 'uppercase',
+                display: 'block',
+                marginBottom: 8,
               }}>
-                <svg viewBox="0 0 100 100" width="128" height="128">
-                  {/* Simulação de QR Code */}
-                  <rect x="0" y="0" width="30" height="30" fill="#000" />
-                  <rect x="5" y="5" width="20" height="20" fill="#fff" />
-                  <rect x="10" y="10" width="10" height="10" fill="#000" />
-                  <rect x="70" y="0" width="30" height="30" fill="#000" />
-                  <rect x="75" y="5" width="20" height="20" fill="#fff" />
-                  <rect x="80" y="10" width="10" height="10" fill="#000" />
-                  <rect x="0" y="70" width="30" height="30" fill="#000" />
-                  <rect x="5" y="75" width="20" height="20" fill="#fff" />
-                  <rect x="10" y="80" width="10" height="10" fill="#000" />
-                  <rect x="40" y="10" width="5" height="5" fill="#000" />
-                  <rect x="50" y="10" width="5" height="5" fill="#000" />
-                  <rect x="40" y="20" width="5" height="5" fill="#000" />
-                  <rect x="60" y="20" width="5" height="5" fill="#000" />
-                  <rect x="10" y="40" width="5" height="5" fill="#000" />
-                  <rect x="20" y="40" width="5" height="5" fill="#000" />
-                  <rect x="40" y="40" width="5" height="5" fill="#000" />
-                  <rect x="50" y="40" width="5" height="5" fill="#000" />
-                  <rect x="60" y="40" width="5" height="5" fill="#000" />
-                  <rect x="70" y="40" width="5" height="5" fill="#000" />
-                  <rect x="90" y="40" width="5" height="5" fill="#000" />
-                  <rect x="40" y="50" width="5" height="5" fill="#000" />
-                  <rect x="60" y="50" width="5" height="5" fill="#000" />
-                  <rect x="80" y="50" width="5" height="5" fill="#000" />
-                  <rect x="10" y="60" width="5" height="5" fill="#000" />
-                  <rect x="30" y="60" width="5" height="5" fill="#000" />
-                  <rect x="50" y="60" width="5" height="5" fill="#000" />
-                  <rect x="70" y="60" width="5" height="5" fill="#000" />
-                  <rect x="40" y="70" width="5" height="5" fill="#000" />
-                  <rect x="50" y="70" width="5" height="5" fill="#000" />
-                  <rect x="60" y="70" width="5" height="5" fill="#000" />
-                  <rect x="80" y="70" width="5" height="5" fill="#000" />
-                  <rect x="90" y="70" width="5" height="5" fill="#000" />
-                  <rect x="40" y="80" width="5" height="5" fill="#000" />
-                  <rect x="60" y="80" width="5" height="5" fill="#000" />
-                  <rect x="70" y="80" width="5" height="5" fill="#000" />
-                  <rect x="90" y="80" width="5" height="5" fill="#000" />
-                  <rect x="40" y="90" width="5" height="5" fill="#000" />
-                  <rect x="50" y="90" width="5" height="5" fill="#000" />
-                  <rect x="80" y="90" width="5" height="5" fill="#000" />
-                </svg>
+                Digitar Código do Outro Aparelho (6 dígitos ou PLN-…):
+              </label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  className="sy-input"
+                  value={pairCode}
+                  onChange={(e) => setPairCode(e.target.value.toUpperCase())}
+                  placeholder="EX: 482910"
+                  maxLength={12}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="sy-btn sy-btn--sm sy-btn--primary"
+                  style={{ padding: '10px 16px' }}
+                  onClick={() => {
+                    /* TODO: validar código com sync-manager */
+                    setShowConnectModal(false);
+                    setPairCode('');
+                  }}
+                  disabled={pairCode.length < 6}
+                >
+                  Autorizar
+                </button>
               </div>
-              {/* Código de pareamento */}
-              <div style={{ textAlign: 'center', marginTop: 16 }}>
-                <p style={{ fontSize: 10, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', marginBottom: 4 }}>
-                  Código de pareamento
-                </p>
-                <p style={{ fontSize: 20, fontWeight: 900, fontFamily: 'var(--font-mono, monospace)', letterSpacing: '0.1em', color: 'var(--sy-accent)' }}>
-                  {pairingCode}
-                </p>
-                <p style={{ fontSize: 10, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', marginTop: 8 }}>
-                  Expira em {formatCountdown(connectCountdown)}
-                </p>
-              </div>
+              <p style={{ fontSize: 10, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', marginTop: 10, lineHeight: 1.5 }}>
+                Abra o Academia no novo dispositivo, vá em Dispositivos → Conectar e digite o código de 6 dígitos exibido.
+              </p>
             </div>
-            <p style={{ fontSize: 10, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', lineHeight: 1.5, textAlign: 'center' }}>
-              Abra o Academia no novo dispositivo e escaneie o QR Code ou insira o código de pareamento manualmente.
-            </p>
+
+            {/* Divisor OU SIMULAR (reference img 6) */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              margin: '18px 0',
+            }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(63, 63, 70, 0.6)' }} />
+              <span style={{
+                fontSize: 9,
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                color: 'var(--sy-dim)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+              }}>
+                Ou Simular Aparelho de Teste
+              </span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(63, 63, 70, 0.6)' }} />
+            </div>
+
+            <button
+              type="button"
+              className="sy-btn"
+              style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => {
+                /* TODO: chamar função de simulação no sync-manager */
+                setShowConnectModal(false);
+              }}
+            >
+              Simular Novo Aparelho
+            </button>
           </div>
         </div>
       )}
 
-      {/* v4.9.3-settings — Modal: Gerenciar Dispositivo (reference) */}
+      {/* Modal: Editar Dispositivo (reference img 5) */}
       {editingDevice && (
-        <div className="sy-modal" role="dialog" aria-modal="true" aria-label="Gerenciar Dispositivo">
+        <div className="sy-modal" role="dialog" aria-modal="true" aria-label="Editar Dispositivo">
           <div className="sy-modal__panel">
             <button
               type="button"
@@ -416,82 +426,121 @@ export function ConnectedDevices() {
               {SvgX}
             </button>
             <div className="sy-modal__head">
-              <h3 className="sy-modal__title">Gerenciar Dispositivo</h3>
-              <p className="sy-modal__desc">Renomeie ou desconecte este aparelho</p>
+              <h3 className="sy-modal__title">Editar Dispositivo</h3>
             </div>
-            <div>
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 10, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--sy-dim)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
-                  Nome do dispositivo
-                </label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
-                    type="text"
-                    className="sy-input"
-                    value={editName}
-                    autoFocus
-                    onChange={(e) => setEditName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') void saveRename(editingDevice.id);
-                      if (e.key === 'Escape') setEditingDevice(null);
-                    }}
-                    placeholder="Nome do dispositivo"
-                  />
-                  <button
-                    type="button"
-                    className="sy-btn sy-btn--sm sy-btn--primary"
-                    onClick={() => void saveRename(editingDevice.id)}
-                  >
-                    {SvgCheck}
-                    Salvar Nome
-                  </button>
-                </div>
-              </div>
 
-              {/* Info box */}
+            {/* Ícone centralizado (reference img 5) */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
               <div style={{
-                padding: 12,
-                background: 'rgba(24, 24, 27, 0.6)',
+                padding: 14,
+                borderRadius: 14,
+                background: 'rgba(24, 24, 27, 0.8)',
                 border: '1px solid rgba(63, 63, 70, 0.8)',
-                borderRadius: 10,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-                marginBottom: 16,
+                color: editingDevice.isCurrent ? '#34d399' : 'var(--sy-dim)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: 'var(--sy-dim)' }}>{SvgInfo}</span>
-                  <span style={{ fontSize: 11, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)' }}>
-                    Navegador: {editingDevice.browser || 'Desconhecido'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: 'var(--sy-dim)' }}>{SvgInfo}</span>
-                  <span style={{ fontSize: 11, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)' }}>
-                    Sistema: {editingDevice.os || 'Desconhecido'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ color: 'var(--sy-dim)' }}>{SvgInfo}</span>
-                  <span style={{ fontSize: 11, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)' }}>
-                    Status: {editingDevice.isCurrent ? 'Sessão atual' : 'Dispositivo remoto'}
-                  </span>
-                </div>
+                {editingDevice.deviceType === 'mobile' ? SvgSmartphone : SvgMonitor}
               </div>
+            </div>
 
-              {/* Desconectar (apenas não-atual) */}
-              {!editingDevice.isCurrent && (
+            {/* Nome do dispositivo (reference img 5) */}
+            <div style={{ textAlign: 'center', marginBottom: 18 }}>
+              <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--sy-text)', margin: 0 }}>
+                {editingDevice.name}
+              </p>
+              <p style={{ fontSize: 10, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', marginTop: 4 }}>
+                Nome do dispositivo
+              </p>
+            </div>
+
+            {/* Renomear (reference img 5) */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                fontSize: 10,
+                fontFamily: 'var(--font-mono, monospace)',
+                fontWeight: 700,
+                color: 'var(--sy-dim)',
+                textTransform: 'uppercase',
+                display: 'block',
+                marginBottom: 6,
+              }}>
+                Renomear Dispositivo
+              </label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  className="sy-input"
+                  value={editName}
+                  autoFocus
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void saveRename(editingDevice.id);
+                    if (e.key === 'Escape') setEditingDevice(null);
+                  }}
+                  style={{ flex: 1 }}
+                />
                 <button
                   type="button"
-                  className="sy-btn sy-btn--danger"
-                  style={{ width: '100%' }}
-                  onClick={() => void handleDisconnect(editingDevice)}
+                  className="sy-btn sy-btn--sm sy-btn--primary"
+                  onClick={() => void saveRename(editingDevice.id)}
                 >
-                  {SvgTrash}
-                  Desconectar Este Aparelho
+                  {SvgCheck}
+                  Salvar
                 </button>
-              )}
+              </div>
             </div>
+
+            {/* Info rows (reference img 5) */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              marginBottom: 18,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ color: 'var(--sy-dim)', flexShrink: 0 }}>{SvgClock}</span>
+                <div>
+                  <p style={{ fontSize: 10, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', margin: 0 }}>
+                    Última sessão ativa
+                  </p>
+                  <p style={{ fontSize: 11, color: 'var(--sy-text)', margin: 0 }}>
+                    {editingDevice.isCurrent ? 'Ativo agora nesta janela' : editingDevice.lastActive}
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ color: 'var(--sy-dim)', flexShrink: 0 }}>{SvgGlobe}</span>
+                <div>
+                  <p style={{ fontSize: 10, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', margin: 0 }}>
+                    Navegador e SO
+                  </p>
+                  <p style={{ fontSize: 11, color: 'var(--sy-text)', margin: 0 }}>
+                    {editingDevice.browser || 'Desconhecido'}{editingDevice.os ? ` (${editingDevice.os})` : ''}
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ color: '#34d399', flexShrink: 0 }}>{SvgShield}</span>
+                <div>
+                  <p style={{ fontSize: 11, color: '#34d399', margin: 0 }}>
+                    Criptografia de ponta a ponta ativa
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Desconectar (reference img 5) */}
+            <button
+              type="button"
+              className="sy-btn sy-btn--danger"
+              style={{ width: '100%', justifyContent: 'center', marginBottom: 12 }}
+              onClick={() => void handleDisconnect(editingDevice)}
+            >
+              {SvgTrash}
+              Desconectar Dispositivo
+            </button>
+            <p style={{ fontSize: 9, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', textAlign: 'center', lineHeight: 1.5, margin: 0 }}>
+              Ao desconectar, este aparelho perderá acesso aos seus dados de sincronização.
+            </p>
           </div>
         </div>
       )}

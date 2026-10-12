@@ -135,16 +135,6 @@ const groupKeywords = (tiles: HubTile[], extra: string[] = []): string[] => [
   ...tiles.flatMap((t) => [t.title.toLowerCase(), ...(t.keywords ?? [])]),
 ];
 
-/** Agrega keywords recursivamente das telas aninhadas (v4.5.0). */
-const screenKeywords = (screen?: HubScreen): string[] => {
-  if (!screen?.tiles) return [];
-  return screen.tiles.flatMap((t) => [
-    t.title.toLowerCase(),
-    ...(t.keywords ?? []),
-    ...screenKeywords(screen.screens?.[t.id]),
-  ]);
-};
-
 export function ProfileFeature() {
   const data = useLocalData();
   const { state: profile, update } = useProfileState();
@@ -1117,57 +1107,6 @@ export function ProfileFeature() {
 
   /* ── Blocos de header/head dos grupos ── */
 
-  const devModeRow = (
-    <div
-      className="pref-row"
-      style={{
-        margin: '0 0 16px 0',
-        background: 'rgba(139, 92, 246, 0.08)',
-        border: '1px dashed var(--primary-light)',
-        padding: '12px 16px',
-        borderRadius: '12px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 4px var(--primary-light))' }}>
-          🛠️
-        </span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <span
-            className="pref-label"
-            style={{
-              fontFamily: "'Rajdhani', sans-serif",
-              fontWeight: 700,
-              color: '#fff',
-              letterSpacing: '1px',
-              fontSize: '0.95rem',
-            }}
-          >
-            MODO DESENVOLVEDOR
-          </span>
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-            Libera personalizações, conquistas e maestrias
-          </span>
-        </div>
-      </div>
-      <label
-        className="pref-switch"
-        style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px', marginBottom: 0 }}
-      >
-        <input
-          type="checkbox"
-          id="devModeToggle"
-          checked={devMode}
-          onChange={(e) => void toggleDevMode(e.target.checked)}
-        />
-        <span className="pref-slider" />
-      </label>
-    </div>
-  );
-
   const saveButton = (
     <button
       type="button"
@@ -1181,17 +1120,12 @@ export function ProfileFeature() {
     </button>
   );
 
-  /* ── Hub raiz (v4.5.1: tiles de Configurações promovidos à raiz) ── */
+  /* ── Hub raiz (v4.10.0: Sua Conta 1º, Progressão dentro de Perfil,
+       Nuvem dentro de Sua Conta, Telas dentro de Cores) ── */
 
-  const rootTiles: HubTile[] = [
-    {
-      id: 'perfil',
-      title: 'Perfil',
-      desc: 'Cartão, ofensivas dos amigos e medalhas',
-      icon: SvgUser20,
-      badge: pc.nome || 'DECEPTIVON',
-      keywords: groupKeywords(perfilTiles, ['perfil']),
-    },
+  /* v4.10.0 — Progressão movida para dentro de Perfil */
+  const perfilTilesV2: HubTile[] = [
+    ...perfilTiles,
     {
       id: 'progressao',
       title: 'Progressão',
@@ -1199,6 +1133,51 @@ export function ProfileFeature() {
       icon: SvgTrending20,
       badge: `Nível ${stats.nivel}`,
       keywords: groupKeywords(progTiles, ['progressao', 'gamificacao']),
+    },
+  ];
+
+  /* v4.10.0 — Nuvem movida para dentro de Sua Conta */
+  const contaTilesV2: HubTile[] = [
+    ...(settings.screens.conta?.tiles ?? []),
+    {
+      id: 'nuvem',
+      title: 'Nuvem e Sincronização',
+      desc: 'Supabase, chave de sync, status e dispositivos',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+          <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+        </svg>
+      ),
+      badge: 'Nuvem',
+      keywords: [
+        'nuvem', 'sync', 'sincronizar', 'sincronizacao', 'supabase', 'online',
+        'backup nuvem', 'chave', 'dispositivos', 'conectados', 'sessao',
+        'remoto', 'tempo real',
+      ],
+    },
+  ];
+
+  const rootTiles: HubTile[] = [
+    /* v4.10.0 — Sua Conta é a primeira opção */
+    {
+      id: 'conta',
+      title: 'Sua Conta',
+      desc: 'Informações da conta, senha, backup, nuvem e desativação',
+      icon: SvgUser20,
+      badge: handleText(pc) || 'Local',
+      keywords: [
+        'conta', 'perfil', 'usuario', 'nome', 'handle', 'email', 'senha',
+        'backup', 'exportar', 'importar', 'json', 'desativar', 'sair', 'dados',
+        'nuvem', 'sync', 'sincronizar', 'supabase',
+      ],
+    },
+    {
+      id: 'perfil',
+      title: 'Perfil',
+      desc: 'Cartão, ofensivas, medalhas e progressão',
+      icon: SvgUser20,
+      badge: pc.nome || 'DECEPTIVON',
+      keywords: groupKeywords(perfilTilesV2, ['perfil', 'progressao']),
     },
     {
       id: 'personalizar',
@@ -1208,30 +1187,16 @@ export function ProfileFeature() {
       badge: handleText(pc),
       keywords: groupKeywords(persTiles, ['personalizar', 'customizacao']),
     },
-    /* Configurações (v4.5.0) — direto na raiz, sem tile "Configurações" */
-    ...settings.tiles.map((t) =>
-      t.id === 'conta'
-        ? {
-            ...t,
-            keywords: [...(t.keywords ?? []), ...screenKeywords(settings.screens.conta)],
-          }
-        : t
-    ),
+    /* Configurações restantes (Segurança, Dispositivos, Notificações, Cores, Exibição) */
+    ...settings.tiles.filter((t) => !['conta', 'nuvem'].includes(t.id)),
   ];
 
   const rootScreens: Record<string, HubScreen> = {
     perfil: {
       eyebrow: 'ACADEMIA • PERFIL',
       title: 'Perfil',
-      tiles: perfilTiles,
-      screens: perfilScreens,
-    },
-    progressao: {
-      eyebrow: 'ACADEMIA • PROGRESSÃO',
-      title: 'Progressão',
-      head: devModeRow,
-      tiles: progTiles,
-      screens: progScreens,
+      tiles: perfilTilesV2,
+      screens: { ...perfilScreens, ...progScreens },
     },
     personalizar: {
       eyebrow: 'ACADEMIA • PERSONALIZAR',
@@ -1240,7 +1205,19 @@ export function ProfileFeature() {
       screens: persScreens,
       headerActions: saveButton,
     },
-    ...settings.screens,
+    /* v4.10.0 — Sua Conta com Nuvem aninhada */
+    conta: {
+      ...settings.screens.conta,
+      tiles: contaTilesV2,
+      screens: {
+        ...settings.screens.conta.screens,
+        nuvem: settings.screens.nuvem,
+      },
+    },
+    /* Telas restantes de Configurações (sem conta/nuvem que foram movidos) */
+    ...Object.fromEntries(
+      Object.entries(settings.screens).filter(([k]) => k !== 'conta')
+    ),
   };
 
   return (

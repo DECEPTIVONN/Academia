@@ -43,10 +43,12 @@ import { ColorPickerModal } from './ColorPickerModal';
 import { getInstallState, promptInstall, type InstallState } from '@/lib/pwa-install';
 import { WALL_PRESETS } from '@/features/lock/lock-wallpapers';
 import {
+  clearBiometric,
   clearPin,
   getPinLength,
   lockApp,
   lockPrefsChanged,
+  registerBiometric,
   savePin,
 } from '@/features/lock/lock-store';
 import type { HubScreen, HubTile } from './HubShell';
@@ -327,21 +329,6 @@ const SvgLogIn = (
     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
     <polyline points="10 17 15 12 10 7" />
     <line x1="15" y1="12" x2="3" y2="12" />
-  </svg>
-);
-
-/* v4.9.0-sync — tiles "Nuvem" e "Telas" */
-const SvgCloud20 = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
-  </svg>
-);
-
-const SvgImages20 = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" />
-    <polyline points="21 15 16 10 5 21" />
   </svg>
 );
 
@@ -819,30 +806,8 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         'idioma', 'language', 'pt', 'en',
       ],
     },
-    /* v4.9.0-sync — nuvem (Supabase) + telas personalizadas */
-    {
-      id: 'nuvem',
-      title: 'Nuvem e Sincronização',
-      desc: 'Supabase, chave de sync, status e dispositivos',
-      icon: SvgCloud20,
-      badge: cloudConfigured ? 'Ativo' : 'Desativado',
-      keywords: [
-        'nuvem', 'sync', 'sincronizar', 'sincronizacao', 'supabase', 'online',
-        'backup nuvem', 'chave', 'dispositivos', 'conectados', 'sessao',
-        'remoto', 'tempo real',
-      ],
-    },
-    {
-      id: 'telas',
-      title: 'Telas Personalizadas',
-      desc: 'Imagens da tela de bloqueio e da splash de carregamento',
-      icon: SvgImages20,
-      badge: 'Imagens',
-      keywords: [
-        'telas', 'tela personalizada', 'imagem', 'wallpaper', 'splash',
-        'carregamento', 'upload', 'fundo', 'bg', 'preview', 'bloqueio imagem',
-      ],
-    },
+    /* v4.10.0 — nuvem movida para dentro de Sua Conta (ProfileFeature);
+       telas movida para dentro de Esquema de Cores (abaixo) */
   ];
 
   const toggleItemsInteraction = [
@@ -1343,7 +1308,23 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <input
                     type="checkbox"
                     checked={lock.biometric === 'true'}
-                    onChange={(e) => updateLock('biometric', String(e.target.checked))}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      if (on) {
+                        /* v4.10.0: registra credencial WebAuthn real */
+                        void registerBiometric().then((ok) => {
+                          if (ok) {
+                            updateLock('biometric', 'true');
+                            showToast('Biometria registrada com sucesso!', 'success');
+                          } else {
+                            showToast('Falha ao registrar biometria. Verifique se seu dispositivo suporta Windows Hello, Touch ID ou digital.', 'error');
+                          }
+                        });
+                      } else {
+                        clearBiometric();
+                        updateLock('biometric', 'false');
+                      }
+                    }}
                   />
                   <span className="set-switch__track" />
                 </label>
@@ -1628,13 +1609,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       content: <SyncSettingsPanel />,
     },
 
-    /* ================= TELAS PERSONALIZADAS (v4.9.0-sync) ================= */
-    telas: {
-      eyebrow: 'ACADEMIA • TELAS',
-      title: 'Telas Personalizadas',
-      content: <ScreensCustomizationPanel />,
-    },
-
     /* ================= NOTIFICAÇÕES ================= */
     notificacoes: {
       eyebrow: 'ACADEMIA • NOTIFICAÇÕES',
@@ -1819,6 +1793,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       eyebrow: 'ACADEMIA • CORES',
       title: 'Esquema de Cores e Personalização',
       content: (
+        <>
         <section className="set-card">
           <div className="set-card__head">
             <div>
@@ -1871,6 +1846,21 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             </button>
           </div>
         </section>
+
+        {/* v4.10.0 — Telas Personalizadas movida para dentro de Cores */}
+        <section className="set-card" style={{ marginTop: 14 }}>
+          <div className="set-card__head">
+            <div>
+              <div className="set-card__eyebrow">TELAS PERSONALIZADAS</div>
+              <h3 className="set-card__title">Imagens de Bloqueio e Splash</h3>
+              <p className="set-card__desc">
+                Personalize a tela de bloqueio e a splash de carregamento.
+              </p>
+            </div>
+          </div>
+          <ScreensCustomizationPanel />
+        </section>
+        </>
       ),
     },
 
