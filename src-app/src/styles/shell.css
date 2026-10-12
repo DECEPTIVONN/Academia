@@ -1152,3 +1152,36 @@
   box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.2) !important;
   border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5) !important;
 }
+/* Moldura da aba Exercícios (#tab-exercicios) e hairline da sub-navbar:
+   tabs-subnav.css usa bg #150b24 + bordas roxas fixas — paleta settings. */
+#tab-exercicios {
+  background: #0b0b10;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.sub-navbar {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Molduras de avatar da top bar mobile (8-customizacao.css L358–385 só
+   atinge .profile-avatar; o botão da top bar recebeu data-frame e usa o
+   outline no próprio elemento, já que o interior tem overflow:hidden). */
+.top-bar__avatar[data-frame="bronze"] {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+}
+.top-bar__avatar[data-frame="prata"] {
+  outline: 2px solid #94a3b8;
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(148, 163, 184, 0.5);
+}
+.top-bar__avatar[data-frame="ouro"] {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.6);
+}
+.top-bar__avatar[data-frame="elite"] {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--primary), 0 0 18px var(--primary);
+}

@@ -21,6 +21,17 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.8.4.2-treinos-frame] - 2026-10-11
+
+Continuação do polish da aba Exercícios (moldura da aba + sub-navbar ainda roxas em `tabs-subnav.css`) e moldura de avatar da top bar mobile. `system_map.json` → 3.5.45.
+
+### Changed
+- `shell.css`: `#tab-exercicios` (moldura roxa `#150b24` + borda `rgba(139,92,246,0.3)` de `tabs-subnav.css:179`, espelho legado não editado) → `#0b0b10` + hairline `rgba(255,255,255,0.08)`; `.sub-navbar` border-bottom roxa → hairline. Sub-nav ativa já era ghost primary (v4.8.4.1).
+- `MobileTopBar.tsx`: `.top-bar__avatar` ganha `data-frame={customization.avatarFrame}` (paridade com `#dashAvatar` do DashboardFeature).
+- `shell.css`: regras `.top-bar__avatar[data-frame="bronze|prata|ouro|elite"]` — outline 2px + glow no próprio botão (mesmas cores do `8-customizacao.css:358–385`; o interior tem `overflow:hidden`, então o outline vai no elemento); `elite` acompanha `var(--primary)`.
+
+Verificação: `npx tsc -b` exit 0 · `npx oxlint src` 0 warnings · `npm run build` OK · CDP `probe_4841b.js` **8/8 PASS** (`#tab-exercicios` `rgb(11,11,16)` + hairlines; sub-nav ativa ghost primary; molduras bronze/prata/ouro/elite com outline+glow corretos; sem moldura → `outline: none`; 0 erros de JS).
+
 ## [v4.8.4.1-treinos-polish] - 2026-10-11
 
 Polimento da seção Treinos na paleta das Configurações (`features/settings/settings.css`): seletor de abas Exercícios/Montar Ficha, linha de filtros e chrome da aba (busca/CTA/view) — cards intocados; ícone do botão EDITAR EXERCÍCIO do CRDetails virou SVG stroke (regra do `Diretrizes/Ícones.md`); botão de tela cheia da top bar mobile deixa de ficar colorido quando ativo. `system_map.json` → 3.5.44.

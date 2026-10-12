@@ -37,6 +37,7 @@ export const MobileTopBar: React.FC<MobileTopBarProps> = ({
       <button
         type="button"
         className="top-bar__avatar"
+        data-frame={state?.customization?.avatarFrame || ''}
         onClick={onOpenProfile}
         aria-label={`Abrir perfil de ${nome}`}
         title="Abrir Perfil"
