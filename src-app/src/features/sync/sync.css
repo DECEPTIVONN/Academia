@@ -1,7 +1,8 @@
 /* ============================================================
    sync.css — Painéis de Nuvem/Sincronização/Dispositivos/Telas
    (v4.9.0-sync) · paleta do SupabaseSyncSecurityStandalone.tsx
-   (zinc ultra-profundo + laranja #f97316) · tipografia Rajdhani
+   (zinc ultra-profundo + acento na cor do usuário — var(--primary)
+   do tema escolhido em Configurações → Cores) · tipografia Rajdhani
    do app · BEM `.sy-*`
    ============================================================ */
 
@@ -14,10 +15,10 @@
   --sy-text: #fafafa;
   --sy-dim: #a1a1aa;
   --sy-dim-2: #71717a;
-  --sy-accent: #f97316;
-  --sy-accent-strong: #ea580c;
-  --sy-accent-soft: rgba(249, 115, 22, 0.1);
-  --sy-accent-line: rgba(249, 115, 22, 0.22);
+  --sy-accent: var(--primary, #f97316);
+  --sy-accent-strong: var(--primary-dark, #ea580c);
+  --sy-accent-soft: rgba(var(--primary-rgb, 249, 115, 22), 0.1);
+  --sy-accent-line: rgba(var(--primary-rgb, 249, 115, 22), 0.22);
   --sy-ok: #10b981;
   --sy-ok-soft: rgba(16, 185, 129, 0.1);
   --sy-ok-line: rgba(16, 185, 129, 0.22);
@@ -155,7 +156,7 @@
   background: var(--sy-accent);
   border-color: var(--sy-accent);
   color: #fff;
-  box-shadow: 0 6px 22px -6px rgba(249, 115, 22, 0.45);
+  box-shadow: 0 6px 22px -6px rgba(var(--primary-rgb, 249, 115, 22), 0.45);
 }
 .sy-btn--primary:hover {
   background: var(--sy-accent-strong);
@@ -551,7 +552,7 @@
   border: 1px solid var(--sy-accent-line);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 10px 40px -10px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 10px 40px -10px rgba(var(--primary-rgb, 249, 115, 22), 0.25);
   display: flex;
   align-items: center;
   gap: 13px;
@@ -718,115 +719,8 @@
   height: 100%;
   background: var(--sy-accent);
   border-radius: 999px;
-  box-shadow: 0 0 12px rgba(249, 115, 22, 0.8);
+  box-shadow: 0 0 12px rgba(var(--primary-rgb, 249, 115, 22), 0.8);
   transition: width 0.08s linear;
-}
-
-/* ── Preview da tela de bloqueio ── */
-.sy-lock-preview {
-  position: fixed;
-  inset: 0;
-  z-index: 1300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  overflow: hidden;
-  background: #000;
-  color: #fff;
-  user-select: none;
-  font-family: var(--font-family);
-}
-.sy-lock-preview__bg {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  filter: brightness(0.6) scale(1.05);
-  transition: all 0.5s ease;
-}
-.sy-lock-preview__shade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, #000, rgba(0, 0, 0, 0.4) 45%, transparent);
-}
-.sy-lock-preview__card {
-  position: relative;
-  z-index: 1;
-  width: min(340px, calc(100vw - 32px));
-  padding: 26px 22px;
-  border-radius: 24px;
-  background: rgba(9, 9, 11, 0.8);
-  border: 1px solid rgba(249, 115, 22, 0.35);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  text-align: center;
-}
-.sy-lock-preview__avatar {
-  position: relative;
-  width: 72px;
-  height: 72px;
-}
-.sy-lock-preview__avatar img {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--sy-accent);
-  box-shadow: 0 0 22px rgba(249, 115, 22, 0.35);
-}
-.sy-lock-preview__avatar-badge {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  padding: 5px;
-  background: var(--sy-accent);
-  border-radius: 50%;
-  display: flex;
-  color: #fff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-}
-.sy-lock-preview__name {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #fff;
-}
-.sy-lock-preview__sub {
-  font-size: 0.68rem;
-  color: var(--sy-dim);
-  font-family: var(--sy-mono);
-  margin-top: 2px;
-}
-.sy-lock-preview__input-wrap {
-  position: relative;
-  width: 100%;
-  margin-top: 4px;
-}
-.sy-lock-preview__input {
-  width: 100%;
-  background: #18181b;
-  border: 1px solid var(--sy-line-2);
-  border-radius: 12px;
-  padding: 12px 42px 12px 16px;
-  font-family: var(--sy-mono);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.35em;
-  color: #fff;
-  text-align: center;
-  outline: none;
-}
-.sy-lock-preview__input:focus {
-  border-color: var(--sy-accent);
-}
-.sy-lock-preview__unlock {
-  width: 100%;
-  margin-top: 4px;
 }
 
 /* ── Modal (Auth / previews) ── */

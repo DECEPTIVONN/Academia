@@ -111,6 +111,14 @@ const SvgShield = (
   </svg>
 );
 
+/* Olho mostrar/ocultar senha da tela de Segurança (v4.9.0-sync) */
+const SvgEye = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="17" height="17">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
 const SvgUser20 = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -369,10 +377,12 @@ const SvgLaptop = (
 
 const LOCK_TIMEOUTS = [
   { v: '60', l: '1 min' },
+  { v: '120', l: '2 min' },
   { v: '300', l: '5 min' },
+  { v: '600', l: '10 min' },
   { v: '900', l: '15 min' },
   { v: '1800', l: '30 min' },
-  { v: '-1', l: 'Desativado' },
+  { v: '-1', l: 'Sempre Logado' },
 ];
 
 const LOCK_PREF_MAP = {
@@ -450,12 +460,15 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     reminderTime: readLS(PREF_KEYS.workoutReminderTime) || '18:00',
   }));
 
-  /* v4.6.0-shell — fluxo do PIN local (4–6 dígitos) */
+  /* v4.6.0-shell / v4.9.0-sync — fluxo da senha de bloqueio local
+     (alfanumérica, 4–32 caracteres) */
   const [pinLen, setPinLen] = useState(() => getPinLength());
   const [pinFormOpen, setPinFormOpen] = useState(false);
   const [pinDraft, setPinDraft] = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
   const [pinError, setPinError] = useState('');
+  const [showPinDraft, setShowPinDraft] = useState(false);
+  const [showPinConfirm, setShowPinConfirm] = useState(false);
 
   /* Campos de segurança (init único quando o estado carrega) */
   const [sec, setSec] = useState({ nome: '', handle: '', email: '', senha: '' });
@@ -528,7 +541,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     /* v4.6.0-shell: re-arma o timer de inatividade e o estado do lock */
     lockPrefsChanged();
 
-    /* Ligar o bloqueio sem PIN definido → abre a criação do PIN na hora */
+    /* Ligar o bloqueio sem senha definida → abre a criação da senha na hora */
     if (key === 'enabled' && value === 'true' && getPinLength() === 0) {
       setPinFormOpen(true);
       setPinError('');
@@ -539,33 +552,37 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     }
   };
 
-  /* ── PIN local: cria/altera/remove (v4.6.0-shell) ── */
+  /* ── Senha de bloqueio local: cria/altera/remove (v4.6.0-shell) ── */
 
   const resetPinForm = () => {
     setPinDraft('');
     setPinConfirm('');
     setPinError('');
     setPinFormOpen(false);
+    setShowPinDraft(false);
+    setShowPinConfirm(false);
   };
 
   const submitPin = () => {
-    const digits = pinDraft.trim();
-    if (!/^\d{4,6}$/.test(digits)) {
-      setPinError('Use de 4 a 6 dígitos numéricos.');
+    /* v4.9.0-sync — senha alfanumérica: letras/números/símbolos são aceitos
+       (antes o replace(/\D/g) descartava letras e a senha "não salvava"). */
+    const pw = pinDraft.trim();
+    if (pw.length < 4 || pw.length > 32) {
+      setPinError('Use de 4 a 32 caracteres (letras, números e símbolos).');
       return;
     }
-    if (digits !== pinConfirm.trim()) {
-      setPinError('Os PINs não coincidem.');
+    if (pw !== pinConfirm.trim()) {
+      setPinError('As senhas não coincidem.');
       return;
     }
-    savePin(digits);
-    setPinLen(digits.length);
+    savePin(pw);
+    setPinLen(pw.length);
     writeLS(PREF_KEYS.appLockEnabled, 'true');
     setLock((l) => ({ ...l, enabled: 'true' }));
     lockPrefsChanged();
     resetPinForm();
     showToast(
-      pinLen > 0 ? 'PIN alterado com sucesso.' : 'Bloqueio ativado! O app pedirá o PIN ao abrir.',
+      pinLen > 0 ? 'Senha alterada com sucesso.' : 'Bloqueio ativado! O app pedirá a senha ao abrir.',
       'success'
     );
   };
@@ -577,7 +594,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     setLock((l) => ({ ...l, enabled: 'false' }));
     lockPrefsChanged();
     resetPinForm();
-    showToast('PIN removido — bloqueio do app desativado.', 'info');
+    showToast('Senha removida — bloqueio do app desativado.', 'info');
   };
 
   const saveSecurityField = async (
@@ -1131,35 +1148,53 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 ))}
               </div>
             </div>
-            {/* ── PIN local + ações do lock (v4.6.0-shell) ── */}
+            {/* ── Senha de bloqueio local + ações do lock (v4.9.0-sync) ── */}
             <div className="set-field" style={{ marginTop: 14, marginBottom: 0 }}>
               <label className="set-field__label">
                 {SvgLock}
-                PIN do App
+                Senha de Bloqueio
               </label>
 
               {pinFormOpen ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    maxLength={6}
-                    className="set-input"
-                    placeholder="Novo PIN (4 a 6 dígitos)"
-                    value={pinDraft}
-                    onChange={(e) => setPinDraft(e.target.value.replace(/\D/g, ''))}
-                  />
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    maxLength={6}
-                    className="set-input"
-                    placeholder="Repita o PIN"
-                    value={pinConfirm}
-                    onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ''))}
-                  />
+                  <div className="set-input-wrap">
+                    <input
+                      type={showPinDraft ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      maxLength={32}
+                      className="set-input"
+                      placeholder="Nova senha (mín. 4 caracteres)"
+                      value={pinDraft}
+                      onChange={(e) => setPinDraft(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="set-eye"
+                      onClick={() => setShowPinDraft((v) => !v)}
+                      aria-label={showPinDraft ? 'Ocultar senha' : 'Mostrar senha'}
+                    >
+                      {SvgEye}
+                    </button>
+                  </div>
+                  <div className="set-input-wrap">
+                    <input
+                      type={showPinConfirm ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      maxLength={32}
+                      className="set-input"
+                      placeholder="Repita a senha"
+                      value={pinConfirm}
+                      onChange={(e) => setPinConfirm(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="set-eye"
+                      onClick={() => setShowPinConfirm((v) => !v)}
+                      aria-label={showPinConfirm ? 'Ocultar senha' : 'Mostrar senha'}
+                    >
+                      {SvgEye}
+                    </button>
+                  </div>
                   {pinError && (
                     <span className="set-note" style={{ color: '#fb7185', marginTop: 0 }}>
                       {pinError}
@@ -1167,7 +1202,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   )}
                   <div className="set-install" style={{ marginTop: 0 }}>
                     <button type="button" className="set-btn set-btn--primary" onClick={submitPin}>
-                      Salvar PIN
+                      Salvar Senha
                     </button>
                     <button type="button" className="set-btn" onClick={resetPinForm}>
                       Cancelar
@@ -1177,7 +1212,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               ) : pinLen > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <span className="set-note" style={{ marginTop: 0 }}>
-                    PIN de {pinLen} dígitos definido neste dispositivo.
+                    Senha de {pinLen} caractere{pinLen > 1 ? 's' : ''} definida neste dispositivo.
                   </span>
                   <div className="set-install" style={{ marginTop: 0, flexWrap: 'wrap' }}>
                     <button
@@ -1190,10 +1225,10 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                         setPinFormOpen(true);
                       }}
                     >
-                      Alterar PIN
+                      Alterar Senha
                     </button>
                     <button type="button" className="set-btn" onClick={removePin}>
-                      Remover PIN
+                      Remover Senha
                     </button>
                     <button
                       type="button"
@@ -1209,7 +1244,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               ) : (
                 <div className="set-install" style={{ marginTop: 0 }}>
                   <button type="button" className="set-btn set-btn--primary" onClick={() => setPinFormOpen(true)}>
-                    Criar PIN
+                    Criar Senha
                   </button>
                 </div>
               )}

@@ -108,7 +108,10 @@ window.addEventListener('online', () => {
 if ('serviceWorker' in navigator && 'SyncManager' in window) {
   navigator.serviceWorker.ready.then(registration => {
     // @ts-expect-error SyncManager ainda não tem tipos completos no TS
-    void registration.sync.register('sync-mutations');
+    // v4.9.0-sync: `.catch` explícito — em headless/incognito o Chrome rejeita
+    // com "Background Sync is disabled." e a rejeição flutuante virava erro
+    // de console/unhandled rejection no probe.
+    registration.sync.register('sync-mutations').catch(() => {});
   }).catch(console.warn);
 }
 

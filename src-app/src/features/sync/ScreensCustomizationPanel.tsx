@@ -5,13 +5,21 @@
  * (CustomScreenSettingsPanel): upload/colar de imagens para
  *   • tela de bloqueio — desktop (16:9) e mobile (9:16)  → mbc_lock_desktop/mobile;
  *   • splash/carregamento — vertical e horizontal         → mbc_loading_*;
- * com previews interativos (bloqueio fake + splash com progresso).
+ * com previews interativos: "Testar Bloqueio" reusa as classes reais do
+ * LockScreen (lock__*) — pill, avatar, digital, senha+olho e notas — e
+ * "Testar Splash" abre o AppLoadingScreen com progresso.
  */
 
-import { useState, type ChangeEvent } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { showToast } from '@/lib/toast';
 import { useProfileState } from '@/features/profile/useProfileState';
+import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
+import { ProfileEmblem } from '@/components/ProfileEmblem';
+import { isBiometricEnabled } from '@/features/lock/lock-store';
+import { resolveWallpaper } from '@/features/lock/lock-wallpapers';
 import { AppLoadingScreen } from './AppLoadingScreen';
+import '@/features/lock/lock.css';
 import './sync.css';
 
 const IMG_MAX_BYTES = 2 * 1024 * 1024;
@@ -62,9 +70,51 @@ const SvgTrash = (
   </svg>
 );
 
-const SvgShield = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="30" height="30">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+const SvgFingerPill = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+    <path d="M12 10a2 2 0 00-2 2c0 1.02-.1 2.51-.26 4" />
+    <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+    <path d="M2 12a10 10 0 0118-6" />
+    <path d="M2 16h.01" />
+    <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 01.34-2" />
+    <path d="M9 6.8a6 6 0 019 5.2v2" />
+  </svg>
+);
+
+const SvgLockBadge = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" width="11" height="11">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+const SvgFingerBig = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="40" height="40">
+    <path d="M12 10a2 2 0 00-2 2c0 1.02-.1 2.51-.26 4" />
+    <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+    <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+    <path d="M2 12a10 10 0 0118-6" />
+    <path d="M2 16h.01" />
+    <path d="M21.8 16c.2-2 .13-5.354 0-6" />
+    <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 01.34-2" />
+    <path d="M8.65 22c.21-.66.45-1.32.57-2" />
+    <path d="M9 6.8a6 6 0 019 5.2v2" />
+  </svg>
+);
+
+const SvgEye = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="17" height="17">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const SvgEyeOff = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="17" height="17">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 );
 
@@ -158,6 +208,55 @@ export function ScreensCustomizationPanel() {
   const [loadHorizontal, setLoadHorizontal] = useState(() => localStorage.getItem('mbc_loading_horizontal') || '');
   const [preview, setPreview] = useState<PreviewMode>(null);
 
+  /* ── Estados da prévia de bloqueio (espelham o LockScreen real) ── */
+  const [pw, setPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [forgot, setForgot] = useState(false);
+  const [portrait, setPortrait] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(orientation: portrait)').matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(orientation: portrait)');
+    const on = (e: MediaQueryListEvent) => setPortrait(e.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+
+  /* ESC fecha a prévia */
+  useEffect(() => {
+    if (preview !== 'lock') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPreview(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [preview]);
+
+  const openLockPreview = () => {
+    setPw('');
+    setShowPw(false);
+    setScanning(false);
+    setForgot(false);
+    setPreview('lock');
+  };
+
+  const biometric = isBiometricEnabled();
+  const customBg = portrait ? lockMobile || lockDesktop : lockDesktop || lockMobile;
+  const wall = resolveWallpaper(
+    readLS(portrait ? PREF_KEYS.lockWallVertical : PREF_KEYS.lockWallHorizontal) ||
+      (portrait ? 'neon' : 'grafite')
+  );
+  const nome = (profile?.customization?.nome || '').trim();
+
+  /* Biometria fake da prévia: 1s "verificando" → fecha */
+  const onBiometric = () => {
+    if (scanning) return;
+    setScanning(true);
+    window.setTimeout(() => setPreview(null), 1000);
+  };
+
   const update = (setter: (v: string) => void, key: string) => (v: string) => {
     setter(v);
     if (v) localStorage.setItem(key, v);
@@ -181,7 +280,7 @@ export function ScreensCustomizationPanel() {
               </p>
             </div>
           </div>
-          <button type="button" className="sy-btn sy-btn--sm" onClick={() => setPreview('lock')}>
+          <button type="button" className="sy-btn sy-btn--sm" onClick={openLockPreview}>
             {SvgPlay}
             Testar Bloqueio
           </button>
@@ -242,65 +341,130 @@ export function ScreensCustomizationPanel() {
         </div>
       </section>
 
-      {/* ══ Previews interativos ══ */}
-      {preview === 'lock' && (
-        <div className="sy-lock-preview" role="dialog" aria-modal="true" aria-label="Prévia da tela de bloqueio">
-          <div
-            className="sy-lock-preview__bg"
-            style={
-              lockDesktop || lockMobile
-                ? { backgroundImage: `url("${lockDesktop || lockMobile}")` }
-                : { background: 'linear-gradient(160deg, #f97316 0%, #0a0a10 70%)' }
-            }
-          />
-          <div className="sy-lock-preview__shade" />
-          <div className="sy-lock-preview__card">
-            <div className="sy-lock-preview__avatar">
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 72,
-                  height: 72,
-                  borderRadius: '50%',
-                  background: 'rgba(249,115,22,0.12)',
-                  border: '2px solid #f97316',
-                  color: '#f97316',
+      {/* ══ Prévia de bloqueio — classes reais do LockScreen (v4.9.2-telas) ══ */}
+      {preview === 'lock' &&
+        createPortal(
+          <div className="lock" role="dialog" aria-modal="true" aria-label="Prévia da tela de bloqueio">
+            <div
+              className="lock__wall"
+              style={
+                customBg
+                  ? {
+                      backgroundImage: `url("${customBg}")`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      filter: 'brightness(0.78) saturate(1.05)',
+                    }
+                  : { background: wall.bg }
+              }
+            />
+            <div className="lock__shade" />
+            <div className="lock__card">
+              <span className="lock__badge">
+                {SvgFingerPill}
+                Desbloqueio • Academia
+              </span>
+
+              <div className="lock__avatar">
+                <div className="lock__avatar-img">
+                  <ProfileEmblem customization={profile?.customization} />
+                </div>
+                <span className="lock__avatar-lock" aria-hidden="true">
+                  {SvgLockBadge}
+                </span>
+              </div>
+
+              <h2 className="lock__name">{nome || 'Academia'}</h2>
+              <p className="lock__hint">
+                {biometric ? (
+                  <>
+                    Entrada preferencial com <strong>Impressão Digital</strong>. Toque no sensor
+                    biométrico para desbloquear o Academia.
+                  </>
+                ) : (
+                  <>
+                    Este app está protegido. Digite sua <strong>senha de bloqueio</strong> para
+                    desbloquear o Academia.
+                  </>
+                )}
+              </p>
+
+              {biometric && (
+                <button
+                  type="button"
+                  className={scanning ? 'lock__bio lock__bio--scan' : 'lock__bio'}
+                  onClick={onBiometric}
+                  disabled={scanning}
+                  aria-label="Desbloquear com impressão digital (prévia)"
+                >
+                  {SvgFingerBig}
+                  <span className="lock__bio-title">
+                    {scanning ? 'Verificando…' : 'Desbloquear com Digital'}
+                  </span>
+                  <span className="lock__bio-sub">Toque no sensor para autenticar</span>
+                </button>
+              )}
+
+              <form
+                className="lock__form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setPreview(null);
                 }}
               >
-                {SvgShield}
-              </span>
-              <span className="sy-lock-preview__avatar-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" width="11" height="11">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-              </span>
+                <div className="lock__pw">
+                  <input
+                    type={showPw ? 'text' : 'password'}
+                    value={pw}
+                    onChange={(e) => setPw(e.target.value)}
+                    placeholder="Digite sua senha"
+                    autoComplete="off"
+                    maxLength={32}
+                    aria-label="Senha de bloqueio (prévia)"
+                  />
+                  <button
+                    type="button"
+                    className="lock__pw-eye"
+                    onClick={() => setShowPw((v) => !v)}
+                    aria-label={showPw ? 'Ocultar senha' : 'Mostrar senha'}
+                    tabIndex={-1}
+                  >
+                    {showPw ? SvgEyeOff : SvgEye}
+                  </button>
+                </div>
+                <button type="submit" className="lock__submit" disabled={scanning || !pw}>
+                  Desbloquear
+                </button>
+              </form>
+
+              <button type="button" className="lock__forgot" onClick={() => setForgot((v) => !v)}>
+                Esqueceu a senha?
+              </button>
+
+              {forgot ? (
+                <p className="lock__note lock__note--warn">
+                  Prévia: na tela real a senha existe apenas neste dispositivo — não há
+                  recuperação na nuvem.
+                </p>
+              ) : (
+                <p className="lock__note">
+                  Prévia da tela de bloqueio — desbloqueie ou pressione ESC para voltar às
+                  configurações.
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="sy-btn sy-btn--sm"
+                style={{ width: '100%', marginTop: 4 }}
+                onClick={() => setPreview(null)}
+              >
+                Fechar prévia
+              </button>
             </div>
-            <div>
-              <div className="sy-lock-preview__name">{profile?.customization.nome || 'Atleta'}</div>
-              <div className="sy-lock-preview__sub">APLICATIVO BLOQUEADO</div>
-            </div>
-            <div className="sy-lock-preview__input-wrap">
-              <input
-                type="password"
-                className="sy-lock-preview__input"
-                placeholder="••••"
-                aria-label="PIN de demonstração"
-                maxLength={6}
-              />
-            </div>
-            <button
-              type="button"
-              className="sy-btn sy-btn--primary sy-lock-preview__unlock"
-              onClick={() => setPreview(null)}
-            >
-              Desbloquear Sessão
-            </button>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       {preview === 'loading' && (
         <AppLoadingScreen

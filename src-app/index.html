@@ -15,6 +15,36 @@
     <link rel="stylesheet" href="/vendor/fontawesome.min.css">
     <!-- Material Symbols segue CDN (mesmo comportamento da versão offline) -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+
+    <!-- v4.9.0-sync — splash com imagem personalizada (mbc_loading_*): a
+         referência exibe APENAS a imagem em tela cheia com a barra de
+         progresso no rodapé (sem logo EVO FIT / saudação). Os estilos vivem
+         aqui porque src-app/src/legacy-style/ é espelho intocável. -->
+    <style>
+      .splash-screen--custom .splash-screen__logo,
+      .splash-screen--custom .splash-screen__user { display: none; }
+      .splash-screen--custom .splash-screen__content {
+        max-width: none;
+        height: 100%;
+        justify-content: flex-end;
+        gap: 0;
+        padding: 0;
+      }
+      .splash-screen--custom .splash-screen__bg::after { display: none; }
+      .splash-screen--custom .splash-screen__bar-wrap {
+        padding: 46px 22px calc(18px + env(safe-area-inset-bottom, 0px));
+        gap: 9px;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.62) 55%);
+      }
+      .splash-screen--custom .splash-screen__bar {
+        height: 4px;
+        background: rgba(255,255,255,0.28);
+      }
+      .splash-screen--custom .splash-screen__loading-text {
+        color: rgba(255,255,255,0.8);
+        letter-spacing: 2.5px;
+      }
+    </style>
   </head>
   <body class="bg-[#131313] text-white antialiased selection:bg-purple-500 selection:text-white">
     <!-- ✨ Splash Screen Personalizada (Feature 9) — port de treino.html L102–118 -->
@@ -35,7 +65,7 @@
           </div>
           <span class="splash-screen__loading-text">
             <span id="splashStatus">Carregando...</span>
-            <span id="splashPct" style="color:#f97316;font-weight:700"> 0%</span>
+            <span id="splashPct" style="color:var(--primary, #f97316);font-weight:700"> 0%</span>
           </span>
         </div>
       </div>
@@ -109,6 +139,9 @@
             bgEl.style.backgroundSize = 'cover';
             bgEl.style.backgroundPosition = 'center';
             bgEl.removeAttribute('data-banner');
+            /* Imagem em tela cheia: esconde logo/saudação e desloca a barra
+               para o rodapé (estilo inline em <head>, espelha a referência). */
+            splash.classList.add('splash-screen--custom');
           }
           var temNuvem = !!localStorage.getItem('mbc_supabase_url');
           if (statusEl) statusEl.textContent = temNuvem ? 'Sincronizando dados com a nuvem...' : 'Carregando dados...';

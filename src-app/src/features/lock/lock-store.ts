@@ -1,13 +1,14 @@
 /**
- * lock-store.ts — Sistema de Bloqueio do App (v4.6.0-shell)
+ * lock-store.ts — Sistema de Bloqueio do App (v4.6.0-shell / v4.9.0-sync)
  *
  * Store + utilitários do lock (port funcional do lock do
  * NavigationShellStandalone.tsx, adaptado às prefs do Academia):
  *   • prefs em localStorage via PREF_KEYS (appLockEnabled/Biometric/Timeout);
- *   • PIN local (4–6 dígitos) persistido como hash djb2 — nunca o PIN cru;
+ *   • senha local alfanumérica (4–32 caracteres) persistida como hash djb2 —
+ *     nunca a senha crua;
  *   • `useLockStore` (zustand) é a fonte de verdade do estado `locked`;
- *   • `isLockUsable()` = toggle ligado + PIN definido (condição do lock);
- *   • timeout de inatividade (-1 = desativado) lido por useAppLock.
+ *   • `isLockUsable()` = toggle ligado + senha definida (condição do lock);
+ *   • timeout de inatividade (-1 = sempre logado) lido por useAppLock.
  */
 
 import { create } from 'zustand';
@@ -15,9 +16,9 @@ import { PREF_KEYS, readLS, writeLS } from '@/features/profile/profile-data';
 
 export const PIN_STORAGE_KEY = 'academia_pref_app_pin';
 
-/* ── Hash leve do PIN (evita o PIN cru no localStorage; app local-only)
-     Formato: djb2:<hex>:<tamanho> — o tamanho deixa a tela de lock
-     auto-enviar o PIN ao completar os dígitos. ── */
+/* ── Hash leve da senha (evita a senha crua no localStorage; app local-only)
+     Formato: djb2:<hex>:<tamanho> — o tamanho identifica a credencial salva
+     (ex.: exibir "Senha de N caracteres" nas Configurações). ── */
 function hashPin(pin: string): string {
   let h = 5381;
   for (let i = 0; i < pin.length; i++) h = ((h << 5) + h + pin.charCodeAt(i)) >>> 0;
@@ -29,12 +30,12 @@ export function readPinHash(): string | null {
   return v && /^djb2:[0-9a-f]+:[0-9]+$/.test(v) ? v : null;
 }
 
-/** Tamanho (4–6) do PIN salvo; 0 quando não há PIN. */
+/** Tamanho (4–32) da senha salva; 0 quando não há senha. */
 export function getPinLength(): number {
   const stored = readPinHash();
   if (!stored) return 0;
   const len = Number(stored.split(':')[2]);
-  return Number.isFinite(len) && len >= 4 && len <= 6 ? len : 0;
+  return Number.isFinite(len) && len >= 4 && len <= 32 ? len : 0;
 }
 
 export function savePin(pin: string): void {
@@ -50,7 +51,7 @@ export function verifyPin(pin: string): boolean {
   return !!stored && stored === hashPin(pin);
 }
 
-/** Lock utilizável: toggle ativo E PIN definido. */
+/** Lock utilizável: toggle ativo E senha definida. */
 export function isLockUsable(): boolean {
   return readLS(PREF_KEYS.appLockEnabled) === 'true' && !!readPinHash();
 }
