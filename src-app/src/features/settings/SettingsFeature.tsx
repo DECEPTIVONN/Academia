@@ -50,6 +50,13 @@ import {
   savePin,
 } from '@/features/lock/lock-store';
 import type { HubScreen, HubTile } from './HubShell';
+import { SyncSettingsPanel } from '@/features/sync/SyncSettingsPanel';
+import { ScreensCustomizationPanel } from '@/features/sync/ScreensCustomizationPanel';
+import { ConnectedDevices } from '@/features/sync/ConnectedDevices';
+import { useAuthModalStore } from '@/features/auth/auth-modal-store';
+import { useAuth } from '@/core/auth/use-auth';
+import { supabase, isSupabaseConfigured } from '@/core/supabase';
+import { isSyncConfigured } from '@/core/sync/supabase-client';
 import './settings.css';
 
 export interface SettingsGroupProps {
@@ -305,6 +312,30 @@ const SvgLogOut = (
   </svg>
 );
 
+/* v4.9.0-sync — entrada (login na nuvem) */
+const SvgLogIn = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+    <polyline points="10 17 15 12 10 7" />
+    <line x1="15" y1="12" x2="3" y2="12" />
+  </svg>
+);
+
+/* v4.9.0-sync — tiles "Nuvem" e "Telas" */
+const SvgCloud20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+  </svg>
+);
+
+const SvgImages20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" />
+  </svg>
+);
+
 const SvgFingerprint = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
     <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" />
@@ -363,6 +394,11 @@ type LockState = Record<LockKey, string>;
  */
 export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProps): SettingsGroup {
   const { state: profile, update } = useProfileState();
+
+  /* v4.9.0-sync — sessão Supabase + modal de login */
+  const { user } = useAuth();
+  const openAuthModal = useAuthModalStore((s) => s.openModal);
+  const cloudConfigured = isSyncConfigured() || isSupabaseConfigured;
 
   /* Cor de destaque — localStorage é a fonte da verdade */
   const [themeKey, setThemeKey] = useState(() => readLS('academia_theme') || 'purple');
@@ -603,32 +639,16 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const activeHex = activeThemeHex(themeKey, customHex);
   const handleBadge = profile?.customization.handle || 'Local';
 
-  const deviceInfo = (() => {
-    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-    const browser = /Edg\//.test(ua)
-      ? 'Edge'
-      : /OPR\//.test(ua)
-        ? 'Opera'
-        : /Chrome\//.test(ua)
-          ? 'Chrome'
-          : /Firefox\//.test(ua)
-            ? 'Firefox'
-            : /Safari\//.test(ua)
-              ? 'Safari'
-              : 'Navegador';
-    const os = /Windows/.test(ua)
-      ? 'Windows'
-      : /Android/.test(ua)
-        ? 'Android'
-        : /iPhone|iPad|iPod/.test(ua)
-          ? 'iOS'
-          : /Mac OS/.test(ua)
-            ? 'macOS'
-            : /Linux/.test(ua)
-              ? 'Linux'
-              : 'Sistema local';
-    return { browser, os };
-  })();
+  /* v4.9.0-sync — sai só da sessão nuvem (NÃO limpa o banco local: o
+     signOut do AuthProvider chama clearLocalDB, destrutivo no modo sync) */
+  const handleSignOut = async () => {
+    try {
+      if (isSupabaseConfigured) await supabase.auth.signOut();
+      showToast('Desconectado da conta nuvem. Seus dados continuam neste dispositivo.', 'info');
+    } catch (err) {
+      showToast(`Erro ao sair: ${(err as Error).message}`, 'error');
+    }
+  };
 
   const secFields = [
     {
@@ -822,6 +842,30 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         'sons', 'som', 'vibracao', 'online', 'status', 'dev', 'desenvolvedor',
       ],
     },
+    /* v4.9.0-sync — nuvem (Supabase) + telas personalizadas */
+    {
+      id: 'nuvem',
+      title: 'Nuvem e Sincronização',
+      desc: 'Supabase, chave de sync, status e dispositivos',
+      icon: SvgCloud20,
+      badge: cloudConfigured ? 'Ativo' : 'Desativado',
+      keywords: [
+        'nuvem', 'sync', 'sincronizar', 'sincronizacao', 'supabase', 'online',
+        'backup nuvem', 'chave', 'dispositivos', 'conectados', 'sessao',
+        'remoto', 'tempo real',
+      ],
+    },
+    {
+      id: 'telas',
+      title: 'Telas Personalizadas',
+      desc: 'Imagens da tela de bloqueio e da splash de carregamento',
+      icon: SvgImages20,
+      badge: 'Imagens',
+      keywords: [
+        'telas', 'tela personalizada', 'imagem', 'wallpaper', 'splash',
+        'carregamento', 'upload', 'fundo', 'bg', 'preview', 'bloqueio imagem',
+      ],
+    },
   ];
 
   const toggleItemsInteraction = [
@@ -845,18 +889,25 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     },
   ];
 
-  const rootExtra = (
-    <button
-      type="button"
-      className="set-logout"
-      onClick={() =>
-        showToast('Sessão local: não há login remoto para sair — em breve!', 'info')
-      }
-    >
+  /* v4.9.0-sync — Entrar (abre o AuthModal) ou Sair (sessão nuvem) */
+  const rootExtra = user ? (
+    <button type="button" className="set-logout" onClick={() => void handleSignOut()}>
       {SvgLogOut}
       <span className="set-logout__body">
         <span className="set-logout__title">Sair da Conta</span>
-        <span className="set-logout__desc">Desconecte a sessão local deste dispositivo</span>
+        <span className="set-logout__desc">
+          {user.email || 'Conta nuvem'} • desconecta a sessão (dados locais mantidos)
+        </span>
+      </span>
+    </button>
+  ) : (
+    <button type="button" className="set-logout" onClick={() => openAuthModal()}>
+      {SvgLogIn}
+      <span className="set-logout__body">
+        <span className="set-logout__title">Entrar</span>
+        <span className="set-logout__desc">
+          Sincronize seus dados na nuvem em todos os aparelhos
+        </span>
       </span>
     </button>
   );
@@ -1189,45 +1240,24 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             </p>
           </section>
 
-          <section className="set-card">
-            <div className="set-card__head">
-              <div>
-                <div className="set-card__eyebrow">DISPOSITIVOS</div>
-                <h3 className="set-card__title">Dispositivos Conectados</h3>
-                <p className="set-card__desc">
-                  Sessões ativas e dispositivos autorizados.
-                </p>
-              </div>
-            </div>
-            <div className="set-toggles">
-              <div className="set-toggle">
-                <div className="set-toggle__info">
-                  <span className="set-toggle__icon">
-                    {/Android|iPhone|iPad|iPod/.test(navigator.userAgent)
-                      ? SvgSmartphone
-                      : SvgLaptop}
-                  </span>
-                  <div>
-                    <span className="set-toggle__label">
-                      Este Dispositivo
-                      <span className="set-badge-dev" style={{ marginLeft: 7 }}>
-                        ATUAL
-                      </span>
-                    </span>
-                    <span className="set-toggle__desc">
-                      {deviceInfo.browser} • {deviceInfo.os}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p className="set-note" style={{ marginTop: 10 }}>
-              A sincronização entre dispositivos chega em breve. Por enquanto
-              seus dados são 100% locais.
-            </p>
-          </section>
+          {/* v4.9.0-sync — lista real de dispositivos (registry da nuvem) */}
+          <ConnectedDevices />
         </>
       ),
+    },
+
+    /* ================= NUVEM E SINCRONIZAÇÃO (v4.9.0-sync) ================= */
+    nuvem: {
+      eyebrow: 'ACADEMIA • NUVEM',
+      title: 'Nuvem e Sincronização',
+      content: <SyncSettingsPanel />,
+    },
+
+    /* ================= TELAS PERSONALIZADAS (v4.9.0-sync) ================= */
+    telas: {
+      eyebrow: 'ACADEMIA • TELAS',
+      title: 'Telas Personalizadas',
+      content: <ScreensCustomizationPanel />,
     },
 
     /* ================= NOTIFICAÇÕES ================= */

@@ -36,6 +36,9 @@ import { motion, useMotionValue } from 'motion/react';
 import { flushSync } from 'react-dom';
 import { showToast } from '@/lib/toast';
 import type { SheetKey } from '@/core/db/schema';
+import { AuthModal } from '@/features/auth/AuthModal';
+import { RemoteSyncToast } from '@/features/sync/RemoteSyncToast';
+import { isEngineRunning, startSyncEngine, stopSyncEngine } from '@/core/sync/sync-manager';
 
 /* Ordem canônica das seções (ordem dos slides na fita + swipe) */
 const SECTIONS_ORDER: SectionType[] = ['progresso', 'treinos', 'dashboard', 'social', 'loja'];
@@ -457,6 +460,28 @@ export function App() {
     applySavedTheme();
   }, []);
 
+  /* ====== v4.9.0-sync: motor de sincronização multi-dispositivo ======
+     Liga quando o bootstrap terminar ('academia:db-ready'); o timeout é o
+     fallback para o caso de o evento já ter disparado antes do mount. O
+     atraso de 1,2 s evita push de snapshot vazio durante o bootstrap. */
+  useEffect(() => {
+    let started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      window.setTimeout(() => {
+        if (!isEngineRunning()) startSyncEngine();
+      }, 1200);
+    };
+    document.addEventListener('academia:db-ready', start);
+    const fallback = window.setTimeout(start, 4000);
+    return () => {
+      document.removeEventListener('academia:db-ready', start);
+      window.clearTimeout(fallback);
+      stopSyncEngine();
+    };
+  }, []);
+
   useEffect(() => {
     document.body.classList.toggle('perfil-overlay-open', isPerfilOverlayOpen && !isPerfilClosing);
   }, [isPerfilOverlayOpen, isPerfilClosing]);
@@ -780,6 +805,11 @@ export function App() {
               onPick={handleSearchPick}
             />
           )}
+
+          {/* ====== MODAL DE LOGIN + TOAST DE SYNC (v4.9.0-sync) ======
+              AuthModal z-index 1150 (abaixo do LockScreen 1200). */}
+          <AuthModal />
+          <RemoteSyncToast />
 
           {/* ====== TELA DE BLOQUEIO (v4.6.0-shell) ======
               z-index 1200 — acima de todos os overlays/modais. */}

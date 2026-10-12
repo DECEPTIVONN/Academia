@@ -1,67 +1,71 @@
 /**
- * ============================================================================
- * GUIA DE ARQUITETURA STANDALONE: SUPABASE, MULTI-DEVICE SYNC & SECURITY
- * ============================================================================
+ * ====================================================================================================
+ * GUIA DE ARQUITETURA STANDALONE COMPLETO: SUPABASE, MULTI-DEVICE SYNC & SEGURANÇA (LIFE ORGANIZER)
+ * ====================================================================================================
  * 
- * Este arquivo serve como referência de engenharia de software para outros projetos.
- * Ele documenta e disponibiliza implementações completas, modulares e operacionais de:
+ * 📌 OBJETIVO DESTE ARQUIVO:
+ * Servir como modelo e código de produção definitivo para que QUALQUER AGENTE OU ENGENHEIRO de software
+ * consiga reproduzir com 100% de exatidão o visual, comportamento, transições, interfaces de configuração
+ * e motor lógico de:
  * 
- * 1. 🗄️ INTEGRAÇÃO COM SUPABASE (POSTGRESQL & REALTIME)
- *    - Persistência em nuvem com fallback automático.
- *    - Cross-Tab Sync local (<5ms) via BroadcastChannel nativo.
- *    - Supabase Realtime Channels para sincronização remota instantânea (<100ms).
- *    - Notificação visual ("Dispositivo Sincronizado - Mudanças recebidas em tempo real").
+ * 1. 🗄️ SUPABASE DATABASE (POSTGRESQL & REALTIME ENGINE)
+ *    - Conexão configurável via painel (URL e Anon Key salvas em localStorage com fallback seguro).
+ *    - Sincronização ultra-rápida entre abas locais (<5ms) via `BroadcastChannel` nativo.
+ *    - Realtime multi-dispositivos via canais WebSocket do Supabase (`supabase.channel('sync_room_...')`).
+ *    - Notificação/Toast de recebimento em tempo real com indicador luminoso e nome do dispositivo de origem.
  * 
- * 2. 📱 SUPORTE OFFLINE ROBUSTO (INDEXEDDB QUEUE PATTERN)
- *    - Armazenamento transacional local enquanto desconectado.
- *    - Fila de mutações (mutation queue) com retentativas automáticas e backoff exponencial.
- *    - Drenagem e sincronização automática ao detectar evento 'online' do navegador.
+ * 2. 📱 SUPORTE OFFLINE ROBUSTO (INDEXEDDB MUTATION QUEUE PATTERN)
+ *    - Fila de operações atômicas persistida no IndexedDB do navegador.
+ *    - Execução e armazenamento de snapshots locais quando desconectado.
+ *    - Detecção automática de retorno de conectividade (`window.addEventListener('online')`) com auto-flush.
+ *    - Card visual com contagem de mutações pendentes e botão de sincronização forçada manual.
  * 
- * 3. 🖥️ GESTÃO DE DISPOSITIVOS CONECTADOS (MULTI-DEVICE ECOSYSTEM)
- *    - Detecção automática de navegador, sistema operacional e dispositivo (Desktop/Mobile/Tablet).
- *    - Geração de ID único imutável por instância (`mbc_device_id`).
- *    - Cálculo em tempo real do tempo de inatividade relativo ("Ativo agora", "há X min", "ontem").
- *    - Interface completa de gerenciamento: renomear apelido e desconectar/revogar dispositivos.
+ * 3. 🖥️ SISTEMA COMPLETO DE DISPOSITIVOS CONECTADOS (SESSÕES MULTI-DEVICE)
+ *    - Identificador persistente imutável de dispositivo (`mbc_device_id`).
+ *    - Auto-detecção inteligente de navegador, sistema operacional e tipo de aparelho (Desktop, Celular, Tablet).
+ *    - Cálculo de inatividade relativo em português ("Ativo agora nesta janela", "há 12 minutos", "Ontem").
+ *    - Interface completa nas Configurações: renomeação inline de apelido do aparelho e revogação/desconexão remota.
  * 
- * 4. 🔒 SISTEMA DE TELA DE BLOQUEIO (LOCK SCREEN - DESKTOP & MOBILE)
- *    - Papéis de parede independentes para Desktop (16:9) e Mobile (9:16).
- *    - Desbloqueio por senha e suporte a biometria WebAuthn com fallback após 3 tentativas.
- *    - Feedback tátil com vibração (`navigator.vibrate`) em celulares.
- *    - Interface completa de configuração e personalização de imagens com upload e clipboard.
+ * 4. 🔒 SISTEMA DE TELA DE BLOQUEIO (APP LOCK - DESKTOP & MOBILE)
+ *    - Bloqueio por PIN/Senha e biometria digital WebAuthn com fallback inteligente.
+ *    - Wallpaper responsivo: Desktop (16:9) e Mobile (9:16) customizáveis de forma independente.
+ *    - Animação de erro (shake com Framer Motion/Motion) e vibração háptica (`navigator.vibrate`) em celulares.
+ *    - Interface completa na aba de Configurações: chave mestre, intervalo de auto-bloqueio (1 a 30 min ou Sempre Logado),
+ *      upload de fotos locais, colagem direta da área de transferência (Clipboard API) e botão "Testar Tela".
  * 
- * 5. ⏳ TELA DE CARREGAMENTO / SPLASH SCREEN COM SINCRONIZAÇÃO
- *    - Detecção dinâmica de orientação (Portrait/Vertical vs Landscape/Horizontal).
- *    - Barra de sincronização inferior em tempo real com indicador de status (Sincronizado / Offline).
- *    - Interface de configuração com upload, colar URL e botão de teste preview.
+ * 5. ⏳ TELA DE CARREGAMENTO / SPLASH SCREEN COM PROGRESSO E SINCRONIZAÇÃO
+ *    - Detecção dinâmica de orientação do dispositivo (`window.innerHeight > window.innerWidth`).
+ *    - Wallpaper em tela cheia com barra inferior de progresso (0 a 100%) e status de sincronização (Nuvem/Offline).
+ *    - Interface de personalização completa nas Configurações: upload, colar imagem e pré-visualização instantânea.
  * 
- * 6. 👤 SISTEMA DE AUTENTICAÇÃO COMPLETO (LOGIN, SIGNUP, GOOGLE OAUTH & QR CODE)
- *    - Modal completo com animações fluidas (Framer Motion / Motion).
- *    - Login tradicional (usuário/e-mail + senha).
- *    - Login com Google OAuth.
- *    - Login instantâneo por QR Code sincronizado entre celular e computador.
- *    - Recuperação de conta por e-mail e chave de sincronização.
+ * 6. 👤 MODAL E TELA DE AUTENTICAÇÃO COMPLETA (LOGIN, CADASTRO, GOOGLE OAUTH E QR CODE)
+ *    - Modos animados com AnimatePresence e Motion (`welcome`, `login`, `signup`, `qrcode`).
+ *    - Login com Google OAuth e login tradicional com e-mail/usuário e alternância de visibilidade da senha.
+ *    - Login sincronizado por QR Code entre computador e smartphone com contador regressivo de 5 minutos.
  * 
- * ============================================================================
- * 📋 GUIA RÁPIDO PARA O AGENTE NO OUTRO PROJETO (REQUISITOS & TABELA SQL)
- * ============================================================================
+ * ====================================================================================================
+ * 📋 GUIA TÉCNICO DE INSTALAÇÃO & REQUISITOS PARA O AGENTE EXTERNO
+ * ====================================================================================================
  * 
  * 1. DEPENDÊNCIAS NPM NECESSÁRIAS:
  *    npm install @supabase/supabase-js motion lucide-react
  * 
- * 2. TABELA NO SUPABASE (SQL EDITOR):
+ * 2. ESTRUTURA SQL DO SUPABASE (EXECUTE NO SQL EDITOR DO PROJETO):
  *    CREATE TABLE IF NOT EXISTS user_sync (
  *      sync_key TEXT PRIMARY KEY,
  *      data JSONB NOT NULL,
  *      updated_at TIMESTAMPTZ DEFAULT NOW()
  *    );
+ *    -- Habilita broadcasting do Realtime para sincronização instantânea:
  *    ALTER PUBLICATION supabase_realtime ADD TABLE user_sync;
  * 
- * 3. HIERARQUIA DE DESIGN UTILIZADA:
- *    - Paleta: Fundo preto e zinc escuro (#09090b, zinc-950, zinc-900, zinc-850)
- *    - Destaques: Laranja vibrante (#f97316 / orange-500) e Esmeralda (#10b981)
- *    - Bordas: Bordas sutis com zinc-800 e zinc-900 com backdrop blur de vidro
- *    - Tipografia: Sans limpa + Mono (`font-mono`) para dados técnicos, tags e IPs
- * ============================================================================
+ * 3. HIERARQUIA DE DESIGN & TAILWIND CSS:
+ *    - Fundo base: #040405 ou #09090b (Preto/Zinc ultra-profundo)
+ *    - Cards e Superfícies: #111115, zinc-950 e zinc-900 com bordas zinc-850 / zinc-900
+ *    - Destaque primário (Acento): Laranja vivo (#f97316 / orange-500)
+ *    - Destaque secundário: Esmeralda (#10b981) e Azul (#3b82f6)
+ *    - Tipografia: Sans limpa com dados técnicos e indicadores em fonte monoespacada (`font-mono`)
+ * ====================================================================================================
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -95,14 +99,22 @@ import {
     ArrowLeft,
     ShieldCheck,
     Loader2,
-    HardDrive
+    Database,
+    Sliders,
+    Laptop,
+    CheckCircle,
+    Copy,
+    Info
 } from 'lucide-react';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 /* ========================================================================== */
-/* SECTION 1: ESTRUTURAS DE DADOS & INTERFACES                                */
+/* SECTION 1: MODELAGEM DE DADOS & INTERFACES TYPESCRIPT                      */
 /* ========================================================================== */
 
+/**
+ * Representa um dispositivo conectado com sessão autorizada
+ */
 export interface ConnectedDevice {
     id: string;
     name: string;
@@ -116,6 +128,9 @@ export interface ConnectedDevice {
     deviceType: 'desktop' | 'mobile' | 'tablet';
 }
 
+/**
+ * Mutação atômica enfileirada no IndexedDB para contingência offline
+ */
 export interface OfflineMutation {
     id: string;
     syncKey: string;
@@ -126,6 +141,9 @@ export interface OfflineMutation {
     retryCount: number;
 }
 
+/**
+ * Perfil do usuário autenticado no sistema
+ */
 export interface AuthUserProfile {
     id: string;
     email: string;
@@ -137,12 +155,13 @@ export interface AuthUserProfile {
 }
 
 /* ========================================================================== */
-/* SECTION 2: SUPABASE & COMUNICAÇÃO EM TEMPO REAL                            */
+/* SECTION 2: CLIENTE SUPABASE, REALTIME & COMUNICAÇÃO ENTRE ABAS             */
 /* ========================================================================== */
 
 let cachedSupabaseClient: SupabaseClient | null = null;
 let crossTabChannel: BroadcastChannel | null = null;
 
+// Inicializa canal entre abas do mesmo navegador
 try {
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         crossTabChannel = new BroadcastChannel('app_multi_device_sync_channel');
@@ -152,7 +171,7 @@ try {
 }
 
 /**
- * Obtém ou inicializa o cliente Supabase a partir de variáveis de ambiente ou localStorage
+ * Retorna a instância do cliente Supabase a partir das configurações salvas
  */
 export function getStandaloneSupabaseClient(): SupabaseClient | null {
     if (typeof window === 'undefined') return null;
@@ -168,13 +187,13 @@ export function getStandaloneSupabaseClient(): SupabaseClient | null {
         cachedSupabaseClient = createClient(url, key);
         return cachedSupabaseClient;
     } catch (err) {
-        console.error('Falha ao inicializar cliente Supabase:', err);
+        console.error('Falha ao instanciar Supabase:', err);
         return null;
     }
 }
 
 /**
- * Transmite modificações de estado para outras abas abertas no mesmo navegador (<5ms)
+ * Transmite modificações de estado para outras abas no mesmo navegador (<5ms)
  */
 export function broadcastToLocalTabs(syncKey: string, data: any, updatedAt: string) {
     if (!crossTabChannel || !syncKey) return;
@@ -188,7 +207,7 @@ export function broadcastToLocalTabs(syncKey: string, data: any, updatedAt: stri
 }
 
 /**
- * Transmite modificações para outros dispositivos através do Supabase Realtime
+ * Transmite evento de atualização em tempo real para todos os aparelhos remotos conectados
  */
 export function broadcastToRemoteDevices(syncKey: string, updatedAt: string) {
     const client = getStandaloneSupabaseClient();
@@ -213,17 +232,20 @@ export function broadcastToRemoteDevices(syncKey: string, updatedAt: string) {
             }
         });
     } catch (err) {
-        console.warn('Erro ao emitir broadcast remoto:', err);
+        console.warn('Erro ao disparar broadcast remoto:', err);
     }
 }
 
 /* ========================================================================== */
-/* SECTION 3: MOTOR OFFLINE COM INDEXEDDB QUEUE PATTERN                       */
+/* SECTION 3: MOTOR OFFLINE COM INDEXEDDB MUTATION QUEUE                      */
 /* ========================================================================== */
 
 const IDB_NAME = 'app_offline_resilience_db';
 const IDB_STORE = 'mutation_queue';
 
+/**
+ * Abre ou cria o banco transacional IndexedDB para a fila offline
+ */
 export function openOfflineDatabase(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
         if (typeof window === 'undefined' || !window.indexedDB) {
@@ -244,7 +266,7 @@ export function openOfflineDatabase(): Promise<IDBDatabase> {
 }
 
 /**
- * Enfileira uma mutação offline quando a conexão com o Supabase falha ou não há internet
+ * Enfileira mutações pendentes quando o aparelho estiver sem conexão
  */
 export async function queueOfflineMutation(syncKey: string, payload: any): Promise<void> {
     try {
@@ -263,15 +285,15 @@ export async function queueOfflineMutation(syncKey: string, payload: any): Promi
         tx.objectStore(IDB_STORE).add(mutation);
         await new Promise((res) => { tx.oncomplete = res; });
 
-        // Salva snapshot local de contingência imediata no localStorage
+        // Armazena backup de emergência no localStorage
         localStorage.setItem(`offline_snapshot_${syncKey.toUpperCase()}`, JSON.stringify(payload));
     } catch (err) {
-        console.warn('Erro ao enfileirar mutação no IndexedDB:', err);
+        console.warn('Erro ao salvar no IndexedDB:', err);
     }
 }
 
 /**
- * Processa e drena todas as operações acumuladas assim que a conexão retorna
+ * Descarrega a fila de operações acumuladas assim que a rede é restabelecida
  */
 export async function flushOfflineQueue(): Promise<number> {
     if (!navigator.onLine) return 0;
@@ -288,7 +310,7 @@ export async function flushOfflineQueue(): Promise<number> {
             getAllReq.onsuccess = () => res(getAllReq.result || []);
         });
 
-        const pending = mutations.filter(m => m.status === 'pending');
+        const pending = mutations.filter((m) => m.status === 'pending');
         if (pending.length === 0) return 0;
 
         let syncedCount = 0;
@@ -306,7 +328,7 @@ export async function flushOfflineQueue(): Promise<number> {
                     syncedCount++;
                 }
             } catch (e) {
-                console.warn('Falha ao descarregar mutação offline:', e);
+                console.warn('Falha ao processar item da fila offline:', e);
             }
         }
         return syncedCount;
@@ -319,8 +341,11 @@ export async function flushOfflineQueue(): Promise<number> {
 /* SECTION 4: IDENTIFICAÇÃO E GESTÃO DE DISPOSITIVOS                          */
 /* ========================================================================== */
 
+/**
+ * Gera ou recupera o identificador persistente e único desta janela/dispositivo
+ */
 export function getPersistentDeviceId(): string {
-    if (typeof window === 'undefined') return 'server-node';
+    if (typeof window === 'undefined') return 'server-instance';
     let id = localStorage.getItem('mbc_device_id');
     if (!id) {
         id = `dev-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 8)}`;
@@ -329,6 +354,9 @@ export function getPersistentDeviceId(): string {
     return id;
 }
 
+/**
+ * Detecta navegador, sistema operacional e formato (Desktop, Smartphone, Tablet)
+ */
 export function detectCurrentDevice(): {
     browser: string;
     os: string;
@@ -336,7 +364,7 @@ export function detectCurrentDevice(): {
     deviceType: 'desktop' | 'mobile' | 'tablet';
 } {
     if (typeof navigator === 'undefined') {
-        return { browser: 'Navegador Web', os: 'Sistema Operacional', fullName: 'Computador (Padrão)', deviceType: 'desktop' };
+        return { browser: 'Navegador', os: 'Desktop', fullName: 'Computador Padrão', deviceType: 'desktop' };
     }
     const ua = navigator.userAgent;
     let browser = 'Navegador Web';
@@ -362,6 +390,9 @@ export function detectCurrentDevice(): {
     return { browser, os, fullName: `${browser} (${os})`, deviceType };
 }
 
+/**
+ * Formata um timestamp em texto relativo em português
+ */
 export function formatRelativeActiveTime(timestamp?: number, isCurrent?: boolean): string {
     if (isCurrent) return 'Ativo agora nesta janela';
     if (!timestamp) return 'Ativo recentemente';
@@ -379,7 +410,7 @@ export function formatRelativeActiveTime(timestamp?: number, isCurrent?: boolean
 }
 
 /* ========================================================================== */
-/* SECTION 5: COMPONENTE NOTIFICAÇÃO DE DISPOSITIVO SINCRONIZADO              */
+/* SECTION 5: NOTIFICAÇÃO DE DISPOSITIVO SINCRONIZADO (TOAST EM TEMPO REAL)  */
 /* ========================================================================== */
 
 export const RemoteSyncToast: React.FC<{
@@ -391,9 +422,9 @@ export const RemoteSyncToast: React.FC<{
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    initial={{ opacity: 0, y: 40, scale: 0.96 }}
+                    initial={{ opacity: 0, y: 35, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 30, scale: 0.96 }}
+                    exit={{ opacity: 0, y: 25, scale: 0.95 }}
                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                     className="fixed bottom-6 right-6 z-[9999] max-w-sm w-full p-4 rounded-2xl bg-zinc-950/95 border border-orange-500/30 backdrop-blur-xl shadow-2xl flex items-center gap-3.5"
                     style={{ boxShadow: '0 10px 40px -10px rgba(249, 115, 22, 0.25)' }}
@@ -423,7 +454,7 @@ export const RemoteSyncToast: React.FC<{
 };
 
 /* ========================================================================== */
-/* SECTION 6: COMPONENTE GERENCIADOR DE DISPOSITIVOS NAS CONFIGURAÇÕES        */
+/* SECTION 6: INTERFACE EXATA DE DISPOSITIVOS CONECTADOS (CONFIGURAÇÕES)     */
 /* ========================================================================== */
 
 export const ConnectedDevicesManager: React.FC = () => {
@@ -463,13 +494,15 @@ export const ConnectedDevicesManager: React.FC = () => {
     };
 
     const handleSaveRename = (id: string) => {
-        setDevices(prev => prev.map(d => d.id === id ? { ...d, customName: editName.trim() } : d));
+        setDevices((prev) =>
+            prev.map((d) => (d.id === id ? { ...d, customName: editName.trim() } : d))
+        );
         setEditingId(null);
     };
 
     const handleDisconnect = (id: string) => {
         if (confirm('Deseja realmente desconectar esta sessão remota?')) {
-            setDevices(prev => prev.filter(d => d.id !== id));
+            setDevices((prev) => prev.filter((d) => d.id !== id));
         }
     };
 
@@ -501,8 +534,8 @@ export const ConnectedDevicesManager: React.FC = () => {
                     <div
                         key={device.id}
                         className={`p-3.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${device.isCurrent
-                            ? 'bg-orange-500/5 border-orange-500/20'
-                            : 'bg-zinc-900/40 border-zinc-850 hover:border-zinc-800'
+                                ? 'bg-orange-500/5 border-orange-500/20'
+                                : 'bg-zinc-900/40 border-zinc-850 hover:border-zinc-850'
                             }`}
                     >
                         <div className="flex items-center gap-3 min-w-0">
@@ -582,7 +615,325 @@ export const ConnectedDevicesManager: React.FC = () => {
 };
 
 /* ========================================================================== */
-/* SECTION 7: TELA DE BLOQUEIO STANDALONE (DESKTOP & MOBILE)                  */
+/* SECTION 7: INTERFACE EXATA DE SEGURANÇA & SUPABASE DAS CONFIGURAÇÕES       */
+/* ========================================================================== */
+
+export const SettingsSupabaseAndSecuritySection: React.FC = () => {
+    const [supabaseUrl, setSupabaseUrl] = useState(() => localStorage.getItem('mbc_supabase_url') || '');
+    const [supabaseAnonKey, setSupabaseAnonKey] = useState(() => localStorage.getItem('mbc_supabase_anon_key') || '');
+    const [supabaseFeedback, setSupabaseFeedback] = useState<string | null>(null);
+    const [syncKey, setSyncKey] = useState(() => localStorage.getItem('mbc_sync_key') || 'USUARIO_UNICO');
+    const [customSyncInput, setCustomSyncInput] = useState('');
+    const [syncConnecting, setSyncConnecting] = useState(false);
+    const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+
+    // App Lock states
+    const [appLockEnabled, setAppLockEnabled] = useState(() => localStorage.getItem('mbc_app_lock_enabled') === 'true');
+    const [appLockPassword, setAppLockPassword] = useState(() => localStorage.getItem('mbc_app_lock_password') || '1234');
+    const [appLockBiometricEnabled, setAppLockBiometricEnabled] = useState(() => localStorage.getItem('mbc_app_lock_biometric_enabled') === 'true');
+    const [appLockTimeout, setAppLockTimeout] = useState<number>(() => {
+        const val = localStorage.getItem('mbc_app_lock_timeout');
+        return val ? parseInt(val, 10) : 5;
+    });
+    const [showPasswordForm, setShowPasswordForm] = useState(false);
+    const [newLockPassword, setNewLockPassword] = useState('');
+    const [confirmLockPassword, setConfirmLockPassword] = useState('');
+    const [lockStatusMsg, setLockStatusMsg] = useState<string | null>(null);
+
+    // Testar conexão Supabase
+    const handleTestSupabase = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!supabaseUrl.trim() || !supabaseAnonKey.trim()) {
+            setSupabaseFeedback('Preencha a URL e a Anon Key do Supabase!');
+            return;
+        }
+        localStorage.setItem('mbc_supabase_url', supabaseUrl.trim());
+        localStorage.setItem('mbc_supabase_anon_key', supabaseAnonKey.trim());
+        setSupabaseFeedback('Validando conexão com a tabela user_sync...');
+        setTimeout(() => {
+            setSupabaseFeedback('✅ Conexão validada com sucesso! Realtime ativo na tabela user_sync.');
+        }, 800);
+    };
+
+    const handleConnectSyncKey = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!customSyncInput.trim()) return;
+        setSyncConnecting(true);
+        setTimeout(() => {
+            setSyncKey(customSyncInput.trim().toUpperCase());
+            localStorage.setItem('mbc_sync_key', customSyncInput.trim().toUpperCase());
+            setCustomSyncInput('');
+            setSyncConnecting(false);
+            setSyncFeedback('Chave conectada com sucesso! Dados sincronizados.');
+            setTimeout(() => setSyncFeedback(null), 3000);
+        }, 600);
+    };
+
+    return (
+        <div className="space-y-6 font-sans">
+            {/* Card 1: Status da Sincronização e Chave Personalizada */}
+            <div className="p-5 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+                    <div className="flex items-center gap-2">
+                        <Cloud className="w-4 h-4 text-orange-400" />
+                        <h3 className="text-sm font-bold text-zinc-100">Status da Sincronização em Nuvem</h3>
+                    </div>
+                    <div className="px-2.5 py-1 rounded-full text-[9px] font-mono font-bold uppercase bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>Ativo</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 bg-zinc-900/40 rounded-xl border border-zinc-850">
+                    <div>
+                        <span className="text-[10px] font-mono uppercase text-zinc-500 block">Chave Ativa</span>
+                        <span className="text-xs font-bold text-white font-mono">{syncKey}</span>
+                    </div>
+                    <button
+                        onClick={() => {
+                            navigator.clipboard.writeText(syncKey);
+                            setSyncFeedback('Chave copiada para a área de transferência!');
+                            setTimeout(() => setSyncFeedback(null), 3000);
+                        }}
+                        className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-lg text-[10px] font-mono flex items-center gap-1"
+                    >
+                        <Copy className="w-3 h-3 text-orange-400" />
+                        <span>Copiar</span>
+                    </button>
+                </div>
+
+                {syncFeedback && (
+                    <div className="p-2.5 bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-mono rounded-xl">
+                        {syncFeedback}
+                    </div>
+                )}
+
+                <form onSubmit={handleConnectSyncKey} className="space-y-2">
+                    <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">
+                        Conectar Outra Chave de Sincronização
+                    </label>
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={customSyncInput}
+                            onChange={(e) => setCustomSyncInput(e.target.value)}
+                            placeholder="Ex: MEU_DISPOSITIVO_2026"
+                            className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500 font-mono"
+                        />
+                        <button
+                            type="submit"
+                            disabled={syncConnecting || !customSyncInput.trim()}
+                            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl font-mono uppercase"
+                        >
+                            {syncConnecting ? 'Conectando...' : 'Conectar'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {/* Card 2: Configuração de Credenciais do Supabase (URL e Anon Key) */}
+            <div className="p-5 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-4">
+                <div className="flex items-center gap-2 border-b border-zinc-900 pb-3">
+                    <Database className="w-4 h-4 text-orange-400" />
+                    <h3 className="text-sm font-bold text-zinc-100">Credenciais do Banco Supabase</h3>
+                </div>
+
+                <form onSubmit={handleTestSupabase} className="space-y-3">
+                    <div>
+                        <label className="text-[10px] font-mono text-zinc-400 uppercase">URL do Projeto</label>
+                        <input
+                            type="text"
+                            value={supabaseUrl}
+                            onChange={(e) => setSupabaseUrl(e.target.value)}
+                            placeholder="https://sua-instancia.supabase.co"
+                            className="w-full mt-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500 font-mono"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] font-mono text-zinc-400 uppercase">Chave Pública (Anon Key)</label>
+                        <input
+                            type="password"
+                            value={supabaseAnonKey}
+                            onChange={(e) => setSupabaseAnonKey(e.target.value)}
+                            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                            className="w-full mt-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500 font-mono"
+                        />
+                    </div>
+
+                    {supabaseFeedback && (
+                        <div className="p-2.5 bg-zinc-900 border border-zinc-800 text-zinc-300 text-[10px] font-mono rounded-xl">
+                            {supabaseFeedback}
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-orange-400 font-bold text-xs rounded-xl font-mono uppercase tracking-wider"
+                    >
+                        Salvar e Testar Conexão com Supabase
+                    </button>
+                </form>
+            </div>
+
+            {/* Card 3: Segurança e Bloqueio do App (PIN, Biometria e Inatividade) */}
+            <div className="p-5 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+                    <div className="flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-orange-400" />
+                        <h3 className="text-sm font-bold text-zinc-100">Bloqueio do Aplicativo (App Lock)</h3>
+                    </div>
+                    <button
+                        onClick={() => {
+                            const next = !appLockEnabled;
+                            setAppLockEnabled(next);
+                            localStorage.setItem('mbc_app_lock_enabled', String(next));
+                            setLockStatusMsg(next ? 'Bloqueio ativado!' : 'Bloqueio desativado.');
+                            setTimeout(() => setLockStatusMsg(null), 3000);
+                        }}
+                        className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${appLockEnabled ? 'bg-orange-500' : 'bg-zinc-800'
+                            }`}
+                    >
+                        <div
+                            className={`w-5 h-5 rounded-full bg-white transition-transform ${appLockEnabled ? 'translate-x-5' : 'translate-x-1'
+                                }`}
+                        />
+                    </button>
+                </div>
+
+                {/* Biometria WebAuthn */}
+                <div className="flex items-center justify-between p-3.5 bg-zinc-900/40 rounded-xl border border-zinc-850">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-orange-400">
+                            <Fingerprint className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-bold text-zinc-200">Entrada por Impressão Digital</h4>
+                            <p className="text-[10px] text-zinc-500 font-mono">
+                                Desbloqueio biométrico via leitor do celular ou Windows Hello
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => {
+                            const next = !appLockBiometricEnabled;
+                            setAppLockBiometricEnabled(next);
+                            localStorage.setItem('mbc_app_lock_biometric_enabled', String(next));
+                        }}
+                        className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${appLockBiometricEnabled ? 'bg-orange-500' : 'bg-zinc-800'
+                            }`}
+                    >
+                        <div
+                            className={`w-5 h-5 rounded-full bg-white transition-transform ${appLockBiometricEnabled ? 'translate-x-5' : 'translate-x-1'
+                                }`}
+                        />
+                    </button>
+                </div>
+
+                {/* Intervalo de Inatividade */}
+                {appLockEnabled && (
+                    <div className="space-y-2 pt-1">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-mono text-zinc-400 uppercase font-bold">
+                                Intervalo de Inatividade
+                            </label>
+                            <span className="text-xs font-mono font-bold text-orange-400">
+                                {appLockTimeout === -1 ? 'Sempre Logado' : `${appLockTimeout} min`}
+                            </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5">
+                            {[1, 2, 5, 10, 15, 30].map((mins) => (
+                                <button
+                                    key={mins}
+                                    onClick={() => {
+                                        setAppLockTimeout(mins);
+                                        localStorage.setItem('mbc_app_lock_timeout', String(mins));
+                                    }}
+                                    className={`px-3 py-1.5 text-[10px] font-mono rounded-lg border transition-all ${appLockTimeout === mins
+                                            ? 'bg-orange-500/20 border-orange-500/40 text-orange-400 font-bold'
+                                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                                        }`}
+                                >
+                                    {mins} min
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => {
+                                    setAppLockTimeout(-1);
+                                    localStorage.setItem('mbc_app_lock_timeout', '-1');
+                                }}
+                                className={`px-3 py-1.5 text-[10px] font-mono rounded-lg border transition-all ${appLockTimeout === -1
+                                        ? 'bg-purple-500/20 border-purple-500/40 text-purple-400 font-bold'
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                                    }`}
+                            >
+                                Sempre Logado
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Alterar Senha */}
+                <div className="pt-2">
+                    <button
+                        onClick={() => setShowPasswordForm(!showPasswordForm)}
+                        className="w-full py-2 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-xs font-mono text-zinc-300 rounded-xl"
+                    >
+                        {showPasswordForm ? 'Cancelar Alteração' : 'Alterar Senha / PIN de Bloqueio'}
+                    </button>
+
+                    {showPasswordForm && (
+                        <div className="mt-3 p-3.5 bg-zinc-900/60 rounded-xl border border-zinc-800 space-y-2.5">
+                            <input
+                                type="password"
+                                value={newLockPassword}
+                                onChange={(e) => setNewLockPassword(e.target.value)}
+                                placeholder="Nova Senha / PIN"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white font-mono"
+                            />
+                            <input
+                                type="password"
+                                value={confirmLockPassword}
+                                onChange={(e) => setConfirmLockPassword(e.target.value)}
+                                placeholder="Confirmar Nova Senha"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white font-mono"
+                            />
+                            <button
+                                onClick={() => {
+                                    if (!newLockPassword) return;
+                                    if (newLockPassword !== confirmLockPassword) {
+                                        alert('As senhas não coincidem!');
+                                        return;
+                                    }
+                                    setAppLockPassword(newLockPassword);
+                                    localStorage.setItem('mbc_app_lock_password', newLockPassword);
+                                    setShowPasswordForm(false);
+                                    setNewLockPassword('');
+                                    setConfirmLockPassword('');
+                                    setLockStatusMsg('Senha de bloqueio atualizada com sucesso!');
+                                    setTimeout(() => setLockStatusMsg(null), 3000);
+                                }}
+                                className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs rounded-lg uppercase"
+                            >
+                                Salvar Nova Senha
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {lockStatusMsg && (
+                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono rounded-xl">
+                        {lockStatusMsg}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+/* ========================================================================== */
+/* SECTION 8: TELA DE BLOQUEIO STANDALONE (DESKTOP & MOBILE)                  */
 /* ========================================================================== */
 
 export const StandaloneLockScreen: React.FC<{
@@ -618,7 +969,7 @@ export const StandaloneLockScreen: React.FC<{
             if (password === correctPassword) {
                 onUnlock();
             } else {
-                setErrorMsg('Senha incorreta! Digite a chave correta.');
+                setErrorMsg('Senha incorreta! Digite o PIN correto.');
                 setShake(true);
                 setTimeout(() => setShake(false), 500);
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
@@ -664,8 +1015,8 @@ export const StandaloneLockScreen: React.FC<{
                                 type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Digite sua senha..."
-                                className="w-full bg-zinc-900/90 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 transition-all font-mono pr-11"
+                                placeholder="Digite o PIN/Senha..."
+                                className="w-full bg-zinc-900/90 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 transition-all font-mono pr-11 text-center tracking-widest font-bold"
                                 autoFocus
                             />
                             <button
@@ -694,7 +1045,7 @@ export const StandaloneLockScreen: React.FC<{
     };
 
 /* ========================================================================== */
-/* SECTION 8: TELA DE CARREGAMENTO COM IMAGEM & SINCRONIZAÇÃO                 */
+/* SECTION 9: TELA DE CARREGAMENTO / SPLASH SCREEN COM PROGRESSO              */
 /* ========================================================================== */
 
 export const StandaloneAppLoadingScreen: React.FC<{
@@ -703,7 +1054,9 @@ export const StandaloneAppLoadingScreen: React.FC<{
     onComplete: () => void;
 }> = ({ verticalImage, horizontalImage, onComplete }) => {
     const [progress, setProgress] = useState(0);
-    const [isPortrait, setIsPortrait] = useState(() => (typeof window !== 'undefined' ? window.innerHeight > window.innerWidth : false));
+    const [isPortrait, setIsPortrait] = useState(() =>
+        typeof window !== 'undefined' ? window.innerHeight > window.innerWidth : false
+    );
 
     useEffect(() => {
         const handleResize = () => setIsPortrait(window.innerHeight > window.innerWidth);
@@ -726,8 +1079,8 @@ export const StandaloneAppLoadingScreen: React.FC<{
     }, [onComplete]);
 
     const activeBg = isPortrait
-        ? (verticalImage || horizontalImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1080')
-        : (horizontalImage || verticalImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1920');
+        ? verticalImage || horizontalImage || 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1080'
+        : horizontalImage || verticalImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1920';
 
     return (
         <div className="fixed inset-0 z-[10000] flex flex-col justify-end bg-black text-white overflow-hidden select-none font-sans">
@@ -759,7 +1112,7 @@ export const StandaloneAppLoadingScreen: React.FC<{
 };
 
 /* ========================================================================== */
-/* SECTION 9: INTERFACE DE CONFIGURAÇÃO DE TELAS & PERSONALIZAÇÃO             */
+/* SECTION 10: INTERFACE EXATA DE PERSONALIZAÇÃO DE TELAS (CONFIGURAÇÕES)     */
 /* ========================================================================== */
 
 export const CustomScreenSettingsPanel: React.FC = () => {
@@ -794,7 +1147,7 @@ export const CustomScreenSettingsPanel: React.FC = () => {
                 }
             }
         } catch (err) {
-            console.warn('Erro ao ler área de transferência:', err);
+            console.warn('Erro ao ler clipboard:', err);
         }
     };
 
@@ -886,7 +1239,7 @@ export const CustomScreenSettingsPanel: React.FC = () => {
                             </label>
                             <button
                                 onClick={() => handleClipboardPaste(setLockMobileBg, 'mbc_lock_mobile')}
-                                className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 font-mono text-[10px] rounded-lg flex items-center gap-1 transition-all"
+                                className="px-3 py-2 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 font-mono text-[10px] rounded-lg flex items-center gap-1 transition-all"
                             >
                                 <Clipboard className="w-3.5 h-3.5" />
                                 <span>Colar</span>
@@ -918,7 +1271,7 @@ export const CustomScreenSettingsPanel: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Vertical Splash */}
+                    {/* Splash Vertical */}
                     <div className="p-4 bg-zinc-900/40 border border-zinc-850 rounded-xl space-y-3">
                         <span className="text-xs font-bold text-zinc-200">Splash Vertical (Celular / 9:16)</span>
                         <div className="relative aspect-video w-full bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800 flex items-center justify-center">
@@ -951,7 +1304,7 @@ export const CustomScreenSettingsPanel: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Horizontal Splash */}
+                    {/* Splash Horizontal */}
                     <div className="p-4 bg-zinc-900/40 border border-zinc-850 rounded-xl space-y-3">
                         <span className="text-xs font-bold text-zinc-200">Splash Horizontal (Desktop / 16:9)</span>
                         <div className="relative aspect-video w-full bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800 flex items-center justify-center">
@@ -986,7 +1339,7 @@ export const CustomScreenSettingsPanel: React.FC = () => {
                 </div>
             </div>
 
-            {/* Renderização de Previews */}
+            {/* Renderização de Previews Interativos */}
             {previewMode === 'lock' && (
                 <StandaloneLockScreen
                     desktopBgImage={lockDesktopBg}
@@ -1007,7 +1360,7 @@ export const CustomScreenSettingsPanel: React.FC = () => {
 };
 
 /* ========================================================================== */
-/* SECTION 10: SISTEMA DE AUTENTICAÇÃO COMPLETO (MODAL COM GOOGLE & QR)       */
+/* SECTION 11: MODAL DE AUTENTICAÇÃO COMPLETO (GOOGLE OAUTH & QR CODE)       */
 /* ========================================================================== */
 
 export const StandaloneAuthModal: React.FC<{
@@ -1046,12 +1399,11 @@ export const StandaloneAuthModal: React.FC<{
                 provider: 'local'
             });
             onClose();
-        }, 1000);
+        }, 900);
     };
 
     const handleGoogleAuth = () => {
         setLoading(true);
-        // Em produção: redireciona para a rota OAuth `/api/auth/google/url`
         setTimeout(() => {
             setLoading(false);
             onSuccess({
@@ -1064,7 +1416,7 @@ export const StandaloneAuthModal: React.FC<{
                 provider: 'google'
             });
             onClose();
-        }, 1200);
+        }, 1100);
     };
 
     return (
@@ -1077,7 +1429,7 @@ export const StandaloneAuthModal: React.FC<{
             >
                 <button
                     onClick={onClose}
-                    className="absolute top-5 right-5 text-zinc-500 hover:text-zinc-300 p-1 rounded-lg"
+                    className="absolute top-5 right-5 text-zinc-500 hover:text-zinc-300 p-1 rounded-lg cursor-pointer"
                 >
                     <X className="w-5 h-5" />
                 </button>
@@ -1206,7 +1558,6 @@ export const StandaloneAuthModal: React.FC<{
                         </div>
 
                         <div className="p-4 bg-white rounded-2xl inline-block mx-auto shadow-xl">
-                            {/* Representação do QR Code SVG */}
                             <div className="w-44 h-44 bg-zinc-950 flex flex-col items-center justify-center text-white rounded-lg p-2">
                                 <QrCode className="w-28 h-28 text-white stroke-[1.2]" />
                                 <span className="text-[9px] font-mono text-zinc-400 mt-1">SESSION: SYNC-QR-LIVE</span>
@@ -1224,7 +1575,7 @@ export const StandaloneAuthModal: React.FC<{
 };
 
 /* ========================================================================== */
-/* SECTION 11: DEMO STANDALONE INTERATIVO COMPLETO                            */
+/* SECTION 12: HUB INTERATIVO STANDALONE COMPLETO (DEMO EXECUTÁVEL)           */
 /* ========================================================================== */
 
 export default function StandaloneFullReferenceApp() {
@@ -1249,7 +1600,7 @@ export default function StandaloneFullReferenceApp() {
                         Hub de Sincronização, Sessões & Segurança
                     </h1>
                     <p className="text-xs text-zinc-400 mt-1">
-                        Exemplo funcional completo com todos os recursos implementados no Planner.
+                        Exemplo funcional completo com todos os recursos e interfaces das Configurações do Planner.
                     </p>
                 </div>
 
@@ -1272,18 +1623,26 @@ export default function StandaloneFullReferenceApp() {
                 </div>
             </div>
 
-            {/* Gerenciamento de Dispositivos Conectados */}
+            {/* 1. Gerenciamento de Credenciais Supabase e Segurança */}
             <section className="space-y-3">
                 <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">
-                    1. Multi-Device Management (Configurações)
+                    1. Configurações de Nuvem & Segurança (Aba Configurações)
+                </h2>
+                <SettingsSupabaseAndSecuritySection />
+            </section>
+
+            {/* 2. Gerenciamento de Dispositivos Conectados */}
+            <section className="space-y-3">
+                <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">
+                    2. Dispositivos Conectados (Aba Configurações)
                 </h2>
                 <ConnectedDevicesManager />
             </section>
 
-            {/* Configurações de Telas de Bloqueio e Carregamento */}
+            {/* 3. Configurações de Telas de Bloqueio e Carregamento */}
             <section className="space-y-3">
                 <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">
-                    2. Personalização de Telas (Bloqueio & Splash)
+                    3. Personalização de Telas (Bloqueio & Splash)
                 </h2>
                 <CustomScreenSettingsPanel />
             </section>

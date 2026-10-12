@@ -46,6 +46,19 @@ const SvgFinger = (
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'] as const;
 
+/* v4.9.0-sync — imagem personalizada da tela de bloqueio
+   (Configurações → Telas Personalizadas; usa a da orientação atual com
+   fallback para a outra) */
+function readCustomLockBg(portrait: boolean): string {
+  try {
+    const main = localStorage.getItem(portrait ? 'mbc_lock_mobile' : 'mbc_lock_desktop') || '';
+    if (main) return main;
+    return localStorage.getItem(portrait ? 'mbc_lock_desktop' : 'mbc_lock_mobile') || '';
+  } catch {
+    return '';
+  }
+}
+
 function useOrientationPortrait(): boolean {
   const [portrait, setPortrait] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(orientation: portrait)').matches
@@ -75,13 +88,17 @@ export const LockScreen: React.FC = () => {
       ? readLS(PREF_KEYS.lockWallVertical) || 'neon'
       : readLS(PREF_KEYS.lockWallHorizontal) || 'grafite'
   );
+  /* v4.9.0-sync — imagem personalizada (mbc_lock_desktop/mobile) */
+  const [customBg, setCustomBg] = useState<string>(() => readCustomLockBg(portrait));
   useEffect(() => {
-    const sync = () =>
+    const sync = () => {
       setWallId(
         portrait
           ? readLS(PREF_KEYS.lockWallVertical) || 'neon'
           : readLS(PREF_KEYS.lockWallHorizontal) || 'grafite'
       );
+      setCustomBg(readCustomLockBg(portrait));
+    };
     sync();
     window.addEventListener('academia:lock-prefs-changed', sync);
     return () => window.removeEventListener('academia:lock-prefs-changed', sync);
@@ -169,7 +186,19 @@ export const LockScreen: React.FC = () => {
 
   return (
     <div className="lock" id="appLockScreen" role="dialog" aria-modal="true" aria-label="App bloqueado">
-      <div className="lock__wall" style={{ background: wall.bg }} />
+      <div
+        className="lock__wall"
+        style={
+          customBg
+            ? {
+                backgroundImage: `url("${customBg}")`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'brightness(0.78) saturate(1.05)',
+              }
+            : { background: wall.bg }
+        }
+      />
       <div className="lock__shade" />
 
       <div className="lock__card">

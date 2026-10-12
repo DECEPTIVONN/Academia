@@ -33,7 +33,10 @@
                  e o override inline de applyBarSkinToDOM, sem duplicar CSS. -->
             <div class="splash-screen__fill progress-fill" id="splashFill"></div>
           </div>
-          <span class="splash-screen__loading-text">Carregando...</span>
+          <span class="splash-screen__loading-text">
+            <span id="splashStatus">Carregando...</span>
+            <span id="splashPct" style="color:#f97316;font-weight:700"> 0%</span>
+          </span>
         </div>
       </div>
     </div>
@@ -87,13 +90,45 @@
           }
         } catch (e) {}
 
+        // 2b) v4.9.0-sync — imagem personalizada da splash
+        //     (Configurações → Telas Personalizadas: mbc_loading_*) sobrepõe
+        //     o banner de perfil; status de sincronização + progresso simulado.
+        var statusEl = document.getElementById('splashStatus');
+        var pctEl = document.getElementById('splashPct');
+        var fillSim = document.getElementById('splashFill');
+        var pct = 0;
+        var saida = false;
+        try {
+          var portrait = window.innerHeight > window.innerWidth;
+          var customBg =
+            localStorage.getItem(portrait ? 'mbc_loading_vertical' : 'mbc_loading_horizontal') ||
+            localStorage.getItem(portrait ? 'mbc_loading_horizontal' : 'mbc_loading_vertical');
+          if (customBg) {
+            var bgEl = document.getElementById('splashBg');
+            bgEl.style.backgroundImage = 'url("' + customBg + '")';
+            bgEl.style.backgroundSize = 'cover';
+            bgEl.style.backgroundPosition = 'center';
+            bgEl.removeAttribute('data-banner');
+          }
+          var temNuvem = !!localStorage.getItem('mbc_supabase_url');
+          if (statusEl) statusEl.textContent = temNuvem ? 'Sincronizando dados com a nuvem...' : 'Carregando dados...';
+        } catch (e) {}
+
+        // Progresso simulado (0 → 90%): termina ao chegar em 100% no sair().
+        var tickProg = setInterval(function () {
+          if (saida) return;
+          if (pct >= 90) return;
+          pct = Math.min(90, pct + 1 + Math.round(Math.random() * 5));
+          if (pctEl) pctEl.textContent = ' ' + pct + '%';
+          if (fillSim) fillSim.style.width = pct + '%';
+        }, 140);
+
         // 3) Saída quando o bootstrap termina (academia:db-ready) — sequência
         //    literal de app.js L477–488: +100 ms fill 100% → +400 ms hidden.
         //    Divergência: o preenchimento espera a skin de barra REAL do perfil
         //    (body[data-bar-skin] só é setado pelo bundle quando o profileState
         //    carrega — ProfileFeature) para a splash já abrir com a skin
         //    escolhida pelo usuário. Máximo de espera: 20 × 50 ms.
-        var saida = false;
         var esperandoSkin = 0;
         function sair() {
           if (saida) return;
@@ -103,6 +138,10 @@
             return;
           }
           saida = true;
+          clearInterval(tickProg);
+          pct = 100;
+          if (pctEl) pctEl.textContent = ' 100%';
+          if (statusEl) statusEl.textContent = 'Pronto!';
           var fill = document.getElementById('splashFill');
           if (fill) fill.style.width = '100%';
           setTimeout(function () {

@@ -60,6 +60,8 @@ const CONFIGS: SearchItem[] = [
   { id: 'cfg:exibicao', kind: 'config', title: 'Exibição', desc: 'Navbar, formato da barra, tela cheia automática e timer', stack: ['exibicao'], keywords: ['navbar', 'barra', 'formato', 'oval', 'reta', 'tela cheia', 'fullscreen', 'timer', 'modo'] },
   { id: 'cfg:notificacoes', kind: 'config', title: 'Notificações', desc: 'Lembrete de treino e avisos', stack: ['notificacoes'], keywords: ['lembrete', 'aviso', 'push', 'treino'] },
   { id: 'cfg:conta', kind: 'config', title: 'Conta', desc: 'Informações, senha, backup e restaurar', stack: ['conta'], keywords: ['conta', 'perfil', 'backup', 'exportar', 'restaurar', 'senha'] },
+  { id: 'cfg:nuvem', kind: 'config', title: 'Nuvem e Sincronização', desc: 'Supabase, chave de sync, status e dispositivos', stack: ['nuvem'], keywords: ['nuvem', 'sync', 'sincronizar', 'supabase', 'dispositivos', 'conectados', 'chave', 'tempo real'] },
+  { id: 'cfg:telas', kind: 'config', title: 'Telas Personalizadas', desc: 'Imagens da tela de bloqueio e da splash', stack: ['telas'], keywords: ['telas', 'imagem', 'wallpaper', 'splash', 'carregamento', 'upload', 'fundo'] },
   { id: 'cfg:perfil', kind: 'config', title: 'Perfil', desc: 'Cartão, ofensivas e medalhas', stack: ['perfil'], keywords: ['cartao', 'ofensivas', 'medalhas', 'amigos'] },
   { id: 'cfg:progressao', kind: 'config', title: 'Progressão', desc: 'Visão geral, nível/XP e conquistas', stack: ['progressao'], keywords: ['nivel', 'xp', 'conquistas', 'progresso'] },
   { id: 'cfg:personalizar', kind: 'config', title: 'Personalizar', desc: 'Identidade, frase, destaque e título', stack: ['personalizar'], keywords: ['identidade', 'frase', 'titulo', 'emoji', 'destaque'] },
