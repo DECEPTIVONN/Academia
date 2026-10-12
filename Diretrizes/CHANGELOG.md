@@ -21,6 +21,17 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.8.4.1-treinos-polish] - 2026-10-11
+
+Polimento da seção Treinos na paleta das Configurações (`features/settings/settings.css`): seletor de abas Exercícios/Montar Ficha, linha de filtros e chrome da aba (busca/CTA/view) — cards intocados; ícone do botão EDITAR EXERCÍCIO do CRDetails virou SVG stroke (regra do `Diretrizes/Ícones.md`); botão de tela cheia da top bar mobile deixa de ficar colorido quando ativo. `system_map.json` → 3.5.44.
+
+### Changed
+- `TreinosModals.tsx` (CRDetails): `✏️ EDITAR EXERCÍCIO` → **SVG stroke inline** (mesmo lápis de `cards.tsx` `SLOT_MENU_ICONS.pencil`, `stroke="currentColor"`, 14px) + texto — regra do `Diretrizes/Ícones.md` (sem emojis).
+- `MobileTopBar.tsx`: alternador de tela cheia **nunca recebe `top-bar__btn--active`** — em tela cheia o botão fica neutro como os demais (ícone continua alternando `SvgMaximize`/`SvgMinimize`).
+- `shell.css` (novo bloco `v4.8.4.1-treinos-polish`): override de **cores** do chrome da aba Exercícios na paleta settings (tabs-subnav.css/1-core.css são espelhos legados — não editados): `.section-subtabs .treino-tab-nav` borda inferior → hairline; `.t-tab-btn` inativa `#0b0b10` + hairline + `#8a8a9c`, hover `#101018`, ativa `#0e0e14` + borda `var(--primary)`; `.sub-tab-content` `#0b0b10` + hairline; `.sub-nav-btn` `#8a8a9c`, ativa ghost primary (bg `rgba(var(--primary-rgb),0.16)`, texto `var(--primary-light)`, glow `0 0 12px rgba(var(--primary-rgb),0.2)`) com seta `::after` em `var(--primary)`; `.btn-novo-ex` `var(--gradient)` → variante primary flat; `.view-btn.active` `var(--gradient)` → ghost primary. Cards de exercício intocados (pedido do usuário).
+
+Verificação: `npx tsc -b` exit 0 · `npx oxlint src` 0 warnings · `npm run build` OK · CDP `probe_4841.js` **5/5 PASS** (seletor de abas `rgb(11,11,16)`/ativa borda `rgb(139,92,246)`; sub-nav ativa `rgba(139,92,246,0.16)` + texto `rgb(192,132,252)`; botão tela cheia sem `--active` após toggle; EDITAR EXERCÍCIO com SVG stroke e sem emoji ✏️; 0 erros de JS).
+
 ## [v4.8.4-color-standard] - 2026-10-11
 
 Padronização de cores com a interface de Configurações (`features/settings/settings.css` — painéis near-black `#07070b`/`#0b0b10`/`#0e0e14`, hairlines `rgba(255,255,255,0.08)`, acentos sempre em `--primary`/`--primary-rgb`, dim `#8a8a9c`/`#5d5d70`): top bar mobile totalmente transparente, modal de Detalhes do exercício (CRDetails) e overlay de Missões. `system_map.json` → 3.5.43.

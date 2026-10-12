@@ -1089,3 +1089,66 @@
   border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.7) !important;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(var(--primary-rgb, 139, 92, 246), 0.35) !important;
 }
+
+/* ============================================================
+   v4.8.4.1-treinos-polish — aba Exercícios na paleta das Configurações
+   ============================================================
+   tabs-subnav.css/1-core.css são espelhos legados (não editar). Só CORES
+   do chrome (seletor de abas Exercícios/Montar Ficha, linha de filtros,
+   busca/CTA/view) — os cards de exercício não são tocados. Referência:
+   features/settings/settings.css (near-black, hairlines, --primary). */
+
+.section-subtabs .treino-tab-nav {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+.section-subtabs .t-tab-btn {
+  background: #0b0b10 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #8a8a9c !important;
+}
+.section-subtabs .t-tab-btn:hover {
+  background: #101018 !important;
+  color: #fff !important;
+}
+.section-subtabs .t-tab-btn.active {
+  background: #0e0e14 !important;
+  color: #fff !important;
+  border-color: var(--primary) !important;
+  border-bottom-color: #0e0e14 !important;
+}
+.sub-tab-content {
+  background: #0b0b10;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.sub-nav-btn {
+  color: #8a8a9c;
+}
+.sub-nav-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+.sub-nav-btn.active {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
+  color: var(--primary-light);
+  box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.2);
+}
+.sub-nav-btn.active::after {
+  border-color: var(--primary) transparent;
+}
+.btn-novo-ex {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.55);
+  color: var(--primary-light);
+  box-shadow: none;
+}
+.btn-novo-ex:hover {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.3);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(var(--primary-rgb, 139, 92, 246), 0.2);
+}
+.view-btn.active {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.16) !important;
+  color: var(--primary-light) !important;
+  box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.2) !important;
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5) !important;
+}

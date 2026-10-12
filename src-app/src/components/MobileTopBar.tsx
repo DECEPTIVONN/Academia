@@ -56,7 +56,7 @@ export const MobileTopBar: React.FC<MobileTopBarProps> = ({
         </button>
         <button
           type="button"
-          className={isFullscreen ? 'top-bar__btn top-bar__btn--active' : 'top-bar__btn'}
+          className="top-bar__btn"
           onClick={onToggleFullscreen}
           aria-label={isFullscreen ? 'Sair da tela cheia' : 'Ativar tela cheia'}
           title="Modo Tela Cheia"
