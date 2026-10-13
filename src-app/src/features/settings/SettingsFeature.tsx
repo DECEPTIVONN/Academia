@@ -22,6 +22,8 @@
  */
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+/* v4.13.0 — ícone do opt "Só no Botão" (fonte autorizada Diretrizes/Ícones.md §11) */
+import { MousePointerClick } from 'lucide-react';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { PREF_KEYS, readLS, writeLS } from '@/features/profile/profile-data';
 import { exportBackupData, importBackupFile } from '@/features/profile/backup';
@@ -364,6 +366,8 @@ const SvgPlay = (
 const LOCK_PREF_MAP = {
   enabled: 'appLockEnabled',
   biometric: 'appLockBiometric',
+  /* v4.13.0 — solicitação automática da biometria (default 'true') */
+  bioAuto: 'appLockBioAuto',
   timeout: 'appLockTimeout',
   wallV: 'lockWallVertical',
   wallH: 'lockWallHorizontal',
@@ -429,6 +433,8 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [lock, setLock] = useState<LockState>(() => ({
     enabled: readLS(PREF_KEYS.appLockEnabled) === 'true' ? 'true' : 'false',
     biometric: readLS(PREF_KEYS.appLockBiometric) === 'true' ? 'true' : 'false',
+    /* Ausente = 'true' — mantém o comportamento atual (auto ao entrar). */
+    bioAuto: readLS(PREF_KEYS.appLockBioAuto) === 'false' ? 'false' : 'true',
     timeout: readLS(PREF_KEYS.appLockTimeout) || '300',
     wallV: readLS(PREF_KEYS.lockWallVertical) || 'neon',
     wallH: readLS(PREF_KEYS.lockWallHorizontal) || 'grafite',
@@ -1322,6 +1328,45 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 </label>
               </div>
             </div>
+
+            {/* v4.13.0 — como a biometria é solicitada: automática (padrão,
+                prompt 400ms ao entrar/travar) ou só no botão "Desbloquear
+                com Digital" (a senha continua disponível). */}
+            {lock.biometric === 'true' && (
+              <>
+                <div className="set-card__head" style={{ marginTop: 22 }}>
+                  <div>
+                    <h3 className="set-card__title">Solicitação da Digital</h3>
+                    <p className="set-card__desc">
+                      Quando a biometria é pedida na tela de bloqueio.
+                    </p>
+                  </div>
+                </div>
+                <div className="set-opts">
+                  <button
+                    type="button"
+                    className={`set-opt ${lock.bioAuto === 'true' ? 'set-opt--active' : ''}`}
+                    onClick={() => updateLock('bioAuto', 'true')}
+                  >
+                    {SvgFingerprint}
+                    <span className="set-opt__label">Automática</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`set-opt ${lock.bioAuto === 'false' ? 'set-opt--active' : ''}`}
+                    onClick={() => updateLock('bioAuto', 'false')}
+                  >
+                    <MousePointerClick size={18} />
+                    <span className="set-opt__label">Só no Botão</span>
+                  </button>
+                </div>
+                <p className="set-note" style={{ marginTop: 10 }}>
+                  {lock.bioAuto === 'true'
+                    ? 'A digital é solicitada sozinha ao entrar no app ou ao travar.'
+                    : 'A digital só é pedida ao tocar em "Desbloquear com Digital"; a senha continua disponível.'}
+                </p>
+              </>
+            )}
             {/* v4.9.3-settings — Botão "Testar Bloqueio Agora" (reference) */}
             {lock.enabled === 'true' && (
               <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(63, 63, 70, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

@@ -114,6 +114,10 @@ export const PREF_KEYS = {
   /* v4.5.0 — placeholders de Segurança/Notificações (salvos, sem efeito real) */
   appLockEnabled: 'academia_pref_app_lock_enabled',
   appLockBiometric: 'academia_pref_app_lock_biometric',
+  /* v4.13.0 — como a biometria é solicitada: 'true' (padrão) = automática
+     ao entrar/travar (prompt WebAuthn 400ms após montar o LockScreen);
+     'false' = só quando o usuário toca em "Desbloquear com Digital". */
+  appLockBioAuto: 'academia_pref_app_lock_bio_auto',
   appLockTimeout: 'academia_pref_app_lock_timeout',
   lockWallVertical: 'academia_pref_lock_wall_vertical',
   lockWallHorizontal: 'academia_pref_lock_wall_horizontal',

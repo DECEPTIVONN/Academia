@@ -8,7 +8,9 @@
  *   • direita: busca geral unificada + alternador de tela cheia.
  *
  * No desktop (≥ 1024px) some via CSS (shell.css) — quem aparece é a
- * Sidebar HUD. Como é fixed, o `.shell-body` compensa com padding-top.
+ * Sidebar HUD. Como é fixed e transparente, o offset de 56px vive no
+ * padding-top do .section-slide (v4.13.0): o conteúdo rola por trás da
+ * barra e continua visível através dela.
  */
 
 import React from 'react';

@@ -55,7 +55,7 @@ const SECTIONS: SearchItem[] = [
 ];
 
 const CONFIGS: SearchItem[] = [
-  { id: 'cfg:seguranca', kind: 'config', title: 'Segurança e Bloqueio', desc: 'Senha do app, biometria, inatividade e wallpaper', stack: ['seguranca'], keywords: ['bloqueio', 'senha', 'pin', 'biometria', 'digital', 'inatividade', 'lock'] },
+  { id: 'cfg:seguranca', kind: 'config', title: 'Segurança e Bloqueio', desc: 'Senha do app, biometria, inatividade e wallpaper', stack: ['seguranca'], keywords: ['bloqueio', 'senha', 'pin', 'biometria', 'digital', 'inatividade', 'lock', 'automatica', 'auto', 'botao'] },
   { id: 'cfg:cores', kind: 'config', title: 'Cor de Destaque', desc: 'Tema e cor personalizada do app', stack: ['cores'], keywords: ['cor', 'tema', 'custom', 'roxo', 'acento'] },
   { id: 'cfg:exibicao', kind: 'config', title: 'Exibição', desc: 'Navbar, formato da barra, tela cheia automática e timer', stack: ['exibicao'], keywords: ['navbar', 'barra', 'formato', 'oval', 'reta', 'tela cheia', 'fullscreen', 'timer', 'modo'] },
   { id: 'cfg:notificacoes', kind: 'config', title: 'Notificações', desc: 'Lembrete de treino e avisos', stack: ['notificacoes'], keywords: ['lembrete', 'aviso', 'push', 'treino'] },

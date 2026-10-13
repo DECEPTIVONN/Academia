@@ -177,9 +177,15 @@ export const LockScreen: React.FC = () => {
 
   const wall = useMemo(() => resolveWallpaper(wallId), [wallId]);
   const biometric = isBiometricEnabled();
+  /* v4.13.0 — pref "Solicitação da Digital": 'true' (padrão/ausente) pede a
+     biometria sozinha ao travar/entrar; 'false' pede só no botão. */
+  const autoBio = readLS(PREF_KEYS.appLockBioAuto) !== 'false';
 
-  /* REGRA DE OURO UX: modo biometria-only até 3 falhas */
+  /* REGRA DE OURO UX: modo biometria-only até 3 falhas (cartão da digital) */
   const isBiometricOnlyMode = biometric && bioFailedAttempts < 3;
+  /* Campo de senha: sem biometria, após 3 falhas, ou quando a digital não é
+     solicitada automaticamente (modo "Só no Botão" — senha sempre disponível) */
+  const showPwForm = !biometric || bioFailedAttempts >= 3 || !autoBio;
 
   const shake = useCallback(() => {
     setPw('');
@@ -240,15 +246,22 @@ export const LockScreen: React.FC = () => {
     }
   }, [scanning, unlock]);
 
-  /* Auto-trigger biometria 400ms após montar (modo biometria-only) */
+  /* Auto-trigger biometria 400ms após montar (modo biometria-only).
+     v4.13.0: só quando o app está TRAVADO e a pref "Solicitação Automática"
+     está ativa — com a pref "Só no Botão" a digital só é pedida ao toque.
+     A flag é marcada DENTRO do timeout (o double-invoke do StrictMode em dev
+     limpa o 1º timer no cleanup; marcar antes cancelava o reagendamento). */
   useEffect(() => {
-    if (biometric && !hasTriggeredBioRef.current && bioFailedAttempts < 3) {
-      hasTriggeredBioRef.current = true;
-      const t = window.setTimeout(() => onBiometric(), 400);
+    if (!locked) return undefined;
+    if (biometric && autoBio && !hasTriggeredBioRef.current && bioFailedAttempts < 3) {
+      const t = window.setTimeout(() => {
+        hasTriggeredBioRef.current = true;
+        onBiometric();
+      }, 400);
       return () => window.clearTimeout(t);
     }
     return undefined;
-  }, [biometric, bioFailedAttempts, onBiometric]);
+  }, [locked, biometric, autoBio, bioFailedAttempts, onBiometric]);
 
   /* Limpar senha local (modal "Recuperar Acesso") */
   const onClearLocalData = useCallback(() => {
@@ -320,10 +333,16 @@ export const LockScreen: React.FC = () => {
 
         <h2 className="lock__name">{nome || 'Academia'}</h2>
         <p className="lock__hint">
-          {isBiometricOnlyMode ? (
+          {isBiometricOnlyMode && autoBio ? (
             <>
               Entrada preferencial com <strong>Impressão Digital</strong>. Toque no sensor
               biométrico para prosseguir.
+            </>
+          ) : isBiometricOnlyMode ? (
+            /* v4.13.0 — modo "Só no Botão": nada é pedido sozinho */
+            <>
+              Escolha como desbloquear: toque em <strong>Desbloquear com Digital</strong> ou
+              digite sua <strong>Senha de Bloqueio</strong>.
             </>
           ) : bioFailedAttempts >= 3 ? (
             <>
@@ -338,8 +357,9 @@ export const LockScreen: React.FC = () => {
           )}
         </p>
 
-        {/* MODO A: biometria preferencial exclusiva (até 3 falhas) */}
-        {isBiometricOnlyMode ? (
+        {/* MODO A: cartão da digital (até 3 falhas) — v4.13.0: no modo
+            "Só no Botão" ele convive com o formulário de senha abaixo */}
+        {isBiometricOnlyMode && (
           <div className="lock__bio-only">
             <button
               type="button"
@@ -371,11 +391,13 @@ export const LockScreen: React.FC = () => {
               </div>
             )}
           </div>
-        ) : (
-          /* MODO B: entrada de senha (fallback ou sem biometria) */
+        )}
+
+        {/* MODO B: entrada de senha (sem biometria, após 3 falhas ou modo "Só no Botão") */}
+        {showPwForm && (
           <div className="lock__pw-mode">
             {/* Botão "Tentar biometria novamente" (após 3 falhas) */}
-            {biometric && (
+            {biometric && bioFailedAttempts >= 3 && (
               <div className="lock__bio-retry-wrap">
                 <button
                   type="button"
@@ -423,8 +445,9 @@ export const LockScreen: React.FC = () => {
                 </button>
               </div>
 
-              {/* Mensagem de erro */}
-              {errMsg && (
+              {/* Mensagem de erro — no modo "Só no Botão" o aviso já aparece
+                  no cartão da digital acima (evita duplicar) */}
+              {errMsg && !isBiometricOnlyMode && (
                 <div className="lock__err lock__err--show" role="alert">
                   ⚠️ {errMsg}
                 </div>

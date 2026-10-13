@@ -19,9 +19,13 @@
 /* ---------- Utilidades de layout shell ---------- */
 .shell-body {
   position: relative;
-  /* Top Bar mobile é fixed (paridade com a referência) — o conteúdo
-     precisa começar abaixo dela; no desktop o padding é zerado. */
-  padding-top: 56px;
+  /* v4.13.0 — o deslocamento da Top Bar mobile (56px) saiu daqui e passou a
+     viver em .section-slide (padding-top, regra na seção da Top Bar abaixo).
+     A barra é FIXED e 100% transparente: com o padding no .shell-body o
+     conteúdo era CORTADO em y=56 e a faixa da barra escondia a interface ao
+     rolar ("a barra se sobrepõe à interface"). Como o scroll acontece dentro
+     do slide, o offset ali faz o conteúdo começar abaixo da barra em repouso e
+     passar POR TRÁS dela (visível através do fundo transparente) ao rolar. */
 }
 
 /* v4.12.0 — `main { min-height: 100vh }` do main.css (não-camadado) vence
@@ -139,6 +143,25 @@
   stroke: currentColor;
 }
 
+/* v4.13.0 — barra 100% transparente também no toque: com o conteúdo rolando
+   por trás, a faixa da barra não pode engolir gestos/arrastos — só o avatar
+   e os botões capturam eventos (o resto passa para o slide abaixo). */
+.top-bar {
+  pointer-events: none;
+}
+.top-bar__avatar,
+.top-bar__btn {
+  pointer-events: auto;
+}
+
+/* v4.13.0 — offset da Top Bar (56px) vive no container de scroll: em repouso
+   o conteúdo começa abaixo da barra (mesmo layout de antes); ao rolar ele
+   sobe para dentro da faixa e fica visível atrás da barra transparente.
+   No desktop (≥1024px) não há Top Bar → padding zerado. */
+.section-slide {
+  padding-top: 56px;
+}
+
 @media (min-width: 1024px) {
   .top-bar {
     display: none;
@@ -150,7 +173,8 @@
    ============================================================
    O legado (7-nav-icons.css) dá margin-top de
    calc(20px + env(safe-area-inset-top)) em .section-subtabs —
-   mas o safe-area JÁ é coberto pelo padding-top do .shell-body.
+   mas o offset da Top Bar (56px) JÁ é coberto pelo padding-top do
+   .section-slide (v4.13.0; antes vivia no .shell-body).
    Em tela cheia com notch isso duplicava o inset e criava um
    vazio enorme entre a barra e as sub-abas. Mantém só os 20px.
    ============================================================ */
@@ -192,14 +216,19 @@
   }
 
   /* Conteúdo compensa a largura da sidebar (fixa ou colapsada).
-     Desktop não tem Top Bar fixa → padding-top zerado. */
+     Desktop não tem Top Bar fixa → o offset de 56px do .section-slide é
+     zerado logo abaixo (o padding-left continua sendo o da sidebar). */
   .shell-body {
-    padding-top: 0;
     padding-left: 76px;
     transition: padding-left 0.35s cubic-bezier(0.25, 1, 0.5, 1);
   }
   .shell-body--pinned {
     padding-left: 264px;
+  }
+
+  /* v4.13.0 — sem Top Bar no desktop: conteúdo começa no topo (como antes). */
+  .section-slide {
+    padding-top: 0;
   }
 
   /* O legado usa 500vw/100vw na fita; com a sidebar o 100vw estouraria
