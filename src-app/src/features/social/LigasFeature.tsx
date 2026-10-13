@@ -41,6 +41,8 @@ import {
   DivisionIcon,
   FlagIcon,
 } from './ligas-icons';
+/* v4.14.0 — folha de compartilhamento nativa do SO (Web Share API) */
+import { shareNative } from '@/lib/native-share';
 import {
   addPlayerLeagueXp,
   addPlayerMonthlyLeagueXp,
@@ -513,9 +515,16 @@ function SeasonEndPortal({
     const shareText = monthly
       ? `Subi para a Divisão ${newDivision} Mensal no Academia! Meu brilho ofusca tudo e todos!`
       : `Subi para a Divisão ${newDivision} no Academia! Meu brilho ofusca tudo e todos!`;
-    navigator.clipboard.writeText(shareText).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    /* v4.14.0 — HTTPS (Vercel) habilita a Web Share API: abre a folha
+       NATIVA do Android/Windows/iOS com o link do app. Sem suporte ou
+       cancelada → clipboard + feedback como antes. */
+    void (async () => {
+      const r = await shareNative({ text: shareText, url: window.location.origin });
+      if (r === 'shared' || r === 'cancelled') return;
+      navigator.clipboard.writeText(shareText).catch(() => {});
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    })();
   };
 
   if (step === 3) {

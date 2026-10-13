@@ -162,6 +162,28 @@
   padding-top: 56px;
 }
 
+/* ── v4.14.0 — navbar inferior sempre visível no mobile ──
+   Bug reportado: no Android a .bottom-nav (fixed, com backdrop-filter e —
+   no modo oval — SVG com filter) só "aparecia" após o 1º toque/arrasto.
+   Causas cobertas por este bloco:
+   1) Camada: o Chrome Android só commitava a camada composta da barra fixed
+      no primeiro gesto (repaint forcado por input). will-change: transform
+      promove a navbar a camada própria DESDE O PAINT INICIAL — não altera o
+      posicionamento fixo dela (só formaria containing block para filhos
+      fixed, e ela não tem) e o transform animado continua vindo de
+      .bnav-hidden (globals.css).
+   2) Viewport: 100vh = viewport GRANDE (toolbar do Chrome recolhida); com a
+      toolbar expandida o wrapper do shell estendia ~60-80px ABAIXO da área
+      visível. 100dvh acompanha a toolbar em tempo real; sem suporte
+      (Safari <15.4) a declaração é descartada e o utility h-screen (100vh)
+      permanece como fallback. */
+.bottom-nav {
+  will-change: transform;
+}
+.h-screen {
+  height: 100dvh;
+}
+
 @media (min-width: 1024px) {
   .top-bar {
     display: none;

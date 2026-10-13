@@ -53,6 +53,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const navRef = useRef<HTMLElement>(null);
   const hiddenRef = useRef(false);
   const lastTopRef = useRef(0);
+  /* v4.14.0 — seção ativa em ref: o handler de scroll (deps []) precisa
+     IGNORAR eventos de slides INATIVOS (ver bloco onScroll abaixo). */
+  const activeSectionRef = useRef(activeSection);
+  useEffect(() => {
+    activeSectionRef.current = activeSection;
+  }, [activeSection]);
   const [shape, setShape] = useState<string>(() => {
     try {
       return localStorage.getItem(NAVBAR_SHAPE_KEY) || 'straight';
@@ -81,6 +87,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     const onScroll = (e: Event) => {
       const target = e.target as HTMLElement | null;
       if (!target || !target.classList?.contains('section-slide')) return;
+      /* v4.14.0 — SÓ o slide VISÍVEL controla a barra: com 5 slides montados
+         lado a lado, o Chrome Android restaura o scroll de todos ao reabrir
+         o app (session restore/bfcache) — antes, um slide INATIVO restaurado
+         em top>8 escondia a navbar no boot SEM nenhum gesto do usuário (bug:
+         "a navbar só aparecia após um toque"). */
+      if (target.dataset.section !== activeSectionRef.current) return;
       if (!isFlexible()) {
         setHidden(false);
         return;
@@ -127,9 +139,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     return () => window.removeEventListener('academia:navbar-shape-changed', onShapeChanged);
   }, []);
 
-  /* Troca de seção → novo slide começa no topo; mostra a navbar e zera a ref */
+  /* Troca de seção → novo slide começa no topo; mostra a navbar e zera a ref
+     (v4.14.0: a ref passa a refletir o scrollTop REAL do novo slide — se o
+     Chrome restaurou o scroll dele, não pode contar como "rolou para baixo"). */
   useEffect(() => {
-    lastTopRef.current = 0;
+    const slide = document.querySelector<HTMLElement>(
+      `.section-slide[data-section="${activeSection}"]`
+    );
+    lastTopRef.current = slide ? slide.scrollTop : 0;
     if (hiddenRef.current) {
       hiddenRef.current = false;
       navRef.current?.classList.remove('bnav-hidden');
