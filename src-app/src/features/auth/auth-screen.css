@@ -1,0 +1,10 @@
+/* auth-screen.css — utilitários da tela de login standalone (v4.15.0-auth) */
+
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge antigo */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}

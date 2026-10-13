@@ -21,6 +21,26 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.15.0] - 2026-10-13
+
+Redesenho da tela de login conforme as referências (`LoginAuthStandalone.tsx` + 7 imagens fixadas): o modal pequeno sobre o perfil virou uma **tela standalone full-screen** com fundo de horizonte curvo, marca **"Evo Fit"** / **"Cuidando da sua Saúde"** e as telas welcome/login/criar conta/recuperar senha/QR — mantendo (e completando) a autenticação **real** com Supabase, incluindo o fluxo Google OAuth. `system_map.json` → 3.5.56.
+
+### Changed
+- **`src-app/src/features/auth/AuthScreen.tsx`** (novo) — porta do `StandaloneAuthModal` do reference com guia visual das imagens: welcome (3 pílulas Google/e-mail/criar conta + atalhos "Entrar por QR Code • Vincular Chave" + gaveta de chave + rodapé legal com modais de Termos/Privacidade), login, cadastro, recuperação e QR, todos em cards `rounded-3xl` sobre o grid de perspectiva. Textos únicos alterados vs reference: "Planner"→**"Evo Fit"** e "Entenda sua jornada"→**"Cuidando da sua Saúde"** (incl. QR e textos legais). Login/cadastro/reset são reais via `useAuth` (antes: modal com QR mock); auto-fecha quando a sessão chega (retorno do Google, login ou auto-confirm de cadastro); ESC/X fecham; z-index 1150 (abaixo do LockScreen 1200).
+- **`src-app/src/features/auth/AuthModal.tsx`** — virou wrapper fino que monta `AuthScreen` quando o store abre (ponto de montagem estável p/ App.tsx e Configurações; o visual `sy-modal` antigo foi removido).
+- **`src-app/src/core/auth/auth-context.tsx`** — Google OAuth com `prompt: 'select_account'` (seletor de contas amigável; mantém `access_type: 'offline'` p/ refresh token) + efeito de **"Manter conectado"**: com `mbc_remember_me === 'false'`, as chaves de sessão do Supabase são removidas no `pagehide` (a sessão não persiste além da aba).
+- **`src-app/src/App.tsx`** — comentário do ponto de montagem atualizado (v4.15.0-auth).
+
+### Added
+- **`src-app/src/features/auth/auth-screen.css`** (novo) — utilitário `.no-scrollbar` da tela.
+- **QR Code real** (`qrcode` + `@types/qrcode` no `package.json`): a view QR gera um QR de verdade com payload `${origin}/?qr=PLN-XXXXXX&exp=...`, contagem regressiva de 5 min (pill no cabeçalho), overlay "Código Expirado" + Renovar e linha "Código de Pareamento" — fiel à imagem de referência (o fluxo de pareamento cross-device continua visual: transferir sessão exige backend/Realtime privado).
+- **Vincular Chave funcional**: a gaveta aplica a chave digitada como namespace de sincronização (`setSyncKey` → `mbc_sync_key`) antes do login/cadastro/Google, e a welcome exibe a chave custom ativa — casa com o helper da imagem ("os dados associados a esta chave serão conectados à sua conta").
+- **Recuperação de senha real** (`resetPasswordForEmail`) na vista "Esqueceu?" — o modal antigo não tinha.
+- **Orientação p/ login por @usuário**: o Supabase Auth só autentica por e-mail; digitar algo que não seja e-mail (regex) mostra banner amigável orientando o uso do e-mail cadastrado (limitação documentada — login por @usuário exigiria RPC/Edge Function).
+
+### Verification
+- `tsc -b` exit 0 · `oxlint` 0 avisos · `vite build` exit 0 · probe CDP mobile+desktop **31/31 PASS** (`probe_auth.js`: abertura pelo hub de Perfil, pílulas/links/footer/grid, gaveta de chave, login + hint @usuário, signup, QR real dataURL + PIN + cronômetro, ESC fecha) + screenshots conferidos contra as 7 imagens de referência (`auth_c…auth_j`, incl. welcome desktop 1440×900).
+
 ## [v4.14.0] - 2026-10-13
 
 Rodada pós-feedback mobile (3 itens): (1) **compartilhamento nativo do SO** — agora que o app está hospedado em HTTPS na Vercel, as ações de compartilhar usam a Web Share API (folha nativa do Android/Windows) com fallback para clipboard/download; (2) **bug**: no mobile a navbar inferior só era exibida após um toque na tela (com e sem tela cheia) — corrigido; (3) **garantia**: com "tela cheia automática" + tela de bloqueio ativas, um toque na tela de bloqueio ativa a tela cheia (verificado por probe — os listeners são globais em `document` capture e já alcançam o LockScreen). `system_map.json` → 3.5.55.

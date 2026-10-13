@@ -54,6 +54,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  /* "Manter conectado" (v4.15.0-auth): quando desmarcado no AuthScreen
+     (mbc_remember_me === 'false'), a persistência termina ao sair da página —
+     as chaves de sessão do Supabase são removidas sincronamente no pagehide
+     (também ocorre em reload: sem persistência, sem sessão na próxima visita). */
+  useEffect(() => {
+    if (!user) return;
+    const onLeave = () => {
+      try {
+        if (localStorage.getItem('mbc_remember_me') === 'false') {
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('sb-') && k.includes('auth-token')) {
+              localStorage.removeItem(k);
+            }
+          }
+        }
+      } catch {
+        /* modo privado / storage indisponível */
+      }
+    };
+    window.addEventListener('pagehide', onLeave);
+    return () => window.removeEventListener('pagehide', onLeave);
+  }, [user]);
+
   const signIn = useCallback(async (email: string, password: string) => {
     if (!isSupabaseConfigured) throw new Error('Supabase não configurado.');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -66,7 +90,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/`,
-        queryParams: { access_type: 'offline', prompt: 'consent' },
+        // select_account: mostra o seletor de contas Google (UX amigável);
+        // access_type=offline continua pedindo o refresh_token ao provider.
+        queryParams: { access_type: 'offline', prompt: 'select_account' },
       },
     });
     if (error) throw formatAuthError(error);

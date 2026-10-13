@@ -808,8 +808,9 @@ export function App() {
             />
           )}
 
-          {/* ====== MODAL DE LOGIN + TOAST DE SYNC (v4.9.0-sync) ======
-              AuthModal z-index 1150 (abaixo do LockScreen 1200). */}
+          {/* ====== TELA DE LOGIN STANDALONE + TOAST DE SYNC (v4.15.0-auth) ======
+              AuthModal renderiza a AuthScreen full-screen (z-index 1150,
+              abaixo do LockScreen 1200). */}
           <AuthModal />
           <RemoteSyncToast />
 
