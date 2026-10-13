@@ -47,7 +47,10 @@
   flex-shrink: 0;
 }
 
-.set-root button {
+/* v4.12.0 — :where() zera a especificidade do reset para que as regras
+   de componente (.set-btn, .set-opt, .set-tile…) vencam por ordem;
+   antes (0,1,1) elas perdiam bg/border/padding para este reset. */
+.set-root :where(button) {
   font: inherit;
   color: inherit;
   background: none;
@@ -640,11 +643,19 @@
   border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
 }
 
+/* v4.12.0 — destaque forte da opção selecionada (padrão reference:
+   fundo sólido primary + texto branco, sem glow). */
 .set-opt--active {
   border-color: var(--primary);
   border-width: 2px;
-  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
-  color: var(--primary-light);
+  background: var(--primary);
+  color: #fff;
+}
+.set-opt--active .set-opt__label {
+  color: #fff;
+}
+.set-opt--active svg {
+  stroke: #fff;
 }
 
 .set-opt__label {
@@ -653,10 +664,6 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #cfcfe0;
-}
-
-.set-opt--active .set-opt__label {
-  color: #fff;
 }
 
 /* ---------- Toggles (preferências gerais) ---------- */
@@ -822,11 +829,12 @@
   color: #fff;
 }
 
+/* v4.12.0 — mesmo destaque sólido das opções (reference). */
 .set-chip--active {
   border-color: var(--primary);
   border-width: 2px;
-  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
-  color: var(--primary-light);
+  background: var(--primary);
+  color: #fff;
 }
 
 .set-wall-grid {

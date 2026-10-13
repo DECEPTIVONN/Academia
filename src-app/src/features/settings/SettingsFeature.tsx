@@ -2030,7 +2030,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               </div>
               <button
                 type="button"
-                disabled={installState !== 'available'}
+                disabled={installState === 'installed'}
                 onClick={() => void handleInstallApp()}
                 style={{
                   padding: '10px 18px',
@@ -2047,13 +2047,13 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   fontWeight: 800,
                   letterSpacing: '1.2px',
                   textTransform: 'uppercase',
-                  cursor: installState !== 'available' ? 'default' : 'pointer',
-                  opacity: installState !== 'available' ? 0.7 : 1,
+                  cursor: installState === 'installed' ? 'default' : 'pointer',
+                  opacity: installState === 'installed' ? 0.7 : 1,
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
                 }}
               >
-                {installState === 'installed' ? 'Instalado ✓' : installState === 'available' ? 'Instalar agora' : 'Indisponível'}
+                {installState === 'installed' ? 'Instalado ✓' : 'Instalar'}
               </button>
             </div>
           </section>

@@ -30,6 +30,22 @@ import {
   SvgSearch,
 } from '@/components/nav-items';
 
+/* v4.12.0 — atalhos Missões/Configurações na sidebar (parity com a
+   drawer mobile e com o reference NavigationShellStandalone). */
+const SvgMissions = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <path d="M9 11l3 3L22 4" />
+    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+  </svg>
+);
+
+const SvgGear = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+  </svg>
+);
+
 interface DesktopSidebarProps {
   activeSection: SectionType;
   onSelectSection: (sec: SectionType) => void;
@@ -40,6 +56,10 @@ interface DesktopSidebarProps {
   onLockApp: () => void;
   pinned: boolean;
   onTogglePin: () => void;
+  /** v4.12.0 — atalho Missões (overlay do Dashboard) */
+  onOpenMissions: () => void;
+  /** v4.12.0 — atalho Configurações (hub do Perfil) */
+  onOpenSettings: () => void;
 }
 
 export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
@@ -52,6 +72,8 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   onLockApp,
   pinned,
   onTogglePin,
+  onOpenMissions,
+  onOpenSettings,
 }) => {
   const [hovered, setHovered] = useState(false);
   const expanded = pinned || hovered;
@@ -157,6 +179,36 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
             </span>
           </button>
         ))}
+
+        {/* v4.12.0 — atalhos Missões/Configurações (parity com drawer mobile) */}
+        <button
+          type="button"
+          className="side-hud__item"
+          onClick={onOpenMissions}
+          title="Missões"
+        >
+          <span className="side-hud__icon" aria-hidden="true">
+            {SvgMissions}
+          </span>
+          <span className="side-hud__label">
+            <span className="side-hud__label-main">Missões</span>
+            <span className="side-hud__label-desc">Metas e recompensas</span>
+          </span>
+        </button>
+        <button
+          type="button"
+          className="side-hud__item"
+          onClick={onOpenSettings}
+          title="Configurações"
+        >
+          <span className="side-hud__icon" aria-hidden="true">
+            {SvgGear}
+          </span>
+          <span className="side-hud__label">
+            <span className="side-hud__label-main">Configurações</span>
+            <span className="side-hud__label-desc">Cores, exibição e conta</span>
+          </span>
+        </button>
       </nav>
 
       {/* ── Utilitários (v4.8.2: Buscar saiu daqui — virou o 1º item da nav) ── */}

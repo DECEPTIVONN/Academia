@@ -24,6 +24,16 @@
   padding-top: 56px;
 }
 
+/* v4.12.0 — `main { min-height: 100vh }` do main.css (não-camadado) vence
+   o `min-h-0` do Tailwind (utilities em @layer), então .treino-page ficava
+   com 100vh somado ao padding-top de 56px: +56px de overflow fantasma no
+   root. Ao rolar, o shell inteiro subia 56px e o conteúdo invadia a faixa
+   da top bar transparente ("fundo visível"). min-height:0 devolve o
+   controle ao flex-1 e o root para de rolar. */
+.shell-body > .treino-page {
+  min-height: 0;
+}
+
 /* ============================================================
    TOP BAR MOBILE (< 1024px)
    ============================================================
@@ -687,8 +697,12 @@
    ============================================================ */
 .bottom-nav.bnav-oval {
   background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  /* !important + none: o minificador (lightningcss) descarta valores
+     iniciais (`none`) e até achata `blur(0px)` para `blur()` inválido,
+     então o blur(24px) do .bottom-nav em globals.css vazava como
+     retângulo translúcido acima da curva. Declarar SÓ o unprefixed
+     (como tabs-subnav.css) — o autoprefixer re-insere o -webkit-. */
+  backdrop-filter: none !important;
   border-top: none;
   box-shadow: none;
   height: 92px;

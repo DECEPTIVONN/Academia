@@ -555,6 +555,8 @@ export function App() {
             onLockApp={() => useLockStore.getState().lock()}
             pinned={sidebarPinned}
             onTogglePin={toggleSidebarPin}
+            onOpenMissions={() => openDashOverlay('missions')}
+            onOpenSettings={openProfileSettings}
           />
 
           {/* shell-body compensa a largura da Sidebar HUD no desktop
