@@ -357,8 +357,8 @@ export const LockScreen: React.FC = () => {
               <span className="lock__bio-sub">Toque no sensor para autenticar</span>
             </button>
 
-            {/* Contador de tentativas falhas */}
-            {bioFailedAttempts > 0 && (
+            {/* Contador de tentativas falhas — só a partir da 2ª tentativa */}
+            {bioFailedAttempts >= 2 && (
               <div className="lock__bio-counter">
                 Tentativa {bioFailedAttempts} de 3
               </div>

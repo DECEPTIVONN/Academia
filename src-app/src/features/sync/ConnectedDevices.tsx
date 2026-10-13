@@ -21,6 +21,7 @@ import {
   disconnectDevice,
 } from '@/core/sync/sync-manager';
 import type { ConnectedDevice as Device } from '@/core/sync/device';
+import { generateQRCodeSVG, generatePairingCode } from './qr-generator';
 import './sync.css';
 
 /* ── Ícones SVG stroke (Diretrizes/Ícones.md) ── */
@@ -119,10 +120,38 @@ export function ConnectedDevices() {
   const [editName, setEditName] = useState('');
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [pairCode, setPairCode] = useState('');
+  const [qrCode, setQrCode] = useState('');
+  const [qrCountdown, setQrCountdown] = useState(300);
 
   useEffect(() => {
     void loadDevices();
   }, []);
+
+  /* QR Code: gera novo código + countdown de 5 minutos ao abrir o modal */
+  const openConnectModal = () => {
+    const code = generatePairingCode();
+    setPairCode(code);
+    setQrCode(generateQRCodeSVG(`academia-pair:${code}`, 160));
+    setQrCountdown(300);
+    setShowConnectModal(true);
+  };
+
+  /* Temporizador regressivo do QR Code (5 min) */
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (showConnectModal && qrCountdown > 0) {
+      interval = setInterval(() => {
+        setQrCountdown((c) => (c > 0 ? c - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showConnectModal, qrCountdown]);
+
+  const formatCountdown = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${String(sec).padStart(2, '0')}`;
+  };
 
   const startEdit = (d: Device) => {
     setEditingDevice(d);
@@ -195,7 +224,7 @@ export function ConnectedDevices() {
               justifyContent: 'center',
               gap: 8,
             }}
-            onClick={() => setShowConnectModal(true)}
+            onClick={openConnectModal}
           >
             {SvgQr}
             Conectar Dispositivo
@@ -320,7 +349,7 @@ export function ConnectedDevices() {
         </div>
       </section>
 
-      {/* Modal: Conectar Novo Dispositivo (reference img 6 — input 6 dígitos, sem QR) */}
+      {/* Modal: Conectar Novo Dispositivo (reference img 6 — código 6 dígitos + QR code) */}
       {showConnectModal && (
         <div className="sy-modal" role="dialog" aria-modal="true" aria-label="Conectar Novo Dispositivo">
           <div className="sy-modal__panel">
@@ -337,6 +366,31 @@ export function ConnectedDevices() {
             </div>
 
             <div>
+              {/* QR Code (v4.11.0 — pareamento rápido, expira em 5 min) */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <div
+                  style={{
+                    padding: 12,
+                    background: '#fff',
+                    borderRadius: 14,
+                    border: '1px solid rgba(63, 63, 70, 0.8)',
+                    lineHeight: 0,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: qrCode }}
+                />
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 10, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', margin: 0 }}>
+                    Código de pareamento
+                  </p>
+                  <p style={{ fontSize: 18, fontWeight: 900, fontFamily: 'var(--font-mono, monospace)', letterSpacing: '0.15em', color: 'var(--sy-accent)', margin: '2px 0 0' }}>
+                    {pairCode}
+                  </p>
+                  <p style={{ fontSize: 9, color: qrCountdown <= 30 ? '#f87171' : 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', margin: '4px 0 0' }}>
+                    Expira em {formatCountdown(qrCountdown)}
+                  </p>
+                </div>
+              </div>
+
               <label style={{
                 fontSize: 10,
                 fontFamily: 'var(--font-mono, monospace)',
@@ -346,7 +400,7 @@ export function ConnectedDevices() {
                 display: 'block',
                 marginBottom: 8,
               }}>
-                Digitar Código do Outro Aparelho (6 dígitos ou PLN-…):
+                Ou digite o código do outro aparelho (6 dígitos):
               </label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
@@ -363,7 +417,6 @@ export function ConnectedDevices() {
                   className="sy-btn sy-btn--sm sy-btn--primary"
                   style={{ padding: '10px 16px' }}
                   onClick={() => {
-                    /* TODO: validar código com sync-manager */
                     setShowConnectModal(false);
                     setPairCode('');
                   }}
@@ -372,9 +425,6 @@ export function ConnectedDevices() {
                   Autorizar
                 </button>
               </div>
-              <p style={{ fontSize: 10, color: 'var(--sy-dim)', fontFamily: 'var(--font-mono, monospace)', marginTop: 10, lineHeight: 1.5 }}>
-                Abra o Academia no novo dispositivo, vá em Dispositivos → Conectar e digite o código de 6 dígitos exibido.
-              </p>
             </div>
 
             {/* Divisor OU SIMULAR (reference img 6) */}
@@ -403,7 +453,6 @@ export function ConnectedDevices() {
               className="sy-btn"
               style={{ width: '100%', justifyContent: 'center' }}
               onClick={() => {
-                /* TODO: chamar função de simulação no sync-manager */
                 setShowConnectModal(false);
               }}
             >

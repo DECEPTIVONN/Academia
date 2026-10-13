@@ -530,7 +530,8 @@
 
 .set-preset--active {
   border-color: var(--primary);
-  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  border-width: 2px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
 }
 
 .set-preset__dot {
@@ -641,7 +642,8 @@
 
 .set-opt--active {
   border-color: var(--primary);
-  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  border-width: 2px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
   color: var(--primary-light);
 }
 
@@ -822,7 +824,8 @@
 
 .set-chip--active {
   border-color: var(--primary);
-  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  border-width: 2px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
   color: var(--primary-light);
 }
 

@@ -17,7 +17,9 @@ import { create } from 'zustand';
 import { PREF_KEYS, readLS, writeLS } from '@/features/profile/profile-data';
 
 export const PIN_STORAGE_KEY = 'academia_pref_app_pin';
-const WEBAUTHN_CRED_KEY = 'academia_webauthn_credential_id';
+/* v4.11.0: storage key namespaced p/ evitar conflito WebAuthn com o site de
+   referência (LockScreenStandalone.tsx) que roda na mesma origem. */
+const WEBAUTHN_CRED_KEY = 'academia_v10_webauthn_credential_id';
 
 /* ── Hash leve da senha (evita a senha crua no localStorage; app local-only)
      Formato: djb2:<hex>:<tamanho> — o tamanho identifica a credencial salva

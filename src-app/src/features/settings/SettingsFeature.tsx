@@ -236,14 +236,6 @@ const SvgMaximize = (
   </svg>
 );
 
-const SvgInstall = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-    <rect x="6" y="2" width="12" height="20" rx="2" ry="2" />
-    <line x1="12" y1="9" x2="12" y2="14" />
-    <polyline points="9.5 11.5 12 14 14.5 11.5" />
-  </svg>
-);
-
 const SvgVolume = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
@@ -2007,35 +1999,63 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             </p>
           </section>
 
+          {/* v4.11.0 — Instalar Aplicativo (PWA) — reference layout */}
           <section className="set-card">
-            <div className="set-card__head">
-              <div>
-                <div className="set-card__eyebrow">APLICATIVO</div>
-                <h3 className="set-card__title">Instalar App (PWA)</h3>
-                <p className="set-card__desc">
-                  Instale o Academia na tela inicial para abrir como um app
-                  independente, mais rápido e 100% offline.
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '4px 0' }}>
+              {/* Ícone do app com glow */}
+              <div style={{
+                width: 56,
+                height: 56,
+                borderRadius: 14,
+                background: '#0a0a0d',
+                border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.4)',
+                boxShadow: '0 0 20px rgba(var(--primary-rgb, 249, 115, 22), 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary, #f97316)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="28" height="28">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ fontFamily: 'var(--font-family)', fontSize: '1rem', fontWeight: 800, color: 'var(--text)', margin: 0 }}>
+                  Instalar Aplicativo (PWA)
+                </h3>
+                <p style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.7rem', color: 'var(--text-tertiary)', margin: '4px 0 0', lineHeight: 1.5 }}>
+                  Adicione à tela inicial com o ícone oficial estilizado.
                 </p>
               </div>
-            </div>
-            <div className="set-install">
               <button
                 type="button"
-                className="set-btn set-btn--primary"
                 disabled={installState !== 'available'}
                 onClick={() => void handleInstallApp()}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 12,
+                  border: installState === 'installed'
+                    ? '1px solid rgba(220, 38, 38, 0.5)'
+                    : '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.5)',
+                  background: installState === 'installed'
+                    ? 'rgba(220, 38, 38, 0.12)'
+                    : 'rgba(var(--primary-rgb, 249, 115, 22), 0.12)',
+                  color: installState === 'installed' ? '#f87171' : 'var(--primary, #f97316)',
+                  fontFamily: 'var(--font-family)',
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  letterSpacing: '1.2px',
+                  textTransform: 'uppercase',
+                  cursor: installState !== 'available' ? 'default' : 'pointer',
+                  opacity: installState !== 'available' ? 0.7 : 1,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
               >
-                {SvgInstall}
-                {installState === 'installed' ? 'App instalado' : 'Instalar agora'}
+                {installState === 'installed' ? 'Instalado ✓' : installState === 'available' ? 'Instalar agora' : 'Indisponível'}
               </button>
             </div>
-            <p className="set-note" style={{ marginTop: 10 }}>
-              {installState === 'installed'
-                ? 'Este app já está instalado neste dispositivo.'
-                : installState === 'available'
-                  ? 'Toque em "Instalar agora" e confirme o prompt do navegador.'
-                  : 'Seu navegador não ofereceu o prompt. Use o menu do navegador → "Instalar aplicativo" ou "Adicionar à tela inicial".'}
-            </p>
           </section>
 
           <section className="set-card">
@@ -2133,29 +2153,36 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             </div>
           </section>
 
-          {/* v4.9.3-settings — Idioma do Sistema (reference) */}
+          {/* v4.11.0 — Idioma do Sistema / Language — reference layout */}
           <section className="set-card">
-            <div className="set-card__head">
-              <div>
-                <div className="set-card__eyebrow">IDIOMA</div>
-                <h3 className="set-card__title">Idioma do Sistema</h3>
-                <p className="set-card__desc">
-                  Escolha o idioma de exibição do aplicativo.
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '4px 0' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ fontFamily: 'var(--font-family)', fontSize: '1rem', fontWeight: 800, color: 'var(--text)', margin: 0 }}>
+                  Idioma do Sistema / Language
+                </h3>
+                <p style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.7rem', color: 'var(--text-tertiary)', margin: '4px 0 0', lineHeight: 1.5 }}>
+                  Selecione o idioma de preferência para a interface.
                 </p>
               </div>
-            </div>
-            <div className="set-field" style={{ marginBottom: 0 }}>
-              <label className="set-field__label" htmlFor="setLang">
-                {SvgGlobe}
-                Idioma
-              </label>
               <select
                 id="setLang"
-                className="set-input"
                 value={readLS('academia_lang') || 'pt'}
                 onChange={(e) => {
                   writeLS('academia_lang', e.target.value);
                   showToast(`Idioma definido como ${e.target.value === 'pt' ? 'Português' : 'English'}.`, 'success');
+                }}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 12,
+                  border: '1px solid rgba(63, 63, 70, 0.8)',
+                  background: '#18181b',
+                  color: 'var(--text)',
+                  fontFamily: 'var(--font-family)',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  minWidth: 160,
                 }}
               >
                 <option value="pt">Português (BR)</option>

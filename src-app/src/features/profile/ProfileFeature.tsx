@@ -114,21 +114,6 @@ const SvgType20 = (
   </svg>
 );
 
-const SvgEdit20 = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-    <path d="M12 20h9" />
-    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-  </svg>
-);
-
-const SvgSave = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-    <polyline points="17 21 17 13 7 13" />
-    <polyline points="7 3 7 8 15 8" />
-  </svg>
-);
-
 /** Agrega keywords dos tiles filhos para a busca na raiz do hub. */
 const groupKeywords = (tiles: HubTile[], extra: string[] = []): string[] => [
   ...extra,
@@ -969,6 +954,15 @@ export function ProfileFeature() {
                   />
                 </div>
               </div>
+              {/* v4.11.0 — botão Salvar na tela Identidade */}
+              <button
+                type="button"
+                className="set-btn set-btn--primary"
+                style={{ width: '100%', marginTop: 16 }}
+                onClick={() => void saveIdentity()}
+              >
+                Salvar Identidade
+              </button>
             </div>
           </div>
         </div>
@@ -1105,25 +1099,11 @@ export function ProfileFeature() {
     },
   };
 
-  /* ── Blocos de header/head dos grupos ── */
-
-  const saveButton = (
-    <button
-      type="button"
-      className="set-btn"
-      id="btnSalvarCustomizacaoTab"
-      title="Salvar alterações"
-      onClick={() => void saveIdentity()}
-    >
-      {SvgSave}
-      Salvar
-    </button>
-  );
-
   /* ── Hub raiz (v4.10.0: Sua Conta 1º, Progressão dentro de Perfil,
        Nuvem dentro de Sua Conta, Telas dentro de Cores) ── */
 
   /* v4.10.0 — Progressão movida para dentro de Perfil */
+  /* v4.11.0 — Personalizar movido para dentro de Perfil (sem submenu separado) */
   const perfilTilesV2: HubTile[] = [
     ...perfilTiles,
     {
@@ -1134,6 +1114,7 @@ export function ProfileFeature() {
       badge: `Nível ${stats.nivel}`,
       keywords: groupKeywords(progTiles, ['progressao', 'gamificacao']),
     },
+    ...persTiles,
   ];
 
   /* v4.10.0 — Nuvem movida para dentro de Sua Conta */
@@ -1174,18 +1155,10 @@ export function ProfileFeature() {
     {
       id: 'perfil',
       title: 'Perfil',
-      desc: 'Cartão, ofensivas, medalhas e progressão',
+      desc: 'Cartão, ofensivas, medalhas, progressão e personalização',
       icon: SvgUser20,
       badge: pc.nome || 'DECEPTIVON',
-      keywords: groupKeywords(perfilTilesV2, ['perfil', 'progressao']),
-    },
-    {
-      id: 'personalizar',
-      title: 'Personalizar',
-      desc: 'Identidade, frase, destaque e título',
-      icon: SvgEdit20,
-      badge: handleText(pc),
-      keywords: groupKeywords(persTiles, ['personalizar', 'customizacao']),
+      keywords: groupKeywords(perfilTilesV2, ['perfil', 'progressao', 'personalizar']),
     },
     /* Configurações restantes (Segurança, Dispositivos, Notificações, Cores, Exibição) */
     ...settings.tiles.filter((t) => !['conta', 'nuvem'].includes(t.id)),
@@ -1196,14 +1169,7 @@ export function ProfileFeature() {
       eyebrow: 'ACADEMIA • PERFIL',
       title: 'Perfil',
       tiles: perfilTilesV2,
-      screens: { ...perfilScreens, ...progScreens },
-    },
-    personalizar: {
-      eyebrow: 'ACADEMIA • PERSONALIZAR',
-      title: 'Personalizar',
-      tiles: persTiles,
-      screens: persScreens,
-      headerActions: saveButton,
+      screens: { ...perfilScreens, ...progScreens, ...persScreens },
     },
     /* v4.10.0 — Sua Conta com Nuvem aninhada */
     conta: {

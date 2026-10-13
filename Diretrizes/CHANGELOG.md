@@ -21,6 +21,25 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.11.0] - 2026-10-12
+
+Rodada de correções pós-feedback: (1) lock — contador "Tentativa X de 3" só a partir da 2ª tentativa; fundo escuro translúcido removido do card/badge/avatar (mantido apenas ao redor do botão de digital); accent colors via `var(--primary)` no avatar, texto "Impressão Digital" e botão de digital; (2) WebAuthn — storage key namespaced (`academia_v10_...`) p/ evitar conflito com site de referência na mesma origem; (3) dispositivos — QR code com countdown de 5 min no modal "Conectar Novo Dispositivo" (gerador QR SVG sem dependências); (4) settings — opção selecionada ganha borda 2px + fundo mais forte (sem glow); (5) hub — "Personalizar" movido para dentro de "Perfil" (sem submenu separado); (6) PWA Install card + Idioma do Sistema redesenhados conforme reference (ícone + título + descrição + botão à direita; select à direita). `system_map.json` → 3.5.52.
+
+### Changed
+- **`src-app/src/features/lock/LockScreen.tsx`**: contador de tentativas biométricas exibido apenas a partir da 2ª falha (`bioFailedAttempts >= 2`).
+- **`src-app/src/features/lock/lock.css`**: `.lock__card` — fundo escuro translúcido (`rgba(9,9,11,0.78)` + `backdrop-filter: blur(22px)`) removido, agora transparente sem borda/shadow; `.lock__badge` — fundo transparente com borda accent; `.lock__avatar-img` — fundo transparente com borda accent 2px; `.lock__hint strong` — cor `var(--primary)` (accent) para "Impressão Digital"; `.lock__bio` mantém fundo escuro (área do botão de digital).
+- **`src-app/src/features/lock/lock-store.ts`**: `WEBAUTHN_CRED_KEY` → `academia_v10_webauthn_credential_id` (namespace p/ evitar conflito WebAuthn com site de referência na mesma origem).
+- **`src-app/src/features/sync/ConnectedDevices.tsx`**: modal "Conectar Novo Dispositivo" agora exibe QR Code SVG (pareamento rápido) + código de 6 dígitos + countdown de 5 minutos (expira em vermelho ≤30s); `openConnectModal()` gera código/QR ao abrir; divisor "OU SIMULAR APARELHO DE TESTE" mantido.
+- **`src-app/src/features/settings/settings.css`**: `.set-preset--active`, `.set-opt--active`, `.set-chip--active` — borda 2px + fundo mais forte (`0.18` alpha) p/ destaque adequado da opção selecionada (sem glow).
+- **`src-app/src/features/profile/ProfileFeature.tsx`**: "Personalizar" movido para dentro de "Perfil" (`persTiles` + `persScreens` aninhados em `perfilTilesV2`/`rootScreens.perfil`); `SvgEdit20`/`SvgSave`/`saveButton` removidos (órfãos); botão "Salvar Identidade" adicionado ao final da tela Identidade.
+- **`src-app/src/features/settings/SettingsFeature.tsx`**: card "Instalar Aplicativo (PWA)" redesenhado conforme reference (ícone app + título + descrição + botão "Instalado ✓"/"Instalar agora" à direita); card "Idioma do Sistema / Language" redesenhado (título + descrição + select à direita); `SvgInstall` removido (órfão).
+
+### Added
+- **`src-app/src/features/sync/qr-generator.ts`**: gerador mínimo de QR Code SVG sem dependências externas (byte mode, ECC level L, versões 1–10, Reed-Solomon); `generateQRCodeSVG(text, pixelSize)` + `generatePairingCode()`.
+- **`Diretrizes/system_map.json`**: `version` 3.5.51 → **3.5.52**.
+
+Verificação: `npx tsc --noEmit` exit 0 · `npm run lint` (oxlint) 0 warnings · `npm run build` exit 0.
+
 ## [v4.10.0] - 2026-10-12
 
 Rodada de correções pós-feedback do usuário (12 imagens): (1) biometria real via WebAuthn (antes era fake 1s); (2) reordenar hub — "Sua Conta" 1º, "Progressão" movida para dentro de "Perfil", "Nuvem e Sincronização" movida para dentro de "Sua Conta"; (3) remover Glow das interfaces (preset ativo, opt ativo, chip ativo, switches, botões primários); (4) "Telas Personalizadas" movida para dentro de "Esquema de Cores e Personalização"; (5) `ConnectedDevices.tsx` reescrito fiel às referências (banner full-width emerald, lista de cards arredondados, modal "Editar Dispositivo" com ícone centralizado + info rows, modal "Conectar Novo Dispositivo" com input de código 6 dígitos — sem QR); (6) lock screen: removido overlay escuro sobre a imagem customizada (gradiente sutil inferior apenas); (7) `sync.css` glow do botão primário removido. `system_map.json` → 3.5.51.
