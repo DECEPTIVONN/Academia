@@ -44,6 +44,89 @@
         color: rgba(255,255,255,0.8);
         letter-spacing: 2.5px;
       }
+
+      /* v4.16.0-boot — overlay de boot: aparece quando o app AINDA NÃO montou
+         (splash já saiu) ou quando o bundle falhou. Substitui a tela preta que
+         aparecia quando o bundle não chegava (rede lenta/falha no mobile).
+         Mesmas classes são usadas pelo ErrorBoundary do React (main.tsx). */
+      .boot-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 200000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 28px 22px calc(28px + env(safe-area-inset-bottom, 0px));
+        text-align: center;
+        background: radial-gradient(120% 90% at 50% 0%, #17121f 0%, #0b0b10 55%, #07070b 100%);
+        color: #fff;
+        font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        animation: bootFade 0.25s ease both;
+      }
+      @keyframes bootFade { from { opacity: 0; } to { opacity: 1; } }
+      .boot-overlay .boot-spinner {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, 0.14);
+        border-top-color: var(--primary, #8b5cf6);
+        animation: bootSpin 0.9s linear infinite;
+      }
+      @keyframes bootSpin { to { transform: rotate(360deg); } }
+      .boot-overlay .boot-title {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .boot-overlay .boot-msg {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #9a9aab;
+        max-width: 420px;
+      }
+      .boot-overlay .boot-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 4px;
+      }
+      .boot-overlay .boot-btn {
+        appearance: none;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 12px 22px;
+        border-radius: 12px;
+        background: var(--primary, #8b5cf6);
+        color: #0b0b10;
+        transition: transform 0.12s ease;
+      }
+      .boot-overlay .boot-btn:active { transform: scale(0.97); }
+      .boot-overlay .boot-details {
+        display: block;
+        width: min(560px, 100%);
+        max-height: 34vh;
+        overflow: auto;
+        text-align: left;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 11px;
+        line-height: 1.5;
+        color: #8a8a9c;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 10px 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
     </style>
   </head>
   <body class="bg-[#131313] text-white antialiased selection:bg-purple-500 selection:text-white">
@@ -72,13 +155,150 @@
     </div>
     <script>
       // Port do script inline de treino.html L119–134 + saída de app.js L477–488.
+      // v4.16.0-boot — WATCHDOG DE BOOT:
+      //   • a splash só some quando o app REALMENTE montou (#root com conteúdo);
+      //   • se o bundle falhar → 1 tentativa automática de retry (cache-bust);
+      //   • se ainda assim falhar / nada montar → overlay de ERRO com "Tentar
+      //     novamente" + detalhes (nunca mais tela preta muda);
+      //   • enquanto o bundle não chega (rede lenta) a splash fica e o status
+      //     avisa "Ainda carregando…"; se a splash já saiu, um overlay de
+      //     carregamento assume o lugar.
       (function () {
         var splash = document.getElementById('splashScreen');
-        if (!splash) return;
+        var t0 = Date.now();
+        var saida = false;
+        var pendingSaida = false;
+        var esperandoSkin = 0;
+        var erroExibido = false;
+        var erroInfo = null;
+        var retryFeito = false;
+        var overlayEl = null;
+        var overlayMode = null;
+        var tickProg = null;
 
-        // 1) Divergência deliberada do legado (pedido do usuário 2026-10-07):
-        //    com treino em andamento a splash NÃO aparece (recarregar a página
-        //    no meio do treino volta direto para o app). Flags espelham app.js L53–59.
+        var statusEl = document.getElementById('splashStatus');
+        var pctEl = document.getElementById('splashPct');
+        var fillSim = document.getElementById('splashFill');
+
+        function montado() {
+          var root = document.getElementById('root');
+          return !!(root && root.children.length > 0);
+        }
+        function splashAtiva() {
+          return !!(splash && splash.parentNode && !splash.classList.contains('splash-screen--hidden'));
+        }
+        function curto(u) {
+          var p = String(u || '').split('?')[0].split('/');
+          return p[p.length - 1] || u;
+        }
+        function regulaErro(msg, file, line, col) {
+          if (!msg) return null;
+          return msg + (file ? ' [' + curto(file) + (line ? ':' + line + (col ? ':' + col : '') : '') + ']' : '');
+        }
+
+        /* ── 1) Captura de falhas ANTES do bundle executar ── */
+        window.addEventListener('error', function (ev) {
+          var alvo = ev.target;
+          if (alvo && alvo !== window && alvo.tagName === 'SCRIPT') {
+            onScriptFail(alvo);
+            return;
+          }
+          if (!erroInfo) erroInfo = regulaErro(ev.message, ev.filename, ev.lineno, ev.colno);
+        }, true);
+        window.addEventListener('unhandledrejection', function (ev) {
+          if (!erroInfo) {
+            var r = ev.reason;
+            var txt = r && r.message ? r.message : r ? String(r) : 'desconhecido';
+            erroInfo = 'Promise rejeitada: ' + txt;
+          }
+        });
+
+        /* ── 2) Overlay de boot (loading / erro) ── */
+        function overlay() {
+          if (overlayEl && overlayEl.parentNode) return overlayEl;
+          var el = document.createElement('div');
+          el.id = 'bootOverlay';
+          el.className = 'boot-overlay';
+          el.setAttribute('role', 'status');
+          el.setAttribute('aria-live', 'polite');
+          document.body.appendChild(el);
+          overlayEl = el;
+          return el;
+        }
+        function hideOverlay() {
+          if (overlayEl && overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
+          overlayEl = null;
+          overlayMode = null;
+        }
+        function showLoading() {
+          if (erroExibido || overlayMode === 'loading') return;
+          overlayMode = 'loading';
+          var el = overlay();
+          el.setAttribute('role', 'status');
+          el.innerHTML = '';
+          var sp = document.createElement('div');
+          sp.className = 'boot-spinner';
+          sp.setAttribute('aria-hidden', 'true');
+          var t = document.createElement('div');
+          t.className = 'boot-title';
+          t.textContent = 'Carregando aplicativo';
+          var m = document.createElement('div');
+          m.className = 'boot-msg';
+          m.textContent = 'Está demorando mais que o normal. Confira sua conexão — os arquivos continuam sendo baixados.';
+          el.appendChild(sp); el.appendChild(t); el.appendChild(m);
+        }
+        function showError() {
+          if (erroExibido) return;
+          erroExibido = true;
+          overlayMode = 'error';
+          var el = overlay();
+          el.setAttribute('role', 'alert');
+          el.innerHTML = '';
+          var t = document.createElement('div');
+          t.className = 'boot-title';
+          t.textContent = 'Não foi possível carregar o app';
+          var m = document.createElement('div');
+          m.className = 'boot-msg';
+          m.textContent = erroInfo
+            ? 'Ocorreu um erro ao iniciar o aplicativo. Tente novamente — se persistir, os detalhes abaixo ajudam a diagnosticar.'
+            : 'Os arquivos do aplicativo não chegaram a carregar. Confira sua conexão com a internet e tente novamente.';
+          var a = document.createElement('div');
+          a.className = 'boot-actions';
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'boot-btn';
+          b.textContent = 'Tentar novamente';
+          b.addEventListener('click', function () { window.location.reload(); });
+          a.appendChild(b);
+          el.appendChild(t); el.appendChild(m); el.appendChild(a);
+          if (erroInfo) {
+            var d = document.createElement('pre');
+            d.className = 'boot-details';
+            d.textContent = erroInfo;
+            el.appendChild(d);
+          }
+        }
+
+        /* ── 3) Retry automático quando o bundle FALHA ao baixar ── */
+        function onScriptFail(el) {
+          if (el.type !== 'module') return;           // só o bundle principal
+          var src = el.src || el.getAttribute('src');
+          if (!src) { showError(); return; }
+          if (retryFeito) {
+            if (!erroInfo) erroInfo = 'Falha ao baixar os arquivos do aplicativo (' + curto(src) + ').';
+            showError();
+            return;
+          }
+          retryFeito = true;
+          var novo = document.createElement('script');
+          novo.type = 'module';
+          if (el.crossOrigin) novo.crossOrigin = el.crossOrigin;
+          novo.src = src + (src.indexOf('?') >= 0 ? '&' : '?') + 'retry=' + Date.now();
+          document.head.appendChild(novo);
+          showLoading();
+        }
+
+        /* ── 4) Splash: treino ativo sai na hora (pedido do usuário 2026-10-07) ── */
         var treinoAtivo = false;
         try {
           var t = localStorage.getItem('workout_start_time');
@@ -89,89 +309,80 @@
             var raw0 = localStorage.getItem('academia_treino');
             if (raw0) {
               var d0 = JSON.parse(raw0);
-              var dt = new Date();
+              var dt0 = new Date();
               var hoje =
-                dt.getFullYear() +
-                '-' + String(dt.getMonth() + 1).padStart(2, '0') +
-                '-' + String(dt.getDate()).padStart(2, '0');
+                dt0.getFullYear() +
+                '-' + String(dt0.getMonth() + 1).padStart(2, '0') +
+                '-' + String(dt0.getDate()).padStart(2, '0');
               treinoAtivo = Boolean(d0.fichaEmAndamento) && String(d0.fichaEmAndamentoDate || '') === hoje;
             }
           }
         } catch (e) {}
-        if (treinoAtivo) {
+        if (treinoAtivo && splash && splash.parentNode) {
           splash.parentNode.removeChild(splash);
-          return;
         }
 
-        // 2) Banner + nome (espelha treino.html L120–134: lê o localStorage legado
-        //    ANTES do bundle, sem flash).
-        try {
-          var raw = localStorage.getItem('academia_treino');
-          if (raw) {
-            var d = JSON.parse(raw);
-            var banner = (d.profileCustomization && d.profileCustomization.banner) || 'roxo-neon';
-            var nome = (d.profileCustomization && d.profileCustomization.nome) || '';
-            document.getElementById('splashBg').setAttribute('data-banner', banner);
-            if (nome) {
-              document.getElementById('splashUser').innerHTML =
-                '<span class="splash-screen__user-name">' + nome +
-                '</span><span class="splash-screen__user-sub">BEM-VINDO DE VOLTA</span>';
-            }
-          }
-        } catch (e) {}
-
-        // 2b) v4.9.0-sync — imagem personalizada da splash
-        //     (Configurações → Telas Personalizadas: mbc_loading_*) sobrepõe
-        //     o banner de perfil; status de sincronização + progresso simulado.
-        var statusEl = document.getElementById('splashStatus');
-        var pctEl = document.getElementById('splashPct');
-        var fillSim = document.getElementById('splashFill');
+        /* ── 5) Banner + nome + imagem custom + progresso (só com splash viva) ── */
         var pct = 0;
-        var saida = false;
-        try {
-          var portrait = window.innerHeight > window.innerWidth;
-          var customBg =
-            localStorage.getItem(portrait ? 'mbc_loading_vertical' : 'mbc_loading_horizontal') ||
-            localStorage.getItem(portrait ? 'mbc_loading_horizontal' : 'mbc_loading_vertical');
-          if (customBg) {
-            var bgEl = document.getElementById('splashBg');
-            bgEl.style.backgroundImage = 'url("' + customBg + '")';
-            bgEl.style.backgroundSize = 'cover';
-            bgEl.style.backgroundPosition = 'center';
-            bgEl.removeAttribute('data-banner');
-            /* Imagem em tela cheia: esconde logo/saudação e desloca a barra
-               para o rodapé (estilo inline em <head>, espelha a referência). */
-            splash.classList.add('splash-screen--custom');
-          }
-          var temNuvem = !!localStorage.getItem('mbc_supabase_url');
-          if (statusEl) statusEl.textContent = temNuvem ? 'Sincronizando dados com a nuvem...' : 'Carregando dados...';
-        } catch (e) {}
+        if (splashAtiva()) {
+          try {
+            var raw = localStorage.getItem('academia_treino');
+            if (raw) {
+              var d = JSON.parse(raw);
+              var banner = (d.profileCustomization && d.profileCustomization.banner) || 'roxo-neon';
+              var nome = (d.profileCustomization && d.profileCustomization.nome) || '';
+              document.getElementById('splashBg').setAttribute('data-banner', banner);
+              if (nome) {
+                document.getElementById('splashUser').innerHTML =
+                  '<span class="splash-screen__user-name">' + nome +
+                  '</span><span class="splash-screen__user-sub">BEM-VINDO DE VOLTA</span>';
+              }
+            }
+          } catch (e) {}
 
-        // Progresso simulado (0 → 90%): termina ao chegar em 100% no sair().
-        var tickProg = setInterval(function () {
-          if (saida) return;
-          if (pct >= 90) return;
-          pct = Math.min(90, pct + 1 + Math.round(Math.random() * 5));
-          if (pctEl) pctEl.textContent = ' ' + pct + '%';
-          if (fillSim) fillSim.style.width = pct + '%';
-        }, 140);
+          try {
+            var portrait = window.innerHeight > window.innerWidth;
+            var customBg =
+              localStorage.getItem(portrait ? 'mbc_loading_vertical' : 'mbc_loading_horizontal') ||
+              localStorage.getItem(portrait ? 'mbc_loading_horizontal' : 'mbc_loading_vertical');
+            if (customBg) {
+              var bgEl = document.getElementById('splashBg');
+              bgEl.style.backgroundImage = 'url("' + customBg + '")';
+              bgEl.style.backgroundSize = 'cover';
+              bgEl.style.backgroundPosition = 'center';
+              bgEl.removeAttribute('data-banner');
+              splash.classList.add('splash-screen--custom');
+            }
+            var temNuvem = !!localStorage.getItem('mbc_supabase_url');
+            if (statusEl) statusEl.textContent = temNuvem ? 'Sincronizando dados com a nuvem...' : 'Carregando dados...';
+          } catch (e) {}
 
-        // 3) Saída quando o bootstrap termina (academia:db-ready) — sequência
-        //    literal de app.js L477–488: +100 ms fill 100% → +400 ms hidden.
-        //    Divergência: o preenchimento espera a skin de barra REAL do perfil
-        //    (body[data-bar-skin] só é setado pelo bundle quando o profileState
-        //    carrega — ProfileFeature) para a splash já abrir com a skin
-        //    escolhida pelo usuário. Máximo de espera: 20 × 50 ms.
-        var esperandoSkin = 0;
+          // Progresso simulado (0 → 90%): termina ao chegar em 100% no sair().
+          tickProg = setInterval(function () {
+            if (saida || pct >= 90) return;
+            pct = Math.min(90, pct + 1 + Math.round(Math.random() * 5));
+            if (pctEl) pctEl.textContent = ' ' + pct + '%';
+            if (fillSim) fillSim.style.width = pct + '%';
+          }, 140);
+        }
+
+        /* ── 6) Saída: só esconde a splash quando o app já montou ── */
         function sair() {
-          if (saida) return;
+          if (saida || erroExibido) return;
+          if (!splashAtiva()) return;                  // splash já removida
+          if (!montado()) {
+            // Bundle ainda não executou → NÃO esconde (evita tela preta).
+            pendingSaida = true;
+            if (statusEl) statusEl.textContent = 'Ainda carregando…';
+            return;
+          }
           if (!document.body.hasAttribute('data-bar-skin') && esperandoSkin < 20) {
             esperandoSkin++;
             setTimeout(sair, 50);
             return;
           }
           saida = true;
-          clearInterval(tickProg);
+          if (tickProg) clearInterval(tickProg);
           pct = 100;
           if (pctEl) pctEl.textContent = ' 100%';
           if (statusEl) statusEl.textContent = 'Pronto!';
@@ -184,11 +395,36 @@
         document.addEventListener('academia:db-ready', function () {
           setTimeout(sair, 100);
         });
-        // Fallback: se o bundle falhar, a splash não fica presa na tela.
+        // Fallback: se o bundle falhar, a splash não fica PRESA (o erro aparece
+        // no overlay) — mas também não some deixando o fundo preto.
         setTimeout(function () {
           esperandoSkin = 20;
           sair();
         }, 10000);
+
+        /* ── 7) Watchdog: acompanha a montagem do #root ── */
+        setInterval(function () {
+          if (erroExibido) return;
+          var ok = montado();
+          var dt = Date.now() - t0;
+          if (ok) {
+            if (overlayMode === 'loading') hideOverlay();
+            if (pendingSaida && !saida) sair();
+            return;
+          }
+          if (erroInfo && dt > 4000) { showError(); return; }   // erro de execução
+          if (dt > 45000) { showError(); return; }              // bundle nunca chegou
+          if (dt > 1500 && (!splashAtiva() || pendingSaida)) showLoading();
+        }, 250);
+
+        /* ── 8) API usada pelo ErrorBoundary do React (main.tsx) ── */
+        window.__academiaBoot = {
+          showError: function (msg) {
+            if (msg && !erroInfo) erroInfo = String(msg);
+            showError();
+          },
+          showLoading: showLoading,
+        };
       })();
     </script>
     <div id="root"></div>

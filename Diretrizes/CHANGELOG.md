@@ -21,6 +21,23 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.16.0] - 2026-10-13
+
+Correção do **bug de tela preta no mobile** (relato em `academia-seven-iota.vercel.app`, Android Chrome): após a splash, o app podia ficar preso numa tela 100% preta. Diagnóstico por probe CDP no build idêntico ao deploy da Vercel (bundle byte-a-byte igual): **não era um bug mobile** — o script da splash em `src-app/index.html` ocultava a splash após 10 s **mesmo quando o React nunca montava** (bundle JS não baixado/travado por rede ruim, cache corrompido, etc.); com `#root` vazio, o `body` ficava preto e não havia **nenhuma** mensagem de erro nem retry. O "mobile only" era só a condição de rede/ cache que expunha a falha. `system_map.json` → 3.5.57.
+
+### Fixed
+- **`src-app/index.html`** — **watchdog da splash**: a splash só é ocultada quando o React **realmente montou** (`#root` com filhos), com fallback de 10 s que, em vez de fechar às cegas, exibe o novo overlay de boot; captura de `window.onerror`/`unhandledrejection` durante o boot também aciona o overlay (com stack/mensagem). Resultado: **nenhum cenário de falha produzir mais tela preta** — todos viram uma tela visível e acionável.
+- **`src-app/src/main.tsx`** — **`BootErrorBoundary`**: erros de render do React durante a montagem são capturados e exibem o mesmo overlay de boot (antes, um erro de render derrubava a árvore inteira e o usuário via `#root` vazio = tela preta).
+
+### Added
+- **`src-app/index.html`** — **overlay de boot** (`.boot-overlay`, `#bootOverlay`): tela escura com título "Não foi possível carregar o app", mensagem amigável, botão roxo **"Tentar novamente"** e `<details>` com o diagnóstico técnico (ex.: nome do chunk que falhou). Estilos em `<style>` no próprio shell (não dependem do bundle CSS, que também pode não ter chegado).
+- **Retry automático do bundle**: se o `<script type="module">` falhar, o shell re-injeta o script **uma vez** com `?retry=<ts>` (quebra cache do chunk); se ainda falhar, mostra o overlay. API `window.__academiaBoot` (`markReady`/`showBootError`) exposta pelo shell e consumida pelo `main.tsx`.
+- Estados visuais na splash durante boot lento: "Ainda carregando…" após 6 s (mantém o usuário informado em rede 2G em vez de deixá-lo no escuro).
+
+### Verification
+- `tsc -b` exit 0 · `oxlint` 0 avisos · `vite build` exit 0. Probes CDP (Chrome headless remoto, viewport mobile 392×777) no `vite preview` :4173, 4 cenários: **normal** (dashboard monta, splash "Pronto!", sem overlay) · **block** (bundle bloqueado = o bug original: aos 6 s aparece o overlay com "Tentar novamente" + "Falha ao baixar os arquivos do aplicativo (index-….js)") · **slow** (bundle atrasado 8 s: splash permanece viva, app monta ao chegar — antes: tela preta 26 s) · **api** (erro de render simulado: `BootErrorBoundary` exibe o overlay) — screenshots `%TEMP%\opencode\boot_{normal,block,slow,api}.png` conferidos · **desktop 1440×900**: regressão OK (dashboard monta, sem overlay, splash "Pronto!") — `boot_desktop.png`.
+- **Nota (gap conhecido)**: a versão legada `www/`/`treino.html` não foi alterada — este fix é do deploy React na Vercel. Se o app legado (HTTP local) tiver sintoma análogo, o mesmo padrão watchdog+overlay pode ser portado.
+
 ## [v4.15.0] - 2026-10-13
 
 Redesenho da tela de login conforme as referências (`LoginAuthStandalone.tsx` + 7 imagens fixadas): o modal pequeno sobre o perfil virou uma **tela standalone full-screen** com fundo de horizonte curvo, marca **"Evo Fit"** / **"Cuidando da sua Saúde"** e as telas welcome/login/criar conta/recuperar senha/QR — mantendo (e completando) a autenticação **real** com Supabase, incluindo o fluxo Google OAuth. `system_map.json` → 3.5.56.
