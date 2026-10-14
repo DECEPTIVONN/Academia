@@ -6,26 +6,38 @@
  *  • Playlists  — grade "Listas de reprodução" com FAB "+", empty state
  *                 "Nenhuma playlist ainda / Criar Playlist";
  *  • Biblioteca — envio de músicas (upload local → IndexedDB), links do
- *                 YouTube/Spotify e playlists externas adicionadas;
- *  • Mini-player fixo no rodapé (faixa atual + play/pause).
+ *                 YouTube/Spotify e playlists externas adicionadas.
  *
- * Aberto via window.dispatchEvent('academia:open-music') — gatilho do card
- * de Configurações (Exibição). ESC/X fecham.
+ * v4.20.0-music:
+ *  • Clique em uma playlist (em QUALQUER aba) ENTRA na página da playlist;
+ *  • Long-press (pressionar) numa playlist abre ações: Renomear, Trocar capa,
+ *    Usar no treino e Excluir;
+ *  • Capa customizável por playlist (imagem reduzida → data URL);
+ *  • Badge "No treino" na playlist ativa (seleção de qual toca no treino).
  *
- * Cores seguem o padrão v4.8.4-color-standard (fundo #07070b, cards #0b0b10,
- * hairlines rgba(255,255,255,0.08), accent var(--primary)).
+ * Aberto via window.dispatchEvent('academia:open-music'). ESC/X fecham.
+ * Cores seguem o padrão v4.8.4-color-standard (fundo #07070b, accent var(--primary)).
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import {
   ArrowLeft,
   Disc3,
   Home,
+  Image as ImageIcon,
   ListMusic,
   Library,
   MoreVertical,
   Music2,
   Pause,
+  Pencil,
   Play,
   Plus,
   Shuffle,
@@ -34,6 +46,7 @@ import {
   Radio,
   Trash2,
   Check,
+  Dumbbell,
 } from 'lucide-react';
 import {
   parseSpotifyRef,
@@ -72,13 +85,110 @@ interface MusicOverlayProps {
   onClose: () => void;
 }
 
+/* ───────────────────────────── Helpers ───────────────────────────────── */
+
+/** Long-press (pressionar e segurar) que dispara ações sem conflitar com o clique. */
+function useLongPress(onLongPress: () => void, onClick?: () => void) {
+  const timer = useRef<number | null>(null);
+  const fired = useRef(false);
+  const sx = useRef(0);
+  const sy = useRef(0);
+
+  const cancel = () => {
+    if (timer.current != null) {
+      window.clearTimeout(timer.current);
+      timer.current = null;
+    }
+  };
+
+  return {
+    onPointerDown: (e: ReactPointerEvent) => {
+      fired.current = false;
+      sx.current = e.clientX;
+      sy.current = e.clientY;
+      timer.current = window.setTimeout(() => {
+        fired.current = true;
+        onLongPress();
+      }, 480);
+    },
+    onPointerMove: (e: ReactPointerEvent) => {
+      if (timer.current == null) return;
+      if (Math.abs(e.clientX - sx.current) > 10 || Math.abs(e.clientY - sy.current) > 10) cancel();
+    },
+    onPointerUp: cancel,
+    onPointerLeave: cancel,
+    onPointerCancel: cancel,
+    onClick: (e: ReactMouseEvent) => {
+      if (fired.current) {
+        e.preventDefault();
+        e.stopPropagation();
+      } else {
+        onClick?.();
+      }
+    },
+  };
+}
+
+/** Lê uma imagem e a reduz (~320px, JPEG) para usar como capa (data URL pequena). */
+function readImageCover(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const max = 320;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        reject(new Error('canvas 2d indisponível'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('falha ao carregar imagem'));
+    };
+    img.src = url;
+  });
+}
+
+/** Capa da playlist: imagem custom ou ícone fallback. */
+function PlaylistArt({ pl, size = 30 }: { pl: Playlist; size?: number }) {
+  if (pl.cover) return <img className="mu-cover" src={pl.cover} alt="" />;
+  return <ListMusic size={size} />;
+}
+
+/* ────────────────────────────── OVERLAY ──────────────────────────────── */
+
 export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
   const [tab, setTab] = useState<Tab>('home');
   const [state, setState] = useState<MusicState>(() => getMusicState());
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [menuId, setMenuId] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<Playlist | null>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
+  const coverTargetRef = useRef<string | null>(null);
 
-  const library = useLibraryStore();
+  const {
+    playlists,
+    hydrate,
+    deletePlaylist,
+    renamePlaylist,
+    setPlaylistCover,
+    setActivePlaylist,
+    activePlaylistId,
+  } = useLibraryStore();
+
   useEffect(() => {
-    if (open) library.hydrate();
+    if (open) hydrate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -90,15 +200,43 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
     return () => window.removeEventListener('academia:music-state', onState);
   }, [open]);
 
-  /* ESC/X fecham */
+  /* ESC: fecha modal → detalhe → overlay */
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key !== 'Escape') return;
+      if (renaming) setRenaming(null);
+      else if (menuId) setMenuId(null);
+      else if (openId) setOpenId(null);
+      else onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open, onClose, renaming, menuId, openId]);
+
+  const openPlaylist = openId ? (playlists.find((p) => p.id === openId) ?? null) : null;
+  const menuPlaylist = menuId ? (playlists.find((p) => p.id === menuId) ?? null) : null;
+
+  const goToTab = (t: Tab) => {
+    setOpenId(null);
+    setTab(t);
+  };
+
+  const openCoverPicker = (plId: string) => {
+    coverTargetRef.current = plId;
+    coverRef.current?.click();
+  };
+
+  const handleCoverFile = async (file: File | undefined) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    try {
+      const dataUrl = await readImageCover(file);
+      if (coverTargetRef.current) setPlaylistCover(coverTargetRef.current, dataUrl);
+    } catch {
+      /* ignora falha de leitura */
+    }
+    coverTargetRef.current = null;
+  };
 
   if (!open) return null;
 
@@ -110,18 +248,36 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
         </button>
         <div className="mu-header__titles">
           <span className="mu-header__eyebrow">EVO FIT</span>
-          <h2 className="mu-header__title">Músicas</h2>
+          <h2 className="mu-header__title">{openPlaylist ? openPlaylist.name : 'Músicas'}</h2>
         </div>
       </header>
 
       <div className="mu-scroll">
-        {tab === 'home' && <HomeView onGoPlaylists={() => setTab('playlists')} />}
-        {tab === 'playlists' && <PlaylistsView />}
-        {tab === 'biblioteca' && <BibliotecaView />}
+        {openPlaylist ? (
+          <PlaylistDetail
+            playlist={openPlaylist}
+            isWorkout={activePlaylistId === openPlaylist.id}
+            onBack={() => setOpenId(null)}
+            onSetWorkout={(on) => setActivePlaylist(on ? openPlaylist.id : null)}
+            onOpenMenu={() => setMenuId(openPlaylist.id)}
+          />
+        ) : (
+          <>
+            {tab === 'home' && (
+              <HomeView onOpenPlaylist={setOpenId} onOpenMenu={setMenuId} activePlaylistId={activePlaylistId} />
+            )}
+            {tab === 'playlists' && (
+              <PlaylistsView onOpenPlaylist={setOpenId} onOpenMenu={setMenuId} />
+            )}
+            {tab === 'biblioteca' && (
+              <BibliotecaView onOpenPlaylist={setOpenId} onOpenMenu={setMenuId} />
+            )}
+          </>
+        )}
         <div style={{ height: 120 }} />
       </div>
 
-      {/* Mini-player */}
+      {/* Mini-player fixo (controle rápido dentro da interface) */}
       <div className="mu-mini">
         <div className="mu-mini__body">
           <div className="mu-mini__art">
@@ -146,36 +302,94 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
       <nav className="mu-nav">
         <button
           type="button"
-          className={`mu-nav__btn ${tab === 'home' ? 'mu-nav__btn--active' : ''}`}
-          onClick={() => setTab('home')}
+          className={`mu-nav__btn ${tab === 'home' && !openPlaylist ? 'mu-nav__btn--active' : ''}`}
+          onClick={() => goToTab('home')}
         >
           <Home size={20} />
           <span>Início</span>
         </button>
         <button
           type="button"
-          className={`mu-nav__btn ${tab === 'playlists' ? 'mu-nav__btn--active' : ''}`}
-          onClick={() => setTab('playlists')}
+          className={`mu-nav__btn ${tab === 'playlists' && !openPlaylist ? 'mu-nav__btn--active' : ''}`}
+          onClick={() => goToTab('playlists')}
         >
           <ListMusic size={20} />
           <span>Listas</span>
         </button>
         <button
           type="button"
-          className={`mu-nav__btn ${tab === 'biblioteca' ? 'mu-nav__btn--active' : ''}`}
-          onClick={() => setTab('biblioteca')}
+          className={`mu-nav__btn ${tab === 'biblioteca' && !openPlaylist ? 'mu-nav__btn--active' : ''}`}
+          onClick={() => goToTab('biblioteca')}
         >
           <Library size={20} />
           <span>Biblioteca</span>
         </button>
       </nav>
+
+      {/* Input oculto de capa */}
+      <input
+        ref={coverRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          void handleCoverFile(e.target.files?.[0]);
+          e.target.value = '';
+        }}
+      />
+
+      {/* Sheet de ações da playlist (long-press) */}
+      {menuPlaylist && (
+        <PlaylistActionSheet
+          playlist={menuPlaylist}
+          isWorkout={activePlaylistId === menuPlaylist.id}
+          onClose={() => setMenuId(null)}
+          onRename={() => {
+            setRenaming(menuPlaylist);
+            setMenuId(null);
+          }}
+          onCover={() => {
+            openCoverPicker(menuPlaylist.id);
+            setMenuId(null);
+          }}
+          onSetWorkout={(on) => {
+            setActivePlaylist(on ? menuPlaylist.id : null);
+            setMenuId(null);
+          }}
+          onDelete={() => {
+            deletePlaylist(menuPlaylist.id);
+            setMenuId(null);
+            setOpenId((cur) => (cur === menuPlaylist.id ? null : cur));
+          }}
+        />
+      )}
+
+      {/* Modal renomear */}
+      {renaming && (
+        <RenameModal
+          playlist={renaming}
+          onSave={(name) => {
+            renamePlaylist(renaming.id, name);
+            setRenaming(null);
+          }}
+          onClose={() => setRenaming(null)}
+        />
+      )}
     </div>
   );
 }
 
 /* ────────────────────────────── HOME ─────────────────────────────────── */
 
-function HomeView({ onGoPlaylists }: { onGoPlaylists: () => void }) {
+function HomeView({
+  onOpenPlaylist,
+  onOpenMenu,
+  activePlaylistId,
+}: {
+  onOpenPlaylist: (id: string) => void;
+  onOpenMenu: (id: string) => void;
+  activePlaylistId: string | null;
+}) {
   const { tracks, playlists } = useLibraryStore();
 
   return (
@@ -200,20 +414,13 @@ function HomeView({ onGoPlaylists }: { onGoPlaylists: () => void }) {
             </button>
           ))}
           {playlists.map((pl) => (
-            <button
+            <PlaylistQuickCard
               key={pl.id}
-              type="button"
-              className="mu-quick-card"
-              onClick={() => {
-                if (pl.items.length > 0) void playPlaylistFromUi(pl.items);
-                else onGoPlaylists();
-              }}
-            >
-              <div className="mu-quick-card__art mu-quick-card__art--pl">
-                <ListMusic size={26} />
-              </div>
-              <span className="mu-quick-card__name">{pl.name}</span>
-            </button>
+              playlist={pl}
+              isWorkout={activePlaylistId === pl.id}
+              onOpen={() => onOpenPlaylist(pl.id)}
+              onMenu={() => onOpenMenu(pl.id)}
+            />
           ))}
         </div>
       </section>
@@ -250,6 +457,30 @@ function HomeView({ onGoPlaylists }: { onGoPlaylists: () => void }) {
   );
 }
 
+/** Card de playlist nas "Escolhas rápidas" — clique entra, long-press abre ações. */
+function PlaylistQuickCard({
+  playlist,
+  isWorkout,
+  onOpen,
+  onMenu,
+}: {
+  playlist: Playlist;
+  isWorkout: boolean;
+  onOpen: () => void;
+  onMenu: () => void;
+}) {
+  const press = useLongPress(onMenu, onOpen);
+  return (
+    <button type="button" className="mu-quick-card" {...press}>
+      <div className="mu-quick-card__art mu-quick-card__art--pl">
+        <PlaylistArt pl={playlist} size={26} />
+        {isWorkout && <span className="mu-badge-treino">treino</span>}
+      </div>
+      <span className="mu-quick-card__name">{playlist.name}</span>
+    </button>
+  );
+}
+
 function UploadRow({ track }: { track: UploadTrack }) {
   return (
     <li className="mu-row">
@@ -272,16 +503,16 @@ function UploadRow({ track }: { track: UploadTrack }) {
 
 /* ──────────────────────────── PLAYLISTS ──────────────────────────────── */
 
-function PlaylistsView() {
-  const { playlists, createPlaylist, deletePlaylist, setActivePlaylist, activePlaylistId } =
-    useLibraryStore();
+function PlaylistsView({
+  onOpenPlaylist,
+  onOpenMenu,
+}: {
+  onOpenPlaylist: (id: string) => void;
+  onOpenMenu: (id: string) => void;
+}) {
+  const { playlists, createPlaylist, setActivePlaylist, activePlaylistId } = useLibraryStore();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
-  const [openPl, setOpenPl] = useState<Playlist | null>(null);
-  const [menuPl, setMenuPl] = useState<string | null>(null);
-
-  /* Detalhe de playlist aberta (espelha o objeto atualizado do store) */
-  const openPlLive = openPl ? playlists.find((p) => p.id === openPl.id) ?? null : null;
 
   const handleCreate = () => {
     const trimmed = name.trim();
@@ -289,25 +520,20 @@ function PlaylistsView() {
     const pl = createPlaylist(trimmed);
     setCreating(false);
     setName('');
-    setOpenPl(pl);
+    onOpenPlaylist(pl.id);
   };
-
-  if (openPlLive) {
-    return (
-      <PlaylistDetail
-        playlist={openPlLive}
-        isWorkout={activePlaylistId === openPlLive.id}
-        onBack={() => setOpenPl(null)}
-        onSetWorkout={(on) => setActivePlaylist(on ? openPlLive.id : null)}
-      />
-    );
-  }
 
   return (
     <div className="mu-page">
       <section className="mu-section">
         <div className="mu-section__head">
           <h3 className="mu-section__title">Listas de reprodução</h3>
+          {playlists.length > 0 && (
+            <span className="mu-section__sub">
+              {playlists.length} {playlists.length === 1 ? 'playlist' : 'playlists'}
+              {activePlaylistId ? ' • toque e segure p/ opções' : ''}
+            </span>
+          )}
         </div>
 
         {playlists.length === 0 ? (
@@ -321,45 +547,19 @@ function PlaylistsView() {
         ) : (
           <div className="mu-pl-grid">
             {playlists.map((pl) => (
-              <div key={pl.id} className="mu-pl-card">
-                <button type="button" className="mu-pl-card__open" onClick={() => setOpenPl(pl)}>
-                  <div className="mu-pl-card__art">
-                    <ListMusic size={30} />
-                  </div>
-                  <span className="mu-pl-card__name">{pl.name}</span>
-                  <span className="mu-pl-card__count">
-                    {pl.items.length} {pl.items.length === 1 ? 'música' : 'músicas'}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="mu-pl-card__menu"
-                  onClick={() => setMenuPl(menuPl === pl.id ? null : pl.id)}
-                  aria-label="Opções da playlist"
-                >
-                  <MoreVertical size={18} />
-                </button>
-                {menuPl === pl.id && (
-                  <div className="mu-menu">
-                    <button
-                      type="button"
-                      className="mu-menu__item mu-menu__item--danger"
-                      onClick={() => {
-                        deletePlaylist(pl.id);
-                        setMenuPl(null);
-                      }}
-                    >
-                      <Trash2 size={15} /> Excluir playlist
-                    </button>
-                  </div>
-                )}
-              </div>
+              <PlaylistGridCard
+                key={pl.id}
+                playlist={pl}
+                isWorkout={activePlaylistId === pl.id}
+                onOpen={() => onOpenPlaylist(pl.id)}
+                onMenu={() => onOpenMenu(pl.id)}
+              />
             ))}
           </div>
         )}
       </section>
 
-      {/* FAB "+" —Criar playlist / YouTube / Spotify */}
+      {/* FAB "+" — criar playlist */}
       <button
         type="button"
         className="mu-fab"
@@ -392,6 +592,53 @@ function PlaylistsView() {
           </div>
         </div>
       )}
+
+      <button
+        type="button"
+        className="mu-btn mu-btn--ghost mu-btn--block"
+        style={{ marginTop: 4 }}
+        onClick={() => setActivePlaylist(null)}
+        disabled={!activePlaylistId}
+      >
+        <Dumbbell size={16} /> Nenhuma playlist no treino (usar faixa do app)
+      </button>
+    </div>
+  );
+}
+
+/** Card da grade de playlists — clique entra, long-press abre ações. */
+function PlaylistGridCard({
+  playlist,
+  isWorkout,
+  onOpen,
+  onMenu,
+}: {
+  playlist: Playlist;
+  isWorkout: boolean;
+  onOpen: () => void;
+  onMenu: () => void;
+}) {
+  const press = useLongPress(onMenu, onOpen);
+  return (
+    <div className="mu-pl-card">
+      <button type="button" className="mu-pl-card__open" {...press}>
+        <div className="mu-pl-card__art">
+          <PlaylistArt pl={playlist} size={30} />
+          {isWorkout && <span className="mu-badge-treino">no treino</span>}
+        </div>
+        <span className="mu-pl-card__name">{playlist.name}</span>
+        <span className="mu-pl-card__count">
+          {playlist.items.length} {playlist.items.length === 1 ? 'música' : 'músicas'}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="mu-pl-card__menu"
+        onClick={onMenu}
+        aria-label="Opções da playlist"
+      >
+        <MoreVertical size={18} />
+      </button>
     </div>
   );
 }
@@ -403,11 +650,13 @@ function PlaylistDetail({
   isWorkout,
   onBack,
   onSetWorkout,
+  onOpenMenu,
 }: {
   playlist: Playlist;
   isWorkout: boolean;
   onBack: () => void;
   onSetWorkout: (on: boolean) => void;
+  onOpenMenu: () => void;
 }) {
   const { tracks, removeItem, addUploadToPlaylist, addExternalToPlaylist } = useLibraryStore();
   const [adding, setAdding] = useState(false);
@@ -449,17 +698,27 @@ function PlaylistDetail({
     <div className="mu-page">
       <section className="mu-section">
         <button type="button" className="mu-back" onClick={onBack}>
-          <ArrowLeft size={17} /> Listas de reprodução
+          <ArrowLeft size={17} /> Voltar
         </button>
 
         <div className="mu-pl-hero">
           <div className="mu-pl-hero__art">
-            <ListMusic size={34} />
+            <PlaylistArt pl={playlist} size={34} />
           </div>
           <div className="mu-pl-hero__meta">
             <h3 className="mu-pl-hero__name">{playlist.name}</h3>
-            <span className="mu-pl-hero__count">{playlist.items.length} itens</span>
+            <span className="mu-pl-hero__count">
+              {playlist.items.length} itens{isWorkout ? ' • usada no treino' : ''}
+            </span>
           </div>
+          <button
+            type="button"
+            className="mu-icon-btn mu-icon-btn--sm"
+            onClick={onOpenMenu}
+            aria-label="Opções da playlist"
+          >
+            <MoreVertical size={18} />
+          </button>
         </div>
 
         <div className="mu-pl-actions">
@@ -485,7 +744,7 @@ function PlaylistDetail({
             onClick={() => onSetWorkout(!isWorkout)}
             title="Tocar automaticamente durante o treino"
           >
-            {isWorkout ? <Check size={16} /> : <Plus size={16} />}
+            {isWorkout ? <Check size={16} /> : <Dumbbell size={16} />}
             {isWorkout ? 'Treino ativo' : 'Usar no treino'}
           </button>
         </div>
@@ -609,10 +868,109 @@ function PlaylistDetail({
   );
 }
 
+/* ────────────────── Sheet de ações + Modal renomear ──────────────────── */
+
+function PlaylistActionSheet({
+  playlist,
+  isWorkout,
+  onClose,
+  onRename,
+  onCover,
+  onSetWorkout,
+  onDelete,
+}: {
+  playlist: Playlist;
+  isWorkout: boolean;
+  onClose: () => void;
+  onRename: () => void;
+  onCover: () => void;
+  onSetWorkout: (on: boolean) => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="mu-modal mu-modal--sheet" onClick={onClose}>
+      <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
+        <h4 className="mu-modal__title">{playlist.name}</h4>
+        <span className="mu-modal__label">
+          {playlist.items.length} itens{isWorkout ? ' • no treino' : ''}
+        </span>
+        <div className="mu-actionsheet">
+          <button type="button" className="mu-actionsheet__item" onClick={onRename}>
+            <Pencil size={17} /> Renomear
+          </button>
+          <button type="button" className="mu-actionsheet__item" onClick={onCover}>
+            <ImageIcon size={17} /> Trocar capa
+          </button>
+          <button
+            type="button"
+            className="mu-actionsheet__item"
+            onClick={() => onSetWorkout(!isWorkout)}
+          >
+            <Dumbbell size={17} /> {isWorkout ? 'Remover do treino' : 'Usar no treino'}
+          </button>
+          <button
+            type="button"
+            className="mu-actionsheet__item mu-actionsheet__item--danger"
+            onClick={onDelete}
+          >
+            <Trash2 size={17} /> Excluir playlist
+          </button>
+        </div>
+        <div className="mu-modal__actions">
+          <button type="button" className="mu-btn mu-btn--ghost" onClick={onClose}>
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RenameModal({
+  playlist,
+  onSave,
+  onClose,
+}: {
+  playlist: Playlist;
+  onSave: (name: string) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(playlist.name);
+  return (
+    <div className="mu-modal" onClick={onClose}>
+      <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
+        <h4 className="mu-modal__title">Renomear playlist</h4>
+        <input
+          className="mu-input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && name.trim() && onSave(name)}
+          autoFocus
+          onFocus={(e) => e.currentTarget.select()}
+        />
+        <div className="mu-modal__actions">
+          <button type="button" className="mu-btn mu-btn--ghost" onClick={onClose}>
+            Cancelar
+          </button>
+          <button type="button" className="mu-btn" onClick={() => name.trim() && onSave(name)}>
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ──────────────────────────── BIBLIOTECA ─────────────────────────────── */
 
-function BibliotecaView() {
-  const { tracks, playlists, addUpload, removeTrack, createPlaylist, addExternalToPlaylist } =
+function BibliotecaView({
+  onOpenPlaylist,
+  onOpenMenu,
+}: {
+  onOpenPlaylist: (id: string) => void;
+  onOpenMenu: (id: string) => void;
+}) {
+  const { tracks, playlists, addUpload, removeTrack, createPlaylist, addExternalToPlaylist, activePlaylistId } =
     useLibraryStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -634,6 +992,17 @@ function BibliotecaView() {
     }
   };
 
+  const linkKindIsYoutube = (k: null | 'youtube' | 'spotify') => k !== 'spotify';
+
+  const applyExternal = (kind: 'youtube' | 'spotify', refId: string, title: string) => {
+    let target = linkTarget;
+    if (!target) {
+      const pl = createPlaylist(title);
+      target = pl.id;
+    }
+    addExternalToPlaylist(target, kind, refId, title);
+  };
+
   const addExternalLink = () => {
     setLinkErr('');
     if (linkKindIsYoutube(linkModal)) {
@@ -653,18 +1022,6 @@ function BibliotecaView() {
     }
     setLink('');
     setLinkModal(null);
-  };
-
-  const linkKindIsYoutube = (k: null | 'youtube' | 'spotify') => k !== 'spotify';
-
-  const applyExternal = (kind: 'youtube' | 'spotify', refId: string, title: string) => {
-    // Alvo: playlist existente escolhida OU uma nova criada agora.
-    let target = linkTarget;
-    if (!target) {
-      const pl = createPlaylist(title);
-      target = pl.id;
-    }
-    addExternalToPlaylist(target, kind, refId, title);
   };
 
   return (
@@ -747,22 +1104,20 @@ function BibliotecaView() {
         <section className="mu-section">
           <div className="mu-section__head">
             <h3 className="mu-section__title">Playlists</h3>
+            <span className="mu-section__sub">toque para abrir • segure p/ opções</span>
           </div>
-          <ul className="mu-list">
+          {/* Álbuns/listas em grade — clique entra, long-press abre ações */}
+          <div className="mu-pl-grid">
             {playlists.map((pl) => (
-              <li key={pl.id} className="mu-row">
-                <div className="mu-row__main">
-                  <div className="mu-row__art mu-row__art--pl">
-                    <ListMusic size={16} />
-                  </div>
-                  <div className="mu-row__meta">
-                    <span className="mu-row__title">{pl.name}</span>
-                    <span className="mu-row__sub">{pl.items.length} itens</span>
-                  </div>
-                </div>
-              </li>
+              <PlaylistGridCard
+                key={pl.id}
+                playlist={pl}
+                isWorkout={activePlaylistId === pl.id}
+                onOpen={() => onOpenPlaylist(pl.id)}
+                onMenu={() => onOpenMenu(pl.id)}
+              />
             ))}
-          </ul>
+          </div>
         </section>
       )}
 

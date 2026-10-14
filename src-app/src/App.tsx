@@ -30,6 +30,7 @@ import { loadLocalData, getTodayTreino, selectSheetEntry } from '@/core/db/queri
 import { ShareModal } from '@/features/gamification/ShareModal';
 /* v4.19.0-music — interface de Músicas e Playlists (overlay estilo YT Music) */
 import { MusicOverlay } from '@/features/music/MusicOverlay';
+import { FloatingMiniPlayer } from '@/features/music/FloatingMiniPlayer';
 import { useShareStore } from '@/features/gamification/share-store';
 import { ColecaoModals } from '@/features/gamification/ColecaoModals';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
@@ -865,6 +866,12 @@ export function App() {
           {/* ====== INTERFACE DE MÚSICAS E PLAYLISTS (v4.19.0-music) ======
               Aberta pelo card de Configurações ('academia:open-music'). */}
           <MusicOverlay open={isMusicOpen} onClose={() => setIsMusicOpen(false)} />
+
+          {/* ====== MINIPLAYER FLUTUANTE (v4.20.0-music) ======
+              Global: arrastável/redimensionável, com retroceder/avançar —
+              especialmente útil durante o treino (z-index 660, abaixo do
+              MusicOverlay 700 e do LockScreen 1200). */}
+          <FloatingMiniPlayer />
 
           {/* ====== TELA DE BLOQUEIO (v4.6.0-shell) ======
               z-index 1200 — acima de todos os overlays/modais. */}

@@ -604,3 +604,248 @@
   .mu-quick-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .mu-page { padding: 14px 12px; }
 }
+
+/* ═══════════════ v4.20.0 — capa, ações por long-press, teclado ═══════════════ */
+
+/* Capa custom da playlist (imagem reduzida salva como data URL) */
+.mu-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit;
+}
+
+/* Containers de arte precisam ser o âncora da capa/badge */
+.mu-pl-card__art,
+.mu-quick-card__art,
+.mu-pl-hero__art,
+.mu-row__art {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Badge "no treino" na playlist ativa (seleção de qual toca no treino) */
+.mu-badge-treino {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--primary, #8b5cf6);
+  color: #fff;
+  padding: 3px 7px;
+  border-radius: 6px;
+  line-height: 1;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+/* Sheet de ações (long-press / botão "…") */
+.mu-actionsheet {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 6px 0 4px;
+}
+
+.mu-actionsheet__item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 14px 15px;
+  border-radius: 13px;
+  background: #101017;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #d4d4de;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.1s;
+}
+
+.mu-actionsheet__item:hover {
+  background: #17171f;
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+}
+
+.mu-actionsheet__item:active { transform: scale(0.98); }
+.mu-actionsheet__item svg { flex-shrink: 0; color: var(--primary, #8b5cf6); }
+
+.mu-actionsheet__item--danger { color: #fca5a5; }
+.mu-actionsheet__item--danger:hover {
+  background: rgba(220, 38, 38, 0.14);
+  border-color: rgba(220, 38, 38, 0.5);
+}
+.mu-actionsheet__item--danger svg { color: #f87171; }
+
+.mu-modal--sheet .mu-modal__panel { max-width: 520px; }
+
+/* v4.20.0 — teclado Android: o painel do modal nunca ultrapassa a viewport
+   (o viewport usa interactive-widget=resizes-content, então o bottom-sheet
+   sobe junto com o teclado em vez de ficar atrás dele). */
+.mu-modal__panel {
+  max-height: min(86vh, 720px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mu-modal__panel .mu-input { flex-shrink: 0; }
+
+/* ═══════════════ v4.20.0 — miniplayer flutuante global ═══════════════ */
+
+.fmp {
+  position: fixed;
+  z-index: 660;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(11, 11, 16, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  backdrop-filter: blur(12px);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fmp__top {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 9px 5px 10px;
+  min-height: 0;
+  cursor: grab;
+}
+
+.fmp__top:active { cursor: grabbing; }
+
+.fmp__art {
+  flex-shrink: 0;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--primary-rgb, 139, 92, 246), 0.85),
+    #0b0b10
+  );
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fmp__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fmp__title {
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #f2f2f7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fmp__artist {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #8a8a9c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fmp__close {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.07);
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.fmp__close:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+
+.fmp__controls {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px 8px;
+}
+
+.fmp__btn {
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.12s, border-color 0.18s;
+}
+
+.fmp__btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+}
+
+.fmp__btn:active { transform: scale(0.9); }
+
+.fmp__btn--play {
+  background: var(--primary, #8b5cf6);
+  border-color: var(--primary, #8b5cf6);
+  color: #fff;
+}
+
+.fmp__btn--play:hover {
+  background: var(--primary-light, #a78bfa);
+  border-color: var(--primary-light, #a78bfa);
+}
+
+.fmp__grip {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 24px;
+  height: 24px;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.fmp__grip::after {
+  content: '';
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid rgba(255, 255, 255, 0.35);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0 0 3px 0;
+}

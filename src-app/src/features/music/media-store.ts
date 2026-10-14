@@ -92,6 +92,8 @@ export interface Playlist {
   name: string;
   items: PlaylistItem[];
   createdAt: number;
+  /** v4.20.0 — capa customizável (data URL de imagem enviada pelo usuário). */
+  cover?: string;
 }
 
 export interface MusicLibrary {
@@ -146,6 +148,9 @@ interface LibraryState extends MusicLibrary {
   ) => void;
   removeItem: (playlistId: string, itemId: string) => void;
   setActivePlaylist: (playlistId: string | null) => void;
+  /** v4.20.0 */
+  renamePlaylist: (playlistId: string, name: string) => void;
+  setPlaylistCover: (playlistId: string, cover: string | undefined) => void;
 }
 
 export const useLibraryStore = create<LibraryState>((set) => ({
@@ -276,6 +281,29 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   setActivePlaylist: (playlistId) => {
     const cur = readLibrary();
     const lib = { ...cur, activePlaylistId: playlistId };
+    writeLibrary(lib);
+    set(lib);
+  },
+
+  /* v4.20.0 — renomear e trocar a capa da playlist */
+  renamePlaylist: (playlistId, name) => {
+    const cur = readLibrary();
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const lib: MusicLibrary = {
+      ...cur,
+      playlists: cur.playlists.map((p) => (p.id === playlistId ? { ...p, name: trimmed } : p)),
+    };
+    writeLibrary(lib);
+    set(lib);
+  },
+
+  setPlaylistCover: (playlistId, cover) => {
+    const cur = readLibrary();
+    const lib: MusicLibrary = {
+      ...cur,
+      playlists: cur.playlists.map((p) => (p.id === playlistId ? { ...p, cover } : p)),
+    };
     writeLibrary(lib);
     set(lib);
   },

@@ -182,6 +182,24 @@
   color: #fff;
 }
 
+/* v4.20.0 — botão destacado "Abrir Músicas e Playlists" (chamada principal
+   da seção Áudio e Música): fundo sólido na cor do tema + glow. */
+.set-btn--music {
+  background: var(--primary, #8b5cf6);
+  border-color: var(--primary, #8b5cf6);
+  color: #fff;
+  padding: 13px 18px;
+  font-size: 0.78rem;
+  box-shadow: 0 8px 24px rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+.set-btn--music:hover {
+  background: var(--primary-light, #a78bfa);
+  border-color: var(--primary-light, #a78bfa);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+}
+
 /* v4.4.0 — botão de instalação PWA (estado indisponível/instalado) */
 .set-btn:disabled {
   opacity: 0.45;

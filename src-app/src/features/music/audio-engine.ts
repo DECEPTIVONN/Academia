@@ -510,3 +510,37 @@ export function playSiteTrackFromUi(id: 'main' | 'workout' | 'result' | 'mission
   stopUserQueue();
   void playSite(id);
 }
+
+/* ─────────────── Avançar/Retroceder (miniplayer flutuante) ─────────────── */
+
+/** Ordem das faixas do site para navegação prev/next. */
+const SITE_ORDER: Array<'main' | 'workout' | 'missions' | 'result'> = [
+  'main',
+  'workout',
+  'missions',
+  'result',
+];
+
+/** Próxima faixa: fila do usuário (playlist) ou ciclo das faixas do site. */
+export function nextTrack(): void {
+  if (context === 'workout-user' && queue.length > 0) {
+    queueIndex = (queueIndex + 1) % queue.length;
+    void playQueueIndex(queueIndex);
+    return;
+  }
+  const i = SITE_ORDER.indexOf(context as (typeof SITE_ORDER)[number]);
+  const next = SITE_ORDER[(i + 1) % SITE_ORDER.length] ?? 'main';
+  void playSite(next);
+}
+
+/** Faixa anterior: fila do usuário ou ciclo reverso das faixas do site. */
+export function prevTrack(): void {
+  if (context === 'workout-user' && queue.length > 0) {
+    queueIndex = (queueIndex - 1 + queue.length) % queue.length;
+    void playQueueIndex(queueIndex);
+    return;
+  }
+  const i = SITE_ORDER.indexOf(context as (typeof SITE_ORDER)[number]);
+  const prev = SITE_ORDER[(i - 1 + SITE_ORDER.length) % SITE_ORDER.length] ?? 'main';
+  void playSite(prev);
+}

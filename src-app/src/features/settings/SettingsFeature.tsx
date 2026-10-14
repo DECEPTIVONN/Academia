@@ -824,17 +824,29 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     {
       id: 'exibicao',
       title: 'Acessibilidade, Exibição e PWA',
-      desc: 'Tela cheia, cronômetro, navbar, música de fundo, instalar app e interação',
+      desc: 'Tela cheia, cronômetro, navbar, instalar app e modo dev',
       icon: SvgSliders,
       badge: autoFullscreen ? 'Tela cheia' : 'Padrão',
       keywords: [
         'exibicao', 'acessibilidade', 'tela cheia', 'fullscreen', 'telacheia',
         'pwa', 'instalar', 'app', 'aplicativo', 'install', 'cronometro',
         'timer', 'ampulheta', 'radar', 'navbar', 'barra', 'navegacao',
-        'sons', 'som', 'vibracao', 'online', 'status', 'dev', 'desenvolvedor',
+        'online', 'status', 'dev', 'desenvolvedor',
         'idioma', 'language', 'pt', 'en',
-        /* v4.18.0-music */
-        'musica', 'música', 'volume', 'bgm', 'trilha', 'fundo',
+      ],
+    },
+    /* v4.20.0 — seção própria de áudio (saiu de Exibição) */
+    {
+      id: 'audio',
+      title: 'Áudio e Música',
+      desc: 'Música de fundo, faixas do treino, efeitos sonoros e playlists',
+      icon: SvgVolume,
+      badge: musicEnabled ? (musicVolume > 0 ? `${musicVolume}%` : 'Mudo') : 'Desligada',
+      keywords: [
+        'audio', 'áudio', 'musica', 'música', 'som', 'sons', 'volume', 'bgm',
+        'trilha', 'fundo', 'efeitos', 'sonoros', 'vibracao', 'vibração',
+        'treino', 'playlist', 'playlists', 'youtube', 'spotify', 'upload',
+        'faixa', 'player', 'músicas',
       ],
     },
     /* v4.10.0 — nuvem movida para dentro de Sua Conta (ProfileFeature);
@@ -1935,50 +1947,12 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     },
 
     /* ================= ACESSIBILIDADE, EXIBIÇÃO E PWA ================= */
-    exibicao: {
-      eyebrow: 'ACADEMIA • EXIBIÇÃO',
-      title: 'Acessibilidade, Exibição e PWA',
+    /* v4.20.0 — seção própria de Áudio e Música (saiu de Exibição) */
+    audio: {
+      eyebrow: 'ACADEMIA • ÁUDIO E MÚSICA',
+      title: 'Áudio e Música',
       content: (
         <>
-          <section className="set-card">
-            <div className="set-card__head">
-              <div>
-                <div className="set-card__eyebrow">EXIBIÇÃO</div>
-                <h3 className="set-card__title">Tela Cheia</h3>
-                <p className="set-card__desc">
-                  Entre em modo tela cheia automaticamente ao abrir o app.
-                </p>
-              </div>
-            </div>
-            <div className="set-toggles">
-              <div className="set-toggle">
-                <div className="set-toggle__info">
-                  <span className="set-toggle__icon">{SvgMaximize}</span>
-                  <div>
-                    <span className="set-toggle__label">Tela Cheia Automática</span>
-                    <span className="set-toggle__desc">
-                      Ao recarregar a página, o primeiro clique ou toque em
-                      qualquer lugar da tela aciona o modo tela cheia
-                    </span>
-                  </div>
-                </div>
-                <label className="set-switch">
-                  <input
-                    type="checkbox"
-                    checked={autoFullscreen}
-                    onChange={(e) => toggleAutoFullscreen(e.target.checked)}
-                  />
-                  <span className="set-switch__track" />
-                </label>
-              </div>
-            </div>
-            <p className="set-note" style={{ marginTop: 10 }}>
-              {autoFullscreen
-                ? 'Ativo: o próximo clique ou toque após recarregar entra em tela cheia. Para sair, pressione ESC.'
-                : 'Desativo: o app continua na janela normal do navegador.'}
-            </p>
-          </section>
-
           {/* v4.18.0-music — música de fundo (MAIN.mp3 em loop) */}
           <section className="set-card">
             <div className="set-card__head">
@@ -2125,7 +2099,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             </div>
             <button
               type="button"
-              className="set-btn"
+              className="set-btn set-btn--music"
               style={{ width: '100%', marginTop: 14 }}
               onClick={() => window.dispatchEvent(new CustomEvent('academia:open-music'))}
             >
@@ -2134,6 +2108,85 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             <p className="set-note" style={{ marginTop: 10 }}>
               Envie suas próprias músicas, monte playlists e adicione playlists do
               YouTube ou Spotify para tocar no treino.
+            </p>
+          </section>
+
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">INTERAÇÃO</div>
+                <h3 className="set-card__title">Preferências de Interação</h3>
+                <p className="set-card__desc">
+                  Sons, vibração e status de atividade do app.
+                </p>
+              </div>
+            </div>
+            <div className="set-toggles">
+              {toggleItemsInteraction.map((item) => (
+                <div className="set-toggle" key={item.key}>
+                  <div className="set-toggle__info">
+                    <span className="set-toggle__icon">{item.icon}</span>
+                    <div>
+                      <span className="set-toggle__label">{item.label}</span>
+                      <span className="set-toggle__desc">{item.desc}</span>
+                    </div>
+                  </div>
+                  <label className="set-switch">
+                    <input
+                      type="checkbox"
+                      checked={prefs[item.key]}
+                      onChange={(e) => togglePref(item.key, e.target.checked)}
+                    />
+                    <span className="set-switch__track" />
+                  </label>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      ),
+    },
+    exibicao: {
+      eyebrow: 'ACADEMIA • EXIBIÇÃO',
+      title: 'Acessibilidade, Exibição e PWA',
+      content: (
+        <>
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">EXIBIÇÃO</div>
+                <h3 className="set-card__title">Tela Cheia</h3>
+                <p className="set-card__desc">
+                  Entre em modo tela cheia automaticamente ao abrir o app.
+                </p>
+              </div>
+            </div>
+            <div className="set-toggles">
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgMaximize}</span>
+                  <div>
+                    <span className="set-toggle__label">Tela Cheia Automática</span>
+                    <span className="set-toggle__desc">
+                      Ao recarregar a página, o primeiro clique ou toque em
+                      qualquer lugar da tela aciona o modo tela cheia
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={autoFullscreen}
+                    onChange={(e) => toggleAutoFullscreen(e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+            </div>
+            <p className="set-note" style={{ marginTop: 10 }}>
+              {autoFullscreen
+                ? 'Ativo: o próximo clique ou toque após recarregar entra em tela cheia. Para sair, pressione ESC.'
+                : 'Desativo: o app continua na janela normal do navegador.'}
             </p>
           </section>
 
@@ -2291,39 +2344,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               >
                 {installState === 'installed' ? 'Instalado ✓' : 'Instalar'}
               </button>
-            </div>
-          </section>
-
-          <section className="set-card">
-            <div className="set-card__head">
-              <div>
-                <div className="set-card__eyebrow">INTERAÇÃO</div>
-                <h3 className="set-card__title">Preferências de Interação</h3>
-                <p className="set-card__desc">
-                  Sons, vibração e status de atividade do app.
-                </p>
-              </div>
-            </div>
-            <div className="set-toggles">
-              {toggleItemsInteraction.map((item) => (
-                <div className="set-toggle" key={item.key}>
-                  <div className="set-toggle__info">
-                    <span className="set-toggle__icon">{item.icon}</span>
-                    <div>
-                      <span className="set-toggle__label">{item.label}</span>
-                      <span className="set-toggle__desc">{item.desc}</span>
-                    </div>
-                  </div>
-                  <label className="set-switch">
-                    <input
-                      type="checkbox"
-                      checked={prefs[item.key]}
-                      onChange={(e) => togglePref(item.key, e.target.checked)}
-                    />
-                    <span className="set-switch__track" />
-                  </label>
-                </div>
-              ))}
             </div>
           </section>
 
