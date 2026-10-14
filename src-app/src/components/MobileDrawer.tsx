@@ -33,6 +33,8 @@ interface MobileDrawerProps {
   onOpenMissions: () => void;
   /** Abre o hub do Perfil já nas Configurações */
   onOpenSettings: () => void;
+  /** v4.21.0 — abre a interface de Músicas e Playlists */
+  onOpenMusic: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
 }
@@ -73,6 +75,15 @@ const SvgGear = (
   </svg>
 );
 
+/* v4.21.0 — atalho da interface de Músicas e Playlists */
+const SvgMusic = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <path d="M9 18V5l12-2v13" />
+    <circle cx="6" cy="18" r="3" />
+    <circle cx="18" cy="16" r="3" />
+  </svg>
+);
+
 export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   open,
   onClose,
@@ -83,6 +94,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   onOpenNews,
   onOpenMissions,
   onOpenSettings,
+  onOpenMusic,
   isFullscreen,
   onToggleFullscreen,
 }) => {
@@ -150,6 +162,13 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
       desc: 'Metas diárias e recompensas',
       icon: SvgMissions,
       onClick: onOpenMissions,
+    },
+    {
+      id: 'musicas',
+      label: 'Músicas',
+      desc: 'Playlists e trilhas do treino',
+      icon: SvgMusic,
+      onClick: onOpenMusic,
     },
     {
       id: 'config',

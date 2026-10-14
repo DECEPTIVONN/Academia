@@ -46,6 +46,15 @@ const SvgGear = (
   </svg>
 );
 
+/* v4.21.0 — atalho da interface de Músicas e Playlists */
+const SvgMusic = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <path d="M9 18V5l12-2v13" />
+    <circle cx="6" cy="18" r="3" />
+    <circle cx="18" cy="16" r="3" />
+  </svg>
+);
+
 interface DesktopSidebarProps {
   activeSection: SectionType;
   onSelectSection: (sec: SectionType) => void;
@@ -60,6 +69,8 @@ interface DesktopSidebarProps {
   onOpenMissions: () => void;
   /** v4.12.0 — atalho Configurações (hub do Perfil) */
   onOpenSettings: () => void;
+  /** v4.21.0 — atalho Músicas e Playlists */
+  onOpenMusic: () => void;
 }
 
 export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
@@ -74,6 +85,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   onTogglePin,
   onOpenMissions,
   onOpenSettings,
+  onOpenMusic,
 }) => {
   const [hovered, setHovered] = useState(false);
   const expanded = pinned || hovered;
@@ -155,6 +167,21 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           </span>
           <span className="side-hud__label">
             <span className="side-hud__label-main">Buscar</span>
+          </span>
+        </button>
+        {/* v4.21.0 — atalho Músicas e Playlists */}
+        <button
+          type="button"
+          className="side-hud__item"
+          onClick={onOpenMusic}
+          title="Músicas e Playlists"
+        >
+          <span className="side-hud__icon" aria-hidden="true">
+            {SvgMusic}
+          </span>
+          <span className="side-hud__label">
+            <span className="side-hud__label-main">Músicas</span>
+            <span className="side-hud__label-desc">Playlists e trilhas</span>
           </span>
         </button>
         {NavSectionItems.map((item) => (

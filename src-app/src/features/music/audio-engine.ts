@@ -130,6 +130,97 @@ function emitState(): void {
       detail: { context, playing, title, artist } satisfies MusicState,
     }),
   );
+  updateMediaSession();
+}
+
+/* ──────────────── Media Session API (notificação Android) ────────────────
+   Sem metadata, o Chrome mostra só "Fichas de Treino — Academia" + a URL e
+   SEM botões de avançar/retroceder. Com Metadata + action handlers, a
+   notificação ganha nome, arte, duração/barra de progresso e prev/next. */
+
+const MS_ARTWORK = [
+  { src: '/assets/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+  { src: '/assets/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+];
+
+function mediaSession(): MediaSession | null {
+  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return null;
+  return navigator.mediaSession;
+}
+
+function updateMediaSession(): void {
+  const ms = mediaSession();
+  if (!ms) return;
+  try {
+    if (!title) {
+      ms.metadata = null;
+      return;
+    }
+    ms.metadata = new MediaMetadata({
+      title,
+      artist: artist || 'Evo Fit',
+      album: 'Academia Evo Fit',
+      artwork: MS_ARTWORK,
+    });
+  } catch {
+    /* MediaMetadata indisponível */
+  }
+}
+
+/** Posição/duração na barra de progresso da notificação (áudio HTML). */
+function updatePositionState(el: HTMLAudioElement): void {
+  const ms = mediaSession();
+  if (!ms?.setPositionState) return;
+  try {
+    if (Number.isFinite(el.duration) && el.duration > 0) {
+      ms.setPositionState({
+        duration: el.duration,
+        position: Math.min(el.currentTime, el.duration),
+        playbackRate: el.playbackRate || 1,
+      });
+    }
+  } catch {
+    /* estado inválido (ex.: duração NaN) */
+  }
+}
+
+function seekBy(delta: number): void {
+  const el =
+    context === 'workout-user'
+      ? queue[queueIndex]?.kind === 'site'
+        ? getSiteAudio()
+        : getUserAudio()
+      : getSiteAudio();
+  try {
+    if (Number.isFinite(el.duration) && el.duration > 0) {
+      el.currentTime = Math.min(el.duration - 0.1, Math.max(0, el.currentTime + delta));
+    }
+  } catch {
+    /* seek indisponível */
+  }
+}
+
+/** Liga os handlers da notificação (play/pause/prev/next/seek). */
+function setupMediaSessionHandlers(): void {
+  const ms = mediaSession();
+  if (!ms) return;
+  const safe = (action: MediaSessionAction, fn: () => void) => {
+    try {
+      ms.setActionHandler(action, fn);
+    } catch {
+      /* ação não suportada nesta plataforma */
+    }
+  };
+  safe('play', () => {
+    if (!playing) resumeCurrent();
+  });
+  safe('pause', () => {
+    if (playing) togglePlayback();
+  });
+  safe('previoustrack', () => prevTrack());
+  safe('nexttrack', () => nextTrack());
+  safe('seekbackward', () => seekBy(-10));
+  safe('seekforward', () => seekBy(10));
 }
 
 function getSiteAudio(): HTMLAudioElement {
@@ -137,9 +228,17 @@ function getSiteAudio(): HTMLAudioElement {
     siteAudio = new Audio();
     siteAudio.preload = 'auto';
     siteAudio.addEventListener('ended', () => {
+      // Faixa do site dentro da playlist do usuário → avança a fila.
+      if (context === 'workout-user') {
+        advanceUserQueue();
+        return;
+      }
       // RESULT terminou → volta o ambiente (main).
       if (context === 'result') void playSite('main');
     });
+    // Barra de progresso da notificação (duração/posição reais)
+    siteAudio.addEventListener('loadedmetadata', () => updatePositionState(siteAudio!));
+    siteAudio.addEventListener('timeupdate', () => updatePositionState(siteAudio!));
   }
   return siteAudio;
 }
@@ -151,6 +250,8 @@ function getUserAudio(): HTMLAudioElement {
     userAudio.addEventListener('ended', () => {
       if (context === 'workout-user') advanceUserQueue();
     });
+    userAudio.addEventListener('loadedmetadata', () => updatePositionState(userAudio!));
+    userAudio.addEventListener('timeupdate', () => updatePositionState(userAudio!));
   }
   return userAudio;
 }
@@ -246,7 +347,7 @@ function startWorkoutContext(): void {
 /* ─────────────────────── Fila do usuário (treino) ─────────────────────── */
 
 function isPlayableItem(it: PlaylistItem): boolean {
-  return it.kind === 'upload' || it.kind === 'youtube';
+  return it.kind === 'upload' || it.kind === 'youtube' || it.kind === 'site';
 }
 
 async function startUserQueue(items: PlaylistItem[]): Promise<void> {
@@ -266,7 +367,7 @@ async function playQueueIndex(index: number): Promise<void> {
   if (!item) return;
   context = 'workout-user';
   title = item.title;
-  artist = item.kind === 'upload' ? 'Sua playlist' : 'YouTube';
+  artist = item.kind === 'upload' ? 'Sua playlist' : item.kind === 'site' ? 'Trilha do app' : 'YouTube';
   pauseSite();
 
   if (item.kind === 'upload') {
@@ -281,6 +382,30 @@ async function playQueueIndex(index: number): Promise<void> {
     if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
     currentObjectUrl = URL.createObjectURL(blob);
     el.src = currentObjectUrl;
+    el.loop = false;
+    applyVolume(el);
+    try {
+      await el.play();
+      playing = true;
+      disarmGestures();
+    } catch {
+      playing = false;
+      armGestures();
+    }
+    emitState();
+    return;
+  }
+
+  /* v4.21.0 — faixa fixa do site dentro de uma playlist (Evo Fit):
+     toca no siteAudio mas SEM loop, para a fila avançar no `ended`. */
+  if (item.kind === 'site') {
+    stopYt();
+    const conf = SITE_TRACKS[item.siteId];
+    const el = getSiteAudio();
+    getUserAudio().pause();
+    if (!el.src.endsWith(encodeURI(conf.src)) && !el.src.endsWith(conf.src)) {
+      el.src = conf.src;
+    }
     el.loop = false;
     applyVolume(el);
     try {
@@ -313,6 +438,8 @@ function stopUserQueue(): void {
     currentObjectUrl = null;
   }
   stopYt();
+  // A fila pode estar tocando uma faixa do site no siteAudio → pausa ela.
+  if (queue[queueIndex]?.kind === 'site') getSiteAudio().pause();
   queue = [];
   queueIndex = 0;
 }
@@ -403,6 +530,9 @@ export function initAudioEngine(): void {
   // v4.19.0 — assume a reprodução global (módulo v4.18 fica só com prefs).
   claimMusicPlayback();
 
+  // v4.21.0 — botões avançar/retroceder/toque/pausa na notificação do Android.
+  setupMediaSessionHandlers();
+
   // Hidrata a biblioteca (tracks/playlists/ativa) para que a playlist de
   // treino valha mesmo sem o usuário abrir a interface de Músicas antes.
   useLibraryStore.getState().hydrate();
@@ -476,7 +606,12 @@ export function initAudioEngine(): void {
 
 /** Pausa/retoma manual (mini-player da interface de Músicas). */
 export function togglePlayback(): void {
-  const el = context === 'workout-user' ? getUserAudio() : getSiteAudio();
+  const el =
+    context === 'workout-user'
+      ? queue[queueIndex]?.kind === 'site'
+        ? getSiteAudio()
+        : getUserAudio()
+      : getSiteAudio();
   if (playing) {
     el.pause();
     try {

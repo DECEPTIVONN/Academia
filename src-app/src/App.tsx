@@ -31,6 +31,8 @@ import { ShareModal } from '@/features/gamification/ShareModal';
 /* v4.19.0-music — interface de Músicas e Playlists (overlay estilo YT Music) */
 import { MusicOverlay } from '@/features/music/MusicOverlay';
 import { FloatingMiniPlayer } from '@/features/music/FloatingMiniPlayer';
+/* v4.21.0-music — barra de música no rodapé da Ficha (treino) */
+import { WorkoutNowPlayingBar } from '@/features/music/WorkoutNowPlayingBar';
 import { useShareStore } from '@/features/gamification/share-store';
 import { ColecaoModals } from '@/features/gamification/ColecaoModals';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
@@ -486,6 +488,15 @@ export function App() {
 
   /* Overlay de Músicas e Playlists (interface estilo YouTube Music):
      estado declarado acima (cluster de isSearchOpen); aqui só os listeners. */
+  const openMusic = useCallback(() => {
+    setIsDrawerOpen(false);
+    if (isPerfilOverlayOpen) {
+      setIsPerfilClosing(false);
+      setIsPerfilOverlayOpen(false);
+    }
+    setIsMusicOpen(true);
+  }, [isPerfilOverlayOpen]);
+
   useEffect(() => {
     const onOpen = () => setIsMusicOpen(true);
     window.addEventListener('academia:open-music', onOpen);
@@ -606,6 +617,7 @@ export function App() {
             onTogglePin={toggleSidebarPin}
             onOpenMissions={() => openDashOverlay('missions')}
             onOpenSettings={openProfileSettings}
+            onOpenMusic={openMusic}
           />
 
           {/* shell-body compensa a largura da Sidebar HUD no desktop
@@ -757,6 +769,8 @@ export function App() {
                 onWorkoutCompleted={() => setIsConclusaoOpen(true)}
               />
             </div>
+            {/* v4.21.0-music — faixa tocando no rodapé do treino (prev/play/next) */}
+            <WorkoutNowPlayingBar />
           </div>
 
           {/* Modal de Treino Ativo removido do fluxo: no legado o treino em
@@ -839,6 +853,7 @@ export function App() {
             onOpenNews={() => openDashOverlay('news')}
             onOpenMissions={() => openDashOverlay('missions')}
             onOpenSettings={openProfileSettings}
+            onOpenMusic={openMusic}
             isFullscreen={isFullscreen}
             onToggleFullscreen={() => {
               setIsDrawerOpen(false);

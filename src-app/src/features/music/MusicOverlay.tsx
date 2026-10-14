@@ -15,6 +15,14 @@
  *  • Capa customizável por playlist (imagem reduzida → data URL);
  *  • Badge "No treino" na playlist ativa (seleção de qual toca no treino).
  *
+ * v4.21.0-music:
+ *  • Transições animadas entre abas e ao entrar na playlist (mu-pane);
+ *  • "Escolhas rápidas" = itens FIXADOS (álbuns/músicas) + tile "Fixar";
+ *  • Uploads entram automaticamente na playlist "Suas músicas";
+ *  • Trilhas do site passam a viver na playlist "Evo Fit";
+ *  • Nome atribuível ao adicionar playlist do YouTube/Spotify;
+ *  • Teclado Android: bottom-sheets sobem via visualViewport (--mu-kb).
+ *
  * Aberto via window.dispatchEvent('academia:open-music'). ESC/X fecham.
  * Cores seguem o padrão v4.8.4-color-standard (fundo #07070b, accent var(--primary)).
  */
@@ -38,6 +46,7 @@ import {
   Music2,
   Pause,
   Pencil,
+  Pin,
   Play,
   Plus,
   Shuffle,
@@ -51,6 +60,9 @@ import {
 import {
   parseSpotifyRef,
   parseYouTubeRef,
+  pinPlaylistKey,
+  pinSiteKey,
+  pinTrackKey,
   useLibraryStore,
   type Playlist,
   type UploadTrack,
@@ -62,6 +74,7 @@ import {
   togglePlayback,
   type MusicState,
 } from './audio-engine';
+import { useKeyboardInset } from './useKeyboardInset';
 import './music.css';
 
 /* ───────────────────────── Faixas fixas do site ───────────────────────── */
@@ -176,6 +189,8 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
   const [renaming, setRenaming] = useState<Playlist | null>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const coverTargetRef = useRef<string | null>(null);
+  /* v4.21.0 — teclado Android: altura real do teclado p/ os bottom-sheets */
+  const kbInset = useKeyboardInset();
 
   const {
     playlists,
@@ -185,6 +200,8 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
     setPlaylistCover,
     setActivePlaylist,
     activePlaylistId,
+    pinnedQuick,
+    togglePin,
   } = useLibraryStore();
 
   useEffect(() => {
@@ -241,7 +258,13 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
   if (!open) return null;
 
   return (
-    <div className="mu-overlay" role="dialog" aria-modal="true" aria-label="Músicas e Playlists">
+    <div
+      className="mu-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Músicas e Playlists"
+      style={{ ['--mu-kb' as string]: `${kbInset}px` }}
+    >
       <header className="mu-header">
         <button type="button" className="mu-icon-btn" onClick={onClose} aria-label="Fechar">
           <ArrowLeft size={22} />
@@ -253,27 +276,33 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
       </header>
 
       <div className="mu-scroll">
-        {openPlaylist ? (
-          <PlaylistDetail
-            playlist={openPlaylist}
-            isWorkout={activePlaylistId === openPlaylist.id}
-            onBack={() => setOpenId(null)}
-            onSetWorkout={(on) => setActivePlaylist(on ? openPlaylist.id : null)}
-            onOpenMenu={() => setMenuId(openPlaylist.id)}
-          />
-        ) : (
-          <>
-            {tab === 'home' && (
-              <HomeView onOpenPlaylist={setOpenId} onOpenMenu={setMenuId} activePlaylistId={activePlaylistId} />
-            )}
-            {tab === 'playlists' && (
-              <PlaylistsView onOpenPlaylist={setOpenId} onOpenMenu={setMenuId} />
-            )}
-            {tab === 'biblioteca' && (
-              <BibliotecaView onOpenPlaylist={setOpenId} onOpenMenu={setMenuId} />
-            )}
-          </>
-        )}
+        {/* v4.21.0 — key re-monta a aba/detalhe e dispara a transição CSS */}
+        <div
+          key={openPlaylist ? `pl-${openPlaylist.id}` : tab}
+          className={openPlaylist ? 'mu-pane mu-pane--detail' : 'mu-pane'}
+        >
+          {openPlaylist ? (
+            <PlaylistDetail
+              playlist={openPlaylist}
+              isWorkout={activePlaylistId === openPlaylist.id}
+              onBack={() => setOpenId(null)}
+              onSetWorkout={(on) => setActivePlaylist(on ? openPlaylist.id : null)}
+              onOpenMenu={() => setMenuId(openPlaylist.id)}
+            />
+          ) : (
+            <>
+              {tab === 'home' && (
+                <HomeView onOpenPlaylist={setOpenId} onOpenMenu={setMenuId} activePlaylistId={activePlaylistId} />
+              )}
+              {tab === 'playlists' && (
+                <PlaylistsView onOpenPlaylist={setOpenId} onOpenMenu={setMenuId} />
+              )}
+              {tab === 'biblioteca' && (
+                <BibliotecaView onOpenPlaylist={setOpenId} onOpenMenu={setMenuId} />
+              )}
+            </>
+          )}
+        </div>
         <div style={{ height: 120 }} />
       </div>
 
@@ -343,6 +372,7 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
         <PlaylistActionSheet
           playlist={menuPlaylist}
           isWorkout={activePlaylistId === menuPlaylist.id}
+          isPinned={pinnedQuick.includes(pinPlaylistKey(menuPlaylist.id))}
           onClose={() => setMenuId(null)}
           onRename={() => {
             setRenaming(menuPlaylist);
@@ -354,6 +384,10 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
           }}
           onSetWorkout={(on) => {
             setActivePlaylist(on ? menuPlaylist.id : null);
+            setMenuId(null);
+          }}
+          onTogglePin={() => {
+            togglePin(pinPlaylistKey(menuPlaylist.id));
             setMenuId(null);
           }}
           onDelete={() => {
@@ -390,30 +424,48 @@ function HomeView({
   onOpenMenu: (id: string) => void;
   activePlaylistId: string | null;
 }) {
-  const { tracks, playlists } = useLibraryStore();
+  const { tracks, playlists, pinnedQuick, togglePin } = useLibraryStore();
+  const [picking, setPicking] = useState(false);
+
+  /* Itens FIXADOS nas Escolhas rápidas (álbuns, uploads e faixas do site) */
+  const pinnedPlaylists = pinnedQuick
+    .filter((k) => k.startsWith('pl:'))
+    .map((k) => playlists.find((p) => p.id === k.slice(3)))
+    .filter((p): p is Playlist => !!p);
+  const pinnedTracks = pinnedQuick
+    .filter((k) => k.startsWith('trk:'))
+    .map((k) => tracks.find((t) => t.id === k.slice(4)))
+    .filter((t): t is UploadTrack => !!t);
+  const pinnedSite = pinnedQuick
+    .filter((k) => k.startsWith('site:'))
+    .map((k) => SITE_TRACKS_UI.find((s) => s.id === k.slice(5)))
+    .filter((s): s is (typeof SITE_TRACKS_UI)[number] => !!s);
 
   return (
     <div className="mu-page">
       <section className="mu-section">
         <div className="mu-section__head">
           <h3 className="mu-section__title">Escolhas rápidas</h3>
-          <span className="mu-section__sub">Trilhas do app e suas playlists</span>
+          <span className="mu-section__sub">Álbuns e músicas que você fixar</span>
         </div>
         <div className="mu-quick-grid">
-          {SITE_TRACKS_UI.map((t) => (
+          {pinnedSite.map((t) => (
             <button
               key={t.id}
               type="button"
               className="mu-quick-card"
               onClick={() => playSiteTrackFromUi(t.id)}
             >
-              <div className="mu-quick-card__art" style={{ background: `linear-gradient(135deg, ${t.tint}, #0b0b10)` }}>
+              <div
+                className="mu-quick-card__art"
+                style={{ background: `linear-gradient(135deg, ${t.tint}, #0b0b10)` }}
+              >
                 <Disc3 size={26} />
               </div>
               <span className="mu-quick-card__name">{t.title}</span>
             </button>
           ))}
-          {playlists.map((pl) => (
+          {pinnedPlaylists.map((pl) => (
             <PlaylistQuickCard
               key={pl.id}
               playlist={pl}
@@ -422,7 +474,40 @@ function HomeView({
               onMenu={() => onOpenMenu(pl.id)}
             />
           ))}
+          {pinnedTracks.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className="mu-quick-card"
+              onClick={() =>
+                void playPlaylistFromUi([{ id: `ui-${t.id}`, kind: 'upload', trackId: t.id, title: t.name }])
+              }
+            >
+              <div className="mu-quick-card__art mu-quick-card__art--pl">
+                <Music2 size={26} />
+              </div>
+              <span className="mu-quick-card__name">{t.name}</span>
+            </button>
+          ))}
+          {/* Tile "+": abre o seletor para fixar álbuns/músicas */}
+          <button
+            type="button"
+            className="mu-quick-card mu-quick-card--add"
+            onClick={() => setPicking(true)}
+            aria-label="Fixar álbuns e músicas"
+          >
+            <div className="mu-quick-card__art mu-quick-card__art--add">
+              <Plus size={26} />
+            </div>
+            <span className="mu-quick-card__name">Fixar</span>
+          </button>
         </div>
+        {pinnedQuick.length === 0 && (
+          <p className="mu-note">
+            Toque em <strong>Fixar</strong> para escolher álbuns e músicas para as suas escolhas
+            rápidas.
+          </p>
+        )}
       </section>
 
       <section className="mu-section">
@@ -431,20 +516,15 @@ function HomeView({
         </div>
         <ul className="mu-list">
           {SITE_TRACKS_UI.map((t) => (
-            <li key={t.id} className="mu-row">
-              <button type="button" className="mu-row__main" onClick={() => playSiteTrackFromUi(t.id)}>
-                <div className="mu-row__art" style={{ background: `linear-gradient(135deg, ${t.tint}, #0b0b10)` }}>
-                  <Music2 size={16} />
-                </div>
-                <div className="mu-row__meta">
-                  <span className="mu-row__title">{t.title}</span>
-                  <span className="mu-row__sub">{t.artist} • App</span>
-                </div>
-              </button>
-            </li>
+            <SiteTrackRow key={t.id} track={t} isPinned={pinnedQuick.includes(pinSiteKey(t.id))} onTogglePin={() => togglePin(pinSiteKey(t.id))} />
           ))}
           {tracks.map((t) => (
-            <UploadRow key={t.id} track={t} />
+            <UploadRow
+              key={t.id}
+              track={t}
+              isPinned={pinnedQuick.includes(pinTrackKey(t.id))}
+              onTogglePin={() => togglePin(pinTrackKey(t.id))}
+            />
           ))}
           {tracks.length === 0 && (
             <li className="mu-note">
@@ -453,6 +533,117 @@ function HomeView({
           )}
         </ul>
       </section>
+
+      {picking && <PinPickerModal onClose={() => setPicking(false)} />}
+    </div>
+  );
+}
+
+/** Linha de faixa fixa do site (Evo Fit) — toca e pode ser fixada. */
+function SiteTrackRow({
+  track,
+  isPinned,
+  onTogglePin,
+}: {
+  track: (typeof SITE_TRACKS_UI)[number];
+  isPinned: boolean;
+  onTogglePin: () => void;
+}) {
+  return (
+    <li className="mu-row">
+      <button type="button" className="mu-row__main" onClick={() => playSiteTrackFromUi(track.id)}>
+        <div className="mu-row__art" style={{ background: `linear-gradient(135deg, ${track.tint}, #0b0b10)` }}>
+          <Music2 size={16} />
+        </div>
+        <div className="mu-row__meta">
+          <span className="mu-row__title">{track.title}</span>
+          <span className="mu-row__sub">{track.artist} • App</span>
+        </div>
+      </button>
+      <PinButton isPinned={isPinned} onToggle={onTogglePin} label={track.title} />
+    </li>
+  );
+}
+
+/** Botão de fixar/desafixar nas Escolhas rápidas (linhas de música). */
+function PinButton({
+  isPinned,
+  onToggle,
+  label,
+}: {
+  isPinned: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={isPinned ? 'mu-icon-btn mu-icon-btn--sm mu-pin-btn mu-pin-btn--on' : 'mu-icon-btn mu-icon-btn--sm mu-pin-btn'}
+      onClick={onToggle}
+      aria-pressed={isPinned}
+      aria-label={`${isPinned ? 'Desafixar' : 'Fixar'} ${label} nas escolhas rápidas`}
+    >
+      <Pin size={15} />
+    </button>
+  );
+}
+
+/** Modal de fixar: lista álbuns + faixas com toggle de fixação. */
+function PinPickerModal({ onClose }: { onClose: () => void }) {
+  const { playlists, tracks, pinnedQuick, togglePin } = useLibraryStore();
+  return (
+    <div className="mu-modal" onClick={onClose}>
+      <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
+        <h4 className="mu-modal__title">Fixar nas escolhas rápidas</h4>
+
+        <span className="mu-modal__label">Álbuns</span>
+        <ul className="mu-pick-list">
+          {playlists.map((pl) => {
+            const on = pinnedQuick.includes(pinPlaylistKey(pl.id));
+            return (
+              <li key={pl.id}>
+                <button type="button" className={on ? 'mu-pick mu-pick--on' : 'mu-pick'} onClick={() => togglePin(pinPlaylistKey(pl.id))}>
+                  <ListMusic size={15} /> {pl.name}
+                  <span className="mu-pick__hint">{on ? 'fixado' : 'fixar'}</span>
+                </button>
+              </li>
+            );
+          })}
+          {playlists.length === 0 && <li className="mu-note">Nenhuma playlist ainda.</li>}
+        </ul>
+
+        <span className="mu-modal__label">Músicas</span>
+        <ul className="mu-pick-list">
+          {SITE_TRACKS_UI.map((t) => {
+            const on = pinnedQuick.includes(pinSiteKey(t.id));
+            return (
+              <li key={t.id}>
+                <button type="button" className={on ? 'mu-pick mu-pick--on' : 'mu-pick'} onClick={() => togglePin(pinSiteKey(t.id))}>
+                  <Music2 size={15} /> {t.title}
+                  <span className="mu-pick__hint">{on ? 'fixado' : 'fixar'}</span>
+                </button>
+              </li>
+            );
+          })}
+          {tracks.map((t) => {
+            const on = pinnedQuick.includes(pinTrackKey(t.id));
+            return (
+              <li key={t.id}>
+                <button type="button" className={on ? 'mu-pick mu-pick--on' : 'mu-pick'} onClick={() => togglePin(pinTrackKey(t.id))}>
+                  <Music2 size={15} /> {t.name}
+                  <span className="mu-pick__hint">{on ? 'fixado' : 'fixar'}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="mu-modal__actions">
+          <button type="button" className="mu-btn" onClick={onClose}>
+            Concluir
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -481,7 +672,15 @@ function PlaylistQuickCard({
   );
 }
 
-function UploadRow({ track }: { track: UploadTrack }) {
+function UploadRow({
+  track,
+  isPinned,
+  onTogglePin,
+}: {
+  track: UploadTrack;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
+}) {
   return (
     <li className="mu-row">
       <button
@@ -497,6 +696,9 @@ function UploadRow({ track }: { track: UploadTrack }) {
           <span className="mu-row__sub">{track.artist} • Sua música</span>
         </div>
       </button>
+      {onTogglePin && (
+        <PinButton isPinned={!!isPinned} onToggle={onTogglePin} label={track.name} />
+      )}
     </li>
   );
 }
@@ -513,6 +715,7 @@ function PlaylistsView({
   const { playlists, createPlaylist, setActivePlaylist, activePlaylistId } = useLibraryStore();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
+  const kbInset = useKeyboardInset();
 
   const handleCreate = () => {
     const trimmed = name.trim();
@@ -570,7 +773,7 @@ function PlaylistsView({
       </button>
 
       {creating && (
-        <div className="mu-modal" onClick={() => setCreating(false)}>
+        <div className="mu-modal" onClick={() => setCreating(false)} style={{ paddingBottom: kbInset }}>
           <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
             <h4 className="mu-modal__title">Criar Playlist</h4>
             <input
@@ -661,8 +864,10 @@ function PlaylistDetail({
   const { tracks, removeItem, addUploadToPlaylist, addExternalToPlaylist } = useLibraryStore();
   const [adding, setAdding] = useState(false);
   const [link, setLink] = useState('');
+  const [linkName, setLinkName] = useState('');
   const [linkKind, setLinkKind] = useState<'youtube' | 'spotify'>('youtube');
   const [linkErr, setLinkErr] = useState('');
+  const kbInset = useKeyboardInset();
 
   const addLink = () => {
     setLinkErr('');
@@ -676,7 +881,7 @@ function PlaylistDetail({
         playlist.id,
         'youtube',
         parsed.id,
-        parsed.kind === 'list' ? 'Playlist do YouTube' : 'Vídeo do YouTube',
+        linkName.trim() || (parsed.kind === 'list' ? 'Playlist do YouTube' : 'Vídeo do YouTube'),
       );
     } else {
       const id = parseSpotifyRef(link);
@@ -684,9 +889,10 @@ function PlaylistDetail({
         setLinkErr('Link do Spotify inválido.');
         return;
       }
-      addExternalToPlaylist(playlist.id, 'spotify', id, 'Playlist do Spotify');
+      addExternalToPlaylist(playlist.id, 'spotify', id, linkName.trim() || 'Playlist do Spotify');
     }
     setLink('');
+    setLinkName('');
   };
 
   const notInPlaylist = useMemo(
@@ -775,7 +981,13 @@ function PlaylistDetail({
                   <div className="mu-row__meta">
                     <span className="mu-row__title">{it.title}</span>
                     <span className="mu-row__sub">
-                      {it.kind === 'upload' ? 'Sua música' : it.kind === 'youtube' ? 'YouTube' : 'Spotify'}
+                      {it.kind === 'upload'
+                        ? 'Sua música'
+                        : it.kind === 'site'
+                          ? 'Trilha do app'
+                          : it.kind === 'youtube'
+                            ? 'YouTube'
+                            : 'Spotify'}
                     </span>
                   </div>
                 </button>
@@ -798,7 +1010,7 @@ function PlaylistDetail({
       </section>
 
       {adding && (
-        <div className="mu-modal" onClick={() => setAdding(false)}>
+        <div className="mu-modal" onClick={() => setAdding(false)} style={{ paddingBottom: kbInset }}>
           <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
             <h4 className="mu-modal__title">Adicionar músicas</h4>
 
@@ -843,6 +1055,12 @@ function PlaylistDetail({
             </div>
             <input
               className="mu-input"
+              placeholder="Nome (opcional)"
+              value={linkName}
+              onChange={(e) => setLinkName(e.target.value)}
+            />
+            <input
+              className="mu-input"
               placeholder={
                 linkKind === 'youtube'
                   ? 'https://youtube.com/playlist?list=...'
@@ -873,18 +1091,22 @@ function PlaylistDetail({
 function PlaylistActionSheet({
   playlist,
   isWorkout,
+  isPinned,
   onClose,
   onRename,
   onCover,
   onSetWorkout,
+  onTogglePin,
   onDelete,
 }: {
   playlist: Playlist;
   isWorkout: boolean;
+  isPinned: boolean;
   onClose: () => void;
   onRename: () => void;
   onCover: () => void;
   onSetWorkout: (on: boolean) => void;
+  onTogglePin: () => void;
   onDelete: () => void;
 }) {
   return (
@@ -907,6 +1129,10 @@ function PlaylistActionSheet({
             onClick={() => onSetWorkout(!isWorkout)}
           >
             <Dumbbell size={17} /> {isWorkout ? 'Remover do treino' : 'Usar no treino'}
+          </button>
+          <button type="button" className="mu-actionsheet__item" onClick={onTogglePin}>
+            <Pin size={17} />{' '}
+            {isPinned ? 'Desafixar das escolhas rápidas' : 'Fixar nas escolhas rápidas'}
           </button>
           <button
             type="button"
@@ -936,8 +1162,9 @@ function RenameModal({
   onClose: () => void;
 }) {
   const [name, setName] = useState(playlist.name);
+  const kbInset = useKeyboardInset();
   return (
-    <div className="mu-modal" onClick={onClose}>
+    <div className="mu-modal" onClick={onClose} style={{ paddingBottom: kbInset }}>
       <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
         <h4 className="mu-modal__title">Renomear playlist</h4>
         <input
@@ -970,14 +1197,16 @@ function BibliotecaView({
   onOpenPlaylist: (id: string) => void;
   onOpenMenu: (id: string) => void;
 }) {
-  const { tracks, playlists, addUpload, removeTrack, createPlaylist, addExternalToPlaylist, activePlaylistId } =
+  const { tracks, playlists, addUpload, removeTrack, createPlaylist, addExternalToPlaylist, activePlaylistId, pinnedQuick, togglePin } =
     useLibraryStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [linkModal, setLinkModal] = useState<null | 'youtube' | 'spotify'>(null);
   const [link, setLink] = useState('');
+  const [linkName, setLinkName] = useState('');
   const [linkErr, setLinkErr] = useState('');
   const [linkTarget, setLinkTarget] = useState<string>('');
+  const kbInset = useKeyboardInset();
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -997,10 +1226,10 @@ function BibliotecaView({
   const applyExternal = (kind: 'youtube' | 'spotify', refId: string, title: string) => {
     let target = linkTarget;
     if (!target) {
-      const pl = createPlaylist(title);
+      const pl = createPlaylist(linkName.trim() || title);
       target = pl.id;
     }
-    addExternalToPlaylist(target, kind, refId, title);
+    addExternalToPlaylist(target, kind, refId, linkName.trim() || title);
   };
 
   const addExternalLink = () => {
@@ -1021,6 +1250,7 @@ function BibliotecaView({
       applyExternal('spotify', id, 'Playlist do Spotify');
     }
     setLink('');
+    setLinkName('');
     setLinkModal(null);
   };
 
@@ -1086,6 +1316,11 @@ function BibliotecaView({
                     <span className="mu-row__sub">{t.artist}</span>
                   </div>
                 </button>
+                <PinButton
+                  isPinned={pinnedQuick.includes(pinTrackKey(t.id))}
+                  onToggle={() => togglePin(pinTrackKey(t.id))}
+                  label={t.name}
+                />
                 <button
                   type="button"
                   className="mu-icon-btn mu-icon-btn--sm"
@@ -1122,7 +1357,7 @@ function BibliotecaView({
       )}
 
       {linkModal && (
-        <div className="mu-modal" onClick={() => setLinkModal(null)}>
+        <div className="mu-modal" onClick={() => setLinkModal(null)} style={{ paddingBottom: kbInset }}>
           <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
             <h4 className="mu-modal__title">
               {linkKindIsYoutube(linkModal) ? 'Playlist do YouTube' : 'Playlist do Spotify'}
@@ -1140,6 +1375,12 @@ function BibliotecaView({
                 </option>
               ))}
             </select>
+            <input
+              className="mu-input"
+              placeholder="Nome da playlist (ex.: Treino de Peito)"
+              value={linkName}
+              onChange={(e) => setLinkName(e.target.value)}
+            />
             <input
               className="mu-input"
               placeholder={

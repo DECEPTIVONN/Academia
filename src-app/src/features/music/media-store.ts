@@ -82,10 +82,15 @@ export interface UploadTrack {
   kind: 'upload';
 }
 
+export type SiteTrackId = 'main' | 'workout' | 'result' | 'missions';
+
 export type PlaylistItem =
   | { id: string; kind: 'upload'; trackId: string; title: string }
   | { id: string; kind: 'youtube'; refId: string; title: string } // refId = videoId ou listId
-  | { id: string; kind: 'spotify'; refId: string; title: string }; // refId = playlistId
+  | { id: string; kind: 'spotify'; refId: string; title: string } // refId = playlistId
+  /* v4.21.0 — faixa fixa do site (MAIN/RESULT/Revenger Phoenix/Black Panther)
+     vivendo DENTRO de uma playlist (a "Evo Fit" criada por padrão). */
+  | { id: string; kind: 'site'; siteId: SiteTrackId; title: string };
 
 export interface Playlist {
   id: string;
@@ -100,9 +105,47 @@ export interface MusicLibrary {
   tracks: UploadTrack[];
   playlists: Playlist[];
   activePlaylistId: string | null;
+  /* v4.21.0 — "Escolhas rápidas" = itens FIXADOS pelo usuário.
+     Chaves: `pl:<id>` (álbum/playlist), `trk:<id>` (upload),
+     `site:<siteId>` (faixa fixa do site). */
+  pinnedQuick: string[];
+  /** v4.21.0 — migração de seed (Evo Fit + Suas músicas) já aplicada. */
+  seeded: boolean;
 }
 
-const EMPTY_LIBRARY: MusicLibrary = { tracks: [], playlists: [], activePlaylistId: null };
+const EMPTY_LIBRARY: MusicLibrary = {
+  tracks: [],
+  playlists: [],
+  activePlaylistId: null,
+  pinnedQuick: [],
+  seeded: false,
+};
+
+/* ────────────────────── Playlists padrão (seed v4.21.0) ───────────────── */
+
+/** Playlist "Evo Fit" — trilhas fixas do site moram aqui por padrão. */
+export const EVO_FIT_ID = 'pl-evo-fit';
+/** Playlist "Suas músicas" — recebe automaticamente cada upload do usuário. */
+export const SUAS_MUSICAS_ID = 'pl-suas-musicas';
+
+const EVO_FIT_ITEMS: PlaylistItem[] = [
+  { id: 'site-item-main', kind: 'site', siteId: 'main', title: 'MAIN' },
+  {
+    id: 'site-item-workout',
+    kind: 'site',
+    siteId: 'workout',
+    title: 'Black Panther: War For Wakanda',
+  },
+  { id: 'site-item-missions', kind: 'site', siteId: 'missions', title: 'Revenger Phoenix' },
+  { id: 'site-item-result', kind: 'site', siteId: 'result', title: 'RESULT' },
+];
+
+/** Chave de fixação de um álbum (playlist) nas Escolhas rápidas. */
+export const pinPlaylistKey = (id: string): string => `pl:${id}`;
+/** Chave de fixação de uma música enviada pelo usuário. */
+export const pinTrackKey = (id: string): string => `trk:${id}`;
+/** Chave de fixação de uma faixa fixa do site. */
+export const pinSiteKey = (id: SiteTrackId): string => `site:${id}`;
 
 function newId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -117,6 +160,8 @@ function readLibrary(): MusicLibrary {
       tracks: Array.isArray(parsed.tracks) ? parsed.tracks : [],
       playlists: Array.isArray(parsed.playlists) ? parsed.playlists : [],
       activePlaylistId: parsed.activePlaylistId ?? null,
+      pinnedQuick: Array.isArray(parsed.pinnedQuick) ? parsed.pinnedQuick : [],
+      seeded: parsed.seeded === true,
     };
   } catch {
     return { ...EMPTY_LIBRARY };
@@ -129,6 +174,57 @@ function writeLibrary(lib: MusicLibrary): void {
   } catch {
     /* storage cheio/indisponível — estado segue em memória */
   }
+}
+
+/* ───────────────────── Seed v4.21.0 (migração única) ───────────────────── */
+
+/**
+ * Primeira hidratação pós-v4.21.0:
+ *  • cria a playlist "Evo Fit" com as 4 faixas fixas do site (elas saem das
+ *    Escolhas rápidas e passam a viver dentro de uma playlist);
+ *  • cria a playlist "Suas músicas" e move para lá todos os uploads já
+ *    existentes (novos uploads entram automaticamente em addUpload).
+ */
+function seedLibrary(lib: MusicLibrary): MusicLibrary {
+  if (lib.seeded) return lib;
+  let playlists = [...lib.playlists];
+
+  if (!playlists.some((p) => p.id === EVO_FIT_ID)) {
+    playlists.push({
+      id: EVO_FIT_ID,
+      name: 'Evo Fit',
+      items: EVO_FIT_ITEMS,
+      createdAt: Date.now(),
+    });
+  }
+
+  let suas = playlists.find((p) => p.id === SUAS_MUSICAS_ID);
+  if (!suas) {
+    suas = { id: SUAS_MUSICAS_ID, name: 'Suas músicas', items: [], createdAt: Date.now() };
+    playlists.push(suas);
+  }
+  const already = new Set(
+    suas.items.filter((it) => it.kind === 'upload').map((it) => (it as { trackId: string }).trackId),
+  );
+  const missing = lib.tracks.filter((t) => !already.has(t.id));
+  if (missing.length > 0) {
+    playlists = playlists.map((p) =>
+      p.id === SUAS_MUSICAS_ID
+        ? {
+            ...p,
+            items: [
+              ...p.items,
+              ...missing.map(
+                (t) =>
+                  ({ id: newId('it'), kind: 'upload', trackId: t.id, title: t.name }) as PlaylistItem,
+              ),
+            ],
+          }
+        : p,
+    );
+  }
+
+  return { ...lib, playlists, seeded: true };
 }
 
 /* ───────────────────────────── Store (zustand) ───────────────────────── */
@@ -151,14 +247,17 @@ interface LibraryState extends MusicLibrary {
   /** v4.20.0 */
   renamePlaylist: (playlistId: string, name: string) => void;
   setPlaylistCover: (playlistId: string, cover: string | undefined) => void;
+  /** v4.21.0 — fixar/desafixar álbum/música nas Escolhas rápidas */
+  togglePin: (key: string) => void;
 }
 
 export const useLibraryStore = create<LibraryState>((set) => ({
   ...EMPTY_LIBRARY,
 
   hydrate: () => {
-    const lib = readLibrary();
-    set(lib);
+    const seeded = seedLibrary(readLibrary());
+    writeLibrary(seeded);
+    set(seeded);
   },
 
   addUpload: async (file) => {
@@ -174,8 +273,16 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       addedAt: Date.now(),
       kind: 'upload',
     };
-    const cur = readLibrary();
-    const lib = { ...cur, tracks: [...cur.tracks, track] };
+    const cur = seedLibrary(readLibrary());
+    const item: PlaylistItem = { id: newId('it'), kind: 'upload', trackId: id, title: track.name };
+    const lib: MusicLibrary = {
+      ...cur,
+      tracks: [...cur.tracks, track],
+      /* v4.21.0 — todo upload entra automaticamente em "Suas músicas" */
+      playlists: cur.playlists.map((p) =>
+        p.id === SUAS_MUSICAS_ID ? { ...p, items: [...p.items, item] } : p,
+      ),
+    };
     writeLibrary(lib);
     set(lib);
     return track;
@@ -191,6 +298,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
         ...p,
         items: p.items.filter((it) => !(it.kind === 'upload' && it.trackId === trackId)),
       })),
+      pinnedQuick: cur.pinnedQuick.filter((k) => k !== pinTrackKey(trackId)),
     };
     if (lib.activePlaylistId && !lib.playlists.some((p) => p.id === lib.activePlaylistId)) {
       lib.activePlaylistId = null;
@@ -219,6 +327,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       ...cur,
       playlists: cur.playlists.filter((p) => p.id !== playlistId),
       activePlaylistId: cur.activePlaylistId === playlistId ? null : cur.activePlaylistId,
+      pinnedQuick: cur.pinnedQuick.filter((k) => k !== pinPlaylistKey(playlistId)),
     };
     writeLibrary(lib);
     set(lib);
@@ -303,6 +412,18 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     const lib: MusicLibrary = {
       ...cur,
       playlists: cur.playlists.map((p) => (p.id === playlistId ? { ...p, cover } : p)),
+    };
+    writeLibrary(lib);
+    set(lib);
+  },
+
+  /* v4.21.0 — fixar/desafixar um álbum ou música nas Escolhas rápidas */
+  togglePin: (key) => {
+    const cur = readLibrary();
+    const has = cur.pinnedQuick.includes(key);
+    const lib: MusicLibrary = {
+      ...cur,
+      pinnedQuick: has ? cur.pinnedQuick.filter((k) => k !== key) : [...cur.pinnedQuick, key],
     };
     writeLibrary(lib);
     set(lib);

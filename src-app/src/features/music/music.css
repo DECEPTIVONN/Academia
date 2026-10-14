@@ -849,3 +849,152 @@
   border-bottom: 2px solid rgba(255, 255, 255, 0.35);
   border-radius: 0 0 3px 0;
 }
+
+/* ═══════════════ v4.21.0 — transições, fixação, treino, teclado ═══════════════ */
+
+/* ── Transição entre abas / ao entrar na playlist (mu-pane remonta c/ key) ── */
+@keyframes muPaneIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes muPaneInRight {
+  from { opacity: 0; transform: translateX(26px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.mu-pane { animation: muPaneIn 0.26s cubic-bezier(0.25, 1, 0.5, 1); }
+.mu-pane--detail { animation: muPaneInRight 0.28s cubic-bezier(0.25, 1, 0.5, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mu-pane,
+  .mu-pane--detail { animation: none; }
+}
+
+/* ── Tile "Fixar" nas Escolhas rápidas ── */
+.mu-quick-card__art--add {
+  background: linear-gradient(135deg, #16161f, #0b0b10);
+  border: 1px dashed rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+  color: var(--primary, #8b5cf6);
+}
+
+.mu-quick-card--add:hover .mu-quick-card__art {
+  background: linear-gradient(135deg, #1c1c28, #0b0b10);
+}
+
+/* ── Botão fixar (pin) nas linhas de música ── */
+.mu-pin-btn { color: #6f6f82; }
+.mu-pin-btn:hover { color: var(--primary, #8b5cf6); }
+.mu-pin-btn--on { color: var(--primary, #8b5cf6); }
+
+/* ── Item "fixado" no seletor de fixação ── */
+.mu-pick--on {
+  border-color: var(--primary, #8b5cf6);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+  color: #fff;
+}
+
+.mu-pick--on .mu-pick__hint { color: var(--primary-light, #a78bfa); }
+
+/* ── Teclado Android: bottom-sheets sobem pelo gap real (visualViewport) ──
+   .mu-modal é o flex-container (align-items:flex-end); o padding-bottom
+   empurra o painel para cima da altura do teclado medida em --mu-kb. */
+.mu-modal { padding-bottom: var(--mu-kb, 0px); }
+
+/* ── Barra de música no rodapé da Ficha (WorkoutNowPlayingBar) ──
+   Montada como último filho de .ficha-overlay (flex column) → fica fixa no
+   rodapé do overlay, acima do conteúdo rolável e abaixo dos modais. */
+.wnp {
+  flex-shrink: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(11, 11, 16, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.wnp__art {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(var(--primary-rgb, 139, 92, 246), 0.85), #0b0b10);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.wnp__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wnp__title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #f2f2f7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wnp__artist {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #8a8a9c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wnp__controls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wnp__btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.12s, border-color 0.18s;
+}
+
+.wnp__btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+}
+
+.wnp__btn:active { transform: scale(0.9); }
+
+.wnp__btn--play {
+  background: var(--primary, #8b5cf6);
+  border-color: var(--primary, #8b5cf6);
+  color: #fff;
+}
+
+.wnp__btn--play:hover {
+  background: var(--primary-light, #a78bfa);
+  border-color: var(--primary-light, #a78bfa);
+}
