@@ -21,6 +21,17 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.17.0] - 2026-10-13
+
+Descrições específicas para cada exercício na interface de detalhes individual da aba **Montar Ficha** (modal `CRDetailsModal`): antes, exercícios sem anotação recebiam o texto genérico "Um exercício focado em fortalecer o {grupo}…" — agora cada um dos 66 exercícios pré-cadastrados tem uma descrição própria explicando o que é, os músculos-alvo, a execução correta e uma dica de técnica. `system_map.json` → 3.5.58.
+
+### Added
+- **`src-app/src/features/workout/treinos/exercise-descriptions.ts`** (novo) — catálogo com **66 descrições em pt-BR**, uma por exercício de `DEFAULT_EXERCISES` (`default-data.ts`) + 1 entrada extra ("Leg Press 45°", nome comum criado por usuários). Lookup por **nome normalizado** (minúsculas, sem acentos, espaços colapsados) via `getExerciseDescription(name?)` — resiliente a caixa/acentuação; exercícios criados pelo usuário que não constam no catálogo caem no fallback genérico (nada é sobrescrito no banco de dados).
+- **`src-app/src/features/workout/treinos/TreinosModals.tsx`** — `CRDetailsModal` (modal `#modalCRDetails`, aberto pelo botão "Detalhes" dos cards do deck) exibe a descrição com prioridade: **anotação do usuário (`ex.notes`, campo "Anotações") → catálogo por nome → fallback genérico por grupo muscular** (texto anterior mantido como última opção).
+
+### Verification
+- `npm run build` exit 0 · `oxlint` 0 avisos · validação de cobertura por script: **66/66** nomes do seed casados no catálogo, 0 chaves duplicadas, 0 faltantes (extra intencional). Probe CDP mobile (392×777) no `vite preview` :4173 — `probe_desc2.js` percorre os **5 cards do deck A** (Supino Articulado, Voador, Leg Press 45° + Banco Extenso, Desenvolvimento Máquina, Supra Prancha): **5/5 descrições específicas** exibidas no modal (nenhum genérico), screenshots `%TEMP%\opencode\desc_modal.png` e `desc_modal2.png` conferidos. Nota: o perfil CDP persistente tinha o SW/PWA do preview servindo o bundle antigo — probes desregistram o SW e limpam caches antes de testar.
+
 ## [v4.16.0] - 2026-10-13
 
 Correção do **bug de tela preta no mobile** (relato em `academia-seven-iota.vercel.app`, Android Chrome): após a splash, o app podia ficar preso numa tela 100% preta. Diagnóstico por probe CDP no build idêntico ao deploy da Vercel (bundle byte-a-byte igual): **não era um bug mobile** — o script da splash em `src-app/index.html` ocultava a splash após 10 s **mesmo quando o React nunca montava** (bundle JS não baixado/travado por rede ruim, cache corrompido, etc.); com `#root` vazio, o `body` ficava preto e não havia **nenhuma** mensagem de erro nem retry. O "mobile only" era só a condição de rede/ cache que expunha a falha. `system_map.json` → 3.5.57.

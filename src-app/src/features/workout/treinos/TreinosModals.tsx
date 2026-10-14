@@ -13,6 +13,7 @@ import { createPortal } from 'react-dom';
 import type { AerobicConfig, Exercise, SheetKey } from '@/core/db/schema';
 import { getMaestriaState, computeMasteryTotals, type MaestriaState } from '@/features/gamification/maestria';
 import type { LegacyRaw } from '@/core/db/queries';
+import { getExerciseDescription } from './exercise-descriptions';
 
 /* Portal para document.body: o .section-strip tem transform/will-change
    (translateX da navegação de seções) e viraria o containing block do
@@ -262,6 +263,13 @@ export const CRDetailsModal: React.FC<{
   const bc = TIER_BY_BADGE[state.badgeLevel];
   const classe = (ex.tags as string[])?.includes('Aparelho') ? 'Aparelho' : 'Peso Livre';
 
+  /* Descrição (v4.17.0): anotação do usuário → catálogo por nome
+     (exercise-descriptions.ts) → fallback genérico por grupo muscular. */
+  const description =
+    ex.notes ||
+    getExerciseDescription(ex.name) ||
+    `Um exercício focado em fortalecer o ${ex.muscleGroup}. Mantenha a postura correta para melhores resultados!`;
+
   /* Swipe entre abas (L1226–1248): threshold 50px */
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.changedTouches[0].screenX;
@@ -350,7 +358,7 @@ export const CRDetailsModal: React.FC<{
           >
             <div className={`cr-tab-pane${tabIdx === 0 ? ' active' : ''}`}>
               <div className="cr-description-box" id="crExDescription">
-                {ex.notes || `Um exercício focado em fortalecer o ${ex.muscleGroup}. Mantenha a postura correta para melhores resultados!`}
+                {description}
               </div>
             </div>
 
