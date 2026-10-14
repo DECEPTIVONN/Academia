@@ -21,6 +21,48 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.19.0] - 2026-10-14
+
+**Músicas multi-contexto + interface de Playlists**: a trilha do app passa a reagir ao estado — `RESULT.mp3` toca ao **concluir um treino** e, ao clicar no botão **INCRÍVEL** (fechar o modal), para e o `MAIN.mp3` volta; durante o treino toca a faixa **Black Panther: War For Wakanda**; com o overlay de **Missões** aberto toca **Revenger Phoenix**. Nova **interface dedicada "Músicas e Playlists"** (estilo YouTube Music) onde o usuário envia suas próprias músicas (upload → IndexedDB), monta playlists, marca uma delas para **tocar automaticamente no treino** e adiciona playlists do **YouTube/Spotify** por link. `system_map.json` → 3.5.60.
+
+### Added
+- **`src-app/src/features/music/audio-engine.ts`** (novo) — motor de áudio multi-contexto que **assume a reprodução global** (o `background-music.ts` v4.18 fica só com prefs/eventos via `claimMusicPlayback()`, evitando dois players de MAIN.mp3). Contextos `main`(MAIN loop)/`workout`(Black Panther loop)/`result`(RESULT 1x → volta main no `ended`)/`missions`(Revenger Phoenix loop)/`workout-user`(playlist do usuário). Escuta eventos `academia:workout-started|completed|closed|cancelled` e `academia:missions-open|close` (disparados pelo `App.tsx`); volume/master reagem a `academia:music-changed` em tempo real; hidrata a biblioteca no boot (`hydrate()`) para a playlist de treino valer sem abrir a interface antes; autoplay adiado ao primeiro gesto (mesma política do v4.18). Fila do usuário avança em loop, itens Spotify são pulados no treino (embed não força autoplay). YouTube via **IFrame API** (carregada sob demanda, player oculto 1×1, avança na `ENDED`).
+- **`src-app/src/features/music/media-store.ts`** (novo) — biblioteca do usuário em duas camadas: **blobs de áudio (uploads) em IndexedDB** (`academia_media_db`, store `audio_blobs` — localStorage não aguenta arquivos grandes) + **metadados (tracks/playlists/playlist ativa) em localStorage** (`academia_music_library_v1`). Store zustand `useLibraryStore`: `addUpload/removeTrack/createPlaylist/deletePlaylist/addUploadToPlaylist/addExternalToPlaylist/removeItem/setActivePlaylist`. Helpers `parseYouTubeRef` (watch?v=/youtu.be/playlist?list=/shorts) e `parseSpotifyRef` (open.spotify.com/playlist/<id> ou ID cru).
+- **`src-app/src/features/music/MusicOverlay.tsx`** + **`music.css`** (novos) — overlay fullscreen estilo YouTube Music (BEM `.mu-*`, padrão de cores v4.8.4 — fundo `#07070b`, accent `var(--primary)`): 3 abas (Início "Escolhas rápidas"+lista Músicas / Playlists com grade+FAB "+"+empty state "Nenhuma playlist ainda"/Biblioteca com upload+links YT/Spotify), **mini-player** fixo (faixa atual + play/pause), bottom nav, modal de criar playlist e de adicionar músicas (uploads + link YT/Spotify). Abre via `academia:open-music`; ESC/X fecham.
+- **`src-app/src/features/music/`** integrado no **`App.tsx`**: estado `isMusicOpen` + `<MusicOverlay>`, dispatches de eventos de áudio nos handlers (`handleOpenFicha`/`handleStartWorkout` → `workout-started`; efeito `isConclusaoOpen` → `workout-completed`; `handleConclusaoClose` → `workout-closed`; `handleEncerrarConfirmar` sem conclusão → `workout-cancelled`; efeito `dashOverlay==='missions'` → `missions-open/close`).
+- **Prefs** (`profile-data.ts` → `PREF_KEYS`): `academia_pref_workout_music` (ausente = **ligado**) — se o usuário tiver playlist ativa com itens, ela vence; senão, se ligado, toca a faixa de treino do site; senão, silêncio no treino.
+- **`src-app/src/features/settings/SettingsFeature.tsx`** — card **"Músicas Durante o Treino"** (tela `exibicao`, após "Música de Fundo"): switch "Músicas do App no Treino" + botão **"Abrir Músicas e Playlists"** (dispara `academia:open-music`) + nota explicando precedência playlist > faixa do site.
+- **Busca** (`search-index.ts` + `App.tsx`): novo item `cfg:musicas` "Músicas e Playlists" com `action:'open-music'` (abre o overlay direto da Busca Geral); keywords de `cfg:exibicao` expandidas (`playlist`, `youtube`, `spotify`, `upload`, `treino`, `faixa`).
+
+### Changed
+- **`src-app/src/main.tsx`** — ordem do boot: `initAudioEngine()` roda **antes** de `initBackgroundMusic()` e chama `claimMusicPlayback()` (o módulo v4.18 passa a só aplicar prefs — a reprodução é do motor, sem áudio duplicado).
+- **`src-app/src/lib/background-music.ts`** — ganha `claimMusicPlayback()` + flag `playbackClaimed`: quando o motor assume, `playMusicNow/pauseMusicNow/initBackgroundMusic` viram no-op (só prefs + evento `academia:music-changed` permanecem).
+- **Assets** — `RESULT.mp3` (6,1 MB), `Black Panther_ War For Wakanda…(MP3_160K).mp3` (1,6 MB) e `Revenger Phoenix(MP3_160K).mp3` (1,5 MB) copiados de `Assets/Sounds/` para `src-app/public/assets/sounds/` (todos **fora** do precache via glob negativo `!assets/sounds/**`, cacheados sob demanda pelo runtimeCaching `/assets/`).
+
+### Verification
+- `npx tsc -b` exit 0 · `oxlint` 0 avisos · `npx vite build` exit 0 (precache **112 entries sem MP3s**; os 4 áudios presentes em `dist/assets/sounds/`).
+- Probe CDP (`%TEMP%\opencode\probe_music419.js`, Chrome headless :9222 + `vite preview` :4173, perfil limpo): **17/17 PASS** — overlay de Músicas monta com 3 abas/4 cards/linhas, empty state de Playlists + FAB, criação de playlist persiste em `academia_music_library_v1`, Biblioteca com upload+YouTube+Spotify, mini-player, ESC fecha, card "Músicas Durante o Treino" + toggle + botão em Configurações → Exibição, **0 erros de console**. Diagnóstico `diag419.js` confirma 65 elementos `.mu-*` no DOM.
+- **Nota**: reprodução audível real (playlist no treino, RESULT→MAIN, YouTube/Spotify) depende de gesto/política de autoplay e rede — o teste automatizado valida montagem de UI, persistência e ausência de erros, não áudio audível. Itens **Spotify em playlist de treino são pulados** (embed não permite autoplay forçado; tocam na interface).
+
+## [v4.18.0] - 2026-10-14
+
+**Música de fundo do site**: `Assets/Sounds/MAIN.mp3` (~7,2 MB) passa a tocar em loop enquanto o app está aberto, com controle nas **Configurações → Acessibilidade, Exibição e PWA**: switch "Tocar Música" (desabilitar/abilitar) e slider de **volume de 0 a 100** (passo 5). `system_map.json` → 3.5.59.
+
+### Added
+- **`src-app/src/lib/background-music.ts`** (novo) — player singleton (`HTMLAudioElement`, loop, `preload='auto'`): `initBackgroundMusic()` (chamado no `main.tsx` antes do render) aplica as prefs salvas e tenta `play()`; como navegadores bloqueiam autoplay com som, o play é **adiado até o primeiro gesto** do usuário (pointerdown/keydown em capture, re-armado a cada gesto até dar certo — mesma mecânica da tela cheia automática). API: `setMusicEnabled()`/`setMusicVolume()` (persistem + disparam `academia:music-changed`), `playMusicNow()`/`pauseMusicNow()`, `isMusicEnabled()`/`getMusicVolume()`. Volume 0 = mudo sem desligar; no iOS Safari `audio.volume` é read-only → degradação graciosa (o switch continua funcional).
+- **Prefs** (`src-app/src/features/profile/profile-data.ts` → `PREF_KEYS`): `academia_pref_music_enabled` (ausente = **ligada**) e `academia_pref_music_volume` (ausente = **70**, faixa 0–100).
+- **`src-app/src/features/settings/SettingsFeature.tsx`** — card **"Música de Fundo"** na tela `exibicao` (logo após "Tela Cheia"): switch "Tocar Música" + slider 0–100 com badge de estado ("Ligada • X%" / "Desligada") e nota explicativa; slider desabilitado quando a música está off; keywords do tile/search-index expandidas (`musica`, `volume`, `bgm`, `trilha`).
+- **`src-app/public/assets/sounds/MAIN.mp3`** (novo) — cópia servida pelo build React da fonte `Assets/Sounds/MAIN.mp3`.
+- **`src-app/src/main.tsx`** — `initBackgroundMusic()` chamado junto de `initPwaInstall()`/`initAutoFullscreen()`.
+
+### Changed
+- **`src-app/vite.config.ts`** — `includeAssets: ['favicon.ico', 'assets/**/*', '!assets/sounds/**']`: glob negativo mantém o MP3 **fora do precache** do Service Worker (7,2 MB não devem ser baixados na instalação do SW); ele é cacheado sob demanda pelo `runtimeCaching` StaleWhileRevalidate já existente para `/assets/` (a partir do primeiro play, funciona offline).
+
+### Verification
+- `npx tsc -b` exit 0 · `npm run lint` (oxlint) 0 avisos · `npm run build` exit 0 (dist contém `assets/sounds/MAIN.mp3`; precache 112 entries **sem** o MP3).
+- Probe CDP (`%TEMP%\opencode\probe_music.js`, Chrome headless :9222 + `vite preview` :4173, perfil limpo): **12/12 PASS** — card "Música de Fundo" presente em Configurações → Exibição, switch ligado por padrão, slider 0–100 com valor 70, mover volume para 40 persiste `academia_pref_music_volume=40`, desligar persiste `=false` e desabilita o slider, religar restaura, 0 erros de runtime. Screenshot `%TEMP%\opencode\v418_music_settings.png` conferido (card com toggle roxo, badge "Ligada • 40%", slider e nota).
+- **Nota**: o autoplay real só ocorre após o primeiro gesto do usuário (política dos navegadores — incontornável por JS); o teste automatizado não valida áudio audível, apenas estado/persistência/UI.
+
 ## [v4.17.0] - 2026-10-13
 
 Descrições específicas para cada exercício na interface de detalhes individual da aba **Montar Ficha** (modal `CRDetailsModal`): antes, exercícios sem anotação recebiam o texto genérico "Um exercício focado em fortalecer o {grupo}…" — agora cada um dos 66 exercícios pré-cadastrados tem uma descrição própria explicando o que é, os músculos-alvo, a execução correta e uma dica de técnica. `system_map.json` → 3.5.58.

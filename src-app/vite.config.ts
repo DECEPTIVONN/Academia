@@ -11,7 +11,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'assets/**/*'],
+      // v4.18.0-music — '!assets/sounds/**' exclui o MAIN.mp3 (7,2 MB) do
+      // precache: ele é cacheado sob demanda via runtimeCaching StaleWhileRevalidate.
+      includeAssets: ['favicon.ico', 'assets/**/*', '!assets/sounds/**'],
       manifest: {
         name: 'Academia Workout Tracker',
         short_name: 'Academia',

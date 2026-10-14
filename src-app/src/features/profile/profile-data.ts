@@ -125,6 +125,13 @@ export const PREF_KEYS = {
   workoutReminderTime: 'academia_pref_workout_reminder_time',
   /* v4.6.0-shell — Sidebar HUD fixada expandida no desktop */
   sidebarPinned: 'academia_pref_sidebar_pinned',
+  /* v4.18.0-music — música de fundo (Assets/Sounds/MAIN.mp3):
+     enabled ausente = 'true' (ligada por padrão); volume ausente = 70. */
+  musicEnabled: 'academia_pref_music_enabled',
+  musicVolume: 'academia_pref_music_volume',
+  /* v4.19.0-music — faixas do site durante o treino (Black Panther):
+     ausente = 'true'. Se o usuário tiver playlist ativa, ela vence. */
+  workoutMusic: 'academia_pref_workout_music',
 } as const;
 
 export function isDevMode(): boolean {

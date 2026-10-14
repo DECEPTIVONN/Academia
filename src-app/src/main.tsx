@@ -9,6 +9,8 @@ import './styles/shell.css';
 import App from './App.tsx';
 import { bootstrap } from '@/core/db/bootstrap';
 import { initAutoFullscreen } from '@/lib/auto-fullscreen';
+import { initBackgroundMusic } from '@/lib/background-music';
+import { initAudioEngine } from '@/features/music/audio-engine';
 import { initPwaInstall } from '@/lib/pwa-install';
 
 /* v4.16.0-boot — API de boot publicada pelo script inline do index.html
@@ -72,6 +74,13 @@ class BootErrorBoundary extends Component<{ children: ReactNode }, { failed: boo
 // no primeiro clique/toque (v4.4.0) — precisam estar ativos antes do render.
 initPwaInstall();
 initAutoFullscreen();
+// v4.19.0-music — motor multi-contexto (treino/conclusão/missões + playlists)
+// assume a reprodução ANTES do initBackgroundMusic (senão haveria dois
+// players de MAIN.mp3 em paralelo; claimMusicPlayback() troca a posse).
+initAudioEngine();
+// v4.18.0-music — prefs de música (master/volume): com a posse no motor,
+// só aplica as prefs salvas (a reprodução é do audio-engine).
+initBackgroundMusic();
 
 // Seed + migração do localStorage legado (v3.5.7) + flush da fila offline.
 // Assíncrono: não bloqueia o primeiro render; a UI escuta 'academia:db-ready'.

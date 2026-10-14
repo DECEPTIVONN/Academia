@@ -43,6 +43,13 @@ import {
 } from './theme-colors';
 import { ColorPickerModal } from './ColorPickerModal';
 import { getInstallState, promptInstall, type InstallState } from '@/lib/pwa-install';
+/* v4.18.0-music — música de fundo (MAIN.mp3) com prefs de ligar/volume */
+import {
+  getMusicVolume,
+  isMusicEnabled,
+  setMusicEnabled,
+  setMusicVolume,
+} from '@/lib/background-music';
 import { WALL_PRESETS } from '@/features/lock/lock-wallpapers';
 import {
   clearBiometric,
@@ -408,6 +415,13 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [autoFullscreen, setAutoFullscreen] = useState(
     () => readLS(PREF_KEYS.autoFullscreen) === 'true'
   );
+  /* v4.18.0-music — estado da música de fundo (espelha lib/background-music) */
+  const [musicEnabled, setMusicEnabledState] = useState(() => isMusicEnabled());
+  const [musicVolume, setMusicVolumeState] = useState(() => getMusicVolume());
+  /* v4.19.0-music — faixas do site durante o treino (padrão ligado) */
+  const [workoutMusic, setWorkoutMusicState] = useState(
+    () => readLS(PREF_KEYS.workoutMusic) !== 'false'
+  );
   /* Instalação PWA — estado sincronizado com os eventos do lib/pwa-install */
   const [installState, setInstallState] = useState<InstallState>(() => getInstallState());
   useEffect(() => {
@@ -496,6 +510,23 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     writeLS(PREF_KEYS.autoFullscreen, String(checked));
     setAutoFullscreen(checked);
     window.dispatchEvent(new CustomEvent('academia:auto-fullscreen-changed'));
+  };
+
+  /* v4.18.0-music — handlers da música de fundo (persistência + player) */
+  const toggleMusic = (checked: boolean) => {
+    setMusicEnabledState(checked);
+    setMusicEnabled(checked);
+  };
+
+  const changeMusicVolume = (value: number) => {
+    setMusicVolumeState(value);
+    setMusicVolume(value);
+  };
+
+  /* v4.19.0-music — faixas do site durante o treino (pref + re-render) */
+  const toggleWorkoutMusic = (checked: boolean) => {
+    setWorkoutMusicState(checked);
+    writeLS(PREF_KEYS.workoutMusic, String(checked));
   };
 
   const handleInstallApp = async () => {
@@ -793,7 +824,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     {
       id: 'exibicao',
       title: 'Acessibilidade, Exibição e PWA',
-      desc: 'Tela cheia, cronômetro, navbar, instalar app e interação',
+      desc: 'Tela cheia, cronômetro, navbar, música de fundo, instalar app e interação',
       icon: SvgSliders,
       badge: autoFullscreen ? 'Tela cheia' : 'Padrão',
       keywords: [
@@ -802,6 +833,8 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         'timer', 'ampulheta', 'radar', 'navbar', 'barra', 'navegacao',
         'sons', 'som', 'vibracao', 'online', 'status', 'dev', 'desenvolvedor',
         'idioma', 'language', 'pt', 'en',
+        /* v4.18.0-music */
+        'musica', 'música', 'volume', 'bgm', 'trilha', 'fundo',
       ],
     },
     /* v4.10.0 — nuvem movida para dentro de Sua Conta (ProfileFeature);
@@ -1943,6 +1976,164 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               {autoFullscreen
                 ? 'Ativo: o próximo clique ou toque após recarregar entra em tela cheia. Para sair, pressione ESC.'
                 : 'Desativo: o app continua na janela normal do navegador.'}
+            </p>
+          </section>
+
+          {/* v4.18.0-music — música de fundo (MAIN.mp3 em loop) */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">SOM</div>
+                <h3 className="set-card__title">Música de Fundo</h3>
+                <p className="set-card__desc">
+                  Trilha sonora ambiente enquanto você usa o app. O início pode
+                  acontecer no primeiro toque da tela (regra de autoplay dos
+                  navegadores).
+                </p>
+              </div>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  color: 'var(--primary, #f97316)',
+                  background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)',
+                  padding: '4px 10px',
+                  borderRadius: 8,
+                  border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
+                }}
+              >
+                {musicEnabled ? `Ligada • ${musicVolume}%` : 'Desligada'}
+              </span>
+            </div>
+            <div className="set-toggles">
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgVolume}</span>
+                  <div>
+                    <span className="set-toggle__label">Tocar Música</span>
+                    <span className="set-toggle__desc">
+                      Ativa a trilha sonora de fundo do app em loop contínuo
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={musicEnabled}
+                    onChange={(e) => toggleMusic(e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+            </div>
+            <div
+              className="set-card__head"
+              style={{ marginTop: 22, marginBottom: 12 }}
+            >
+              <div>
+                <h3 className="set-card__title">Volume</h3>
+                <p className="set-card__desc">Intensidade da música de 0 a 100.</p>
+              </div>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  color: 'var(--primary, #f97316)',
+                  background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)',
+                  padding: '4px 10px',
+                  borderRadius: 8,
+                  border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
+                }}
+              >
+                {musicVolume}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={musicVolume}
+              disabled={!musicEnabled}
+              onChange={(e) => changeMusicVolume(Number(e.target.value))}
+              style={{
+                width: '100%',
+                accentColor: 'var(--primary, #f97316)',
+                background: 'rgba(24, 24, 27, 0.8)',
+                height: 8,
+                borderRadius: 8,
+                cursor: musicEnabled ? 'pointer' : 'not-allowed',
+                opacity: musicEnabled ? 1 : 0.5,
+              }}
+            />
+            <p className="set-note" style={{ marginTop: 10 }}>
+              {musicEnabled
+                ? `Volume atual: ${musicVolume}%. 0% silencia a trilha sem desligá-la.`
+                : 'Música desligada — ative "Tocar Música" para ajustar o volume.'}
+            </p>
+          </section>
+
+          {/* v4.19.0-music — preferências de treino + acesso à interface */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">SOM • TREINO</div>
+                <h3 className="set-card__title">Músicas Durante o Treino</h3>
+                <p className="set-card__desc">
+                  Se você tiver uma playlist marcada "Usar no treino", ela toca no
+                  lugar das faixas do app. Sem playlist, a faixa de treino do site
+                  é a trilha padrão.
+                </p>
+              </div>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  color: 'var(--primary, #f97316)',
+                  background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)',
+                  padding: '4px 10px',
+                  borderRadius: 8,
+                  border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
+                }}
+              >
+                {workoutMusic ? 'Ligadas' : 'Desligadas'}
+              </span>
+            </div>
+            <div className="set-toggles">
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgVolume}</span>
+                  <div>
+                    <span className="set-toggle__label">Músicas do App no Treino</span>
+                    <span className="set-toggle__desc">
+                      Toca a faixa de treino do site quando não há playlist sua ativa
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={workoutMusic}
+                    onChange={(e) => toggleWorkoutMusic(e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="set-btn"
+              style={{ width: '100%', marginTop: 14 }}
+              onClick={() => window.dispatchEvent(new CustomEvent('academia:open-music'))}
+            >
+              Abrir Músicas e Playlists
+            </button>
+            <p className="set-note" style={{ marginTop: 10 }}>
+              Envie suas próprias músicas, monte playlists e adicione playlists do
+              YouTube ou Spotify para tocar no treino.
             </p>
           </section>
 

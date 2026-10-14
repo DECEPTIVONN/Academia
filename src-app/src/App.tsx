@@ -28,6 +28,8 @@ import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
 import { loadLocalData, getTodayTreino, selectSheetEntry } from '@/core/db/queries';
 import { ShareModal } from '@/features/gamification/ShareModal';
+/* v4.19.0-music — interface de Músicas e Playlists (overlay estilo YT Music) */
+import { MusicOverlay } from '@/features/music/MusicOverlay';
 import { useShareStore } from '@/features/gamification/share-store';
 import { ColecaoModals } from '@/features/gamification/ColecaoModals';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
@@ -145,6 +147,8 @@ export function App() {
   useAppLock();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  /* v4.19.0-music — overlay de Músicas e Playlists (aberto pela Busca/Config) */
+  const [isMusicOpen, setIsMusicOpen] = useState(false);
   /* Sidebar HUD fixada expandida (pref academia_pref_sidebar_pinned) */
   const [sidebarPinned, setSidebarPinned] = useState(
     () => readLS(PREF_KEYS.sidebarPinned) === 'true'
@@ -216,6 +220,16 @@ export function App() {
   const handleSearchPick = useCallback(
     (item: SearchItem) => {
       setIsSearchOpen(false);
+
+      /* v4.19.0-music — atalho da Busca → interface de Músicas e Playlists */
+      if (item.action === 'open-music') {
+        if (isPerfilOverlayOpen) {
+          setIsPerfilClosing(false);
+          setIsPerfilOverlayOpen(false);
+        }
+        setIsMusicOpen(true);
+        return;
+      }
 
       /* Configuração/grupo do hub → abre o Perfil já na tela pedida
          (ProfileFeature escuta 'academia:profile-nav') */
@@ -381,6 +395,8 @@ export function App() {
         await loaded.update((e) => selectSheetEntry(e, sheetKey));
       }
       if (!useWorkoutStore.getState().isActive) startWorkout(sheetKey, `Treino ${sheetKey}`);
+      // v4.19.0-music — contexto de treino (playlist do usuário ou faixa do site)
+      window.dispatchEvent(new CustomEvent('academia:workout-started'));
       setIsFichaOverlayOpen(true);
     },
     [startWorkout]
@@ -390,6 +406,8 @@ export function App() {
      sem fechar a Ficha e sem abrir outro modal */
   const handleStartWorkout = (sheetKey: SheetKey) => {
     startWorkout(sheetKey, `Treino ${sheetKey}`);
+    // v4.19.0-music — contexto de treino (playlist do usuário ou faixa do site)
+    window.dispatchEvent(new CustomEvent('academia:workout-started'));
     showToast('Treino iniciado! Foco total!', 'success');
   };
 
@@ -399,6 +417,8 @@ export function App() {
 
   /* btnFecharConclusao (app.js L272–292): fecha, volta ao Início e fecha a ficha */
   const handleConclusaoClose = () => {
+    // v4.19.0-music — botão INCRÍVEL: para a faixa RESULT e volta o MAIN
+    window.dispatchEvent(new CustomEvent('academia:workout-closed'));
     setIsConclusaoOpen(false);
     setIsFichaOverlayOpen(false);
     setActiveSection('dashboard');
@@ -437,7 +457,11 @@ export function App() {
     setIsEncerrarOpen(false);
     setIsFichaOverlayOpen(false);
     if (vaiConcluir) setIsConclusaoOpen(true);
-    else setActiveSection('dashboard');
+    else {
+      // v4.19.0-music — encerrado sem conclusão → volta a música ambiente
+      window.dispatchEvent(new CustomEvent('academia:workout-cancelled'));
+      setActiveSection('dashboard');
+    }
   };
 
   /* openModal/closeModal (secao-ficha.js L560–568): trava/destrava body */
@@ -445,6 +469,30 @@ export function App() {
     document.body.style.overflow =
       isEncerrarOpen || isConclusaoOpen || isShareOpen || isMaestriaUiOpen ? 'hidden' : '';
   }, [isEncerrarOpen, isConclusaoOpen, isShareOpen, isMaestriaUiOpen]);
+
+  /* v4.19.0-music — áudio multi-contexto:
+     • conclusão aberta → faixa RESULT.mp3;
+     • overlay de Missões → faixa Revenger Phoenix (fechar → retoma anterior);
+     • overlay de Músicas → estado para o MusicOverlay. */
+  useEffect(() => {
+    if (isConclusaoOpen) window.dispatchEvent(new CustomEvent('academia:workout-completed'));
+  }, [isConclusaoOpen]);
+
+  useEffect(() => {
+    if (dashOverlay === 'missions') window.dispatchEvent(new CustomEvent('academia:missions-open'));
+    else window.dispatchEvent(new CustomEvent('academia:missions-close'));
+  }, [dashOverlay]);
+
+  /* Overlay de Músicas e Playlists (interface estilo YouTube Music):
+     estado declarado acima (cluster de isSearchOpen); aqui só os listeners. */
+  useEffect(() => {
+    const onOpen = () => setIsMusicOpen(true);
+    window.addEventListener('academia:open-music', onOpen);
+    return () => window.removeEventListener('academia:open-music', onOpen);
+  }, []);
+  useEffect(() => {
+    document.body.style.overflow = isMusicOpen ? 'hidden' : '';
+  }, [isMusicOpen]);
 
   /* Trava o scroll do body enquanto o overlay fullscreen da Ficha está aberto
      (regra body.ficha-overlay-open de ficha-overlay.css, igual ao legado) */
@@ -813,6 +861,10 @@ export function App() {
               abaixo do LockScreen 1200). */}
           <AuthModal />
           <RemoteSyncToast />
+
+          {/* ====== INTERFACE DE MÚSICAS E PLAYLISTS (v4.19.0-music) ======
+              Aberta pelo card de Configurações ('academia:open-music'). */}
+          <MusicOverlay open={isMusicOpen} onClose={() => setIsMusicOpen(false)} />
 
           {/* ====== TELA DE BLOQUEIO (v4.6.0-shell) ======
               z-index 1200 — acima de todos os overlays/modais. */}

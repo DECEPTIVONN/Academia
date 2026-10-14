@@ -34,6 +34,8 @@ export interface SearchItem {
   sheetKey?: SheetKey;
   /** Exercícios */
   exerciseName?: string;
+  /** Ações especiais interpretadas pelo App (ex.: abrir a interface de Músicas) */
+  action?: 'open-music';
 }
 
 export interface RankedGroup {
@@ -55,9 +57,10 @@ const SECTIONS: SearchItem[] = [
 ];
 
 const CONFIGS: SearchItem[] = [
+  { id: 'cfg:musicas', kind: 'config', title: 'Músicas e Playlists', desc: 'Envie músicas, crie playlists e adicione playlists do YouTube/Spotify', action: 'open-music', keywords: ['musica', 'música', 'musicas', 'músicas', 'playlist', 'playlists', 'upload', 'enviar', 'youtube', 'spotify', 'treino', 'faixa', 'som', 'player'] },
   { id: 'cfg:seguranca', kind: 'config', title: 'Segurança e Bloqueio', desc: 'Senha do app, biometria, inatividade e wallpaper', stack: ['seguranca'], keywords: ['bloqueio', 'senha', 'pin', 'biometria', 'digital', 'inatividade', 'lock', 'automatica', 'auto', 'botao'] },
   { id: 'cfg:cores', kind: 'config', title: 'Cor de Destaque', desc: 'Tema e cor personalizada do app', stack: ['cores'], keywords: ['cor', 'tema', 'custom', 'roxo', 'acento'] },
-  { id: 'cfg:exibicao', kind: 'config', title: 'Exibição', desc: 'Navbar, formato da barra, tela cheia automática e timer', stack: ['exibicao'], keywords: ['navbar', 'barra', 'formato', 'oval', 'reta', 'tela cheia', 'fullscreen', 'timer', 'modo'] },
+  { id: 'cfg:exibicao', kind: 'config', title: 'Exibição', desc: 'Navbar, formato da barra, tela cheia, timer, música de fundo e músicas do treino', stack: ['exibicao'], keywords: ['navbar', 'barra', 'formato', 'oval', 'reta', 'tela cheia', 'fullscreen', 'timer', 'modo', 'musica', 'música', 'volume', 'bgm', 'som', 'fundo', 'treino', 'playlist', 'playlists', 'youtube', 'spotify', 'upload', 'faixa'] },
   { id: 'cfg:notificacoes', kind: 'config', title: 'Notificações', desc: 'Lembrete de treino e avisos', stack: ['notificacoes'], keywords: ['lembrete', 'aviso', 'push', 'treino'] },
   { id: 'cfg:conta', kind: 'config', title: 'Conta', desc: 'Informações, senha, backup e restaurar', stack: ['conta'], keywords: ['conta', 'perfil', 'backup', 'exportar', 'restaurar', 'senha'] },
   { id: 'cfg:nuvem', kind: 'config', title: 'Nuvem e Sincronização', desc: 'Supabase, chave de sync, status e dispositivos', stack: ['nuvem'], keywords: ['nuvem', 'sync', 'sincronizar', 'supabase', 'dispositivos', 'conectados', 'chave', 'tempo real'] },
