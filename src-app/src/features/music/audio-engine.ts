@@ -51,6 +51,12 @@ export interface MusicState {
   playing: boolean;
   title: string;
   artist: string;
+  /** v4.24.0 — posição atual na fila (só quando há fila do usuário; -1 = sem fila). */
+  queueIndex: number;
+  /** v4.24.0 — total de faixas na fila (0 = sem fila / faixa do site). */
+  queueLength: number;
+  /** v4.24.0 — há faixa anterior? Só 2ª música em diante mostra "Retroceder". */
+  canPrev: boolean;
 }
 
 const SITE_TRACKS = {
@@ -136,9 +142,26 @@ function workoutMusicEnabled(): boolean {
 }
 
 function emitState(): void {
+  /* v4.24.0 — expõe a posição na fila p/ o player esconder "Retroceder" na 1ª
+     música. Fila do usuário: há anterior da 2ª em diante. Faixa do site
+     (contexto main/workout/result/missions): sempre dá pra voltar no ciclo. */
+  const inUserQueue = context === 'workout-user' && queue.length > 0;
+  const qIdx = inUserQueue ? queueIndex : -1;
+  const qLen = inUserQueue ? queue.length : 0;
+  // Só a fila do usuário tem "anterior". Faixa do site (playSite) toca isolada
+  // com loop e não é parte de uma navegável → sem Retroceder.
+  const canPrev = inUserQueue && qLen > 1 && qIdx > 0;
   window.dispatchEvent(
     new CustomEvent('academia:music-state', {
-      detail: { context, playing, title, artist } satisfies MusicState,
+      detail: {
+        context,
+        playing,
+        title,
+        artist,
+        queueIndex: qIdx,
+        queueLength: qLen,
+        canPrev,
+      } satisfies MusicState,
     }),
   );
   updateMediaSession();
@@ -649,7 +672,16 @@ export function togglePlayback(): void {
 }
 
 export function getMusicState(): MusicState {
-  return { context, playing, title, artist };
+  const inUserQueue = context === 'workout-user' && queue.length > 0;
+  return {
+    context,
+    playing,
+    title,
+    artist,
+    queueIndex: inUserQueue ? queueIndex : -1,
+    queueLength: inUserQueue ? queue.length : 0,
+    canPrev: inUserQueue && queue.length > 1 && queueIndex > 0,
+  };
 }
 
 /** Toca uma playlist específica na interface (não mexe no contexto do treino). */

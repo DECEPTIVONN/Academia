@@ -2,27 +2,32 @@
  * FloatingMiniPlayer.tsx — miniplayer flutuante global (v4.20.0-music)
  *
  * Widget fixo sobre o app (inclusive DURANTE O TREINO), inspirado na
- * referência fixada (arte + título + controles):
- *  • arrastável  — segure na área da arte/título e mova;
- *  • redimensionável — puxe a alça do canto inferior direito;
- *  • retroceder / pausar / avançar — next/prev do audio-engine (fila da
- *    playlist ativa ou ciclo das faixas do site);
- *  • posição e tamanho persistem em localStorage;
- *  • "×" oculta até a próxima faixa começar.
+ * referência fixada (arte + título + controles).
  *
- * v4.22.0 — DOIS MODOS (Configurações → Áudio e Música):
- *  • Flexível (padrão) — o painel acima, inalterado;
- *  • Fixo — pastilha MINIMIZADA no estilo do contador de duração do treino
- *    (.global-timer), na posição escolhida nas prefs, sempre visível ou só
- *    N segundos (padrão 7, configurável) após trocar de música.
+ * MODOS (Configurações → Áudio e Música):
+ *  • Flexível (padrão) — pastilha ARRASTÁVEL com botão "×" (oculta até a
+ *    próxima faixa). v4.24.0: usa o MESMO design do Fixo (unificação).
+ *  • Fixo — pastilha MINIMIZADA fixa na posição escolhida, sempre visível ou
+ *    só N segundos (padrão 7) após trocar de música. INALTERADO (v4.22.0).
+ *
+ * v4.24.0 — GAVETA (convive com Flexível/Fixo, que só definem a POSIÇÃO):
+ *  • Barra accent na borda da tela (esquerda/direita conforme a âncora).
+ *  • Deslizar a barra pra dentro (ou clicar) abre o player — mesmo visual do
+ *    Fixo — ancorado à barra; no Flexível o painel fica livre após abrir.
+ *  • Clicar fora do painel recolhe a gaveta.
+ *
+ * Retroceder só aparece da 2ª música em diante (canPrev do audio-engine).
  *
  * Fica abaixo do MusicOverlay (z-index maior) e acima das telas comuns.
  */
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { Music2, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
 import { getMusicState, nextTrack, prevTrack, togglePlayback, type MusicState } from './audio-engine';
 import {
+  getDrawerThickness,
+  getDrawerVpHeight,
+  getPlayerDrawer,
   getPlayerHideSecs,
   getPlayerMode,
   getPlayerPersist,
@@ -31,81 +36,123 @@ import {
 } from './player-prefs';
 import './music.css';
 
-const STORE_KEY = 'academia_floating_player_rect_v1';
+const DRAWER_KEY = 'academia_floating_drawer_open_v1';
 
-const MIN_W = 230;
-const MAX_W = 520;
-const MIN_H = 116;
-const MAX_H = 300;
-const EDGE = 8;
+type Anchor = 'tl' | 'tc' | 'tr' | 'bl' | 'bc' | 'br';
 
-interface Rect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+/** Lado da barra da gaveta conforme a âncora (esquerda/direita da tela). */
+function anchorSide(pos: Anchor): 'left' | 'right' {
+  return pos === 'tl' || pos === 'bl' ? 'left' : 'right';
 }
 
-function clamp(v: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, v));
-}
-
-/**
- * Encaixa o retângulo na viewport: limita largura/altura ao espaço disponível
- * e reposiciona x/y para o painel nunca sair da tela (também usado ao
- * redimensionar, para o crescimento empurrar o canto em vez de estourar).
- */
-function fit(r: Rect): Rect {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const w = clamp(r.w, MIN_W, Math.max(MIN_W, Math.min(MAX_W, vw - 2 * EDGE)));
-  const h = clamp(r.h, MIN_H, Math.max(MIN_H, Math.min(MAX_H, vh - 2 * EDGE)));
-  return {
-    w,
-    h,
-    x: clamp(r.x, EDGE, Math.max(EDGE, vw - w - EDGE)),
-    y: clamp(r.y, EDGE, Math.max(EDGE, vh - h - EDGE)),
-  };
-}
-
-function defaultRect(): Rect {
-  const w = clamp(Math.round(window.innerWidth * 0.62), MIN_W, MAX_W);
-  const h = 132;
-  return fit({
-    x: window.innerWidth - w - EDGE,
-    y: window.innerHeight - h - 110,
-    w,
-    h,
-  });
-}
-
-function loadRect(): Rect {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return defaultRect();
-    const p = JSON.parse(raw) as Partial<Rect>;
-    if (typeof p.x !== 'number' || typeof p.y !== 'number' || typeof p.w !== 'number' || typeof p.h !== 'number') {
-      return defaultRect();
-    }
-    return fit({ x: p.x, y: p.y, w: p.w, h: p.h });
-  } catch {
-    return defaultRect();
+/** Posição da pastilha fixa a partir da âncora (padding igual ao contador). */
+function pillStyleFor(pos: Anchor): Record<string, string> {
+  switch (pos) {
+    case 'tl':
+      return { top: 'calc(85px + env(safe-area-inset-top, 0px))', left: '12px' };
+    case 'tc':
+      return { top: 'calc(85px + env(safe-area-inset-top, 0px))', left: '50%', transform: 'translateX(-50%)' };
+    case 'tr':
+      return { top: 'calc(85px + env(safe-area-inset-top, 0px))', right: '12px' };
+    case 'bl':
+      return { bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', left: '12px' };
+    case 'bc':
+      return { bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', left: '50%', transform: 'translateX(-50%)' };
+    default:
+      return { bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', right: '12px' };
   }
+}
+
+interface Pos { x: number; y: number }
+const clampPos = (x: number, y: number): Pos => {
+  const w = 240;
+  const h = 46;
+  return {
+    x: Math.min(window.innerWidth - w - 8, Math.max(8, x)),
+    y: Math.min(window.innerHeight - h - 8, Math.max(8, y)),
+  };
+};
+
+/** Pastilha compacta compartilhada (Flexível / Fixo / painel da gaveta). */
+function Pill({
+  state,
+  onDrag,
+  onPrev,
+  onClose,
+}: {
+  state: MusicState;
+  onDrag?: (e: ReactPointerEvent<HTMLDivElement>) => void;
+  onPrev?: () => void;
+  onClose?: () => void;
+}) {
+  const canPrev = state.canPrev;
+  return (
+    <>
+      <div className="fmp__drag" onPointerDown={onDrag}>
+        <div className="fmp__content">
+          <span className="fmp__label">Tocando agora</span>
+          <span className="fmp__title">{state.title}</span>
+        </div>
+      </div>
+      <div className="fmp__controls">
+        {canPrev && (
+          <button type="button" className="fmp__btn" onClick={onPrev ?? prevTrack} aria-label="Retroceder">
+            <SkipBack size={13} fill="currentColor" />
+          </button>
+        )}
+        <button
+          type="button"
+          className="fmp__btn fmp__btn--play"
+          onClick={togglePlayback}
+          aria-label={state.playing ? 'Pausar' : 'Tocar'}
+        >
+          {state.playing ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
+        </button>
+        <button type="button" className="fmp__btn" onClick={nextTrack} aria-label="Avançar">
+          <SkipForward size={13} fill="currentColor" />
+        </button>
+        {onClose && (
+          <button type="button" className="fmp__close" onClick={onClose} aria-label="Ocultar reprodutor">
+            <X size={13} />
+          </button>
+        )}
+      </div>
+    </>
+  );
 }
 
 export function FloatingMiniPlayer() {
   const [state, setState] = useState<MusicState>(() => getMusicState());
-  const [rect, setRect] = useState<Rect>(() => loadRect());
-  const [hidden, setHidden] = useState(false);
 
-  /* v4.22.0 — modo/pos/visibilidade do player (prefs). Derivadas no render;
-     o evento de prefs só pulsa o re-render (setPrefsTick). */
+  /* Prefs (derivadas no render; evento só pulsa re-render) */
   const [, setPrefsTick] = useState(0);
   const mode = getPlayerMode();
-  const pos = getPlayerPos();
+  const pos = getPlayerPos() as Anchor;
   const persist = getPlayerPersist();
   const hideSecs = getPlayerHideSecs();
+  const drawerOn = getPlayerDrawer() === 'on';
+
+  /* Modo Fixo: some Ns após troca (reset nos eventos, nunca no effect) */
   const [timedOut, setTimedOut] = useState(false);
+  /* Flexível: posição arrastável persistida; "×" oculta até a próxima faixa */
+  const [hidden, setHidden] = useState(false);
+  const [dragPos, setDragPos] = useState<Pos | null>(() => {
+    try {
+      const raw = localStorage.getItem('academia_floating_player_pos_v1');
+      if (!raw) return null;
+      const p = JSON.parse(raw) as Partial<Pos>;
+      if (typeof p.x !== 'number' || typeof p.y !== 'number') return null;
+      return clampPos(p.x, p.y);
+    } catch {
+      return null;
+    }
+  });
+
+  /* Gaveta: aberto/fechado + posição livre do painel expandido */
+  const [drawerOpen, setDrawerOpen] = useState(() => {
+    try { return localStorage.getItem(DRAWER_KEY) === '1'; } catch { return false; }
+  });
+  const [drawerPanelPos, setDrawerPanelPos] = useState<Pos | null>(null);
 
   /* Estado do motor */
   useEffect(() => {
@@ -124,219 +171,176 @@ export function FloatingMiniPlayer() {
     return () => window.removeEventListener(PLAYER_PREFS_EVENT, onPrefs);
   }, []);
 
+  /* Persiste a posição arrastada do Flexível */
+  useEffect(() => {
+    if (!dragPos) return;
+    try { localStorage.setItem('academia_floating_player_pos_v1', JSON.stringify(dragPos)); } catch { /* storage off */ }
+  }, [dragPos]);
+
   /* Volta a aparecer quando uma faixa nova começa */
   const lastTitle = useRef(state.title);
   useEffect(() => {
     if (state.title !== lastTitle.current) {
       lastTitle.current = state.title;
       setHidden(false);
-      setTimedOut(false); // v4.22.0 — modo fixo "timed" reinicia o contador
+      setTimedOut(false);
     }
   }, [state.title]);
 
-  /* v4.22.0 — modo fixo + "timed": some N segundos após a última troca.
-     O reset (false) acontece nos EVENTOS (troca de faixa / prefs), nunca
-     sincronizado dentro do effect (regra do lint). */
+  /* Fixo + "timed": some N segundos após a última troca */
   useEffect(() => {
     if (mode !== 'fixed' || persist !== 'timed' || timedOut) return undefined;
     const t = window.setTimeout(() => setTimedOut(true), hideSecs * 1000);
     return () => window.clearTimeout(t);
   }, [mode, persist, hideSecs, timedOut, state.title, state.playing]);
 
-  /* Mantém dentro da viewport ao girar/redimensionar a janela */
-  useEffect(() => {
-    const onResize = () => {
-      setRect((r) => fit(r));
-    };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  /* Persiste posição/tamanho */
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      try {
-        localStorage.setItem(STORE_KEY, JSON.stringify(rect));
-      } catch {
-        /* storage indisponível — segue sem persistir */
-      }
-    }, 250);
-    return () => window.clearTimeout(t);
-  }, [rect]);
-
-  const startDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0 && e.pointerType === 'mouse') return;
-    e.preventDefault();
-    const el = e.currentTarget;
-    try {
-      el.setPointerCapture(e.pointerId);
-    } catch {
-      /* ponteiro pode já ter sido liberado — segue sem captura */
-    }
-    const sx = e.clientX;
-    const sy = e.clientY;
-    const orig = rect;
-    const onMove = (ev: PointerEvent) => {
-      setRect(() =>
-        fit({
-          ...orig,
-          x: orig.x + (ev.clientX - sx),
-          y: orig.y + (ev.clientY - sy),
-        }),
-      );
-    };
-    const onUp = () => {
-      el.removeEventListener('pointermove', onMove);
-      el.removeEventListener('pointerup', onUp);
-      el.removeEventListener('pointercancel', onUp);
-    };
-    el.addEventListener('pointermove', onMove);
-    el.addEventListener('pointerup', onUp);
-    el.addEventListener('pointercancel', onUp);
+  const setDrawer = (v: boolean) => {
+    setDrawerOpen(v);
+    if (!v) setDrawerPanelPos(null);
+    try { localStorage.setItem(DRAWER_KEY, v ? '1' : '0'); } catch { /* storage off */ }
   };
 
-  const startResize = (e: ReactPointerEvent<HTMLDivElement>) => {
+  /* Gaveta: clique fora do painel/barra recolhe */
+  useEffect(() => {
+    if (!drawerOn || !drawerOpen) return undefined;
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      if (t.closest('.fmp') || t.closest('.fmp-drawer-bar')) return;
+      setDrawer(false);
+    };
+    window.addEventListener('pointerdown', onDown, true);
+    return () => window.removeEventListener('pointerdown', onDown, true);
+  }, [drawerOn, drawerOpen]);
+
+  /* Arrasto da BARRA da gaveta (deslizar pra dentro abre).
+     Listeners no window (não no el) — o pointer pode sair da barra estreita
+     antes do threshold; sem setPointerCapture o el nunca receberia move/up. */
+  const startBarDrag = (side: 'left' | 'right') => (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    e.preventDefault();
+    e.stopPropagation();
+    const start = e.clientX;
+    const THRESHOLD = 36;
+    let opened = false;
+    const cleanup = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+    const onMove = (ev: PointerEvent) => {
+      const dx = ev.clientX - start;
+      const inward = side === 'left' ? dx > 0 : dx < 0;
+      if (!opened && inward && Math.abs(dx) >= THRESHOLD) {
+        opened = true;
+        setDrawer(true);
+        cleanup();
+      }
+    };
+    const onUp = () => { cleanup(); };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  };
+
+  /* Arrasto do painel (Flexível livre / gaveta ancorada quando livre) */
+  const startDrag = (setPos: (p: Pos) => void, orig: Pos) => (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.preventDefault();
     e.stopPropagation();
     const el = e.currentTarget;
-    try {
-      el.setPointerCapture(e.pointerId);
-    } catch {
-      /* ponteiro pode já ter sido liberado — segue sem captura */
-    }
+    try { el.setPointerCapture(e.pointerId); } catch { /* sem captura */ }
     const sx = e.clientX;
     const sy = e.clientY;
-    const orig = rect;
-    const onMove = (ev: PointerEvent) => {
-      setRect(() =>
-        fit({
-          ...orig,
-          w: orig.w + (ev.clientX - sx),
-          h: orig.h + (ev.clientY - sy),
-        }),
-      );
-    };
-    const onUp = () => {
+    const cleanup = () => {
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerup', onUp);
       el.removeEventListener('pointercancel', onUp);
     };
+    const onMove = (ev: PointerEvent) => setPos(clampPos(orig.x + (ev.clientX - sx), orig.y + (ev.clientY - sy)));
+    const onUp = () => cleanup();
     el.addEventListener('pointermove', onMove);
     el.addEventListener('pointerup', onUp);
     el.addEventListener('pointercancel', onUp);
   };
 
-  const visible = !hidden && (state.title !== '' || state.playing);
-  if (!visible) return null;
+  /* Visibilidade base: Flexível respeta hidden; Fixo respeta timedOut */
+  const baseVisible = state.title !== '' || state.playing;
+  const flexVisible = mode === 'flex' && !hidden;
+  if (!baseVisible) return null;
 
-  /* ── v4.22.0 — MODO FIXO: pastilha no estilo do contador de treino ── */
+  /* ─────────── GAVETA ligada: barra + (opcional) painel expandido ───────────
+     A gaveta substitui a pastilha; ela usa a POSIÇÃO (pos) como âncora. */
+  if (drawerOn) {
+    if (mode === 'fixed' && timedOut && !drawerOpen) return null;
+    const thickness = getDrawerThickness();
+    const barH = Math.round((window.innerHeight * getDrawerVpHeight()) / 100);
+    const barTop = Math.round((window.innerHeight - barH) / 2);
+    const side = anchorSide(pos);
+    const anchored: Pos = drawerPanelPos ?? (side === 'left'
+      ? { x: 16, y: barTop }
+      : { x: window.innerWidth - 256, y: barTop });
+
+    return (
+      <>
+        <div
+          className={`fmp-drawer-bar fmp-drawer-bar--${side}`}
+          style={{ width: thickness, height: barH, top: barTop }}
+          role="button"
+          tabIndex={0}
+          aria-label="Abrir reprodutor"
+          onPointerDown={startBarDrag(side)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setDrawer(true); }}
+        />
+        {drawerOpen && (
+          <div
+            className={`fmp fmp--drawer${side === 'right' ? ' fmp--from-right' : ''}`}
+            style={{ left: anchored.x, top: anchored.y }}
+            role="region"
+            aria-label="Reprodutor"
+          >
+            <Pill
+              state={state}
+              onDrag={mode === 'flex' ? startDrag(setDrawerPanelPos, anchored) : undefined}
+            />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  /* ─────────── SEM gaveta: Fixo (inalterado) | Flexível (pastilha arrastável) ─────────── */
   if (mode === 'fixed') {
     if (timedOut) return null;
     return (
       <div
-        className={`fmp-pill fmp-pill--${pos}`}
+        className="fmp fmp--fixed"
+        style={pillStyleFor(pos)}
         role="region"
         aria-label="Reprodutor"
       >
-        <div className="fmp-pill__icon">
-          <Music2 size={16} />
-        </div>
-        <div className="fmp-pill__content">
-          <span className="fmp-pill__label">Tocando agora</span>
-          <span className="fmp-pill__title">{state.title}</span>
-        </div>
-        <div className="fmp-pill__controls">
-          <button type="button" className="fmp-pill__btn" onClick={prevTrack} aria-label="Retroceder">
-            <SkipBack size={13} fill="currentColor" />
-          </button>
-          <button
-            type="button"
-            className="fmp-pill__btn fmp-pill__btn--play"
-            onClick={togglePlayback}
-            aria-label={state.playing ? 'Pausar' : 'Tocar'}
-          >
-            {state.playing ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
-          </button>
-          <button type="button" className="fmp-pill__btn" onClick={nextTrack} aria-label="Avançar">
-            <SkipForward size={13} fill="currentColor" />
-          </button>
-        </div>
+        <Pill state={state} />
       </div>
     );
   }
 
-  /* ── Modo FLEXÍVEL (padrão, inalterado) ── */
+  /* Posição inicial do Flexível quando ainda não foi arrastado: a âncora escolhida */
+  const flexStart: Pos = dragPos ?? (() => {
+    const anchor = pillStyleFor(pos);
+    const x = anchor.left === '50%'
+      ? window.innerWidth / 2 - 120
+      : anchor.right !== undefined
+        ? window.innerWidth - 256
+        : 16;
+    const y = anchor.bottom !== undefined ? window.innerHeight - 150 : 96;
+    return clampPos(x, y);
+  })();
 
-  /* Escala visual derivada da altura (controles/arte crescem ao redimensionar) */
-  const scale = clamp(rect.h / 150, 1, 1.6);
-  const art = Math.round(46 * scale);
-  const btn = Math.round(38 * scale);
-
+  /* Flexível (padrão) */
+  if (!flexVisible) return null;
   return (
-    <div
-      className="fmp"
-      style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
-      role="region"
-      aria-label="Reprodutor"
-    >
-      {/* Zona de arrasto: arte + título */}
-      <div className="fmp__top" onPointerDown={startDrag}>
-        <div className="fmp__art" style={{ width: art, height: art }}>
-          <Music2 size={Math.round(art * 0.42)} />
-        </div>
-        <div className="fmp__meta">
-          <span className="fmp__title">{state.title}</span>
-          <span className="fmp__artist">{state.artist || 'Evo Fit'}</span>
-        </div>
-        <button
-          type="button"
-          className="fmp__close"
-          aria-label="Ocultar reprodutor"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => setHidden(true)}
-        >
-          <X size={Math.round(15 * scale)} />
-        </button>
-      </div>
-
-      {/* Controles */}
-      <div className="fmp__controls" style={{ gap: Math.round(16 * scale) }}>
-        <button
-          type="button"
-          className="fmp__btn"
-          style={{ width: btn, height: btn }}
-          onClick={prevTrack}
-          aria-label="Retroceder"
-        >
-          <SkipBack size={Math.round(19 * scale)} fill="currentColor" />
-        </button>
-        <button
-          type="button"
-          className="fmp__btn fmp__btn--play"
-          style={{ width: btn, height: btn }}
-          onClick={togglePlayback}
-          aria-label={state.playing ? 'Pausar' : 'Tocar'}
-        >
-          {state.playing ? (
-            <Pause size={Math.round(19 * scale)} fill="currentColor" />
-          ) : (
-            <Play size={Math.round(19 * scale)} fill="currentColor" />
-          )}
-        </button>
-        <button
-          type="button"
-          className="fmp__btn"
-          style={{ width: btn, height: btn }}
-          onClick={nextTrack}
-          aria-label="Avançar"
-        >
-          <SkipForward size={Math.round(19 * scale)} fill="currentColor" />
-        </button>
-      </div>
-
-      {/* Alça de redimensionamento (canto inferior direito) */}
-      <div className="fmp__grip" onPointerDown={startResize} aria-hidden="true" />
+    <div className="fmp" style={{ left: flexStart.x, top: flexStart.y }} role="region" aria-label="Reprodutor">
+      <Pill state={state} onDrag={startDrag(setDragPos, flexStart)} onClose={() => setHidden(true)} />
     </div>
   );
 }

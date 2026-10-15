@@ -53,11 +53,17 @@ import {
 import { WALL_PRESETS } from '@/features/lock/lock-wallpapers';
 /* v4.22.0 — preferências do miniplayer (modo fixo/flexível) */
 import {
+  getDrawerThickness,
+  getDrawerVpHeight,
+  getPlayerDrawer,
   getPlayerHideSecs,
   getPlayerMode,
   getPlayerPersist,
   getPlayerPos,
   PLAYER_POSITIONS,
+  setDrawerThickness,
+  setDrawerVpHeight,
+  setPlayerDrawer,
   setPlayerHideSecs,
   setPlayerMode,
   setPlayerPersist,
@@ -442,6 +448,10 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [playerPos, setPlayerPosState] = useState<PlayerPos>(() => getPlayerPos());
   const [playerPersist, setPlayerPersistState] = useState<PlayerPersist>(() => getPlayerPersist());
   const [playerSecs, setPlayerSecsState] = useState<number>(() => getPlayerHideSecs());
+  /* v4.24.0 — gaveta (barra deslizante que abre o player minimizado) */
+  const [drawerOn, setDrawerOnState] = useState(() => getPlayerDrawer() === 'on');
+  const [drawerThick, setDrawerThickState] = useState<number>(() => getDrawerThickness());
+  const [drawerVp, setDrawerVpState] = useState<number>(() => getDrawerVpHeight());
   /* Instalação PWA — estado sincronizado com os eventos do lib/pwa-install */
   const [installState, setInstallState] = useState<InstallState>(() => getInstallState());
   useEffect(() => {
@@ -566,6 +576,21 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     const clamped = Math.min(60, Math.max(3, Math.round(secs)));
     setPlayerSecsState(clamped);
     setPlayerHideSecs(clamped);
+  };
+  /* v4.24.0 — gaveta */
+  const changeDrawerOn = (on: boolean) => {
+    setDrawerOnState(on);
+    setPlayerDrawer(on ? 'on' : 'off');
+  };
+  const changeDrawerThick = (px: number) => {
+    const clamped = Math.min(14, Math.max(3, Math.round(px)));
+    setDrawerThickState(clamped);
+    setDrawerThickness(clamped);
+  };
+  const changeDrawerVp = (pct: number) => {
+    const clamped = Math.min(100, Math.max(40, Math.round(pct)));
+    setDrawerVpState(clamped);
+    setDrawerVpHeight(clamped);
   };
 
   const handleInstallApp = async () => {
@@ -2158,10 +2183,11 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 <div className="set-card__eyebrow">SOM • PLAYER</div>
                 <h3 className="set-card__title">Player de Música</h3>
                 <p className="set-card__desc">
-                  No modo <strong>Flexível</strong> o player é o painel flutuante
-                  arrastável. No modo <strong>Fixo</strong> ele vira uma pastilha
-                  minimizada no estilo do contador do treino, na posição que você
-                  escolher.
+                  No modo <strong>Flexível</strong> o player é uma pastilha
+                  flutuante que você arrasta. No modo <strong>Fixo</strong> ele
+                  fica parado na posição que você escolher. Ambos usam o mesmo
+                  visual. A <strong>Gaveta</strong> esconde o player numa barra
+                  na lateral: deslize pra dentro pra abrir.
                 </p>
               </div>
               <span
@@ -2177,6 +2203,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 }}
               >
                 {playerMode === 'fixed' ? 'Fixo' : 'Flexível'}
+                {drawerOn ? ' • Gaveta' : ''}
               </span>
             </div>
 
@@ -2188,7 +2215,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               >
                 <span className="set-player-mode__name">Flexível</span>
                 <span className="set-player-mode__desc">
-                  Painel flutuante que você arrasta e redimensiona
+                  Pastilha flutuante que você arrasta
                 </span>
               </button>
               <button
@@ -2305,6 +2332,121 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   </div>
                 )}
               </>
+            )}
+
+            {/* ─────────── v4.24.0 — GAVETA (convive com Flexível/Fixo) ─────────── */}
+            <div className="set-card__head" style={{ marginTop: 22, marginBottom: 10 }}>
+              <div>
+                <h3 className="set-card__title" style={{ fontSize: '0.95rem' }}>
+                  Gaveta (barra deslizante)
+                </h3>
+                <p className="set-card__desc">
+                  Esconde o player numa barra na lateral da tela. Deslize a barra
+                  pra dentro para abrir o mesmo player minimizado; clique fora para
+                  recolher. A barra segue a posição escolhida acima.
+                </p>
+              </div>
+            </div>
+            <div className="set-player-modes">
+              <button
+                type="button"
+                className={`set-player-mode${!drawerOn ? ' set-player-mode--on' : ''}`}
+                onClick={() => changeDrawerOn(false)}
+              >
+                <span className="set-player-mode__name">Desligada</span>
+                <span className="set-player-mode__desc">Player aparece direto na tela</span>
+              </button>
+              <button
+                type="button"
+                className={`set-player-mode${drawerOn ? ' set-player-mode--on' : ''}`}
+                onClick={() => changeDrawerOn(true)}
+              >
+                <span className="set-player-mode__name">Ligada</span>
+                <span className="set-player-mode__desc">Barra na lateral; deslize p/ abrir</span>
+              </button>
+            </div>
+
+            {drawerOn && (
+              <div style={{ marginTop: 16 }}>
+                <div className="set-card__head" style={{ marginBottom: 8 }}>
+                  <div>
+                    <h3 className="set-card__title" style={{ fontSize: '0.9rem' }}>
+                      Espessura da barra
+                    </h3>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      color: 'var(--primary, #f97316)',
+                      background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)',
+                      padding: '4px 10px',
+                      borderRadius: 8,
+                      border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
+                    }}
+                  >
+                    {drawerThick}px
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="3"
+                  max="14"
+                  step="1"
+                  value={drawerThick}
+                  onChange={(e) => changeDrawerThick(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    accentColor: 'var(--primary, #f97316)',
+                    background: 'rgba(24, 24, 27, 0.8)',
+                    height: 8,
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                  }}
+                />
+
+                <div className="set-card__head" style={{ marginTop: 16, marginBottom: 8 }}>
+                  <div>
+                    <h3 className="set-card__title" style={{ fontSize: '0.9rem' }}>
+                      Altura da barra
+                    </h3>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      color: 'var(--primary, #f97316)',
+                      background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)',
+                      padding: '4px 10px',
+                      borderRadius: 8,
+                      border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
+                    }}
+                  >
+                    {drawerVp}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="40"
+                  max="100"
+                  step="1"
+                  value={drawerVp}
+                  onChange={(e) => changeDrawerVp(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    accentColor: 'var(--primary, #f97316)',
+                    background: 'rgba(24, 24, 27, 0.8)',
+                    height: 8,
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                  }}
+                />
+                <p className="set-note" style={{ marginTop: 8 }}>
+                  Altura em % da tela (padrão 62% ≈ altura do player fixo).
+                </p>
+              </div>
             )}
           </section>
 

@@ -21,6 +21,26 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.24.0] - 2026-10-15
+
+**Player unificado (Flexível = pastilha do Fixo, arrastável) + nova GAVETA (barra deslizante) + Retroceder só da 2ª música em diante + botão FOCO suavizado**: o modo **Flexível** passa a usar o **mesmo design do Fixo** (mesma cor/borda/accent roxo, label "TOCANDO AGORA", mini-controles) — a única diferença é que o Flexível é **arrastável** e tem "×"; o modo **Fixo** permanece **inalterado** (fixo na âncora, sem arrasto). Nasce a **GAVETA** (`Configurações → Áudio e Música → Gaveta`), uma **apresentação que convive com ambos os modos** (eles só definem a posição da âncora): uma **barra accent fina na borda da tela** (esquerda/direita conforme a âncora) que, ao ser **deslizada para dentro** (ou ativada por teclado), abre o **mesmo player minimizado** ancorado à barra — no Flexível o painel fica livre para arrastar depois; **clicar fora** recolhe. Espessura (3–14px, padrão 5) e altura (40–100% da viewport, padrão 62 ≈ altura do player fixo) configuráveis. **Retroceder** some na **1ª música** e aparece **da 2ª em diante** (`canPrev` do `audio-engine`, aplicado na pastilha e na barra do treino). Botão **FOCO** suavizado para a paleta accent (antes vermelho destacado). `system_map.json` → 3.5.65.
+
+### Added
+- **GAVETA (barra deslizante)** — `player-prefs.ts` ganha `academia_pref_player_drawer` (on/off), `_drawer_thick` (3–14px, padrão 5) e `_drawer_vp` (40–100%, padrão 62); `FloatingMiniPlayer.tsx` renderiza a barra accent na borda e o painel ancorado; `SettingsFeature.tsx` ganha toggle + 2 sliders no card "Player de Música". Convive com Flexível/Fixo (que definem só a âncora).
+- **`music.css`** — `.fmp-drawer-bar` (barra accent com alça de toque), `.fmp--from-right` (accent à direita quando a barra está à direita).
+
+### Changed
+- **Design unificado** — `.fmp` (Flexível) passa a ter o MESMO visual do `.fmp-pill` (Fixo); CSS órfão `.fmp-pill*` removido; ambos reusam o subcomponente `Pill`. Fixo marcado `fmp--fixed`, gaveta `fmp--drawer`.
+- **`audio-engine.ts`** — `MusicState` expõe `queueIndex`/`queueLength`/`canPrev` (emitState + getMusicState); "Retroceder" (`SkipBack`) só renderiza quando `canPrev` (fila do usuário com >1 faixa e índice >0). Aplicado em `FloatingMiniPlayer` e `WorkoutNowPlayingBar`.
+- **`shell.css`** — `.view-btn--focus` (FOCO) troca o destaque vermelho pela paleta accent roxa dos demais `.view-btn`.
+
+### Fixed
+- **`startBarDrag`** — drag da barra da gaveta usa listeners no `window` (não no `el`) e não depende de `setPointerCapture`, para o pointer não "escapar" da barra estreita antes do threshold.
+
+### Verificado
+- `npx tsc --noEmit` 0 · `npx oxlint` 0 · `npx vite build` OK.
+- Probe CDP (mobile 430×932): **16/16 PASS** — Retroceder oculto na 1ª / visível na 2ª; fixo usa `.fmp fmp--fixed` com borda 4px; barra da gaveta à direita, fechada, deslize abre, clique fora recolhe; barra do treino sem Retroceder na 1ª. Screenshots conferidos visualmente (flex/fixed/gaveta fechada/gaveta aberta).
+
 ## [v4.23.0] - 2026-10-15
 
 **Legado isolado em `Legacy/` + abas Músicas, Missões e Notícias adaptadas ao DESKTOP (mobile inalterado)**: a versão legada **Vanilla JS** sai da raiz e passa a viver inteira em **`Legacy/`** (`treino.html`, `noticias.html`, `JS/`, `style/`, `componentes/`, `Assets/`, `sw.js`, `manifest.json`, `cache/`), funcionando por caminhos relativos sem alteração de código — `www/` (Capacitor) permanece na raiz. As 3 abas ganham **layout desktop** exclusivo a partir de **`@media (min-width: 1024px)`**, mantendo o mobile **100% intacto**: em telas largas os overlays viram **janela centralizada** (Músicas e Notícias `1180×844`, Missões `1140×844`, cantos `20px`, backdrop escurecido/blur) com conteúdo em **grades multi-coluna** (missões diárias 3 col, notícias 3 col com a matéria principal em linha cheia, atualizações 2 col, playlists/escolhas rápidas `auto-fill`), **header sticky** nas janelas de Notícias e **nav inferior virando abas** em Músicas. `Diretrizes/README.md` formaliza a **diretriz de progresso** (relatar prazo e andamento a cada passo) e a nova estrutura `Legacy/`. `system_map.json` → 3.5.64.

@@ -52,9 +52,11 @@ export function WorkoutNowPlayingBar() {
         </span>
       </div>
       <div className="wnp__controls">
-        <button type="button" className="wnp__btn" onClick={prevTrack} aria-label="Retroceder">
-          <SkipBack size={17} fill="currentColor" />
-        </button>
+        {state.canPrev && (
+          <button type="button" className="wnp__btn" onClick={prevTrack} aria-label="Retroceder">
+            <SkipBack size={17} fill="currentColor" />
+          </button>
+        )}
         <button
           type="button"
           className="wnp__btn wnp__btn--play"

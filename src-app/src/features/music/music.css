@@ -822,83 +822,104 @@
   .mu-modal--sheet .mu-modal__panel { max-width: 540px; }
 }
 
-/* ═══════════════ v4.20.0 — miniplayer flutuante global ═══════════════ */
+/* ═══════════ v4.24.0 — miniplayer flutuante (design unificado c/ fixo) ═══════════
+   O modo Flexível AGORA usa a MESMA pastilha do Fixo (mesma cor/borda/accent);
+   a única diferença é que o Flexível pode ser ARRASTADO e tem botão fechar.
+   O Fixo continua fixo na posição escolhida (inalterado). */
 
 .fmp {
   position: fixed;
   z-index: 660;
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: rgba(11, 11, 16, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  box-shadow:
-    0 18px 44px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  background: rgba(10, 10, 10, 0.85);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.3);
+  border-left: 4px solid var(--primary, #8b5cf6);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  max-width: min(360px, calc(100vw - 24px));
+  animation: fmpPillIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.fmp__top {
+/* Zona de arrasto (Flexível): só o miolo arrasta; os botões não. */
+.fmp__drag {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 9px 9px 5px 10px;
-  min-height: 0;
-  cursor: grab;
-}
-
-.fmp__top:active { cursor: grabbing; }
-
-.fmp__art {
-  flex-shrink: 0;
-  border-radius: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  background: linear-gradient(
-    135deg,
-    rgba(var(--primary-rgb, 139, 92, 246), 0.85),
-    #0b0b10
-  );
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.fmp__meta {
+  gap: 10px;
   flex: 1;
   min-width: 0;
+  cursor: grab;
+}
+.fmp__drag:active { cursor: grabbing; }
+
+.fmp__content {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  min-width: 0;
+}
+
+.fmp__label {
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #8a8a9c;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 .fmp__title {
-  font-size: 0.86rem;
-  font-weight: 800;
-  line-height: 1.2;
-  color: #f2f2f7;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 170px;
 }
 
-.fmp__artist {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #8a8a9c;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.fmp__controls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
+
+.fmp__btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.12s;
+}
+
+.fmp__btn:hover { background: rgba(255, 255, 255, 0.14); }
+.fmp__btn:active { transform: scale(0.9); }
+
+.fmp__btn--play {
+  background: var(--primary, #8b5cf6);
+  border-color: var(--primary, #8b5cf6);
+  color: #fff;
+}
+.fmp__btn--play:hover { background: var(--primary-light, #a78bfa); }
 
 .fmp__close {
   flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.07);
@@ -909,70 +930,38 @@
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
 }
-
 .fmp__close:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
 
-.fmp__controls {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 10px 8px;
-}
+/* Borda accent aponta pra BARRA da gaveta: quando a barra está à direita, o
+   accent fica na direita do painel (senão ele "apontaria" pra longe da barra). */
+.fmp--drawer.fmp--from-right { border-left: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.3); border-right: 4px solid var(--primary, #8b5cf6); }
 
-.fmp__btn {
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
-  color: #e8e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.18s, transform 0.12s, border-color 0.18s;
-}
-
-.fmp__btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
-}
-
-.fmp__btn:active { transform: scale(0.9); }
-
-.fmp__btn--play {
+/* ═══════════ v4.24.0 — GAVETA (barra deslizante) ═══════════
+   Barra na borda da tela; deslizar pra dentro abre o player (mesmo visual do
+   Fixo). Cor accent = lateral esquerda. Espessura/altura configuráveis. */
+.fmp-drawer-bar {
+  position: fixed;
+  z-index: 660;
   background: var(--primary, #8b5cf6);
-  border-color: var(--primary, #8b5cf6);
-  color: #fff;
-}
-
-.fmp__btn--play:hover {
-  background: var(--primary-light, #a78bfa);
-  border-color: var(--primary-light, #a78bfa);
-}
-
-.fmp__grip {
-  position: absolute;
-  right: -3px;
-  bottom: -3px;
-  width: 24px;
-  height: 24px;
-  cursor: nwse-resize;
+  border-radius: 10px;
+  box-shadow: 0 0 18px rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+  cursor: pointer;
   touch-action: none;
+  transition: transform 0.18s ease, opacity 0.2s ease;
 }
-
-.fmp__grip::after {
+/* Alça de toque dentro da barra (área de agarrar maior que a espessura). */
+.fmp-drawer-bar::after {
   content: '';
   position: absolute;
-  right: 7px;
-  bottom: 7px;
-  width: 9px;
-  height: 9px;
-  border-right: 2px solid rgba(255, 255, 255, 0.35);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.35);
-  border-radius: 0 0 3px 0;
+  top: 0;
+  bottom: 0;
+  width: 22px;
 }
+.fmp-drawer-bar--left { left: 0; }
+.fmp-drawer-bar--left::after { left: 0; }
+.fmp-drawer-bar--right { right: 0; }
+.fmp-drawer-bar--right::after { right: 0; }
+.fmp-drawer-bar:hover { filter: brightness(1.15); }
 
 /* ═══════════════ v4.21.0 — transições, fixação, treino, teclado ═══════════════ */
 
@@ -1123,27 +1112,10 @@
   border-color: var(--primary-light, #a78bfa);
 }
 
-/* ═══════════════ v4.22.0 — player FIXO (estilo contador de treino) ═══════════════
-   Pastilha minimizada no espírito do .global-timer: fundo escuro translúcido,
-   borda esquerda no accent, label em caps + título, mini controles. */
-
-.fmp-pill {
-  position: fixed;
-  z-index: 660;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 12px;
-  max-width: min(340px, calc(100vw - 24px));
-  background: rgba(10, 10, 10, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.3);
-  border-left: 4px solid var(--primary, #8b5cf6);
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  animation: fmpPillIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+/* ═══════════════ v4.22.0 → v4.24.0 — player FIXO ═══════════════
+   O Fixo agora reusa a MESMA pastilha do Flexível (.fmp + subcomponente Pill);
+   a diferença é só comportamental (fixo na âncora, sem arrasto/fechar).
+   As regras visuais .fmp-pill* foram removidas por estarem órfãs. */
 
 @keyframes fmpPillIn {
   from { opacity: 0; transform: translateY(8px) scale(0.95); }
@@ -1151,83 +1123,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fmp-pill { animation: none; }
-}
-
-/* Posições (6 âncoras; margens respeitam safe-area) */
-.fmp-pill--tl { top: calc(85px + env(safe-area-inset-top, 0px)); left: 12px; }
-.fmp-pill--tc { top: calc(85px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); }
-.fmp-pill--tr { top: calc(85px + env(safe-area-inset-top, 0px)); right: 12px; }
-.fmp-pill--bl { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: 12px; }
-.fmp-pill--bc { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); }
-.fmp-pill--br { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); right: 12px; }
-
-.fmp-pill__icon {
-  flex-shrink: 0;
-  color: var(--primary-light, #a78bfa);
-  display: flex;
-  animation: gtPulse 2s ease-in-out infinite;
+  .fmp { animation: none; }
 }
 
 @keyframes gtPulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.15); opacity: 0.8; }
 }
-
-.fmp-pill__content {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.fmp-pill__label {
-  font-size: 0.55rem;
-  font-weight: 800;
-  color: #8a8a9c;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-
-.fmp-pill__title {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 170px;
-}
-
-.fmp-pill__controls {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.fmp-pill__btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
-  color: #e8e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.18s, transform 0.12s;
-}
-
-.fmp-pill__btn:hover { background: rgba(255, 255, 255, 0.14); }
-.fmp-pill__btn:active { transform: scale(0.9); }
-
-.fmp-pill__btn--play {
-  background: var(--primary, #8b5cf6);
-  border-color: var(--primary, #8b5cf6);
-  color: #fff;
-}
-
-.fmp-pill__btn--play:hover { background: var(--primary-light, #a78bfa); }

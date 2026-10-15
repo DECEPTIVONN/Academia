@@ -1217,16 +1217,16 @@
   box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.2) !important;
   border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5) !important;
 }
-/* v4.22.0 — botão FOCO no seletor de visualização (substituiu o "Coleção"):
-   destaque vermelho, herdeiro do antigo FAB FOCO. */
+/* v4.22.0 → v4.24.0 — botão FOCO no seletor de visualização (substituiu o
+   "Coleção"). v4.24.0: suavizado — herda a paleta dos demais .view-btn
+   (accent roxo) em vez do vermelho destacado. */
 .view-btn--focus {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.12);
+  color: var(--primary-light, #a78bfa);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.1);
 }
 .view-btn--focus:hover {
-  background: rgba(239, 68, 68, 0.24);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.22);
   color: #fff;
-  transform: scale(1.08);
 }
 /* Moldura da aba Exercícios (#tab-exercicios) e hairline da sub-navbar:
    tabs-subnav.css usa bg #150b24 + bordas roxas fixas — paleta settings. */

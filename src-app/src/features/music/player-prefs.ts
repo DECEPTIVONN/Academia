@@ -12,16 +12,27 @@
  *  • academia_pref_player_pos    'tl'|'tc'|'tr'|'bl'|'bc'|'br'
  *  • academia_pref_player_persist 'always' | 'timed'
  *  • academia_pref_player_secs   segundos (3–60, padrão 7)
+ *
+ * v4.24.0 — GAVETA (convive com flex/fixed, que só definem a POSIÇÃO):
+ *  • academia_pref_player_drawer       'on' | 'off' (padrão off)
+ *  • academia_pref_player_drawer_thick espessura da barra em px (3–14, padrão 5)
+ *  • academia_pref_player_drawer_vp    altura da barra em % da viewport (40–100, padrão 62)
  */
 
 export type PlayerMode = 'flex' | 'fixed';
 export type PlayerPos = 'tl' | 'tc' | 'tr' | 'bl' | 'bc' | 'br';
 export type PlayerPersist = 'always' | 'timed';
+/** v4.24.0 — barra deslizante (gaveta). 'off' = desligada; 'on' = ligada. */
+export type PlayerDrawer = 'off' | 'on';
 
 const K_MODE = 'academia_pref_player_mode';
 const K_POS = 'academia_pref_player_pos';
 const K_PERSIST = 'academia_pref_player_persist';
 const K_SECS = 'academia_pref_player_secs';
+/* v4.24.0 — gaveta (barra deslizante que abre o player minimizado) */
+const K_DRAWER = 'academia_pref_player_drawer';
+const K_DRAWER_THICK = 'academia_pref_player_drawer_thick';
+const K_DRAWER_VPERSIST = 'academia_pref_player_drawer_vp';
 
 export const PLAYER_POSITIONS: Array<{ id: PlayerPos; label: string }> = [
   { id: 'tl', label: 'Topo esquerda' },
@@ -88,6 +99,42 @@ export function getPlayerHideSecs(): number {
 
 export function setPlayerHideSecs(secs: number): void {
   write(K_SECS, String(Math.min(60, Math.max(3, Math.round(secs)))));
+  emitPrefsChanged();
+}
+
+/* ═══════════ v4.24.0 — GAVETA (barra deslizante) ═══════════
+   A gaveta é um modo de APRESENTAÇÃO que convive com Flexível/Fixo (eles só
+   definem a posição de onde a barra nasce). Ao deslizar a barra pra dentro
+   abre o mesmo player do modo Fixo; clicar fora recolhe. */
+
+/** Espessura da barra, em px (3–14; padrão 5). */
+export function getDrawerThickness(): number {
+  const n = Number(read(K_DRAWER_THICK));
+  return Number.isFinite(n) ? Math.min(14, Math.max(3, Math.round(n))) : 5;
+}
+
+export function setDrawerThickness(px: number): void {
+  write(K_DRAWER_THICK, String(Math.min(14, Math.max(3, Math.round(px)))));
+  emitPrefsChanged();
+}
+
+/** Altura da barra como % da viewport (40–100; padrão 62 ≈ altura do player fixo). */
+export function getDrawerVpHeight(): number {
+  const n = Number(read(K_DRAWER_VPERSIST));
+  return Number.isFinite(n) ? Math.min(100, Math.max(40, Math.round(n))) : 62;
+}
+
+export function setDrawerVpHeight(pct: number): void {
+  write(K_DRAWER_VPERSIST, String(Math.min(100, Math.max(40, Math.round(pct)))));
+  emitPrefsChanged();
+}
+
+export function getPlayerDrawer(): PlayerDrawer {
+  return read(K_DRAWER) === 'on' ? 'on' : 'off';
+}
+
+export function setPlayerDrawer(v: PlayerDrawer): void {
+  write(K_DRAWER, v);
   emitPrefsChanged();
 }
 
