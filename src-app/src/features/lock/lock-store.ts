@@ -172,6 +172,16 @@ export function hasBiometricCredential(): boolean {
 
 /* ── Estado global do lock ── */
 
+/** v4.22.0 — treino em andamento? (chave legada persistida pelo workout-store)
+    Exceção ÚNICA ao bloqueio: quem está treinando não digita senha ao voltar. */
+export function isWorkoutActive(): boolean {
+  try {
+    return localStorage.getItem('workout_start_time') !== null;
+  } catch {
+    return false;
+  }
+}
+
 interface LockScreenState {
   locked: boolean;
   lock: () => void;
@@ -179,8 +189,8 @@ interface LockScreenState {
 }
 
 export const useLockStore = create<LockScreenState>((set) => ({
-  // Boot: se o lock está utilizável, o app já abre travado
-  locked: isLockUsable(),
+  // Boot: trava, exceto se há treino ativo (exceção v4.22.0)
+  locked: isLockUsable() && !isWorkoutActive(),
   lock: () => {
     if (isLockUsable()) set({ locked: true });
   },

@@ -26,6 +26,11 @@
  *  • 'academia:music-state' → { context, playing, title, artist } p/ UI.
  *  • escuta 'academia:music-changed' (volume/master vindos do Settings).
  *
+ * v4.22.0 — Media Session seletiva: MAIN, RESULT e Revenger Phoenix NÃO
+ * aparecem no player de notificação do Android/Windows; uploads, YouTube e
+ * Black Panther continuam aparecendo normalmente. Reproduções de uploads
+ * contam playCount (Biblioteca → ordenar "Mais tocado").
+ *
  * Autoplay: os contextos são acionados por gestos do usuário (abrir treino,
  * concluir treino, abrir missões) — play() direto; falha → re-arm por gesto.
  */
@@ -36,6 +41,7 @@ import {
   loadAudioBlob,
   useLibraryStore,
   type PlaylistItem,
+  type SiteTrackId,
 } from '@/features/music/media-store';
 
 export type MusicContext = 'main' | 'workout' | 'workout-user' | 'result' | 'missions';
@@ -84,6 +90,11 @@ let context: MusicContext = 'main';
 let playing = false;
 let title = '';
 let artist = '';
+
+/* v4.22.0 — faixa do site tocando agora (ambiente ou dentro da fila).
+   MAIN, RESULT e Revenger Phoenix NÃO aparecem no player de notificação. */
+let currentSiteId: SiteTrackId | null = null;
+const MS_HIDDEN_SITES: ReadonlySet<SiteTrackId> = new Set<SiteTrackId>(['main', 'missions', 'result']);
 
 /* Fila do usuário (treino) */
 let queue: PlaylistItem[] = [];
@@ -148,11 +159,16 @@ function mediaSession(): MediaSession | null {
   return navigator.mediaSession;
 }
 
+/** v4.22.0 — MAIN/RESULT/Revenger Phoenix ficam FORA da notificação. */
+function msHidden(): boolean {
+  return currentSiteId !== null && MS_HIDDEN_SITES.has(currentSiteId);
+}
+
 function updateMediaSession(): void {
   const ms = mediaSession();
   if (!ms) return;
   try {
-    if (!title) {
+    if (!title || msHidden()) {
       ms.metadata = null;
       return;
     }
@@ -170,7 +186,7 @@ function updateMediaSession(): void {
 /** Posição/duração na barra de progresso da notificação (áudio HTML). */
 function updatePositionState(el: HTMLAudioElement): void {
   const ms = mediaSession();
-  if (!ms?.setPositionState) return;
+  if (!ms?.setPositionState || msHidden()) return;
   try {
     if (Number.isFinite(el.duration) && el.duration > 0) {
       ms.setPositionState({
@@ -293,6 +309,7 @@ async function playSite(next: Exclude<MusicContext, 'workout-user'>): Promise<vo
   context = next;
   title = conf.title;
   artist = conf.artist;
+  currentSiteId = next; // v4.22.0 — identifica a faixa p/ notificação
 
   if (!isMusicEnabled()) {
     // Master desligado → nada do site toca.
@@ -368,6 +385,10 @@ async function playQueueIndex(index: number): Promise<void> {
   context = 'workout-user';
   title = item.title;
   artist = item.kind === 'upload' ? 'Sua playlist' : item.kind === 'site' ? 'Trilha do app' : 'YouTube';
+  /* v4.22.0 — uploads/YouTube aparecem na notificação; a faixa do site só
+     se não for MAIN/RESULT/Revenger Phoenix. */
+  currentSiteId = item.kind === 'site' ? item.siteId : null;
+  if (item.kind === 'upload') useLibraryStore.getState().registerPlay(item.trackId); // v4.22.0 — "mais tocado"
   pauseSite();
 
   if (item.kind === 'upload') {

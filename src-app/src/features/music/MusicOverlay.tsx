@@ -65,6 +65,7 @@ import {
   pinTrackKey,
   useLibraryStore,
   type Playlist,
+  type PlaylistItem,
   type UploadTrack,
 } from './media-store';
 import {
@@ -92,6 +93,67 @@ const SITE_TRACKS_UI = [
 ];
 
 type Tab = 'home' | 'playlists' | 'biblioteca';
+
+/* v4.22.0 — ordenação da Biblioteca (1 toque = ordem, 2 toques = inverso) */
+type SortKey = 'alpha' | 'recent' | 'plays' | 'duration';
+const SORT_STORE = 'academia_music_sort_v1';
+const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
+  { key: 'alpha', label: 'Alfabético' },
+  { key: 'recent', label: 'Mais recente' },
+  { key: 'plays', label: 'Mais tocado' },
+  { key: 'duration', label: 'Maior duração' },
+];
+
+interface SortPref {
+  key: SortKey;
+  dir: 1 | -1;
+}
+
+function readSortPref(): SortPref {
+  try {
+    const raw = localStorage.getItem(SORT_STORE);
+    if (raw) {
+      const p = JSON.parse(raw) as Partial<SortPref>;
+      if (
+        (p.key === 'alpha' || p.key === 'recent' || p.key === 'plays' || p.key === 'duration') &&
+        (p.dir === 1 || p.dir === -1)
+      ) {
+        return { key: p.key, dir: p.dir };
+      }
+    }
+  } catch {
+    /* storage indisponível */
+  }
+  return { key: 'recent', dir: 1 };
+}
+
+/** Formata segundos → "m:ss" (exibição de duração na Biblioteca). */
+function formatDur(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+/** Ordena os uploads conforme a chave/direção escolhidas na Biblioteca. */
+function sortTracks(tracks: UploadTrack[], pref: SortPref): UploadTrack[] {
+  const list = [...tracks];
+  const d = pref.dir;
+  switch (pref.key) {
+    case 'alpha':
+      list.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR') * d);
+      break;
+    case 'recent':
+      list.sort((a, b) => (a.addedAt - b.addedAt) * -d);
+      break;
+    case 'plays':
+      list.sort((a, b) => ((a.playCount ?? 0) - (b.playCount ?? 0)) * -d);
+      break;
+    case 'duration':
+      list.sort((a, b) => ((a.durationSec ?? 0) - (b.durationSec ?? 0)) * -d);
+      break;
+  }
+  return list;
+}
 
 interface MusicOverlayProps {
   open: boolean;
@@ -427,6 +489,34 @@ function HomeView({
   const { tracks, playlists, pinnedQuick, togglePin } = useLibraryStore();
   const [picking, setPicking] = useState(false);
 
+  /* v4.22.0 — "playlist oculta" da aba Início: tocar qualquer música daqui
+     monta a fila com TODAS as faixas visíveis (site + uploads), começando
+     pela escolhida — quando uma termina, a próxima começa sozinha. */
+  const homeQueue = useMemo<PlaylistItem[]>(
+    () => [
+      ...SITE_TRACKS_UI.map((t) => ({
+        id: `ui-${t.id}`,
+        kind: 'site' as const,
+        siteId: t.id,
+        title: t.title,
+      })),
+      ...tracks.map((t) => ({
+        id: `ui-${t.id}`,
+        kind: 'upload' as const,
+        trackId: t.id,
+        title: t.name,
+      })),
+    ],
+    [tracks],
+  );
+
+  const playFromHome = (uiId: string) => {
+    const i = homeQueue.findIndex((it) => it.id === uiId);
+    if (i < 0) return;
+    const rotated = i > 0 ? [...homeQueue.slice(i), ...homeQueue.slice(0, i)] : homeQueue;
+    void playPlaylistFromUi(rotated);
+  };
+
   /* Itens FIXADOS nas Escolhas rápidas (álbuns, uploads e faixas do site) */
   const pinnedPlaylists = pinnedQuick
     .filter((k) => k.startsWith('pl:'))
@@ -454,7 +544,7 @@ function HomeView({
               key={t.id}
               type="button"
               className="mu-quick-card"
-              onClick={() => playSiteTrackFromUi(t.id)}
+              onClick={() => playFromHome(`ui-${t.id}`)}
             >
               <div
                 className="mu-quick-card__art"
@@ -479,9 +569,7 @@ function HomeView({
               key={t.id}
               type="button"
               className="mu-quick-card"
-              onClick={() =>
-                void playPlaylistFromUi([{ id: `ui-${t.id}`, kind: 'upload', trackId: t.id, title: t.name }])
-              }
+              onClick={() => playFromHome(`ui-${t.id}`)}
             >
               <div className="mu-quick-card__art mu-quick-card__art--pl">
                 <Music2 size={26} />
@@ -516,7 +604,13 @@ function HomeView({
         </div>
         <ul className="mu-list">
           {SITE_TRACKS_UI.map((t) => (
-            <SiteTrackRow key={t.id} track={t} isPinned={pinnedQuick.includes(pinSiteKey(t.id))} onTogglePin={() => togglePin(pinSiteKey(t.id))} />
+            <SiteTrackRow
+              key={t.id}
+              track={t}
+              isPinned={pinnedQuick.includes(pinSiteKey(t.id))}
+              onTogglePin={() => togglePin(pinSiteKey(t.id))}
+              onPlay={() => playFromHome(`ui-${t.id}`)}
+            />
           ))}
           {tracks.map((t) => (
             <UploadRow
@@ -524,6 +618,7 @@ function HomeView({
               track={t}
               isPinned={pinnedQuick.includes(pinTrackKey(t.id))}
               onTogglePin={() => togglePin(pinTrackKey(t.id))}
+              onPlay={() => playFromHome(`ui-${t.id}`)}
             />
           ))}
           {tracks.length === 0 && (
@@ -544,14 +639,17 @@ function SiteTrackRow({
   track,
   isPinned,
   onTogglePin,
+  onPlay,
 }: {
   track: (typeof SITE_TRACKS_UI)[number];
   isPinned: boolean;
   onTogglePin: () => void;
+  /** v4.22.0 — na aba Início a fila oculta assume o clique (padrão: faixa isolada). */
+  onPlay?: () => void;
 }) {
   return (
     <li className="mu-row">
-      <button type="button" className="mu-row__main" onClick={() => playSiteTrackFromUi(track.id)}>
+      <button type="button" className="mu-row__main" onClick={onPlay ?? (() => playSiteTrackFromUi(track.id))}>
         <div className="mu-row__art" style={{ background: `linear-gradient(135deg, ${track.tint}, #0b0b10)` }}>
           <Music2 size={16} />
         </div>
@@ -676,17 +774,23 @@ function UploadRow({
   track,
   isPinned,
   onTogglePin,
+  onPlay,
 }: {
   track: UploadTrack;
   isPinned?: boolean;
   onTogglePin?: () => void;
+  /** v4.22.0 — na aba Início a fila oculta assume o clique (padrão: faixa isolada). */
+  onPlay?: () => void;
 }) {
   return (
     <li className="mu-row">
       <button
         type="button"
         className="mu-row__main"
-        onClick={() => void playPlaylistFromUi([{ id: `ui-${track.id}`, kind: 'upload', trackId: track.id, title: track.name }])}
+        onClick={
+          onPlay ??
+          (() => void playPlaylistFromUi([{ id: `ui-${track.id}`, kind: 'upload', trackId: track.id, title: track.name }]))
+        }
       >
         <div className="mu-row__art mu-row__art--user">
           <Music2 size={16} />
@@ -1208,6 +1312,21 @@ function BibliotecaView({
   const [linkTarget, setLinkTarget] = useState<string>('');
   const kbInset = useKeyboardInset();
 
+  /* v4.22.0 — ordenação da Biblioteca (1 toque = ordem, 2 toques = inverso) */
+  const [sortPref, setSortPref] = useState<SortPref>(readSortPref);
+  const toggleSort = (key: SortKey) => {
+    setSortPref((prev) => {
+      const next: SortPref = prev.key === key ? { key, dir: (prev.dir === 1 ? -1 : 1) } : { key, dir: 1 };
+      try {
+        localStorage.setItem(SORT_STORE, JSON.stringify(next));
+      } catch {
+        /* storage indisponível */
+      }
+      return next;
+    });
+  };
+  const sortedTracks = useMemo(() => sortTracks(tracks, sortPref), [tracks, sortPref]);
+
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setBusy(true);
@@ -1298,24 +1417,48 @@ function BibliotecaView({
             <p className="mu-empty__text">Nenhuma música enviada ainda</p>
           </div>
         ) : (
-          <ul className="mu-list">
-            {tracks.map((t) => (
-              <li key={t.id} className="mu-row">
-                <button
-                  type="button"
-                  className="mu-row__main"
-                  onClick={() =>
-                    void playPlaylistFromUi([{ id: `ui-${t.id}`, kind: 'upload', trackId: t.id, title: t.name }])
-                  }
-                >
-                  <div className="mu-row__art mu-row__art--user">
-                    <Music2 size={16} />
-                  </div>
-                  <div className="mu-row__meta">
-                    <span className="mu-row__title">{t.name}</span>
-                    <span className="mu-row__sub">{t.artist}</span>
-                  </div>
-                </button>
+          <>
+            {/* v4.22.0 — barra de ordenação: 1 toque = ordem, 2 toques = inverso */}
+            <div className="mu-sortbar" role="group" aria-label="Ordenar músicas">
+              {SORT_OPTIONS.map((opt) => {
+                const active = sortPref.key === opt.key;
+                const inverted = active && sortPref.dir === -1;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    className={`mu-sortbar__chip${active ? ' mu-sortbar__chip--active' : ''}`}
+                    aria-pressed={active}
+                    onClick={() => toggleSort(opt.key)}
+                  >
+                    {opt.label}
+                    {active && <span className="mu-sortbar__arrow">{inverted ? '↑' : '↓'}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <ul className="mu-list">
+              {sortedTracks.map((t) => (
+                <li key={t.id} className="mu-row">
+                  <button
+                    type="button"
+                    className="mu-row__main"
+                    onClick={() =>
+                      void playPlaylistFromUi([{ id: `ui-${t.id}`, kind: 'upload', trackId: t.id, title: t.name }])
+                    }
+                  >
+                    <div className="mu-row__art mu-row__art--user">
+                      <Music2 size={16} />
+                    </div>
+                    <div className="mu-row__meta">
+                      <span className="mu-row__title">{t.name}</span>
+                      <span className="mu-row__sub">
+                        {t.artist}
+                        {t.durationSec ? ` • ${formatDur(t.durationSec)}` : ''}
+                        {t.playCount ? ` • ${t.playCount}×` : ''}
+                      </span>
+                    </div>
+                  </button>
                 <PinButton
                   isPinned={pinnedQuick.includes(pinTrackKey(t.id))}
                   onToggle={() => togglePin(pinTrackKey(t.id))}
@@ -1330,8 +1473,9 @@ function BibliotecaView({
                   <Trash2 size={15} />
                 </button>
               </li>
-            ))}
-          </ul>
+              ))}
+            </ul>
+          </>
         )}
       </section>
 

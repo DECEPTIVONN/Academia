@@ -20,6 +20,7 @@ import {
   today,
   todayLabel,
 } from '@/core/db/queries';
+import { shareNative } from '@/lib/native-share';
 import { useShareStore } from './share-store';
 import { useRadarMode } from './useRadarFit';
 import { showToast } from '@/lib/toast';
@@ -54,6 +55,22 @@ export function ShareModal() {
   const radarMode = useRadarMode((s) => s.mode);
   const [busy, setBusy] = useState<'share' | 'download' | null>(null);
   const radarCloneRef = useRef<HTMLDivElement>(null);
+
+  /* v4.22.0 — canvas PRÉ-RENDERIZADO ao abrir o modal. A Web Share API exige
+     gesto do usuário; renderizar (html2canvas) dentro do clique atrasava a
+     chamada e o SO recusava (daí o fallback "Compartilhamento não suportado").
+     Agora o arquivo já está pronto e o share roda no próprio gesto. */
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const cardId = (kind === 'conquista' ? 'shareCardBadge' : kind === 'radar' ? 'shareCardRadar' : 'shareCard');
+
+  const ensureCanvas = async (): Promise<HTMLCanvasElement | null> => {
+    if (canvasRef.current) return canvasRef.current;
+    const card = document.getElementById(cardId);
+    if (!card) return null;
+    const canvas = await renderCanvas(card);
+    canvasRef.current = canvas;
+    return canvas;
+  };
 
   const data = useMemo(
     () => ({ exercises, sheets, history, legacy }),
@@ -105,16 +122,38 @@ export function ShareModal() {
     }
   }, [show, kind]);
 
+  /* v4.22.0 — pré-render do card assim que o modal abre (share/download usam
+     o mesmo canvas; limpa ao fechar p/ re-renderizar dados novos). */
+  useEffect(() => {
+    if (!show) {
+      canvasRef.current = null;
+      return;
+    }
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      void renderCanvas(card)
+        .then((c) => {
+          canvasRef.current = cancelled ? null : c;
+        })
+        .catch(() => {
+          /* pré-render best-effort — o clique re-renderiza se preciso */
+        });
+    }, 60);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [show, kind, cardId]);
+
   /* downloadShareImage L774–805 */
   const handleDownload = async () => {
     if (busy) return;
     setBusy('download');
     try {
-      const card = document.getElementById(
-        kind === 'conquista' ? 'shareCardBadge' : kind === 'radar' ? 'shareCardRadar' : 'shareCard'
-      );
-      if (!card) return;
-      const canvas = await renderCanvas(card);
+      const canvas = await ensureCanvas();
+      if (!canvas) return;
       const link = document.createElement('a');
       link.download = `meu-${activeCardName(kind)}-${today()}.jpg`;
       link.href = canvas.toDataURL('image/jpeg', 0.9);
@@ -133,11 +172,8 @@ export function ShareModal() {
     if (busy) return;
     setBusy('share');
     try {
-      const card = document.getElementById(
-        kind === 'conquista' ? 'shareCardBadge' : kind === 'radar' ? 'shareCardRadar' : 'shareCard'
-      );
-      if (!card) return;
-      const canvas = await renderCanvas(card);
+      const canvas = await ensureCanvas();
+      if (!canvas) return;
 
       const blob = await new Promise<Blob | null>((resolve) =>
         canvas.toBlob(resolve, 'image/jpeg', 0.9)
@@ -145,6 +181,14 @@ export function ShareModal() {
       if (!blob) throw new Error('canvas sem blob');
       const fileName = `meu-${activeCardName(kind)}-${today()}.jpg`;
       const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+      const downloadImage = () => {
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(link.href), 30000);
+      };
 
       const fallbackDownloadAndCopy = () => {
         void (async () => {
@@ -159,35 +203,41 @@ export function ShareModal() {
               'success'
             );
           } catch {
-            const link = document.createElement('a');
-            link.download = fileName;
-            link.href = URL.createObjectURL(blob);
-            link.click();
+            downloadImage();
             showToast('Compartilhamento não suportado. Imagem baixada!', 'info');
           }
         })();
       };
 
-      const nav = navigator as Navigator & { canShare?: (data?: ShareData) => boolean };
-      if (navigator.share) {
-        if (!nav.canShare || nav.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              title: 'AcademiaPRO',
-              text: '🔥 Confira meu progresso na AcademiaPRO!',
-              files: [file],
-            });
-          } catch (err) {
-            const e = err as { name?: string };
-            console.warn(err);
-            if (e?.name !== 'AbortError') fallbackDownloadAndCopy();
-          }
-        } else {
-          fallbackDownloadAndCopy();
-        }
-      } else {
-        fallbackDownloadAndCopy();
+      /* v4.22.0 — share REAL: a imagem é compartilhada como ARQUIVO na folha
+         nativa (Android/Windows). Se a plataforma recusar files (desktop sem
+         Web Share Level 2), abre a folha nativa com título/texto (também é
+         interação real do SO) e baixa a imagem junto para o usuário anexar. */
+      const res = await shareNative({
+        title: 'Evo Fit',
+        text: '🔥 Confira meu progresso na Evo Fit!',
+        files: [file],
+      });
+
+      if (res === 'shared') {
+        showToast('Compartilhado!', 'success');
+        return;
       }
+      if (res === 'cancelled') return; // usuário fechou a folha — sem fallback
+
+      // files recusado (ex.: Chrome desktop) → folha nativa com texto/link.
+      const resText = await shareNative({
+        title: 'Evo Fit',
+        text: '🔥 Confira meu progresso na Evo Fit!',
+      });
+      if (resText === 'shared') {
+        downloadImage();
+        showToast('Folha de compartilhamento aberta — anexe a imagem baixada.', 'info');
+        return;
+      }
+      if (resText === 'cancelled') return;
+
+      fallbackDownloadAndCopy();
     } catch (err) {
       console.error(err);
       showToast('Erro ao preparar compartilhamento.', 'error');
@@ -216,7 +266,7 @@ export function ShareModal() {
         >
           <div className="share-card-header">
             <div className="share-app-name">
-              ACADEMIA<span>PRO</span>
+              EVO<span>FIT</span>
             </div>
             <div className="share-date" id="shareDate">
               {dateLabel}
@@ -229,7 +279,8 @@ export function ShareModal() {
               TREINO {view.treino}: {view.exCount} EXERCÍCIOS
             </h2>
 
-            <div className="share-stats-grid">
+            {/* v4.22.0 — 2 colunas: Exercícios, KG totais, Ofensiva, Duração */}
+            <div className="share-stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px 30px' }}>
               <div className="s-stat-item">
                 <span className="s-stat-val" id="shareExCount">
                   {view.exCount}
@@ -241,12 +292,6 @@ export function ShareModal() {
                   {view.totalVol.toLocaleString('pt-BR')}
                 </span>
                 <span className="s-stat-lbl">KG TOTAIS</span>
-              </div>
-              <div className="s-stat-item">
-                <span className="s-stat-val" id="shareAvgVol">
-                  {view.avgVol}
-                </span>
-                <span className="s-stat-lbl">VOL. MÉDIO</span>
               </div>
               <div className="s-stat-item">
                 <span className="s-stat-val" id="shareStreak">
@@ -316,7 +361,7 @@ export function ShareModal() {
         >
           <div className="share-card-header">
             <div className="share-app-name">
-              ACADEMIA<span>PRO</span>
+              EVO<span>FIT</span>
             </div>
             <div className="share-date" id="shareBadgeDate">
               {dateLabel}
@@ -383,7 +428,7 @@ export function ShareModal() {
         >
           <div className="share-card-header">
             <div className="share-app-name">
-              ACADEMIA<span>PRO</span>
+              EVO<span>FIT</span>
             </div>
             <div className="share-date" id="shareRadarDate">
               {dateLabel}

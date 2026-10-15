@@ -10,12 +10,25 @@
  *  • posição e tamanho persistem em localStorage;
  *  • "×" oculta até a próxima faixa começar.
  *
+ * v4.22.0 — DOIS MODOS (Configurações → Áudio e Música):
+ *  • Flexível (padrão) — o painel acima, inalterado;
+ *  • Fixo — pastilha MINIMIZADA no estilo do contador de duração do treino
+ *    (.global-timer), na posição escolhida nas prefs, sempre visível ou só
+ *    N segundos (padrão 7, configurável) após trocar de música.
+ *
  * Fica abaixo do MusicOverlay (z-index maior) e acima das telas comuns.
  */
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Music2, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
 import { getMusicState, nextTrack, prevTrack, togglePlayback, type MusicState } from './audio-engine';
+import {
+  getPlayerHideSecs,
+  getPlayerMode,
+  getPlayerPersist,
+  getPlayerPos,
+  PLAYER_PREFS_EVENT,
+} from './player-prefs';
 import './music.css';
 
 const STORE_KEY = 'academia_floating_player_rect_v1';
@@ -85,11 +98,30 @@ export function FloatingMiniPlayer() {
   const [rect, setRect] = useState<Rect>(() => loadRect());
   const [hidden, setHidden] = useState(false);
 
+  /* v4.22.0 — modo/pos/visibilidade do player (prefs). Derivadas no render;
+     o evento de prefs só pulsa o re-render (setPrefsTick). */
+  const [, setPrefsTick] = useState(0);
+  const mode = getPlayerMode();
+  const pos = getPlayerPos();
+  const persist = getPlayerPersist();
+  const hideSecs = getPlayerHideSecs();
+  const [timedOut, setTimedOut] = useState(false);
+
   /* Estado do motor */
   useEffect(() => {
     const onState = (e: Event) => setState((e as CustomEvent<MusicState>).detail);
     window.addEventListener('academia:music-state', onState);
     return () => window.removeEventListener('academia:music-state', onState);
+  }, []);
+
+  /* Prefs mudaram em Settings → re-leitura + reinício do contador */
+  useEffect(() => {
+    const onPrefs = () => {
+      setPrefsTick((t) => t + 1);
+      setTimedOut(false);
+    };
+    window.addEventListener(PLAYER_PREFS_EVENT, onPrefs);
+    return () => window.removeEventListener(PLAYER_PREFS_EVENT, onPrefs);
   }, []);
 
   /* Volta a aparecer quando uma faixa nova começa */
@@ -98,8 +130,18 @@ export function FloatingMiniPlayer() {
     if (state.title !== lastTitle.current) {
       lastTitle.current = state.title;
       setHidden(false);
+      setTimedOut(false); // v4.22.0 — modo fixo "timed" reinicia o contador
     }
   }, [state.title]);
+
+  /* v4.22.0 — modo fixo + "timed": some N segundos após a última troca.
+     O reset (false) acontece nos EVENTOS (troca de faixa / prefs), nunca
+     sincronizado dentro do effect (regra do lint). */
+  useEffect(() => {
+    if (mode !== 'fixed' || persist !== 'timed' || timedOut) return undefined;
+    const t = window.setTimeout(() => setTimedOut(true), hideSecs * 1000);
+    return () => window.clearTimeout(t);
+  }, [mode, persist, hideSecs, timedOut, state.title, state.playing]);
 
   /* Mantém dentro da viewport ao girar/redimensionar a janela */
   useEffect(() => {
@@ -187,6 +229,44 @@ export function FloatingMiniPlayer() {
 
   const visible = !hidden && (state.title !== '' || state.playing);
   if (!visible) return null;
+
+  /* ── v4.22.0 — MODO FIXO: pastilha no estilo do contador de treino ── */
+  if (mode === 'fixed') {
+    if (timedOut) return null;
+    return (
+      <div
+        className={`fmp-pill fmp-pill--${pos}`}
+        role="region"
+        aria-label="Reprodutor"
+      >
+        <div className="fmp-pill__icon">
+          <Music2 size={16} />
+        </div>
+        <div className="fmp-pill__content">
+          <span className="fmp-pill__label">Tocando agora</span>
+          <span className="fmp-pill__title">{state.title}</span>
+        </div>
+        <div className="fmp-pill__controls">
+          <button type="button" className="fmp-pill__btn" onClick={prevTrack} aria-label="Retroceder">
+            <SkipBack size={13} fill="currentColor" />
+          </button>
+          <button
+            type="button"
+            className="fmp-pill__btn fmp-pill__btn--play"
+            onClick={togglePlayback}
+            aria-label={state.playing ? 'Pausar' : 'Tocar'}
+          >
+            {state.playing ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
+          </button>
+          <button type="button" className="fmp-pill__btn" onClick={nextTrack} aria-label="Avançar">
+            <SkipForward size={13} fill="currentColor" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Modo FLEXÍVEL (padrão, inalterado) ── */
 
   /* Escala visual derivada da altura (controles/arte crescem ao redimensionar) */
   const scale = clamp(rect.h / 150, 1, 1.6);

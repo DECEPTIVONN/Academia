@@ -740,6 +740,80 @@
   line-height: 1.35;
 }
 
+/* ---------- v4.22.0 — Player de música (modo/posição/visibilidade) ---------- */
+
+.set-player-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.set-player-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid var(--set-line);
+  border-radius: 14px;
+  background: var(--set-panel);
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.set-player-mode:hover {
+  background: #101018;
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.4);
+}
+
+.set-player-mode--on {
+  border-color: var(--primary, #8b5cf6);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+}
+
+.set-player-mode__name {
+  font-size: 0.79rem;
+  font-weight: 800;
+  color: #e8e8f2;
+}
+
+.set-player-mode--on .set-player-mode__name { color: #fff; }
+
+.set-player-mode__desc {
+  font-size: 0.67rem;
+  color: var(--set-dim);
+  line-height: 1.35;
+}
+
+.set-player-positions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.set-player-pos {
+  padding: 9px 8px;
+  border: 1px solid var(--set-line);
+  border-radius: 12px;
+  background: var(--set-panel);
+  color: var(--set-dim);
+  font-size: 0.67rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+
+.set-player-pos:hover {
+  background: #101018;
+  color: #e8e8f2;
+}
+
+.set-player-pos--on {
+  border-color: var(--primary, #8b5cf6);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+  color: #fff;
+}
+
 .set-badge-dev {
   font-size: 0.55rem;
   font-weight: 900;

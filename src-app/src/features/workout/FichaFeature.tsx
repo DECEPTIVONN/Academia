@@ -34,7 +34,8 @@ import { FocusModal } from '@/features/workout/FocusModal';
 import { fadeIn, fadeSwap } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
 
-type ViewMode = 'table' | 'grid' | 'deck';
+/* v4.22.0 — o modo "Coleção" (deck) saiu; o 3º slot virou o botão FOCO. */
+type ViewMode = 'table' | 'grid';
 
 interface FichaFeatureProps {
   onStartWorkout: (sheetKey: SheetKey) => void;
@@ -480,15 +481,15 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const stored = localStorage.getItem('academia_view_mode');
-    return stored === 'table' || stored === 'grid' || stored === 'deck' ? stored : 'grid';
+    /* v4.22.0 — 'deck' (Coleção) foi removido → migra para 'grid' */
+    return stored === 'table' || stored === 'grid' ? stored : 'grid';
   });
   const [now, setNow] = useState(() => Date.now());
   const [focusOpen, setFocusOpen] = useState(false);
 
-  /* Containers das 3 views (display toggling, como o DOM legado) */
+  /* Containers das views (display toggling, como o DOM legado) */
   const tableViewRef = useRef<HTMLDivElement>(null);
   const gridViewRef = useRef<HTMLDivElement>(null);
-  const deckViewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     void loadEntry();
@@ -520,11 +521,10 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   const ae = sheet?.aerobic ?? null;
   const aeId = `ae-${treino}`;
 
-  /* Container visível (secao-ficha.js L48-50: table-scroll-wrap / grid / deck) */
+  /* Container visível (secao-ficha.js L48-50: table-scroll-wrap / grid) */
   const activeViewRef = (): HTMLElement | null => {
     if (viewMode === 'table') return tableViewRef.current;
-    if (viewMode === 'grid') return gridViewRef.current;
-    return deckViewRef.current;
+    return gridViewRef.current;
   };
 
   const checks = entry.checks ?? [];
@@ -647,7 +647,6 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   const hasAnyContent = exercicios.length > 0 || hasAe;
   const showTable = hasAnyContent && viewMode === 'table';
   const showGrid = hasAnyContent && viewMode === 'grid';
-  const showDeck = hasAnyContent && viewMode === 'deck';
 
   const cardProps = (ex: Exercise, i: number) => ({
     ex,
@@ -666,7 +665,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     index: exercicios.length,
     checked: checks.includes(aeId),
     aeId,
-    prefix: viewMode === 'grid' ? 'chk-grid-' : 'chk-deck-',
+    prefix: 'chk-grid-',
     onToggle: onToggleCheck,
   };
 
@@ -822,26 +821,25 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
                       <rect x={14} y={14} width={7} height={7} rx={1} />
                     </svg>
                   </button>
+                  {/* v4.22.0 — o slot da "Coleção" virou o botão FOCO */}
                   <button
                     type="button"
-                    className={`view-btn ${viewMode === 'deck' ? 'active' : ''}`}
-                    data-view="deck"
-                    id="viewBtnDeck"
-                    title="Modo Coleção"
-                    onClick={() => changeView('deck')}
+                    className="view-btn view-btn--focus"
+                    id="viewBtnFocus"
+                    title="Iniciar Treino Foco"
+                    onClick={onStartFocus}
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2"
+                      strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       width={18}
                       height={18}
                     >
-                      <rect x={2} y={5} width={14} height={17} rx={2} />
-                      <path d="M6 2h12a2 2 0 0 1 2 2v14" />
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                     </svg>
                   </button>
                 </div>
@@ -921,30 +919,9 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
               </div>
             </div>
 
-            {/* ===== FAB FOCO ===== */}
-            <button
-              type="button"
-              className="fab-focus"
-              id="btnStartFocus"
-              title="Iniciar Treino Foco"
-              onClick={onStartFocus}
-            >
-              <div className="fab-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  width={20}
-                  height={20}
-                >
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                </svg>
-              </div>
-              <div className="fab-text">FOCO</div>
-            </button>
+            {/* v4.22.0 — FAB FOCO removido: o botão de foco vive no seletor
+                de visualização (slot que era da "Coleção"), evitando sobrepor
+                a barra "tocando agora" do treino. */}
 
             {/* ===== TABELA ===== */}
             <div
@@ -995,18 +972,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
               {hasAe && <FichaCardioCard {...cardioProps} />}
             </div>
 
-            {/* ===== DECK ===== */}
-            <div
-              ref={deckViewRef}
-              id="workoutDeck"
-              className="workout-deck-grid"
-              style={{ display: showDeck ? 'grid' : 'none', marginTop: 20 }}
-            >
-              {exercicios.map((ex, i) => (
-                <FichaCard key={ex.id} mode="deck" {...cardProps(ex, i)} />
-              ))}
-              {hasAe && <FichaCardioCard {...cardioProps} />}
-            </div>
+            {/* v4.22.0 — view "Coleção" (deck) removida */}
 
             {/* ===== AÇÕES DE CONCLUSÃO ===== */}
             <div

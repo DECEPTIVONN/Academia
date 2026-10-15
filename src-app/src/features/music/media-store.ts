@@ -80,6 +80,10 @@ export interface UploadTrack {
   artist: string;
   addedAt: number;
   kind: 'upload';
+  /** v4.22.0 — duração em segundos (capturada no envio; ordenação "Maior duração"). */
+  durationSec?: number;
+  /** v4.22.0 — quantas vezes a faixa começou a tocar (ordenar "Mais tocado"). */
+  playCount?: number;
 }
 
 export type SiteTrackId = 'main' | 'workout' | 'result' | 'missions';
@@ -229,10 +233,37 @@ function seedLibrary(lib: MusicLibrary): MusicLibrary {
 
 /* ───────────────────────────── Store (zustand) ───────────────────────── */
 
+/** v4.22.0 — lê a duração real do arquivo enviado (best-effort). */
+function probeAudioDuration(file: File): Promise<number | undefined> {
+  return new Promise((resolve) => {
+    let url: string | null = null;
+    try {
+      url = URL.createObjectURL(file);
+      const probe = new Audio();
+      const done = (v: number | undefined) => {
+        if (url) URL.revokeObjectURL(url);
+        resolve(v);
+      };
+      probe.addEventListener('loadedmetadata', () => {
+        const d = probe.duration;
+        done(Number.isFinite(d) && d > 0 ? Math.round(d) : undefined);
+      }, { once: true });
+      probe.addEventListener('error', () => done(undefined), { once: true });
+      // Timeout: arquivo quebrado/rede lenta não trava o envio.
+      window.setTimeout(() => done(undefined), 6000);
+      probe.src = url;
+    } catch {
+      resolve(undefined);
+    }
+  });
+}
+
 interface LibraryState extends MusicLibrary {
   hydrate: () => void;
   addUpload: (file: File) => Promise<UploadTrack>;
   removeTrack: (trackId: string) => Promise<void>;
+  /** v4.22.0 — conta um início de reprodução (ordenar "Mais tocado"). */
+  registerPlay: (trackId: string) => void;
   createPlaylist: (name: string) => Playlist;
   deletePlaylist: (playlistId: string) => void;
   addUploadToPlaylist: (playlistId: string, trackId: string) => void;
@@ -272,6 +303,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       artist: (dash[0] ?? 'Você').trim() || 'Você',
       addedAt: Date.now(),
       kind: 'upload',
+      durationSec: await probeAudioDuration(file), // v4.22.0
     };
     const cur = seedLibrary(readLibrary());
     const item: PlaylistItem = { id: newId('it'), kind: 'upload', trackId: id, title: track.name };
@@ -303,6 +335,21 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     if (lib.activePlaylistId && !lib.playlists.some((p) => p.id === lib.activePlaylistId)) {
       lib.activePlaylistId = null;
     }
+    writeLibrary(lib);
+    set(lib);
+  },
+
+  /* v4.22.0 — cada início de reprodução soma 1 (usado por "Mais tocado"). */
+  registerPlay: (trackId) => {
+    const cur = seedLibrary(readLibrary());
+    let touched = false;
+    const tracks = cur.tracks.map((t) => {
+      if (t.id !== trackId) return t;
+      touched = true;
+      return { ...t, playCount: (t.playCount ?? 0) + 1 };
+    });
+    if (!touched) return;
+    const lib = { ...cur, tracks };
     writeLibrary(lib);
     set(lib);
   },

@@ -381,6 +381,35 @@
 .mu-lib-actions__row { display: flex; gap: 8px; flex-wrap: wrap; }
 .mu-lib-actions__row .mu-btn { flex: 1; min-width: 150px; }
 
+/* ── Barra de ordenação (v4.22.0) ── */
+.mu-sortbar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 2px 0 12px;
+}
+.mu-sortbar__chip {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #14141b;
+  color: #8a8a9c;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+.mu-sortbar__chip:hover { color: #e7e7f2; border-color: rgba(255, 255, 255, 0.2); }
+.mu-sortbar__chip--active {
+  background: var(--primary, #8b5cf6);
+  border-color: var(--primary, #8b5cf6);
+  color: #fff;
+}
+.mu-sortbar__arrow { font-size: 0.8rem; line-height: 1; }
+
 /* ── FAB ── */
 .mu-fab {
   position: fixed;
@@ -998,3 +1027,112 @@
   background: var(--primary-light, #a78bfa);
   border-color: var(--primary-light, #a78bfa);
 }
+
+/* ═══════════════ v4.22.0 — player FIXO (estilo contador de treino) ═══════════════
+   Pastilha minimizada no espírito do .global-timer: fundo escuro translúcido,
+   borda esquerda no accent, label em caps + título, mini controles. */
+
+.fmp-pill {
+  position: fixed;
+  z-index: 660;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  max-width: min(340px, calc(100vw - 24px));
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.3);
+  border-left: 4px solid var(--primary, #8b5cf6);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: fmpPillIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes fmpPillIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fmp-pill { animation: none; }
+}
+
+/* Posições (6 âncoras; margens respeitam safe-area) */
+.fmp-pill--tl { top: calc(85px + env(safe-area-inset-top, 0px)); left: 12px; }
+.fmp-pill--tc { top: calc(85px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); }
+.fmp-pill--tr { top: calc(85px + env(safe-area-inset-top, 0px)); right: 12px; }
+.fmp-pill--bl { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: 12px; }
+.fmp-pill--bc { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); }
+.fmp-pill--br { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); right: 12px; }
+
+.fmp-pill__icon {
+  flex-shrink: 0;
+  color: var(--primary-light, #a78bfa);
+  display: flex;
+  animation: gtPulse 2s ease-in-out infinite;
+}
+
+@keyframes gtPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+.fmp-pill__content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fmp-pill__label {
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #8a8a9c;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.fmp-pill__title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+
+.fmp-pill__controls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fmp-pill__btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.12s;
+}
+
+.fmp-pill__btn:hover { background: rgba(255, 255, 255, 0.14); }
+.fmp-pill__btn:active { transform: scale(0.9); }
+
+.fmp-pill__btn--play {
+  background: var(--primary, #8b5cf6);
+  border-color: var(--primary, #8b5cf6);
+  color: #fff;
+}
+
+.fmp-pill__btn--play:hover { background: var(--primary-light, #a78bfa); }

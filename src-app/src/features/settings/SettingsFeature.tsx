@@ -51,6 +51,21 @@ import {
   setMusicVolume,
 } from '@/lib/background-music';
 import { WALL_PRESETS } from '@/features/lock/lock-wallpapers';
+/* v4.22.0 — preferências do miniplayer (modo fixo/flexível) */
+import {
+  getPlayerHideSecs,
+  getPlayerMode,
+  getPlayerPersist,
+  getPlayerPos,
+  PLAYER_POSITIONS,
+  setPlayerHideSecs,
+  setPlayerMode,
+  setPlayerPersist,
+  setPlayerPos,
+  type PlayerMode,
+  type PlayerPersist,
+  type PlayerPos,
+} from '@/features/music/player-prefs';
 import {
   clearBiometric,
   clearPin,
@@ -422,6 +437,11 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [workoutMusic, setWorkoutMusicState] = useState(
     () => readLS(PREF_KEYS.workoutMusic) !== 'false'
   );
+  /* v4.22.0 — miniplayer: modo (flexível/fixo), posição fixa e visibilidade */
+  const [playerMode, setPlayerModeState] = useState<PlayerMode>(() => getPlayerMode());
+  const [playerPos, setPlayerPosState] = useState<PlayerPos>(() => getPlayerPos());
+  const [playerPersist, setPlayerPersistState] = useState<PlayerPersist>(() => getPlayerPersist());
+  const [playerSecs, setPlayerSecsState] = useState<number>(() => getPlayerHideSecs());
   /* Instalação PWA — estado sincronizado com os eventos do lib/pwa-install */
   const [installState, setInstallState] = useState<InstallState>(() => getInstallState());
   useEffect(() => {
@@ -527,6 +547,25 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const toggleWorkoutMusic = (checked: boolean) => {
     setWorkoutMusicState(checked);
     writeLS(PREF_KEYS.workoutMusic, String(checked));
+  };
+
+  /* v4.22.0 — handlers do miniplayer (prefs + re-render em sessão) */
+  const changePlayerMode = (m: PlayerMode) => {
+    setPlayerModeState(m);
+    setPlayerMode(m);
+  };
+  const changePlayerPos = (p: PlayerPos) => {
+    setPlayerPosState(p);
+    setPlayerPos(p);
+  };
+  const changePlayerPersist = (p: PlayerPersist) => {
+    setPlayerPersistState(p);
+    setPlayerPersist(p);
+  };
+  const changePlayerSecs = (secs: number) => {
+    const clamped = Math.min(60, Math.max(3, Math.round(secs)));
+    setPlayerSecsState(clamped);
+    setPlayerHideSecs(clamped);
   };
 
   const handleInstallApp = async () => {
@@ -2109,6 +2148,164 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               Envie suas próprias músicas, monte playlists e adicione playlists do
               YouTube ou Spotify para tocar no treino.
             </p>
+          </section>
+
+          {/* v4.22.0 — miniplayer: modo flexível (padrão) ou fixo no estilo
+              do contador de duração do treino */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">SOM • PLAYER</div>
+                <h3 className="set-card__title">Player de Música</h3>
+                <p className="set-card__desc">
+                  No modo <strong>Flexível</strong> o player é o painel flutuante
+                  arrastável. No modo <strong>Fixo</strong> ele vira uma pastilha
+                  minimizada no estilo do contador do treino, na posição que você
+                  escolher.
+                </p>
+              </div>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontWeight: 700,
+                  color: 'var(--primary, #f97316)',
+                  background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)',
+                  padding: '4px 10px',
+                  borderRadius: 8,
+                  border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
+                }}
+              >
+                {playerMode === 'fixed' ? 'Fixo' : 'Flexível'}
+              </span>
+            </div>
+
+            <div className="set-player-modes">
+              <button
+                type="button"
+                className={`set-player-mode${playerMode === 'flex' ? ' set-player-mode--on' : ''}`}
+                onClick={() => changePlayerMode('flex')}
+              >
+                <span className="set-player-mode__name">Flexível</span>
+                <span className="set-player-mode__desc">
+                  Painel flutuante que você arrasta e redimensiona
+                </span>
+              </button>
+              <button
+                type="button"
+                className={`set-player-mode${playerMode === 'fixed' ? ' set-player-mode--on' : ''}`}
+                onClick={() => changePlayerMode('fixed')}
+              >
+                <span className="set-player-mode__name">Fixo</span>
+                <span className="set-player-mode__desc">
+                  Pastilha minimizada, no estilo do contador do treino
+                </span>
+              </button>
+            </div>
+
+            {playerMode === 'fixed' && (
+              <>
+                <div className="set-card__head" style={{ marginTop: 22, marginBottom: 10 }}>
+                  <div>
+                    <h3 className="set-card__title" style={{ fontSize: '0.95rem' }}>
+                      Posição na tela
+                    </h3>
+                  </div>
+                </div>
+                <div className="set-player-positions">
+                  {PLAYER_POSITIONS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={`set-player-pos${playerPos === p.id ? ' set-player-pos--on' : ''}`}
+                      onClick={() => changePlayerPos(p.id)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="set-card__head" style={{ marginTop: 22, marginBottom: 10 }}>
+                  <div>
+                    <h3 className="set-card__title" style={{ fontSize: '0.95rem' }}>
+                      Visibilidade
+                    </h3>
+                    <p className="set-card__desc">
+                      Sempre ativo, ou só alguns segundos após trocar de música.
+                    </p>
+                  </div>
+                </div>
+                <div className="set-player-modes">
+                  <button
+                    type="button"
+                    className={`set-player-mode${playerPersist === 'always' ? ' set-player-mode--on' : ''}`}
+                    onClick={() => changePlayerPersist('always')}
+                  >
+                    <span className="set-player-mode__name">Sempre ativo</span>
+                    <span className="set-player-mode__desc">Fica visível o tempo todo</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`set-player-mode${playerPersist === 'timed' ? ' set-player-mode--on' : ''}`}
+                    onClick={() => changePlayerPersist('timed')}
+                  >
+                    <span className="set-player-mode__name">Só após trocar</span>
+                    <span className="set-player-mode__desc">
+                      Some após {playerSecs}s da última troca de música
+                    </span>
+                  </button>
+                </div>
+
+                {playerPersist === 'timed' && (
+                  <div style={{ marginTop: 16 }}>
+                    <div
+                      className="set-card__head"
+                      style={{ marginBottom: 8 }}
+                    >
+                      <div>
+                        <h3 className="set-card__title" style={{ fontSize: '0.9rem' }}>
+                          Tempo visível
+                        </h3>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontWeight: 700,
+                          color: 'var(--primary, #f97316)',
+                          background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)',
+                          padding: '4px 10px',
+                          borderRadius: 8,
+                          border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
+                        }}
+                      >
+                        {playerSecs}s
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="3"
+                      max="30"
+                      step="1"
+                      value={playerSecs}
+                      onChange={(e) => changePlayerSecs(Number(e.target.value))}
+                      style={{
+                        width: '100%',
+                        accentColor: 'var(--primary, #f97316)',
+                        background: 'rgba(24, 24, 27, 0.8)',
+                        height: 8,
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                      }}
+                    />
+                    <p className="set-note" style={{ marginTop: 8 }}>
+                      Quantos segundos a pastilha fica visível após a última troca
+                      de música (3 a 30s).
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </section>
 
           <section className="set-card">
