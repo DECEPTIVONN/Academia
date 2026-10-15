@@ -236,3 +236,134 @@
 .news-overlay .bg-gradient-to-t {
     background-image: none;
 }
+
+/* ═══════════ v4.23.0-desktop — aba NOTÍCIAS adaptada ao DESKTOP ═══════════
+   Em ≥1024px o overlay vira um BACKDROP escurecido (blur) com a janela
+   #news-main-view centralizada (máx. 1180px, cantos arredondados, scroll
+   interno e header sticky), as seções viram GRADES (Notícias 3 colunas com a
+   matéria principal ocupando a linha inteira; Atualizações 2 colunas) e as
+   views de detalhe também viram janela centralizada. Abaixo de 1024px NADA
+   muda — todo o bloco vive dentro da media query e as regras !important
+   existem só para vencer os estilos inline/utilities do modo mobile. */
+@media (min-width: 1024px) {
+    /* Overlay = fundo escurecido (o display:block vem do style inline do JSX
+       — `style={{ display: open ? 'block' : 'none' }}` — e vence qualquer
+       regra sem !important; a centralização é feita pela janela abaixo) */
+    .news-overlay {
+        background-color: rgba(4, 4, 8, 0.86);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        overflow: hidden;
+    }
+
+    /* Janela principal: fixed + inset:0 + margin:auto centraliza na viewport
+       mesmo com o display do overlay preso em block pelo style inline.
+       position precisa de !important para vencer a classe utility `relative`
+       do JSX; height também (a regra base do topo força `height:auto`) */
+    .news-overlay #news-main-view {
+        position: fixed !important;
+        inset: 0;
+        width: min(1180px, calc(100vw - 96px));
+        height: calc(100vh - 56px) !important;
+        min-height: 0 !important;
+        margin: auto;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #0a0514;
+        overflow-x: hidden;
+        overflow-y: auto;
+        box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55);
+        scrollbar-width: thin;
+        scrollbar-color: #2a2a36 transparent;
+    }
+    .news-overlay #news-main-view::-webkit-scrollbar { width: 8px; }
+    .news-overlay #news-main-view::-webkit-scrollbar-thumb {
+        background: #2a2a36;
+        border-radius: 8px;
+    }
+
+    /* Header deixa de ser fixed (viewport) e passa a grudar na janela */
+    .news-overlay #news-main-view > header {
+        position: sticky !important;
+        top: 0 !important;
+        left: auto !important;
+        width: 100% !important;
+        background: rgba(10, 5, 20, 0.92) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    /* Cluster de abas + fechar centralizado com largura de desktop */
+    .news-overlay #news-main-view > header > div {
+        max-width: 720px !important;
+        padding: 0 16px !important;
+    }
+
+    /* Conteúdo: coluna larga em vez de max-w-lg (512px) */
+    .news-overlay #news-main-view > main {
+        padding-top: 0 !important;
+    }
+    .news-overlay #news-main-view > main > div {
+        max-width: 100% !important;
+        padding: 0 32px !important;
+    }
+
+    /* Grades de cartões (margens dos space-y/mt-6 zeradas: o gap faz o papel).
+       O seletor exige .active: sem isso a regra venceria o display:none das
+       abas inativas e todas apareceriam ao mesmo tempo. */
+    .news-overlay .tab-content.active#noticias {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px !important;
+        padding-bottom: 8px !important;
+    }
+    .news-overlay .tab-content.active#atualizacoes {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 24px !important;
+    }
+    .news-overlay #noticias > div,
+    .news-overlay #atualizacoes > div {
+        margin: 0 !important;
+    }
+    /* Matéria principal ocupa a linha inteira; "MOSTRAR MAIS" também */
+    .news-overlay #noticias > div:first-child { grid-column: 1 / -1; }
+    .news-overlay .tab-content > div:has(.btn-show-more) { grid-column: 1 / -1; }
+
+    /* Hover mais evidente nos cartões (desktop tem mouse) */
+    .news-overlay #noticias > div:hover,
+    .news-overlay #atualizacoes > div:hover {
+        transform: translateY(-3px);
+    }
+
+    /* ── Views de detalhe viram a mesma janela centralizada ── */
+    .news-overlay .detail-view {
+        width: min(1180px, calc(100vw - 96px));
+        height: calc(100vh - 56px);
+        margin: auto;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55);
+        background-color: #0a0514;
+    }
+    .news-overlay .detail-view > header {
+        position: sticky !important;
+        top: 0 !important;
+        left: auto !important;
+        width: 100% !important;
+        background: rgba(10, 5, 20, 0.92) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .news-overlay .detail-view > header > div {
+        max-width: 960px !important;
+        padding: 0 16px !important;
+    }
+    .news-overlay .detail-view > main {
+        min-height: 0 !important;
+        padding-top: 0 !important;
+    }
+    .news-overlay .detail-view > main > div {
+        max-width: 960px !important;
+        padding: 0 24px !important;
+    }
+}

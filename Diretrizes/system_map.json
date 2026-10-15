@@ -1,36 +1,36 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "3.5.63",
+  "version": "3.5.64",
   "last_updated": "2026-10-15",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog.",
 
   "entry_points": {
-    "description": "Arquivos raiz que iniciam a aplicação no navegador.",
+    "description": "Arquivos que iniciam cada aplicação no navegador. A VERSÃO LEGADA (Vanilla JS) foi movida para Legacy/ em 2026-10-15 (v4.23.0) e continua funcionando por caminhos relativos; a VERSÃO ATUAL (React) vive em src-app/.",
     "files": [
       {
-        "file": "treino.html",
-        "purpose": "Shell HTML minimalista (~200 linhas). Contém splash screen, dynamic BG, section-strip skeleton com placeholders vazios, bottom nav e script tags. O conteúdo das seções é injetado via loader.js."
+        "file": "Legacy/treino.html",
+        "purpose": "[LEGADO — app vanilla] Shell HTML minimalista (~200 linhas). Contém splash screen, dynamic BG, section-strip skeleton com placeholders vazios, bottom nav e script tags. O conteúdo das seções é injetado via loader.js. Movido da raiz para Legacy/ em 2026-10-15 (v4.23.0), funcionando por caminhos relativos."
       },
       {
-        "file": "sw.js",
-        "purpose": "Service Worker de cache interceptativo. Habilita modo Offline-First via Cache Storage API, interceptando fetch de assets estáticos (JS, CSS, imagens, GIFs)."
+        "file": "Legacy/sw.js",
+        "purpose": "[LEGADO] Service Worker de cache interceptativo. Habilita modo Offline-First via Cache Storage API, interceptando fetch de assets estáticos (JS, CSS, imagens, GIFs)."
       },
       {
-        "file": "manifest.json",
-        "purpose": "Manifesto PWA (Web App Manifest). Define nome, ícones, cores do tema e modo de exibição standalone para instalação na tela inicial."
+        "file": "Legacy/manifest.json",
+        "purpose": "[LEGADO] Manifesto PWA (Web App Manifest). Define nome, ícones, cores do tema e modo de exibição standalone para instalação na tela inicial."
       },
       {
-        "file": "style/treino.css",
-        "purpose": "Arquivo-contêiner de importações CSS. Apenas re-exporta via @import os 8 módulos de style/treino/ na ordem correta da cascata."
+        "file": "Legacy/style/treino.css",
+        "purpose": "[LEGADO] Arquivo-contêiner de importações CSS. Apenas re-exporta via @import os 8 módulos de style/treino/ na ordem correta da cascata."
       }
     ]
   },
 
   "system_modules": {
     "section_loader": {
-      "description": "Carregador modular de fragmentos HTML. Executa fetch() paralelo dos arquivos em componentes/secoes/ e injeta no DOM antes da inicialização do app. Deve ser o primeiro módulo importado por app.js. A partir da v3.1.0: o fragmento `perfil.html` é injetado em `#perfilOverlayScroll` (overlay fullscreen) em vez de `[data-section='perfil']` (slide removido do strip). A partir da v3.2.0: o fragmento `ficha.html` é injetado em `#fichaOverlayScroll` (overlay fullscreen) em vez de `[data-section='ficha']` (slide removido do strip).",
+      "description": "Carregador modular de fragmentos HTML [LEGADO — Legacy/JS/treino/loader.js]. Executa fetch() paralelo dos arquivos em componentes/secoes/ e injeta no DOM antes da inicialização do app. Deve ser o primeiro módulo importado por app.js. A partir da v3.1.0: o fragmento `perfil.html` é injetado em `#perfilOverlayScroll` (overlay fullscreen) em vez de `[data-section='perfil']` (slide removido do strip). A partir da v3.2.0: o fragmento `ficha.html` é injetado em `#fichaOverlayScroll` (overlay fullscreen) em vez de `[data-section='ficha']` (slide removido do strip).",
       "js_files": ["JS/treino/loader.js"],
       "css_files": [],
       "dom_selectors": ["[data-section]", "#modais-container", "#perfilOverlayScroll", "#fichaOverlayScroll"],
@@ -217,8 +217,8 @@
   },
 
   "styling_manifest": {
-    "description": "Todos os arquivos CSS do módulo de treino, carregados em cascata via style/treino.css. A ordem numérica define a especificidade.",
-    "style_treino_css": "Contêiner principal de importação de estilos de treino.",
+    "description": "Todos os arquivos CSS do módulo de treino da VERSÃO LEGADA (Vanilla JS), hoje em Legacy/ (movidos da raiz em 2026-10-15, v4.23.0), carregados em cascata via Legacy/style/treino.css. A ordem numérica define a especificidade. O CSS da versão ATUAL (React) está em src-app/src/**.css e é listado na seção react_app.",
+    "style_treino_css": "Contêiner principal de importação de estilos de treino (Legacy/style/treino.css).",
     "global_css": [
       { "file": "style/main.css", "purpose": "Reset global e variáveis CSS base aplicadas ao site inteiro (fora do módulo de treino)." },
       { "file": "style/navbar.css", "purpose": "Estilos completos da Top Nav Bar global (desktop e mobile)." },
@@ -449,6 +449,7 @@
       "src-app/src/styles/legacy.css (agregador do CSS legado), globals.css (importa ./tailwind-legacy-theme.css; v4.0.13-typography: RESTAURA o travamento do 1-core.css em html/body (height:100%/overflow:hidden — o scroll acontece dentro de .section-slide, com scrollbar clássica de 10px; body.ficha-overlay-open continua overflow hidden !important), preflight `*{border-color:#e5e7eb}` em @layer base (paridade com o Play CDN v3), pins de cascata tipográfica (body line-height:inherit; h1–h6 font-size/weight: revert-layer; .text-* com line-height em rem; * margin/padding: revert-layer — utilities do TW4 voltam a vencer o reset do main.css, Chrome/WebView 111+), 7 pins não camadeados de backdrop-filter (.cr-bg-container blur(24px), .note-popover, .cr-dropdown-menu, .perfil-overlay__header, .ficha-overlay-close, .profile-edit-btn, .missions-overlay .ms-bg-overlay — o par prefixado é deduplicado pelo lightningcss e o getComputedStyle ficava none), thumb de ::-webkit-scrollbar-thumb com o gradiente do thememanager, .cr-bg-container{z-index:0} (nó do bg dinâmico sobe para dentro de #root) e color:#ffffff no reset (paridade com body{color:var(--text)}); mantém o rollback do padding inferior de .bottom-nav (6px 4px, v4.0.7-phase5-navfix)), tailwind-legacy-theme.css (GERADO por %TEMP%/opencode/gen-tailwind-theme.js a partir do <script> do treino.html: 54 cores + 8 fontes; v4.0.13 corrige font-body-lg/font-body-md para Outfit — o Play CDN gera .font-body-lg{font-family:Outfit} sem fallback) e design-tokens.css (--card-border/--card-hover em 0.2/0.25, paridade com :root do 1-core.css) e shell.css (v4.6.0 — casca adaptativa: .top-bar*/.side-hud*/.shell-body, media ≥1024px força strip/slide width:100% e padding-left 76/264px; importado por último no main.tsx). dynamic-bg.css foi REMOVIDO de src-app/src/styles (main.tsx não importa mais; v4.0.13).",
       "src-app/src/legacy-style/ — CSS legado espelhado; footer.css e bg-dinamico.css com url() corrigidos para /assets/… (quebrados apontavam para /assets/fonts/ e caminhos relativos inexistentes)."
     ],
+    "desktop_layout_v4_23": "Adaptação DESKTOP das abas Músicas, Missões e Notícias (v4.23.0, 2026-10-15): em @media (min-width:1024px) os overlays viram JANELA CENTRALIZADA com grades multi-coluna; abaixo de 1024px o mobile permanece 100% intacto (todo o código vive dentro da media query, com !important só para vencer estilos inline/utilities). Músicas: features/music/music.css bloco v4.23.0-desktop — .mu-overlay vira janela min(1180px,100vw−96px)×min(880px,100vh−56px) via position:fixed+inset:0+margin:auto (anel box-shadow 100vmax escurece o fundo sem tocar no JS), .mu-quick-grid/.mu-pl-grid em repeat(auto-fill,minmax()), .mu-nav vira abas centralizadas, .mu-fab absolute. Missões: features/dashboard/missions-overlay.css — .ms-shell 1140×844, #ms-content-daily/#ms-content-weekly em grid 3 colunas (cabeçalho :first-child/:last-child em 1/-1), GUIAS mantém flex/card único; único hook TSX novo = className 'ms-shell' no container do MissionsOverlay.tsx. Notícias: features/news/news-overlay.css — #news-main-view vira janela 1180×844 via position:fixed!important+inset:0+margin:auto (vence a classe utility 'relative' e o display:block preso pelo style inline do JSX; height!important por causa da regra base height:auto), header sticky, .tab-content.active#noticias em grid 3 col (hero 1/-1), #atualizacoes em grid 2 col, .detail-view como janela 1180×844 com header sticky. Verificado por CDP probe 32/32 PASS (desktop 1440×900 + mobile 430×932 sem regressão).",
     "known_gaps": "Fase 0–5 concluídas (Fase 5 em 2026-10-06): cronômetro global do treino + modalEncerrarTreino acionáveis pelo #dashBtnIniciar (handleOpenFicha espelha startWorkoutFromDashboard L276–304), overlay de Notícias NewsOverlay, placeholders Social/Loja com DOM .section-coming-soon e BottomNav 1:1 com 7-nav-icons.css; antes disto o timer nunca era iniciado (botão oculto .btn-start-workout) e o modalEncerrarTreino era inalcançável pela Ficha, e as utilities Tailwind do BottomNav venciam o CSS legado não camadeado sobrepondo os labels. Fases 0–4: 0 fundação, 1 visual (Dashboard/Ficha/Progresso), 2 Perfil/temas, 3 gamificação (Radar Fit, conclusão/encerrar, maestria, share card, openVolumeDetails, coleção + maestria individual, Modo Foco, overlay de missões, fadeSwap/fadeIn) e 4 seção Treinos (TreinosFeature + 7 arquivos de suporte, CustomizacaoTabs, swipe horizontal com exclusões do nav.js, SheetsFeature/HistoryFeature/WorkoutProgressChart removidos, oxlint 0 warnings). Divergências conscientes: deck com exerciseIds string[] compacto (sem nulls, splice perde a posição), swipe sem arrasto contínuo da fita (só intenção + troca no fim), modalPicker (morto no legado) não portado, modalLevelUp omitido; Fase 5 — closeNewsOverlay não faz _transitionTo('dashboard') (o overlay só abre do Dashboard, mesmo racional do MissionsOverlay), rodapé do news-overlay portado em 2026-10-07 (FOOTER_HTML nos 3 containers; lista = 6 diffs e detalhe = 15 diffs, todas não-visuais: serialização oklab/rgba com valores exatos, border-color de elementos com border-width 0 e margens do space-y v3 margin-top no irmão seguinte vs v4 margin-end no anterior — gaps e xywh idênticos), swip com o overlay aberto desmonta o Dashboard e o overlay some (idêntico no nav.js), micro-divergência de 150 ms na transition-opacity da aba ativa do news-overlay; bloco revert-layer requer Chrome/WebView 111+ (degradação graciosa abaixo disso). Lacunas menores: componentes scaffold órfãos nunca montados e mantidos (HeaderHUD, TabBar, ExerciseCard, ui/DynamicBg, ActiveWorkoutModal — este fora do fluxo desde a Fase 5); modais do Progresso (#modalDayHist/#modalVolumeDetails/#modalRadarGuide) portados em 2026-10-11 via createPortal(document.body) com lock de body.overflow (v4.7.3-progresso-dayhist; o will-change:transform de .section-strip quebrava o position:fixed deles dentro da fita), rest timer só no Modo Foco aberto; overlay de missões é estático por desenho legado (sem lógica de missões no Vanilla). Correções v4.0.8 (2026-10-06): #gtTime sincroniza now ao iniciar (sem exibir tempo negativo por ~1 s, paridade com initGlobalTimer), #dashAvatar renderiza o emblema de identidade selecionado (applyProfileCustomization L371–396: wrapper profile-avatar__emblem-wrapper + sprite/URL + pulse + data-frame, antes só tinha o ícone estático shield_person) e o ciclo conta por ficha. Paridade medida v4.0.13-typography (2026-10-07): progresso 6239 → 65 diffs e dashboard 1717 após o repairSectionRaster (65 = célula de GIF r3c5); treinos limitado pela nondeterminismo dos GIFs <img> (não pausáveis por getAnimations — R-vs-R entre duas sessões idênticas = 36000 diffs, mesma ordem de grandeza do L-vs-R); state@R_treinos devolve null para 'Sua Semana' porque o React desmonta as seções (o legado mantém todas no DOM, x=-341) — estrutural, não visual; font-family do <html> difere (preflight TW3 ui-sans-serif vs TW4 -apple-system...) sem efeito visual (body herda Rajdhani) e os contadores do measure_fonts seguem 0/0."
   },
 

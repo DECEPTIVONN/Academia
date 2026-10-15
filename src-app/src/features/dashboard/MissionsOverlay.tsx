@@ -207,8 +207,10 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
         <div className="ms-bg-overlay" />
       </div>
 
-      {/* Full-screen Container */}
+      {/* Full-screen Container (v4.23.0-desktop: classe .ms-shell dá o gancho
+          para a janela centralizada no desktop — sem estilo próprio no mobile) */}
       <div
+        className="ms-shell"
         style={{
           width: '100%',
           maxWidth: 420,

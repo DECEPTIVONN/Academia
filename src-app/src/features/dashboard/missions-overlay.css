@@ -154,3 +154,73 @@
                 text-transform: uppercase;
                 margin-bottom: 8px;
             }
+
+/* ═══════════ v4.23.0-desktop — aba MISSÕES adaptada ao DESKTOP ═══════════
+   Em ≥1024px o overlay vira um BACKDROP escurecido (arena atenuada) com a
+   janela .ms-shell centralizada (máx. 1140px, cantos arredondados) e as
+   missões distribuídas em GRADE DE 3 COLUNAS (cabeçalho e rodapé ocupando a
+   linha inteira). Abaixo de 1024px NADA muda — inclusive os estilos inline
+   do JSX, vencidos aqui apenas por !important dentro da media query. */
+@media (min-width: 1024px) {
+    .missions-overlay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px 48px;
+        background-color: rgba(4, 4, 8, 0.55);
+    }
+
+    /* Arena continua visível, porém atenuada (dim) atrás e através da janela) */
+    .missions-overlay .ms-bg-overlay {
+        background: linear-gradient(to bottom, rgba(4, 4, 8, 0.70) 0%, rgba(4, 4, 8, 0.86) 100%);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+
+    /* Janela centralizada (largura/altura/min-height inline vencidos por !important) */
+    .missions-overlay .ms-shell {
+        width: min(1140px, calc(100vw - 96px)) !important;
+        max-width: 1140px !important;
+        min-height: 0 !important;
+        height: calc(100vh - 56px) !important;
+        margin: auto !important;
+        border-radius: 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        overflow: hidden !important;
+        background: rgba(7, 7, 11, 0.55) !important;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55) !important;
+    }
+
+    /* Header e área de rolagem com respiro de desktop (inline do JSX) */
+    .missions-overlay .ms-shell > header { padding: 24px 28px 0 !important; }
+    .missions-overlay .ms-shell > main {
+        padding: 24px 28px 32px !important;
+        gap: 28px !important;
+    }
+
+    /* Missões diárias/semanais em grade de 3 colunas (a aba GUIAS é um card
+       único centralizado e permanece em 1 coluna) */
+    .missions-overlay .ms-content-area > .ms-active#ms-content-daily,
+    .missions-overlay .ms-content-area > .ms-active#ms-content-weekly {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px 20px !important;
+        align-items: start;
+    }
+    .missions-overlay .ms-content-area > .ms-active#ms-content-daily > :first-child,
+    .missions-overlay .ms-content-area > .ms-active#ms-content-daily > :last-child,
+    .missions-overlay .ms-content-area > .ms-active#ms-content-weekly > :first-child,
+    .missions-overlay .ms-content-area > .ms-active#ms-content-weekly > :last-child {
+        grid-column: 1 / -1;
+    }
+
+    /* Cards de missão com hover mais evidente (desktop tem mouse) */
+    .missions-overlay .ms-content-area article.ms-hover-lift:hover {
+        transform: translateY(-2px) scale(1.015);
+    }
+
+    /* Abas do header com alvo maior */
+    .missions-overlay .ms-tab-btn { padding: 14px 22px; font-size: 15px; }
+}

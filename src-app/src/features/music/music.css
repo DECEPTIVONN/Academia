@@ -727,6 +727,101 @@
 
 .mu-modal__panel .mu-input { flex-shrink: 0; }
 
+/* ═══════════ v4.23.0-desktop — aba MÚSICAS adaptada ao DESKTOP ═══════════
+   Em ≥1024px a interface vira uma JANELA CENTRALIZADA (máx. 1180px, cantos
+   arredondados, borda hairline e anel de box-shadow escurecendo o app atrás)
+   com grades multi-coluna, nav centralizada e modais no centro da janela.
+   Abaixo de 1024px NADA muda — todo o bloco vive dentro da media query. */
+@media (min-width: 1024px) {
+  /* Janela: position:fixed + inset:0 + tamanho definido + margin:auto centra
+     sem usar transform (que brigaria com a animação muFadeIn). O box-shadow
+     com spread 100vmax faz o "dim" do fundo sem tocar no JS. */
+  .mu-overlay {
+    width: min(1180px, calc(100vw - 96px));
+    height: min(880px, calc(100vh - 56px));
+    margin: auto;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    box-shadow:
+      0 0 0 100vmax rgba(4, 4, 8, 0.72),
+      0 40px 120px rgba(0, 0, 0, 0.55);
+  }
+
+  /* Header com mais respiro e tipografia maior */
+  .mu-header { padding: 20px 28px 16px; }
+  .mu-header__eyebrow { font-size: 0.68rem; letter-spacing: 3px; }
+  .mu-header__title { font-size: 1.6rem; }
+
+  /* Conteúdo */
+  .mu-page { padding: 24px 28px 36px; gap: 32px; }
+  .mu-section { gap: 16px; }
+  .mu-section__title { font-size: 1.3rem; }
+  .mu-section__sub { font-size: 0.84rem; }
+
+  /* Grades com preenchimento automático (mais colunas em telas largas) */
+  .mu-quick-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .mu-pl-grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 18px;
+  }
+
+  /* Listas permanecem em 1 coluna (leitura em linha larga, estilo desktop),
+     só com mais altura/hover mais evidente. */
+  .mu-row__main { padding-top: 11px; padding-bottom: 11px; }
+  .mu-row__title { font-size: 0.97rem; }
+  .mu-row__sub { font-size: 0.76rem; }
+
+  /* Barra de upload/links vira linha */
+  .mu-lib-actions { flex-direction: row; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+  /* Mini-player ancorado à esquerda da janela (não em tela cheia) */
+  .mu-mini {
+    left: 24px;
+    right: auto;
+    width: min(460px, calc(100% - 48px));
+    bottom: 74px;
+  }
+
+  /* Bottom nav vira uma barra de abas centralizada na base da janela */
+  .mu-nav {
+    justify-content: center;
+    gap: 18px;
+    padding: 8px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .mu-nav__btn {
+    flex: 0 1 auto;
+    min-width: 150px;
+    flex-direction: row;
+    gap: 8px;
+    font-size: 0.78rem;
+    letter-spacing: 0.6px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 8px 18px;
+  }
+  .mu-nav__btn:hover { color: #e7e7f2; }
+  .mu-nav__btn--active {
+    background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+    border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  }
+
+  /* FAB "+" passa de fixed (viewport) para absolute (janela) */
+  .mu-fab {
+    position: absolute;
+    right: 26px;
+    bottom: 168px;
+  }
+
+  /* Modais/bottom-sheets centralizados na janela */
+  .mu-modal { align-items: center; }
+  .mu-modal__panel { border-radius: 20px; padding-bottom: 22px; }
+  .mu-modal--sheet .mu-modal__panel { max-width: 540px; }
+}
+
 /* ═══════════════ v4.20.0 — miniplayer flutuante global ═══════════════ */
 
 .fmp {

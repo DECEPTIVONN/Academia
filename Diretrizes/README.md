@@ -12,7 +12,7 @@ O projeto foi construído para ser incrivelmente rápido e rodar inteiramente no
 
 Recentemente refatorado para suportar escalabilidade, a base de código modular dispensa bundlers (como Webpack) para manter o carregamento nativo veloz:
 
-### 🗄️ JavaScript Modular (`JS/treino/`)
+### 🗄️ JavaScript Modular (`Legacy/JS/treino/`)
 - `app.js`: Script de inicialização (Entry point).
 - `db.js`: Gerenciamento central do estado da aplicação, schemas padrão e I/O de LocalStorage.
 - `nav.js`: Motor gráfico de transição contínua (Swipe) e controle do Bottom Navigation Bar.
@@ -21,7 +21,10 @@ Recentemente refatorado para suportar escalabilidade, a base de código modular 
 - `secao-progresso.js`: Algoritmos de cálculo de 1RM, renderização de Radar Charts e o Tracker do Ciclo de 30 Dias.
 - `secao-perfil.js`: Sistema de configurações, temas, backup/importação e cartões de compartilhamento.
 
-### 🎨 CSS Cascata Modular (`Style/treino/`)
+> **Nota (2026-10-15):** a versão **atual** é a React em `src-app/` — os caminhos
+> acima são da versão **legada** (movida integralmente para `Legacy/`, sem alterações).
+
+### 🎨 CSS Cascata Modular (`Legacy/style/treino/`)
 Agrupados e carregados via `@import` no `treino.css` raiz, preservando a especificidade da cascata:
 1. `1-core.css`: Variáveis, tipografia, reset e layouts base.
 2. `2-modals.css`: Interface de modais (Fim de treino, ajudas).
@@ -50,10 +53,16 @@ Agrupados e carregados via `@import` no `treino.css` raiz, preservando a especif
 ### 🗂️ Estrutura de Diretórios
 ```
 Academia/
-├── treino.html                ← Shell da aplicação (splash, viewport, bottom nav)
-├── noticias.html, Banner.html, DESIGN.html, background-standalone.html, teste.html
-├── sw.js                      ← Service Worker (cache offline)
-├── manifest.json              ← Manifesto PWA
+├── src-app/                   ← ⭐ VERSÃO ATUAL (React v4) — app que roda/deploya
+├── Legacy/                    ← 📦 VERSÃO LEGADA (Vanilla JS) movida em 2026-10-15
+│   ├── treino.html            ← Shell da aplicação legada (splash, viewport, bottom nav)
+│   ├── noticias.html          ← Página legada de notícias
+│   ├── sw.js, manifest.json   ← Service Worker e Manifesto PWA da versão legada
+│   ├── JS/                    ← treino.js (arquivo morto) + treino/ (módulos ES6)
+│   ├── style/                 ← main.css, navbar.css, treino.css + treino/ (modular)
+│   ├── componentes/           ← JS globais (navbar, footer, temas) + secoes/ (fragmentos)
+│   ├── Assets/                ← BG, Exerciciosgif, FONTS, Images, Arenas, Sounds, libs
+│   └── cache/                 ← Cache interno do SW legado
 ├── DESIGN.md                  ← Manual do sistema de design
 ├── Personalização-perfil.md   ← Roadmap da feature de personalização
 ├── Diretrizes/                ← Documentação e diretrizes (LEIA ANTES DE EDITAR)
@@ -63,17 +72,19 @@ Academia/
 │   ├── Ícones.md              ← Biblioteca de ícones SVG (ler ao mexer em ícones)
 │   └── navbar-inferior.html   ← Guia/preview da navbar mobile HUD
 ├── Planos/                    ← Planejamento e roadmap de features
-├── JS/
-│   ├── treino.js              ← Legado (não é carregado pelo treino.html)
-│   └── treino/                ← Módulos ES6 do app (app, db, nav, loader, overlays, seções)
-├── style/
-│   ├── main.css, navbar.css, footer.css, ...   ← Estilos globais do site
-│   ├── treino.css             ← Contêiner de @import dos módulos do app
-│   └── treino/                ← 1-core … 8-customizacao + secoes/ (modulares)
-├── componentes/               ← JS globais reutilizáveis (navbar, footer, temas, animações)
-│   └── secoes/                ← Fragmentos HTML injetados pelo loader.js
-└── Assets/                    ← BG, Exerciciosgif, FONTS, Images, Arenas, libs
+├── www/                       ← Espelho da versão legada p/ o Capacitor (entry: www/index.html)
+└── Assets/, style/, JS/, ...  ← (movidos para Legacy/ — ver nota abaixo)
 ```
+
+> **📦 Reorganização de 2026-10-15 (pasta `Legacy/`):** todo o app Vanilla JS foi
+> movido da raiz para `Legacy/` (`treino.html`, `noticias.html`, `JS/`, `style/`,
+> `componentes/`, `Assets/`, `sw.js`, `manifest.json`, `cache/`) **sem nenhuma
+> alteração de código** — os caminhos são todos relativos, então a versão legada
+> continua funcionando ao abrir `Legacy/treino.html` (verificado: 200 refs OK +
+> 12/12 HTTP 200) e serve para consultas futuras, **sem se misturar com a versão
+> atual (`src-app/`)**. O `www/` (entrada do Capacitor) permanece na raiz.
+> Futuras edições no shell legado passam a ser feitas em `Legacy/treino.html`
+> e replicadas em `www/index.html`.
 
 ### 💾 Persistência (`localStorage`)
 Banco principal: chave **`academia_treino`** (constante `DB_KEY` em `JS/treino/db.js`). Estrutura produzida por `initDB()`:
@@ -102,19 +113,20 @@ Chaves auxiliares no mesmo `localStorage`: `workout_start_time`, `academia_theme
 - `fade-in.js` + `fade-in-integration.js` + `scroll-animations.js` — animações de entrada; classes `scroll-fade-up|left|right` com `delay-1|2|3` e `.fade-in-element`.
 - `roster.js` — lista de amigos/ofensivas do perfil.
 
-### ➕ Como Adicionar Novas Páginas
-1. Criar `nomepagina.html` na raiz.
-2. Criar `style/nomepagina.css` e `JS/nomepagina.js`.
+### ➕ Como Adicionar Novas Páginas (versão legada)
+1. Criar `nomepagina.html` dentro de `Legacy/`.
+2. Criar `Legacy/style/nomepagina.css` e `Legacy/JS/nomepagina.js`.
 3. Incluir os links para `main.css`, `navbar.css` e `footer.css` no `<head>`.
 4. Incluir os scripts dos componentes **antes** do script da página.
 5. Adicionar os containers `<div id="navbar-container">` e `<div id="footer-container">`.
 6. Se o arquivo entrar no escopo do app, registrar no `system_map.json` **e** no `CHANGELOG.md`.
+7. Se for uma página da **versão atual**, crie o componente em `src-app/src/` (não na raiz).
 
 ### 🤖 Build do App Android (Capacitor) — LEIA ANTES DE COMPILAR
 > **O erro clássico:** compilar no Android Studio e gerar um app "antigo". A causa é quase sempre a mesma — o Capacitor **não** embute a raiz do projeto nem o `www/` em tempo real. O APK lê exclusivamente a cópia estática em `android/app/src/main/assets/public/`, que **só é atualizada** quando você roda o comando de sync. Como a pasta `android/` é ignorada pelo Git, ela nunca recebe as mudanças automaticamente.
 
 **Fluxo obrigatório antes de CADA build no Android Studio:**
-1. **Espelhar as edições em `www/`** — a raiz é o seu ambiente de edição, mas o app roda a partir de `www/`. O entry point do app é **`www/index.html`** (cópia de `treino.html` com os CDNs trocados por `vendor/*` locais) — alterações no shell de `treino.html` precisam ser replicadas em `www/index.html`. Mantenha também os espelhos `www/JS/`, `www/componentes/`, `www/Style/`, `www/Assets/` idênticos à raiz.
+1. **Espelhar as edições em `www/`** — o app legado roda a partir de `www/` (a partir de 2026-10-15 a fonte de edição dele é **`Legacy/`**, não mais a raiz). O entry point do app é **`www/index.html`** (cópia de `Legacy/treino.html` com os CDNs trocados por `vendor/*` locais) — alterações no shell de `Legacy/treino.html` precisam ser replicadas em `www/index.html`. Mantenha também os espelhos `www/JS/`, `www/componentes/`, `www/Style/`, `www/Assets/` idênticos aos de `Legacy/`.
 2. **Rodar `npx cap sync android`** (na raiz do projeto) — copia `www/` → `android/app/src/main/assets/public/` e atualiza os plugins. Sem este passo, o APK continua empacotando o conteúdo antigo (templates, exercícios, GIFs e CSS desatualizados).
 3. **No Android Studio:** `File > Sync Project with Gradle Files` → `Build > Clean Project` → `Run`.
 4. **Se ainda aparecer algo antigo no aparelho:** o WebView mantém o Cache Storage do Service Worker (`sw.js`) e o `localStorage` entre instalações. Limpe os dados do app (Ajustes → Aplicativo → Armazenamento → Limpar dados) ou `adb shell pm clear com.academia.workout`.
@@ -185,7 +197,11 @@ Se você é um assistente de inteligência artificial manipulando esta base de c
 4. Não crie códigos monolíticos. Tudo deve ser feito sob a filosofia modular instalada na pasta `treino/`.
 5. **Padrão CSS BEM:** Para qualquer novo estilo ou componente, é **obrigatório** o uso da metodologia BEM para evitar poluição da cascata global.
 6. **Leia o `DESIGN.md` (raiz do projeto)** antes de criar ou alterar qualquer elemento visual — ele é o manual completo de tokens, animações e blueprints do design system.
-7. **Informe prazo e progresso em tarefas demoradas:** quando a tarefa puder demorar (diagnóstico de bug difícil, migração multi-arquivo, verificação visual exaustiva), **não execute em silêncio até o fim**. Logo no início, diga ao usuário uma estimativa de conclusão e quantos passos restam (ex.: `≈4 passos: pins de CSS → medição CDP → regressões → documentação`) e vá atualizando o progresso a cada passo concluído — o usuário deve sempre saber onde a tarefa está e quanto falta.
+7. **DIRETRIZ OBRIGATÓRIA — informe prazo e progresso de conclusão:** esta é uma **diretriz permanente do projeto** (registrada neste README por decisão de 2026-10-15 e aplicável a toda sessão). Quando a tarefa puder demorar (diagnóstico de bug difícil, migração multi-arquivo, reorganização de pastas, adaptação de layout, verificação visual exaustiva), **não execute em silêncio até o fim**:
+   - **Antes de começar:** diga ao usuário uma estimativa de conclusão e quantos passos restam (ex.: `≈7 passos: mover legado → verificar legado → baseline React → desktop Músicas → desktop Missões → desktop Notícias → documentação`).
+   - **Durante a execução:** informe o progresso a cada passo concluído (ex.: `Passo 3 de 7 — concluído ✔`), sempre indicando o que já foi feito e o que falta.
+   - **Ao final:** confirme a conclusão de todos os passos e o resultado das verificações.
+   O usuário deve **sempre** saber onde a tarefa está e quanto falta — falhar nessa comunicação é descumprir uma regra do projeto, mesmo que o código esteja correto.
 
 ---
 
@@ -224,9 +240,11 @@ O arquivo `Diretrizes/system_map.json` é o **mapa vivo** do projeto. Ele deve s
 
 | Regra | Onde ler/aplicar |
 | :--- | :--- |
+| **Informar estimativa e progresso de conclusão em tarefas demoradas** | `Diretrizes/README.md` → Guia para Agentes, **regra 7 (diretriz obrigatória)** |
 | Antes de compilar no Android Studio | `npx cap sync android` (seção "Build do App Android") |
 | Sempre registrar as alterações feitas | `Diretrizes/CHANGELOG.md` (topo do arquivo) |
 | Ler antes de mexer no código/arquitetura | `Diretrizes/system_map.json` |
 | Ler antes de adicionar ou alterar um ícone | `Diretrizes/Ícones.md` |
 | Ler antes de criar/alterar elementos visuais | `DESIGN.md` (raiz do projeto) |
+| Versão atual do app (React) vs. legado (Vanilla) | `src-app/` vs. `Legacy/` (nunca misturar) |
 | Atualizar ao mudar a estrutura de arquivos | `Diretrizes/system_map.json` (procedimento acima) |
