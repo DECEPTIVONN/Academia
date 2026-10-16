@@ -148,6 +148,22 @@ const PLUS_ICON = (
   </svg>
 );
 
+/** v4.25.x — detecta mobile (≤767px). Na aba Exercícios o mobile usa SÓ o
+    Modo Coleção e esconde o seletor de visualização; no desktop os dois modos
+    (Grid/Coleção) continuam disponíveis. */
+function useIsMobile(query = '(max-width: 767px)') {
+  const [matches, setMatches] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = () => setMatches(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [query]);
+  return matches;
+}
+
 /* ══════════ Componente ══════════ */
 
 export const TreinosFeature: React.FC = () => {
@@ -166,6 +182,11 @@ export const TreinosFeature: React.FC = () => {
     setSearch,
     setDeckPage,
   } = useTreinosStore();
+
+  /* v4.25.x — no mobile a aba Exercícios força o Modo Coleção e esconde o
+     seletor de visualização (o estado do store segue intacto p/ o desktop). */
+  const isMobile = useIsMobile();
+  const effectiveExView = isMobile ? 'colecao' : exView;
 
   /* ── Modais ── */
   const [formOpen, setFormOpen] = useState(false);
@@ -408,26 +429,28 @@ export const TreinosFeature: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="view-selector">
-                  <button
-                    type="button"
-                    className={`view-btn${exView === 'grid' ? ' active' : ''}`}
-                    id="btnExViewGrid"
-                    title="Modo Grid"
-                    onClick={() => setExView('grid')}
-                  >
-                    {EX_GRID_ICON}
-                  </button>
-                  <button
-                    type="button"
-                    className={`view-btn${exView === 'colecao' ? ' active' : ''}`}
-                    id="btnExViewColecao"
-                    title="Modo Coleção"
-                    onClick={() => setExView('colecao')}
-                  >
-                    {EX_COLECAO_ICON}
-                  </button>
-                </div>
+                {!isMobile && (
+                  <div className="view-selector">
+                    <button
+                      type="button"
+                      className={`view-btn${exView === 'grid' ? ' active' : ''}`}
+                      id="btnExViewGrid"
+                      title="Modo Grid"
+                      onClick={() => setExView('grid')}
+                    >
+                      {EX_GRID_ICON}
+                    </button>
+                    <button
+                      type="button"
+                      className={`view-btn${exView === 'colecao' ? ' active' : ''}`}
+                      id="btnExViewColecao"
+                      title="Modo Coleção"
+                      onClick={() => setExView('colecao')}
+                    >
+                      {EX_COLECAO_ICON}
+                    </button>
+                  </div>
+                )}
 
                 <button
                   type="button"
@@ -442,11 +465,11 @@ export const TreinosFeature: React.FC = () => {
             </div>
 
             <div
-              className={`exercicios-grid${exView === 'colecao' ? ' collection-grid' : ''}`}
+              className={`exercicios-grid${effectiveExView === 'colecao' ? ' collection-grid' : ''}`}
               id="exerciciosGrid"
             >
               {list.map((ex) =>
-                exView === 'grid' ? (
+                effectiveExView === 'grid' ? (
                   <TreinosGridCard key={ex.id} ex={ex} onEdit={openEdit} onDel={askDelete} />
                 ) : (
                   <TreinosCollectionCard

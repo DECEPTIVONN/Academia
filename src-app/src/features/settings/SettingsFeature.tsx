@@ -1791,7 +1791,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                       void Notification.requestPermission().then((perm) => {
                         if (perm === 'granted') {
                           new Notification('Notificações Ativas!', {
-                            body: 'O Academia enviará seus alertas e lembretes em segundo plano.',
+                            body: 'O EVO FIT enviará seus alertas e lembretes em segundo plano.',
                             icon: '/icon-192.png',
                           });
                           showToast('Permissão de notificações concedida!', 'success');
@@ -1822,7 +1822,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   className="set-btn"
                   onClick={() => {
                     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                      new Notification('⏰ Teste de Alarme Academia', {
+                      new Notification('⏰ Teste de Alarme EVO FIT', {
                         body: 'Disparo de notificação em segundo plano testado com sucesso!',
                         icon: '/icon-192.png',
                       });
@@ -2238,7 +2238,9 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                       Posição na tela
                     </h3>
                     <p className="set-card__desc">
-                      Onde o player fica (e de que lado nasce a barra da gaveta).
+                      Onde o player fixo fica (topo/base + esquerda/direita) e
+                      de que canto nasce a barra da gaveta. No modo Flexível a
+                      barra nasce na extremidade mais próxima do player.
                     </p>
                   </div>
                 </div>
@@ -2346,7 +2348,8 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 <p className="set-card__desc">
                   Esconde o player numa barra na lateral da tela. Deslize a barra
                   pra dentro para abrir o mesmo player minimizado; clique fora para
-                  recolher. A barra segue a posição escolhida acima.
+                  recolher. No modo Fixo a barra segue a posição escolhida acima;
+                  no Flexível, a última posição do player.
                 </p>
               </div>
             </div>

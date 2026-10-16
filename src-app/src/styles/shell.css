@@ -737,6 +737,55 @@
 }
 
 /* ============================================================
+   INÍCIO (DASHBOARD) — caber sem cortar/empurrar os botões v4.25.x
+   ============================================================
+   Em telas NÃO-fullscreen (viewport curto) o conteúdo estourava a altura
+   (a seção tem overflow:hidden) e os botões "selecionar treino", "TREINAR"
+   e "CICLO" ficavam cortados/baixos, dependendo da proporção do aparelho.
+   Aqui os espaçamentos escalam com a ALTURA da tela (vh) e o container pode
+   rolar como último recurso — nunca fica inalcançável. */
+.section-slide[data-section='dashboard'] .dash-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: clamp(6px, 1vh, 10px);
+}
+.section-slide[data-section='dashboard'] .dash-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Header calling-card: 200px fixos → encolhe em telas baixas. */
+.section-slide[data-section='dashboard']
+  .dash-header-calling-card.dash-profile-banner-card {
+  min-height: clamp(140px, 25vh, 200px) !important;
+  margin-bottom: clamp(6px, 1.4vh, 12px) !important;
+}
+
+/* Radar (quadrado): escala com a altura — era o maior consumidor de espaço. */
+.section-slide[data-section='dashboard'] .dash-radar-container {
+  min-height: 0 !important;
+}
+.section-slide[data-section='dashboard'] .dash-radar-container .radar-wrapper {
+  max-width: min(280px, 30vh) !important;
+}
+
+/* Card arena: menos respiro vertical em telas baixas. */
+.section-slide[data-section='dashboard'] .dash-arena-content {
+  padding-top: clamp(8px, 1.6vh, 14px);
+  padding-bottom: clamp(4px, 1vh, 8px);
+}
+.section-slide[data-section='dashboard'] .dash-arena-footer {
+  padding-top: clamp(8px, 1.6vh, 12px);
+  padding-bottom: clamp(8px, 1.6vh, 12px);
+}
+
+/* Ficha sugerida: os 90px fixos de topo empurravam os botões muito para
+   baixo; agora acompanham a altura da viewport. */
+.section-slide[data-section='dashboard'] .dash-suggested-workout-wrapper {
+  margin-top: clamp(10px, 3vh, 36px);
+}
+
+/* ============================================================
    BOTTOM NAV — MODO OVAL + ITEM MENU (v4.8.3-navbars)
    ============================================================
    Formato 'oval' (academia_pref_navbar_shape): curva neon no topo, port
@@ -1217,16 +1266,72 @@
   box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.2) !important;
   border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5) !important;
 }
-/* v4.22.0 → v4.24.0 — botão FOCO no seletor de visualização (substituiu o
-   "Coleção"). v4.24.0: suavizado — herda a paleta dos demais .view-btn
-   (accent roxo) em vez do vermelho destacado. */
+/* v4.22.0 → v4.25.x — botão FOCO no seletor de visualização (substituiu o
+   "Coleção"). v4.25.x: SEM destaque — fica IGUAL aos botões de Tabela/Grid
+   quando NÃO selecionados (mesma cor da base .view-btn), para não parecer
+   um estado ativo. */
 .view-btn--focus {
-  color: var(--primary-light, #a78bfa);
-  background: rgba(var(--primary-rgb, 139, 92, 246), 0.1);
+  color: var(--text-secondary);
+  background: transparent;
+  box-shadow: none;
 }
 .view-btn--focus:hover {
-  background: rgba(var(--primary-rgb, 139, 92, 246), 0.22);
+  background: var(--overlay);
+  color: var(--text);
+}
+
+/* v4.25.x — aba Exercícios: botão "+" (novo exercício) menos destacado —
+   cor NEUTRA igual ao botão de Filtros (.icon-btn), sem o laranja. */
+.btn-novo-ex-min {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  box-shadow: none;
+}
+.btn-novo-ex-min:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
   color: #fff;
+  box-shadow: none;
+}
+
+/* v4.25.x — menu de FILTROS em preto AMOLED (era roxo/glass). */
+.cr-dropdown-menu {
+  background: #0a0a0a;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 0 15px rgba(255, 255, 255, 0.02);
+}
+.cr-dropdown-menu::after {
+  border-color: transparent transparent #0a0a0a transparent;
+}
+.cr-dropdown-menu::before {
+  border-color: transparent transparent rgba(255, 255, 255, 0.1) transparent;
+}
+.cr-dropdown-header {
+  color: #fff;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  text-shadow: none;
+}
+.cr-dropdown-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+.cr-dropdown-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.cr-dropdown-item.active {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-left: 3px solid #fff !important;
+}
+.cr-dropdown-item.active:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+.cr-dropdown-item.active .cr-checkbox {
+  background: #fff !important;
+  border-color: #fff;
+  box-shadow: none;
+}
+.cr-dropdown-item.active .cr-checkbox::after {
+  border-color: #000;
 }
 /* Moldura da aba Exercícios (#tab-exercicios) e hairline da sub-navbar:
    tabs-subnav.css usa bg #150b24 + bordas roxas fixas — paleta settings. */

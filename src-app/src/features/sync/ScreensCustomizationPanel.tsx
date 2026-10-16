@@ -394,7 +394,7 @@ export function ScreensCustomizationPanel() {
               {/* Badge dinâmico (fingerprint vs shield) */}
               <span className="lock__badge">
                 {SvgFingerPill}
-                Desbloqueio • Academia
+                Desbloqueio • EVO FIT
               </span>
 
               {/* Avatar com aura giratória neon */}
@@ -405,17 +405,17 @@ export function ScreensCustomizationPanel() {
                 </div>
               </div>
 
-              <h2 className="lock__name">{nome || 'Academia'}</h2>
+              <h2 className="lock__name">{nome || 'EVO FIT'}</h2>
               <p className="lock__hint">
                 {biometric ? (
                   <>
                     Entrada preferencial com <strong>Impressão Digital</strong>. Toque no sensor
-                    biométrico para desbloquear o Academia.
+                    biométrico para desbloquear o EVO FIT.
                   </>
                 ) : (
                   <>
                     Este app está protegido. Digite sua <strong>senha de bloqueio</strong> para
-                    desbloquear o Academia.
+                    desbloquear o EVO FIT.
                   </>
                 )}
               </p>

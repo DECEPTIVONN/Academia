@@ -513,8 +513,8 @@ function SeasonEndPortal({
   const handleShare = () => {
     standaloneSound.playLevelUp();
     const shareText = monthly
-      ? `Subi para a Divisão ${newDivision} Mensal no Academia! Meu brilho ofusca tudo e todos!`
-      : `Subi para a Divisão ${newDivision} no Academia! Meu brilho ofusca tudo e todos!`;
+      ? `Subi para a Divisão ${newDivision} Mensal no EVO FIT! Meu brilho ofusca tudo e todos!`
+      : `Subi para a Divisão ${newDivision} no EVO FIT! Meu brilho ofusca tudo e todos!`;
     /* v4.14.0 — HTTPS (Vercel) habilita a Web Share API: abre a folha
        NATIVA do Android/Windows/iOS com o link do app. Sem suporte ou
        cancelada → clipboard + feedback como antes. */

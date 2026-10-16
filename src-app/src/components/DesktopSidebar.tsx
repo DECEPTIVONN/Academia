@@ -261,7 +261,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           <span className="side-hud__util-label">Trancar</span>
         </button>
 
-        <div className="side-hud__foot">Academia · v4.6</div>
+        <div className="side-hud__foot">EVO FIT · v4.6</div>
       </div>
     </aside>
   );

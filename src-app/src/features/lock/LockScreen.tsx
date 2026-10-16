@@ -331,7 +331,7 @@ export const LockScreen: React.FC = () => {
           </div>
         </div>
 
-        <h2 className="lock__name">{nome || 'Academia'}</h2>
+        <h2 className="lock__name">{nome || 'EVO FIT'}</h2>
         <p className="lock__hint">
           {isBiometricOnlyMode && autoBio ? (
             <>

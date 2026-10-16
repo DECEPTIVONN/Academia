@@ -16,6 +16,10 @@
  *    Fixo — ancorado à barra; no Flexível o painel fica livre após abrir.
  *  • Clicar fora do painel recolhe a gaveta.
  *
+ * v4.25.x — POSIÇÃO da barra: no Flexível ela nasce na extremidade MAIS
+ *  PRÓXIMA da última posição do player (lado + altura); no Fixo respeita a
+ *  âncora completa (topo/base + esquerda/direita).
+ *
  * Retroceder só aparece da 2ª música em diante (canPrev do audio-engine).
  *
  * Fica abaixo do MusicOverlay (z-index maior) e acima das telas comuns.
@@ -196,7 +200,12 @@ export function FloatingMiniPlayer() {
 
   const setDrawer = (v: boolean) => {
     setDrawerOpen(v);
-    if (!v) setDrawerPanelPos(null);
+    if (!v) {
+      /* v4.25.x — lembra onde o player estava ANTES de minimizar para a
+         barra nascer na extremidade mais próxima dele. */
+      if (drawerPanelPos) setDragPos(drawerPanelPos);
+      setDrawerPanelPos(null);
+    }
     try { localStorage.setItem(DRAWER_KEY, v ? '1' : '0'); } catch { /* storage off */ }
   };
 
@@ -277,8 +286,33 @@ export function FloatingMiniPlayer() {
     if (timedOut && !drawerOpen) return null;
     const thickness = getDrawerThickness();
     const barH = Math.round((window.innerHeight * getDrawerVpHeight()) / 100);
-    const barTop = Math.round((window.innerHeight - barH) / 2);
-    const side = anchorSide(pos);
+    const inset = 16;
+
+    /* v4.25.x — de onde a barra nasce:
+       • Flexível: extremidade MAIS PRÓXIMA da última posição do player
+         (dragPos — salva ao arrastar/soltar/minimizar) → alinha o LADO e a
+         ALTURA com o player. Sem arrasto ainda → usa a âncora escolhida.
+       • Fixo: respeita a âncora COMPLETA — 1ª letra (t/b) dá a altura
+         (topo/base) e a 2ª (l/r) dá o lado (esquerda/direita). */
+    let side: 'left' | 'right';
+    let barTop: number;
+    if (mode === 'flex' && dragPos) {
+      side = dragPos.x + 120 <= window.innerWidth / 2 ? 'left' : 'right';
+      barTop = Math.round(
+        Math.min(
+          window.innerHeight - barH - inset,
+          Math.max(inset, dragPos.y + 23 - barH / 2),
+        ),
+      );
+    } else if (mode === 'flex') {
+      side = anchorSide(pos);
+      barTop = Math.round((window.innerHeight - barH) / 2);
+    } else {
+      const isTop = pos === 'tl' || pos === 'tc' || pos === 'tr';
+      side = pos === 'tl' || pos === 'bl' ? 'left' : 'right';
+      barTop = isTop ? inset : Math.round(window.innerHeight - barH - inset);
+    }
+
     const anchored: Pos = drawerPanelPos ?? (side === 'left'
       ? { x: 16, y: barTop }
       : { x: window.innerWidth - 256, y: barTop });

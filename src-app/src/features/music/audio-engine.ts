@@ -31,6 +31,12 @@
  * Black Panther continuam aparecendo normalmente. Reproduções de uploads
  * contam playCount (Biblioteca → ordenar "Mais tocado").
  *
+ * v4.25.x — essas 3 faixas são tocadas por Web Audio API (AudioBufferSourceNode)
+ * em vez de <audio>: um elemento de mídia audível sempre gera a notificação
+ * do Chrome (o metadata nulo só esconde título/arte). Sem elemento de mídia,
+ * não há notificação. A faixa de treino (Black Panther) segue no <audio> e
+ * aparece normalmente.
+ *
  * Autoplay: os contextos são acionados por gestos do usuário (abrir treino,
  * concluir treino, abrir missões) — play() direto; falha → re-arm por gesto.
  */
@@ -98,9 +104,167 @@ let title = '';
 let artist = '';
 
 /* v4.22.0 — faixa do site tocando agora (ambiente ou dentro da fila).
-   MAIN, RESULT e Revenger Phoenix NÃO aparecem no player de notificação. */
+   MAIN, RESULT e Revenger Phoenix NÃO aparecem no player de notificação.
+   v4.25.x — essas 3 faixas tocam por Web Audio (sem <audio>) → sem notificação. */
 let currentSiteId: SiteTrackId | null = null;
 const MS_HIDDEN_SITES: ReadonlySet<SiteTrackId> = new Set<SiteTrackId>(['main', 'missions', 'result']);
+
+/* ═══════════ v4.25.x — Faixas OCULTAS via Web Audio API ═══════════
+   Um <audio> audível por >5s SEMPRE gera a notificação de mídia do Chrome
+   (o metadata nulo só remove título/arte). Para MAIN/Revenger Phoenix/RESULT
+   usamos AudioBufferSourceNode sobre um AudioContext — sem elemento de mídia
+   não há notificação. A faixa de treino (Black Panther) continua no <audio>.
+   Fallback: se o AudioContext não existir/falhar, cai no <audio> (melhor
+   esforço: metadata nulo). */
+type HiddenSite = 'main' | 'missions' | 'result';
+function isHiddenSite(id: string): id is HiddenSite {
+  return MS_HIDDEN_SITES.has(id as SiteTrackId);
+}
+
+let audioCtx: AudioContext | null = null;
+let waGain: GainNode | null = null;
+let waSource: AudioBufferSourceNode | null = null;
+/** Fonte oculta "atual" (mantida ao pausar, p/ retomar do ponto) + offset (s). */
+let waCurrentSrc: string | null = null;
+let waOffset = 0;
+let waStartedAt = 0;
+let waDuration = 0;
+/** Guarda de reentrada: só o start mais recente aplica (gestos rápidos). */
+let waStartSeq = 0;
+const waBuffers = new Map<string, AudioBuffer>();
+const waDecoding = new Map<string, Promise<AudioBuffer | null>>();
+
+function getAudioCtx(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  if (audioCtx) return audioCtx;
+  const Ctor: typeof AudioContext | undefined =
+    window.AudioContext ??
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctor) return null;
+  try {
+    audioCtx = new Ctor();
+    waGain = audioCtx.createGain();
+    waGain.connect(audioCtx.destination);
+  } catch {
+    audioCtx = null;
+    waGain = null;
+  }
+  return audioCtx;
+}
+
+function applyGain(): void {
+  if (!waGain) return;
+  try {
+    waGain.gain.value = Math.min(1, Math.max(0, getMusicVolume() / 100));
+  } catch {
+    /* gain indisponível */
+  }
+}
+
+/** Decodifica (uma vez) a faixa em um AudioBuffer, com cache em memória. */
+async function loadHiddenBuffer(src: string): Promise<AudioBuffer | null> {
+  const cached = waBuffers.get(src);
+  if (cached) return cached;
+  const pending = waDecoding.get(src);
+  if (pending) return pending;
+  const ctx = getAudioCtx();
+  if (!ctx) return null;
+  const p = (async () => {
+    try {
+      const res = await fetch(src, { cache: 'force-cache' });
+      const arr = await res.arrayBuffer();
+      const buf = await ctx.decodeAudioData(arr);
+      waBuffers.set(src, buf);
+      return buf;
+    } catch {
+      return null;
+    } finally {
+      waDecoding.delete(src);
+    }
+  })();
+  waDecoding.set(src, p);
+  return p;
+}
+
+/** Para a fonte oculta e esquece o ponto (troca de contexto). */
+function stopHiddenSource(): void {
+  if (waSource) {
+    try { waSource.onended = null; waSource.stop(); } catch { /* já parado */ }
+    try { waSource.disconnect(); } catch { /* ok */ }
+    waSource = null;
+  }
+  waCurrentSrc = null;
+  waOffset = 0;
+}
+
+/** Pausa a fonte oculta PRESERVANDO o ponto (retoma depois). */
+function pauseHidden(): void {
+  if (waSource && audioCtx) {
+    let off = waOffset + (audioCtx.currentTime - waStartedAt);
+    if (waDuration > 0) off = ((off % waDuration) + waDuration) % waDuration;
+    waOffset = Math.max(0, off);
+    try { waSource.onended = null; waSource.stop(); } catch { /* ok */ }
+    try { waSource.disconnect(); } catch { /* ok */ }
+    waSource = null;
+  }
+}
+
+/** Fim natural de uma faixa oculta (RESULT volta ao ambiente; fila avança). */
+function hiddenEnded(src: string): void {
+  if (waCurrentSrc !== src) return;
+  if (context === 'result') void playSite('main');
+  else if (context === 'workout-user') advanceUserQueue();
+}
+
+/**
+ * Toca uma faixa oculta via Web Audio.
+ *  • `true`  = tocando; `false` = não deu (retenta no gesto); `null` = outra
+ *    reprodução assumiu (o caller não deve mexer no estado).
+ */
+async function startHidden(next: HiddenSite, loop: boolean, offset: number): Promise<boolean | null> {
+  const seq = ++waStartSeq;
+  const conf = SITE_TRACKS[next];
+  const ctx = getAudioCtx();
+  if (!ctx) return startHiddenViaElement(conf.src, loop);
+  if (ctx.state !== 'running') {
+    try { await ctx.resume(); } catch { /* precisa de gesto */ }
+    if ((ctx.state as string) !== 'running') return false; // retoma no próximo gesto
+  }
+  const buf = await loadHiddenBuffer(conf.src);
+  if (seq !== waStartSeq) return null; // outro start assumiu
+  if (!buf) return startHiddenViaElement(conf.src, loop);
+
+  stopHiddenSource();
+  const node = ctx.createBufferSource();
+  node.buffer = buf;
+  node.loop = loop;
+  if (waGain) node.connect(waGain);
+  applyGain();
+  node.onended = () => hiddenEnded(conf.src);
+  const startAt = Math.max(0, Math.min(offset, Math.max(0, buf.duration - 0.05)));
+  node.start(0, startAt);
+  waSource = node;
+  waCurrentSrc = conf.src;
+  waDuration = buf.duration;
+  waStartedAt = ctx.currentTime;
+  waOffset = startAt;
+  return true;
+}
+
+/** Fallback (sem Web Audio): toca via <audio> — metadata já fica nulo. */
+async function startHiddenViaElement(src: string, loop: boolean): Promise<boolean> {
+  stopHiddenSource();
+  const el = getSiteAudio();
+  if (!el.src.endsWith(encodeURI(src)) && !el.src.endsWith(src)) el.src = src;
+  el.loop = loop;
+  applyVolume(el);
+  try {
+    await el.play();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /* Fila do usuário (treino) */
 let queue: PlaylistItem[] = [];
@@ -168,7 +332,7 @@ function emitState(): void {
 }
 
 /* ──────────────── Media Session API (notificação Android) ────────────────
-   Sem metadata, o Chrome mostra só "Fichas de Treino — Academia" + a URL e
+   Sem metadata, o Chrome mostra só "Fichas de Treino — EVO FIT" + a URL e
    SEM botões de avançar/retroceder. Com Metadata + action handlers, a
    notificação ganha nome, arte, duração/barra de progresso e prev/next. */
 
@@ -198,7 +362,7 @@ function updateMediaSession(): void {
     ms.metadata = new MediaMetadata({
       title,
       artist: artist || 'Evo Fit',
-      album: 'Academia Evo Fit',
+      album: 'Evo Fit',
       artwork: MS_ARTWORK,
     });
   } catch {
@@ -307,8 +471,13 @@ function armGestures(): void {
   if (gestureArmed) return;
   gestureArmed = true;
   gestureHandler = () => {
+    // v4.25.x — o AudioContext só retoma dentro de um gesto; depois a
+    // reprodução oculta (Web Audio) segue sozinha (não precisa re-armar).
+    const ctx = getAudioCtx();
+    if (ctx && ctx.state === 'suspended') void ctx.resume();
     resumeCurrent();
-    if (playing) disarmGestures();
+    const hiddenReady = context !== 'workout-user' && isHiddenSite(context) && !!ctx;
+    if (playing || hiddenReady) disarmGestures();
   };
   document.addEventListener('pointerdown', gestureHandler, true);
   document.addEventListener('keydown', gestureHandler, true);
@@ -328,7 +497,6 @@ function disarmGestures(): void {
 
 async function playSite(next: Exclude<MusicContext, 'workout-user'>): Promise<void> {
   const conf = SITE_TRACKS[next];
-  const el = getSiteAudio();
   context = next;
   title = conf.title;
   artist = conf.artist;
@@ -336,29 +504,45 @@ async function playSite(next: Exclude<MusicContext, 'workout-user'>): Promise<vo
 
   if (!isMusicEnabled()) {
     // Master desligado → nada do site toca.
-    el.pause();
+    stopHiddenSource();
+    getSiteAudio().pause();
     playing = false;
     emitState();
     return;
   }
 
-  if (!el.src.endsWith(encodeURI(conf.src)) && !el.src.endsWith(conf.src)) {
-    el.src = conf.src;
-  }
-  el.loop = conf.loop;
-  applyVolume(el);
-  try {
-    await el.play();
-    playing = true;
-    disarmGestures();
-  } catch {
-    playing = false;
-    armGestures(); // autoplay recusado — tenta no próximo gesto
+  if (isHiddenSite(next)) {
+    // MAIN/RESULT/Revenger Phoenix → Web Audio (sem notificação de mídia).
+    getSiteAudio().pause();
+    const offset = waCurrentSrc === conf.src ? waOffset : 0;
+    const ok = await startHidden(next, conf.loop, offset);
+    if (ok === null) return; // outra reprodução assumiu o estado
+    playing = ok;
+    if (ok) disarmGestures();
+    else armGestures();
+  } else {
+    // Faixa de TREINO (Black Panther) → <audio> normal (aparece na notificação).
+    stopHiddenSource();
+    const el = getSiteAudio();
+    if (!el.src.endsWith(encodeURI(conf.src)) && !el.src.endsWith(conf.src)) {
+      el.src = conf.src;
+    }
+    el.loop = conf.loop;
+    applyVolume(el);
+    try {
+      await el.play();
+      playing = true;
+      disarmGestures();
+    } catch {
+      playing = false;
+      armGestures(); // autoplay recusado — tenta no próximo gesto
+    }
   }
   emitState();
 }
 
 function pauseSite(): void {
+  pauseHidden();
   getSiteAudio().pause();
   if (context !== 'workout-user') playing = false;
 }
@@ -441,24 +625,36 @@ async function playQueueIndex(index: number): Promise<void> {
   }
 
   /* v4.21.0 — faixa fixa do site dentro de uma playlist (Evo Fit):
-     toca no siteAudio mas SEM loop, para a fila avançar no `ended`. */
+     toca SEM loop, para a fila avançar no `ended`.
+     v4.25.x — se for oculta (main/missions/result), usa Web Audio (sem
+     notificação); senão, o <audio> de sempre. */
   if (item.kind === 'site') {
     stopYt();
     const conf = SITE_TRACKS[item.siteId];
-    const el = getSiteAudio();
     getUserAudio().pause();
-    if (!el.src.endsWith(encodeURI(conf.src)) && !el.src.endsWith(conf.src)) {
-      el.src = conf.src;
-    }
-    el.loop = false;
-    applyVolume(el);
-    try {
-      await el.play();
-      playing = true;
-      disarmGestures();
-    } catch {
-      playing = false;
-      armGestures();
+    if (isHiddenSite(item.siteId)) {
+      getSiteAudio().pause();
+      const ok = await startHidden(item.siteId, false, 0);
+      if (ok === null) return; // outra reprodução assumiu o estado
+      playing = ok;
+      if (ok) disarmGestures();
+      else armGestures();
+    } else {
+      stopHiddenSource();
+      const el = getSiteAudio();
+      if (!el.src.endsWith(encodeURI(conf.src)) && !el.src.endsWith(conf.src)) {
+        el.src = conf.src;
+      }
+      el.loop = false;
+      applyVolume(el);
+      try {
+        await el.play();
+        playing = true;
+        disarmGestures();
+      } catch {
+        playing = false;
+        armGestures();
+      }
     }
     emitState();
     return;
@@ -482,8 +678,11 @@ function stopUserQueue(): void {
     currentObjectUrl = null;
   }
   stopYt();
-  // A fila pode estar tocando uma faixa do site no siteAudio → pausa ela.
-  if (queue[queueIndex]?.kind === 'site') getSiteAudio().pause();
+  // A fila pode estar tocando uma faixa do site (no <audio> OU via Web Audio).
+  if (queue[queueIndex]?.kind === 'site') {
+    getSiteAudio().pause();
+    stopHiddenSource();
+  }
   queue = [];
   queueIndex = 0;
 }
@@ -590,6 +789,7 @@ export function initAudioEngine(): void {
   window.addEventListener('academia:music-changed', () => {
     applyVolume(getSiteAudio());
     if (userAudio) applyVolume(userAudio);
+    applyGain();
     try {
       ytPlayer?.setVolume(Math.round(getMusicVolume()));
     } catch {
@@ -650,18 +850,23 @@ export function initAudioEngine(): void {
 
 /** Pausa/retoma manual (mini-player da interface de Músicas). */
 export function togglePlayback(): void {
-  const el =
-    context === 'workout-user'
-      ? queue[queueIndex]?.kind === 'site'
-        ? getSiteAudio()
-        : getUserAudio()
-      : getSiteAudio();
   if (playing) {
-    el.pause();
-    try {
-      ytPlayer?.pauseVideo();
-    } catch {
-      /* sem player */
+    if (waSource) {
+      // Faixa oculta (Web Audio): pausa preservando o ponto.
+      pauseHidden();
+    } else {
+      const el =
+        context === 'workout-user'
+          ? queue[queueIndex]?.kind === 'site'
+            ? getSiteAudio()
+            : getUserAudio()
+          : getSiteAudio();
+      el.pause();
+      try {
+        ytPlayer?.pauseVideo();
+      } catch {
+        /* sem player */
+      }
     }
     playing = false;
     disarmGestures();

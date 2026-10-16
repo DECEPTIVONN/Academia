@@ -99,8 +99,8 @@ export async function exportBackupData(): Promise<'shared' | 'downloaded'> {
       if (navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: 'Backup Academia',
-          text: 'Meu backup do Academia Workout Tracker',
+          title: 'Backup EVO FIT',
+          text: 'Meu backup do EVO FIT Workout Tracker',
         });
         return 'shared';
       }

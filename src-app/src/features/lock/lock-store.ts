@@ -106,11 +106,11 @@ export async function registerBiometric(): Promise<boolean> {
     const cred = await navigator.credentials.create({
       publicKey: {
         challenge,
-        rp: { name: 'Academia', id: window.location.hostname },
+        rp: { name: 'EVO FIT', id: window.location.hostname },
         user: {
           id: userId,
           name: 'academia-user',
-          displayName: 'Academia User',
+          displayName: 'EVO FIT User',
         },
         pubKeyCredParams: [
           { type: 'public-key', alg: -7 },

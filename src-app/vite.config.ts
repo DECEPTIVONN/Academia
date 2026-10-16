@@ -15,8 +15,8 @@ export default defineConfig({
       // precache: ele é cacheado sob demanda via runtimeCaching StaleWhileRevalidate.
       includeAssets: ['favicon.ico', 'assets/**/*', '!assets/sounds/**'],
       manifest: {
-        name: 'Academia Workout Tracker',
-        short_name: 'Academia',
+        name: 'EVO FIT Workout Tracker',
+        short_name: 'EVO FIT',
         description: 'Rastreador de treinos gamificado — offline-first com sincronização em nuvem',
         theme_color: '#8b5cf6',
         background_color: '#121212',

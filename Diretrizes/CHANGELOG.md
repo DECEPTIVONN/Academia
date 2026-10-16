@@ -21,6 +21,31 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.26.0] - 2026-10-16
+
+**Lote de 6 ajustes de UI/áudio + renome do produto para "EVO FIT"**: (1) as faixas **MAIN**, **Revenger Phoenix (Missões)** e **RESULT** passam a tocar por **Web Audio API** (`AudioBufferSourceNode`) em vez de `<audio>` — **não aparecem mais no player de notificação de mídia** do Chrome/Android (sem elemento de mídia não há notificação); a faixa de treino (**Black Panther**) e uploads/YouTube seguem no `<audio>` e aparecem normalmente; (2) o nome do produto passa de **Academia** para **EVO FIT** (título, manifest PWA, rodapé da sidebar, tela de bloqueio, Configurações, backup, compartilhamento, passkey e álbum musical); (3) o botão de **Modo Foco** deixa de se destacar (mesma cor dos botões Tabela/Grid **não selecionados**); (4) a aba **Treinos** abre em **MONTAR FICHA** (antes Exercícios), o botão **"+" de novo exercício** fica neutro (sem laranja) e **no mobile** o seletor de visualização é **removido** (fixa em **Modo Coleção**; no desktop os dois modos continuam) e os filtros passam do roxo para o **preto AMOLED**; (5) na aba **Início** (sem tela cheia) os botões **selecionar treino / TREINAR / ciclo** não caem mais abaixo da dobra em telas baixas (o layout comprime e rola); (6) a **barra da gaveta** do player vai para a **extremidade mais próxima da última posição** do player no modo **Flexível**, e no modo **Fixo** as âncoras **topo/base + esquerda/direita** passam a alterar de fato a posição. `system_map.json` → 3.5.68.
+
+### Added
+- **`audio-engine.ts` — motor Web Audio para as faixas ocultas**: `getAudioCtx`, `applyGain`, `loadHiddenBuffer` (decode com cache em memória de `AudioBuffer`), `startHidden`/`stopHiddenSource`/`pauseHidden`/`hiddenEnded`, `startHiddenViaElement` (fallback p/ `<audio>` quando não há `AudioContext`/decode falha) e `isHiddenSite`. `MS_HIDDEN_SITES` (`main`/`missions`/`result`) mantém `MediaSession.metadata` nulo.
+
+### Changed
+- **`audio-engine.ts`** — `playSite`, `playQueueIndex` (item `site`), `stopUserQueue`, `togglePlayback`, `armGestures` e o handler `academia:music-changed` foram religados ao motor Web Audio; comentário de cabeçalho documenta a estratégia (v4.25.x).
+- **Renome do produto → "EVO FIT"** — `index.html` (`<title>` "Fichas de Treino — EVO FIT"), `vite.config.ts` (manifest `name`/`short_name`), `DesktopSidebar.tsx`, `LockScreen.tsx`, `ScreensCustomizationPanel.tsx`, `SettingsFeature.tsx`, `backup.ts`, `LigasFeature.tsx`, `lock-store.ts` (passkey `rp.name`) e `audio-engine.ts` (álbum + comentário).
+- **`shell.css` — modo foco neutro** — `.view-btn--focus` fica igual ao `.view-btn` **não selecionado** (`color: var(--text-secondary)`, fundo transparente, sem shadow); hover neutro.
+- **`treinos-store.ts`** — `mainTab` padrão `'montar'` (aba **MONTAR FICHA**).
+- **`TreinosFeature.tsx`** — hook `useIsMobile` (`matchMedia('(max-width:767px)')`) + `effectiveExView`; o seletor de visualização some no mobile e a aba Exercícios força **Modo Coleção**.
+- **`shell.css` — aba Exercícios** — `.btn-novo-ex-min` neutro (mesma paleta do botão de filtros, sem o laranja) e overrides **AMOLED** dos `.cr-dropdown-*` (fundo `rgb(10,10,10)`).
+- **`shell.css` — Início responsivo** — overrides em `.dash-container` (`overflow-y:auto`), banner (`min-height:clamp(140px,25vh,200px)`), radar (`max-width:min(280px,30vh)`), paddings da arena e `margin-top` do card sugerido (`clamp(10px,3vh,36px)`).
+- **`FloatingMiniPlayer.tsx` — barra da gaveta** — modo **Flexível**: lado e posição vertical mais próximos da última posição arrastada do player (`academia_floating_player_pos_v1`); modo **Fixo**: respeita a âncora completa (topo/base + esquerda/direita); fechar a gaveta (`setDrawer(false)`) persiste `drawerPanelPos` em `dragPos`.
+- **`SettingsFeature.tsx`** — descrições das opções de **posição** e **gaveta** atualizadas.
+
+### Verificado
+- `npx tsc -b` 0 · `npx oxlint src` 0 warnings · `npm run build` OK (`dist/manifest.webmanifest` = `{"name":"EVO FIT Workout Tracker","short_name":"EVO FIT"}`).
+- Probe CDP headless (440×956): **17/17 PASS** — título/manifest **EVO FIT**; aba padrão **MONTAR FICHA**; mobile sem seletor de visualização + `exercicios-grid collection-grid`; "+" neutro; filtro AMOLED (`rgb(10,10,10)`); Início com **TREINAR/CICLO/selecionar** dentro da viewport; barra da gaveta (flex esq/dir; fixo tl/tr/bl/br); MAIN via Web Audio (`acCreated:1, decoded:1, elementPlayCalls:0`).
+- Verificação extra instrumentando `AudioContext`/`decodeAudioData`/`AudioBufferSourceNode.start`: **MAIN, MISSIONS e RESULT** → `AudioContext` criado + decode + `source.start`, com **0** chamadas de `HTMLMediaElement.play()`; **WORKOUT** (Black Panther) → **1** `play()` no `<audio>` (segue aparecendo na notificação).
+- **Modo Foco**: `.view-btn--focus` idêntico ao Tabela não selecionado (`rgb(204,204,204)`, fundo transparente, `box-shadow: none`).
+- **Desktop 1280px**: seletor de visualização presente (Grid + Coleção); **mobile 390/500px**: removido.
+
 ## [v4.25.0] - 2026-10-16
 
 **Botão do Início renomeado para "TREINAR" + autoscroll ao abrir a Ficha (pula o hero e aterrissa em "Progresso do treino")**: na aba **Início**, o CTA do card da ficha sugerida deixa de ser **"PRÓXIMO PASSO"** e passa a ser **"TREINAR"** (mesmo `id` `dashBtnStartText`, nenhum comportamento alterado). Ao abrir a interface de treino (overlay da Ficha), o scroller **`.ficha-overlay__scroll`** agora rola automaticamente até **"Progresso do treino"** (`.progress-wrapper`), deixando o **hero acima fora de vista** e os **exercícios em tela** — conforme a imagem de referência. O scroll roda em **passes curtos** (120/500/900/1500 ms, só corrige se o desvio > 2px) porque o conteúdo acima (timer/sugestão) assenta depois do start. `system_map.json` → 3.5.67.

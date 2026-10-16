@@ -45,7 +45,7 @@ interface TreinosState {
 }
 
 export const useTreinosStore = create<TreinosState>((set) => ({
-  mainTab: 'exercicios',
+  mainTab: 'montar', // v4.25.x — aba padrão passa a ser Montar Ficha (era exercicios)
   subTab: 'exercicios-lista',
   deckLetter: 'A',
   deckPage: 1,
