@@ -222,6 +222,27 @@ function hiddenEnded(src: string): void {
 }
 
 /**
+ * v4.29 — espera (limitado) o contexto virar 'running'. O `resume()` resolve
+ * ANTES de o estado mudar (1 tick), então checar `ctx.state` logo depois dele
+ * abortava o 1º toque.
+ */
+function waitCtxRunning(ctx: AudioContext, timeoutMs: number): Promise<void> {
+  if ((ctx.state as string) === 'running') return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      ctx.removeEventListener('statechange', finish);
+      window.clearTimeout(timer);
+      resolve();
+    };
+    const timer = window.setTimeout(finish, timeoutMs);
+    ctx.addEventListener('statechange', finish);
+  });
+}
+
+/**
  * Toca uma faixa oculta via Web Audio.
  *  • `true`  = tocando; `false` = não deu (retenta no gesto); `null` = outra
  *    reprodução assumiu (o caller não deve mexer no estado).
@@ -238,8 +259,19 @@ async function startHidden(next: HiddenSite, loop: boolean, offset: number): Pro
      fica pronto enquanto o app espera o 1º gesto. */
   const bufPromise = loadHiddenBuffer(conf.src);
 
-  if (ctx.state !== 'running') {
-    try { await ctx.resume(); } catch { /* precisa de gesto */ }
+  if ((ctx.state as string) !== 'running') {
+    /* v4.29 — o `resume()` pedido FORA de um gesto pode ficar pendente para
+       sempre no Chrome (nunca resolve nem rejeita). Com prazo, o play não
+       trava esperando e o gesto seguinte reinicia a tentativa. */
+    try {
+      await Promise.race([
+        ctx.resume(),
+        new Promise<void>((r) => { window.setTimeout(r, 1500); }),
+      ]);
+    } catch { /* precisa de gesto */ }
+    /* v4.29 — espera a virada p/ 'running' (ver waitCtxRunning): era o que
+       fazia o 1º toque abortar e a faixa só começar no 2º. */
+    await waitCtxRunning(ctx, 500);
     if ((ctx.state as string) !== 'running') {
       void bufPromise; // segue decodificando p/ o próximo gesto
       return false; // retoma no próximo gesto
@@ -482,6 +514,9 @@ function applyVolume(el: HTMLAudioElement): void {
   }
 }
 
+/** Eventos que valem como gesto p/ o autoplay (capture, em document). */
+const GESTURE_EVENTS = ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'] as const;
+
 function armGestures(): void {
   if (gestureArmed) return;
   gestureArmed = true;
@@ -491,21 +526,21 @@ function armGestures(): void {
     // v4.28 — só (re)dispara o play se ainda NÃO estiver tocando: o gesto
     // agora também fica armado no boot, e sem esta guarda o 1º toque
     // reiniciava a faixa que já estava tocando.
+    // v4.29 — NÃO desarma mais por "hiddenReady": só depois de a faixa tocar
+    // de fato. Antes, um gesto cujo resume() ainda não tinha virado 'running'
+    // desarmava os listeners e a MAIN nunca começava (precisava de 2º toque).
     const ctx = getAudioCtx();
     if (ctx && ctx.state === 'suspended') void ctx.resume();
     if (!playing) resumeCurrent();
-    const hiddenReady = context !== 'workout-user' && isHiddenSite(context) && !!ctx;
-    if (playing || hiddenReady) disarmGestures();
+    if (playing) disarmGestures();
   };
-  document.addEventListener('pointerdown', gestureHandler, true);
-  document.addEventListener('keydown', gestureHandler, true);
+  for (const ev of GESTURE_EVENTS) document.addEventListener(ev, gestureHandler, true);
 }
 
 function disarmGestures(): void {
   if (!gestureArmed) return;
   if (gestureHandler) {
-    document.removeEventListener('pointerdown', gestureHandler, true);
-    document.removeEventListener('keydown', gestureHandler, true);
+    for (const ev of GESTURE_EVENTS) document.removeEventListener(ev, gestureHandler, true);
     gestureHandler = null;
   }
   gestureArmed = false;

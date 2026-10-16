@@ -12,14 +12,18 @@
 
 > ⚠️ **Arquivo desatualizado por várias sessões.** Escrito ao fim da sessão de
 > 2026-10-08 (quando o `system_map` estava em **3.5.24**). O estado atual é
-> `system_map` **3.5.70** e o histórico completo entre `v4.0.15` e `v4.28.0` está
+> `system_map` **3.5.71** e o histórico completo entre `v4.0.15` e `v4.29.0` está
 > no `Diretrizes/CHANGELOG.md`. As seções 2–4 abaixo são **históricas** (fase de
 > paridade da migração React v4). Última sessão registrada aqui: **2026-10-16**
-> (`v4.28.0`) — 5 ajustes (latência das faixas ocultas: gesto de autoplay armado
-> já no boot + fim do download concorrente de MAIN.mp3; player de música opt-in
-> "Mostrar Player" com padrões da referência fixada; ícone da aba Social = o
-> mesmo de Liga; aba Treinos → Minha Ficha; splash custom com logo centralizado).
-> Detalhe no CHANGELOG.
+> (`v4.29.0`) — topo da aba **Início** no estilo **Clash Royale** (2 colunas:
+> banner menor + nome/clã à esquerda ~60%, botões + MISSÕES à direita ~40%, bases
+> alinhadas; outline branca da pílula de Missões removida; radar centralizado com
+> margens laterais) e **1º gesto do áudio** corrigido (o `resume()` do
+> `AudioContext` resolve antes de o estado virar `running` e a checagem imediata
+> abortava a MAIN no 1º toque). Sessão anterior (`v4.28.0`): latência das faixas
+> ocultas, player opt-in "Mostrar Player", ícone da aba Social = Liga, aba
+> Treinos → Minha Ficha e splash custom com logo centralizado. Detalhe no
+> CHANGELOG.
 
 ---
 

@@ -106,35 +106,39 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
     <div className="section-slide" data-section="dashboard">
       <div className="dash-container">
 
-        {/* ── HEADER CALLING CARD (#dashProfileCard) ── */}
-        <header
-          className="profile-banner dash-header-calling-card dash-profile-banner-card"
-          id="dashProfileCard"
-          data-banner={pc?.banner || legacy?.profileCustomization?.banner || 'roxo-neon'}
-          role="button"
-          tabIndex={0}
-          aria-label="Abrir perfil do usuário"
-          onClick={onOpenPerfil}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') onOpenPerfil();
-          }}
-        >
+        {/* ── TOPO estilo Clash Royale (v4.29.0): identidade à esquerda
+            (60%) e ações + MISSÕES à direita (40%), bases alinhadas.
+            A coluna esquerda inteira abre o Perfil (banner + nome/clã). ── */}
+        <div className="dash-top-row">
           <div
-            className="dash-header-overlay"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(to bottom, rgba(19, 19, 19, 0.1) 0%, rgba(19, 19, 19, 0.85) 100%)',
-              zIndex: 1,
-              pointerEvents: 'none',
+            className="dash-top-left"
+            role="button"
+            tabIndex={0}
+            aria-label="Abrir perfil do usuário"
+            onClick={onOpenPerfil}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') onOpenPerfil();
             }}
-          />
-
-          {/* Avatar + botões de topo */}
-          <div className="flex justify-between items-start z-20 w-full mb-6">
-            <div className="relative -mt-2">
+          >
+            <header
+              className="profile-banner dash-profile-banner-card"
+              id="dashProfileCard"
+              data-banner={pc?.banner || legacy?.profileCustomization?.banner || 'roxo-neon'}
+            >
               <div
-                className="profile-avatar dash-profile-avatar w-28 h-28 border-2 border-prestige-gold p-1 shadow-[0_0_20px_rgba(253,224,71,0.5)] bg-surface-container-low overflow-hidden rounded-2xl"
+                className="dash-header-overlay"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(to bottom, rgba(19, 19, 19, 0.05) 0%, rgba(19, 19, 19, 0.45) 100%)',
+                  zIndex: 1,
+                  pointerEvents: 'none',
+                }}
+              />
+
+              {/* Banner do perfil (avatar/emblema) */}
+              <div
+                className="profile-avatar dash-profile-avatar"
                 id="dashAvatar"
                 data-frame={emblemPc?.avatarFrame || ''}
               >
@@ -181,9 +185,22 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                   />
                 )}
               </div>
-            </div>
+            </header>
 
-            <div className="flex flex-col items-end gap-3 mt-1">
+            {/* Nome + clã (placeholder) — colados no pé da coluna, para
+                alinhar com a base da MISSÕES */}
+            <div className="dash-identity">
+              <span className="dash-identity__welcome">Bem vindo de volta,</span>
+              <h1 className="dash-identity__name" id="dashUserName">
+                {userName}
+              </h1>
+              <span className="dash-identity__clan">SEM CLÃ</span>
+            </div>
+          </div>
+
+          {/* Coluna direita: botões (social/notícias/menu) + MISSÕES */}
+          <div className="dash-top-right">
+            <div className="dash-top-btns">
               <div className="flex items-center gap-2">
                 <button
                   className="dash-header-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all"
@@ -218,26 +235,9 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Saudação + pílula de missões (progresso do ciclo) */}
-          <div className="flex justify-between items-end z-20 w-full mt-auto">
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-label-caps text-on-surface-variant text-xs tracking-widest uppercase">
-                  Bem vindo de volta,
-                </span>
-              </div>
-              <h1
-                className="font-['Rajdhani'] font-bold text-3xl text-white uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
-                id="dashUserName"
-              >
-                {userName}
-              </h1>
-            </div>
-
+            {/* Missões — colada no pé da coluna, sem a outline branca */}
             <div
-              className="flex flex-col items-end gap-1 ml-4"
+              className="dash-missions"
               id="dashBtnMissoes"
               role="button"
               onClick={(e) => {
@@ -245,31 +245,29 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                 onOverlayChange('missions');
               }}
             >
-              <div className="font-label-caps text-[9px] bg-black/70 px-2 py-0.5 rounded text-white/90 uppercase whitespace-nowrap mb-0.5 mr-0">
+              <div className="dash-missions__label font-label-caps text-[9px] bg-black/70 px-2 py-0.5 rounded text-white/90 uppercase whitespace-nowrap">
                 Missões
               </div>
-              <div className="dash-missions-pill flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-full py-2 pr-5 pl-2 border border-prestige-gold/40">
-                <div className="dash-missions-hexagon w-8 h-8 bg-[#d97706] hexagon flex items-center justify-center shadow-[0_0_10px_rgba(217,119,6,0.6)]">
-                  <span className="material-symbols-outlined text-white text-[18px]">crown</span>
+              <div className="dash-missions-pill flex items-center bg-black/60 backdrop-blur-md rounded-full">
+                <div className="dash-missions-hexagon bg-[#d97706] hexagon flex items-center justify-center shadow-[0_0_10px_rgba(217,119,6,0.6)]">
+                  <span className="material-symbols-outlined text-white">crown</span>
                 </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="dash-missions-val font-data-mono text-white text-sm" id="dashEmblemsValue">
-                      {cycle.done}/{cycle.total}
-                    </span>
-                    <div className="dash-missions-progress-bar w-32 h-3 bg-surface-variant rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-prestige-gold to-[#d97706] w-0 rounded-full shadow-[0_0_8px_rgba(253,224,71,0.5)] progress-fill"
-                        id="dashMissionsProgressFill"
-                        style={{ width: `${cycle.percent}%` }}
-                      />
-                    </div>
+                <div className="dash-missions-body">
+                  <span className="dash-missions-val font-data-mono text-white" id="dashEmblemsValue">
+                    {cycle.done}/{cycle.total}
+                  </span>
+                  <div className="dash-missions-progress-bar bg-surface-variant rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-prestige-gold to-[#d97706] rounded-full shadow-[0_0_8px_rgba(253,224,71,0.5)] progress-fill"
+                      id="dashMissionsProgressFill"
+                      style={{ width: `${cycle.percent}%` }}
+                    />
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* ── ARENA CARD (radar + barra de XP) ── */}
         <div className="dash-arena-card">

@@ -700,15 +700,11 @@
     padding: 20px 28px 48px;
   }
 
-  /* Banner: para de sangrar para fora do container (margin -18px do
-     mobile) e volta a ter cantos arredondados em todos os lados. */
-  .section-slide[data-section='dashboard']
-    .dash-container
-    .dash-header-calling-card.dash-profile-banner-card {
+  /* Linha do topo (banner + identidade | botões + MISSÕES): herda a linha
+     "banner" do grid. O header antigo, que ocupava esta área, saiu do
+     markup na v4.29.0. */
+  .section-slide[data-section='dashboard'] .dash-container .dash-top-row {
     grid-area: banner;
-    margin: 0 !important;
-    border-radius: 24px !important;
-    align-self: start;
   }
 
   /* Arena/radar ocupa a coluna direita inteira (span das 2 linhas);
@@ -754,13 +750,6 @@
   display: none;
 }
 
-/* Header calling-card: 200px fixos → encolhe em telas baixas. */
-.section-slide[data-section='dashboard']
-  .dash-header-calling-card.dash-profile-banner-card {
-  min-height: clamp(140px, 25vh, 200px) !important;
-  margin-bottom: clamp(6px, 1.4vh, 12px) !important;
-}
-
 /* Radar (quadrado): escala com a altura — era o maior consumidor de espaço. */
 .section-slide[data-section='dashboard'] .dash-radar-container {
   min-height: 0 !important;
@@ -783,6 +772,195 @@
    baixo; agora acompanham a altura da viewport. */
 .section-slide[data-section='dashboard'] .dash-suggested-workout-wrapper {
   margin-top: clamp(10px, 3vh, 36px);
+}
+
+/* ============================================================
+   INÍCIO — TOPO ESTILO CLASH ROYALE (v4.29.0)
+   ============================================================
+   O header deixa de ser um cartão full-width e vira DUAS colunas:
+
+     ┌────────────────────────────┬──────────────┐
+     │ banner do perfil    (~60%) │ botões (~40%)│
+     │ nome + clã                 │ MISSÕES      │
+     └────────────────────────────┴──────────────┘
+
+   As duas colunas têm a mesma altura e o último bloco de cada uma é
+   empurrado para o pé (`margin-top: auto`) → a base de "nome + clã" alinha
+   com a base da MISSÕES, como no Clash Royale. `.dash-header-calling-card`
+   saiu do header: sem ele as regras legadas do cartão de 200px
+   (legacy-style/treino/secoes/dashboard.css L1491) param de valer. O radar
+   passa a ser a "miniatura de arena": centralizado, com margens laterais. */
+
+.dash-top-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+
+.dash-top-left {
+  flex: 0 0 60%;
+  max-width: 60%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.dash-top-right {
+  flex: 1 1 40%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Banner do perfil: bem menor que o cartão antigo (min-height 200px).
+   `max-width: none` cancela o teto de 220px do desenho antigo de "header
+   row" (dashboard.css L56) — o banner acompanha os ~60% da coluna, como o
+   nome/clã logo abaixo. */
+.section-slide[data-section='dashboard'] .dash-top-left .dash-profile-banner-card {
+  position: relative;
+  width: 100%;
+  max-width: none !important;
+  flex: 0 0 auto;
+  height: clamp(78px, 12vh, 100px);
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 8px !important;
+  border: 0 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55) !important;
+  box-sizing: border-box;
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+/* Avatar/emblema dentro do banner menor. */
+.section-slide[data-section='dashboard']
+  .dash-top-left
+  .dash-profile-avatar.profile-avatar {
+  width: clamp(56px, 16vw, 74px) !important;
+  height: clamp(56px, 16vw, 74px) !important;
+  border-radius: 16px !important;
+  padding: 3px !important;
+  margin: 0 !important;
+  z-index: 2;
+}
+
+/* Nome + clã — colados no pé da coluna (alinhamento com a MISSÕES). */
+.dash-identity {
+  margin-top: auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.dash-identity__welcome {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.1;
+}
+.dash-identity__name {
+  margin: 1px 0 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.25rem, 6vw, 1.7rem);
+  line-height: 1.05;
+  color: #fff;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dash-identity__clan {
+  margin-top: 2px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Botões de topo (social/notícias/menu) — cabem na coluna de ~40%. */
+.dash-top-btns {
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 1.2vw, 8px);
+}
+.section-slide[data-section='dashboard'] .dash-top-btns .dash-header-btn {
+  width: clamp(30px, 9.6vw, 42px) !important;
+  height: clamp(30px, 9.6vw, 42px) !important;
+}
+.section-slide[data-section='dashboard'] .dash-top-btns .dash-header-btn span {
+  font-size: clamp(17px, 5vw, 21px) !important;
+}
+
+/* MISSÕES — colada no pé da coluna e sem a outline branca. */
+.dash-missions {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  cursor: pointer;
+}
+.dash-missions__label {
+  margin: 0 !important;
+}
+.dash-missions-pill {
+  /* v4.29.0 — sem `border`: `border-prestige-gold` não existe no tema TW4,
+     então a cor caía no fallback claro do preflight (era a "outline branca"). */
+  border: 0 !important;
+  width: 100%;
+  padding: 5px 10px 5px 5px !important;
+  gap: 6px !important;
+}
+.dash-missions-hexagon {
+  width: 26px !important;
+  height: 26px !important;
+  flex: 0 0 auto;
+}
+.dash-missions-hexagon span {
+  font-size: 15px !important;
+}
+.dash-missions-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dash-missions-val {
+  font-size: 0.78rem;
+  flex: 0 0 auto;
+}
+.dash-missions-progress-bar {
+  width: auto !important;
+  height: 11px !important;
+  flex: 1 1 auto;
+  min-width: 20px;
+}
+
+/* Radar/barra de XP = miniatura de arena do CR: centralizado e com margens
+   laterais (não ocupa toda a largura). No desktop o card é a coluna direita
+   do grid — lá nada muda. */
+@media (max-width: 1023px) {
+  .section-slide[data-section='dashboard'] .dash-arena-card {
+    width: min(88%, 380px);
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 /* ============================================================
