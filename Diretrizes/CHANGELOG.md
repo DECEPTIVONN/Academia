@@ -21,6 +21,19 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.24.1] - 2026-10-15
+
+**Altura da barra da gaveta com mínimo em 0,5% (antes 40%, exagerado) + restaurar as opções de Visibilidade do player ("Sempre ativo" / "Só após tocar") em todos os modos**: o slider **Altura da barra** passa a ir de **0,5% a 100%** (passo de **0,5%**, padrão **0,5% = barra discreta**) — antes o mínimo era 40%, deixando a barra enorme. O bloco **Visibilidade** estava preso dentro do modo **Fixo** e por isso sumia nos outros modos; agora aparece **sempre** (Flexível, Fixo e Gaveta), com as duas opções **Sempre ativo** e **Só após tocar** (o player/barra some após N s — padrão **7s** — da última troca de música, e reaparece ao começar outra). O **auto-ocultar** passou a valer também para o **Flexível** e para a **barra da gaveta** (antes só o Fixo). O seletor **Posição na tela** agora aparece quando o modo é **Fixo** ou quando a **Gaveta** está ligada (a barra nasce do lado da âncora). `system_map.json` → 3.5.66.
+
+### Changed
+- **`player-prefs.ts`** — `getDrawerVpHeight`/`setDrawerVpHeight`: faixa **0,5–100%** com passo **0,5** (arredonda para meio ponto) e **padrão 0,5**; antes 40–100% e padrão 62.
+- **`SettingsFeature.tsx`** — slider de **Altura** com `min=0,5 / max=100 / step=0,5` e nota atualizada; bloco **Visibilidade** movido para **fora** de `{playerMode === 'fixed' && ...}` (vale para todos os modos); label **"Só após tocar"** (antes "Só após trocar"); **Posição na tela** exibida quando `playerMode === 'fixed' || drawerOn`.
+- **`FloatingMiniPlayer.tsx`** — o timer de **"Só após tocar"** roda sempre (`persist === 'timed'`), ocultando **Fixo, Flexível e a barra da gaveta**; `flexVisible` e o branch da gaveta respeitam `timedOut`.
+
+### Verificado
+- `npx tsc --noEmit` 0 · `npx oxlint` 0 · `npx vite build` OK.
+- Probe CDP (Configurações → Áudio e Música): **20/20 PASS** — card presente; "Visibilidade" com "Sempre ativo"/"Só após tocar" em Flexível; "Posição na tela" oculta em Flexível sem gaveta e visível com a gaveta ligada; bloco "Gaveta (barra deslizante)"; sliders de espessura (3–14) e altura (`min=0.5, step=0.5, value=0.5`); barra renderiza com altura pequena; **"Só após tocar"** oculta o Flexível e a barra da gaveta após 3s e mostra no início. Screenshots conferidos.
+
 ## [v4.24.0] - 2026-10-15
 
 **Player unificado (Flexível = pastilha do Fixo, arrastável) + nova GAVETA (barra deslizante) + Retroceder só da 2ª música em diante + botão FOCO suavizado**: o modo **Flexível** passa a usar o **mesmo design do Fixo** (mesma cor/borda/accent roxo, label "TOCANDO AGORA", mini-controles) — a única diferença é que o Flexível é **arrastável** e tem "×"; o modo **Fixo** permanece **inalterado** (fixo na âncora, sem arrasto). Nasce a **GAVETA** (`Configurações → Áudio e Música → Gaveta`), uma **apresentação que convive com ambos os modos** (eles só definem a posição da âncora): uma **barra accent fina na borda da tela** (esquerda/direita conforme a âncora) que, ao ser **deslizada para dentro** (ou ativada por teclado), abre o **mesmo player minimizado** ancorado à barra — no Flexível o painel fica livre para arrastar depois; **clicar fora** recolhe. Espessura (3–14px, padrão 5) e altura (40–100% da viewport, padrão 62 ≈ altura do player fixo) configuráveis. **Retroceder** some na **1ª música** e aparece **da 2ª em diante** (`canPrev` do `audio-engine`, aplicado na pastilha e na barra do treino). Botão **FOCO** suavizado para a paleta accent (antes vermelho destacado). `system_map.json` → 3.5.65.

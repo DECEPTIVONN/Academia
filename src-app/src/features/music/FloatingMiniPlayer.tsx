@@ -187,12 +187,12 @@ export function FloatingMiniPlayer() {
     }
   }, [state.title]);
 
-  /* Fixo + "timed": some N segundos após a última troca */
+  /* "timed": some N segundos após a última troca (Fixo, Flexível e Gaveta) */
   useEffect(() => {
-    if (mode !== 'fixed' || persist !== 'timed' || timedOut) return undefined;
+    if (persist !== 'timed' || timedOut) return undefined;
     const t = window.setTimeout(() => setTimedOut(true), hideSecs * 1000);
     return () => window.clearTimeout(t);
-  }, [mode, persist, hideSecs, timedOut, state.title, state.playing]);
+  }, [mode, persist, hideSecs, timedOut, drawerOn, state.title, state.playing]);
 
   const setDrawer = (v: boolean) => {
     setDrawerOpen(v);
@@ -264,15 +264,17 @@ export function FloatingMiniPlayer() {
     el.addEventListener('pointercancel', onUp);
   };
 
-  /* Visibilidade base: Flexível respeta hidden; Fixo respeta timedOut */
+  /* Visibilidade base: "timed" (timedOut) oculta qualquer modo; Flexível
+     ainda respeta o "×" (hidden). */
   const baseVisible = state.title !== '' || state.playing;
-  const flexVisible = mode === 'flex' && !hidden;
+  const flexVisible = mode === 'flex' && !hidden && !timedOut;
   if (!baseVisible) return null;
 
   /* ─────────── GAVETA ligada: barra + (opcional) painel expandido ───────────
      A gaveta substitui a pastilha; ela usa a POSIÇÃO (pos) como âncora. */
   if (drawerOn) {
-    if (mode === 'fixed' && timedOut && !drawerOpen) return null;
+    /* "Só após tocar": barra e painel desaparecem juntos após N s. */
+    if (timedOut && !drawerOpen) return null;
     const thickness = getDrawerThickness();
     const barH = Math.round((window.innerHeight * getDrawerVpHeight()) / 100);
     const barTop = Math.round((window.innerHeight - barH) / 2);

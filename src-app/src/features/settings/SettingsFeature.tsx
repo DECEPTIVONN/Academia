@@ -588,7 +588,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     setDrawerThickness(clamped);
   };
   const changeDrawerVp = (pct: number) => {
-    const clamped = Math.min(100, Math.max(40, Math.round(pct)));
+    const clamped = Math.min(100, Math.max(0.5, Math.round(pct * 2) / 2));
     setDrawerVpState(clamped);
     setDrawerVpHeight(clamped);
   };
@@ -2230,13 +2230,16 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               </button>
             </div>
 
-            {playerMode === 'fixed' && (
+            {(playerMode === 'fixed' || drawerOn) && (
               <>
                 <div className="set-card__head" style={{ marginTop: 22, marginBottom: 10 }}>
                   <div>
                     <h3 className="set-card__title" style={{ fontSize: '0.95rem' }}>
                       Posição na tela
                     </h3>
+                    <p className="set-card__desc">
+                      Onde o player fica (e de que lado nasce a barra da gaveta).
+                    </p>
                   </div>
                 </div>
                 <div className="set-player-positions">
@@ -2251,87 +2254,87 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                     </button>
                   ))}
                 </div>
-
-                <div className="set-card__head" style={{ marginTop: 22, marginBottom: 10 }}>
-                  <div>
-                    <h3 className="set-card__title" style={{ fontSize: '0.95rem' }}>
-                      Visibilidade
-                    </h3>
-                    <p className="set-card__desc">
-                      Sempre ativo, ou só alguns segundos após trocar de música.
-                    </p>
-                  </div>
-                </div>
-                <div className="set-player-modes">
-                  <button
-                    type="button"
-                    className={`set-player-mode${playerPersist === 'always' ? ' set-player-mode--on' : ''}`}
-                    onClick={() => changePlayerPersist('always')}
-                  >
-                    <span className="set-player-mode__name">Sempre ativo</span>
-                    <span className="set-player-mode__desc">Fica visível o tempo todo</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`set-player-mode${playerPersist === 'timed' ? ' set-player-mode--on' : ''}`}
-                    onClick={() => changePlayerPersist('timed')}
-                  >
-                    <span className="set-player-mode__name">Só após trocar</span>
-                    <span className="set-player-mode__desc">
-                      Some após {playerSecs}s da última troca de música
-                    </span>
-                  </button>
-                </div>
-
-                {playerPersist === 'timed' && (
-                  <div style={{ marginTop: 16 }}>
-                    <div
-                      className="set-card__head"
-                      style={{ marginBottom: 8 }}
-                    >
-                      <div>
-                        <h3 className="set-card__title" style={{ fontSize: '0.9rem' }}>
-                          Tempo visível
-                        </h3>
-                      </div>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontFamily: 'var(--font-mono, monospace)',
-                          fontWeight: 700,
-                          color: 'var(--primary, #f97316)',
-                          background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)',
-                          padding: '4px 10px',
-                          borderRadius: 8,
-                          border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
-                        }}
-                      >
-                        {playerSecs}s
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="3"
-                      max="30"
-                      step="1"
-                      value={playerSecs}
-                      onChange={(e) => changePlayerSecs(Number(e.target.value))}
-                      style={{
-                        width: '100%',
-                        accentColor: 'var(--primary, #f97316)',
-                        background: 'rgba(24, 24, 27, 0.8)',
-                        height: 8,
-                        borderRadius: 8,
-                        cursor: 'pointer',
-                      }}
-                    />
-                    <p className="set-note" style={{ marginTop: 8 }}>
-                      Quantos segundos a pastilha fica visível após a última troca
-                      de música (3 a 30s).
-                    </p>
-                  </div>
-                )}
               </>
+            )}
+
+            <div className="set-card__head" style={{ marginTop: 22, marginBottom: 10 }}>
+              <div>
+                <h3 className="set-card__title" style={{ fontSize: '0.95rem' }}>
+                  Visibilidade
+                </h3>
+                <p className="set-card__desc">
+                  Sempre ativo, ou só alguns segundos após trocar de música.
+                </p>
+              </div>
+            </div>
+            <div className="set-player-modes">
+              <button
+                type="button"
+                className={`set-player-mode${playerPersist === 'always' ? ' set-player-mode--on' : ''}`}
+                onClick={() => changePlayerPersist('always')}
+              >
+                <span className="set-player-mode__name">Sempre ativo</span>
+                <span className="set-player-mode__desc">Fica visível o tempo todo</span>
+              </button>
+              <button
+                type="button"
+                className={`set-player-mode${playerPersist === 'timed' ? ' set-player-mode--on' : ''}`}
+                onClick={() => changePlayerPersist('timed')}
+              >
+                <span className="set-player-mode__name">Só após tocar</span>
+                <span className="set-player-mode__desc">
+                  Some após {playerSecs}s da última troca de música
+                </span>
+              </button>
+            </div>
+
+            {playerPersist === 'timed' && (
+              <div style={{ marginTop: 16 }}>
+                <div
+                  className="set-card__head"
+                  style={{ marginBottom: 8 }}
+                >
+                  <div>
+                    <h3 className="set-card__title" style={{ fontSize: '0.9rem' }}>
+                      Tempo visível
+                    </h3>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontFamily: 'var(--font-mono, monospace)',
+                      fontWeight: 700,
+                      color: 'var(--primary, #f97316)',
+                      background: 'rgba(var(--primary-rgb, 249, 115, 22), 0.1)',
+                      padding: '4px 10px',
+                      borderRadius: 8,
+                      border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
+                    }}
+                  >
+                    {playerSecs}s
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="3"
+                  max="30"
+                  step="1"
+                  value={playerSecs}
+                  onChange={(e) => changePlayerSecs(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    accentColor: 'var(--primary, #f97316)',
+                    background: 'rgba(24, 24, 27, 0.8)',
+                    height: 8,
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                  }}
+                />
+                <p className="set-note" style={{ marginTop: 8 }}>
+                  Quantos segundos o player fica visível após a última troca
+                  de música (3 a 30s).
+                </p>
+              </div>
             )}
 
             {/* ─────────── v4.24.0 — GAVETA (convive com Flexível/Fixo) ─────────── */}
@@ -2429,9 +2432,9 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 </div>
                 <input
                   type="range"
-                  min="40"
+                  min="0.5"
                   max="100"
-                  step="1"
+                  step="0.5"
                   value={drawerVp}
                   onChange={(e) => changeDrawerVp(Number(e.target.value))}
                   style={{
@@ -2444,7 +2447,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   }}
                 />
                 <p className="set-note" style={{ marginTop: 8 }}>
-                  Altura em % da tela (padrão 62% ≈ altura do player fixo).
+                  Altura em % da tela (0,5 a 100; padrão 0,5 = barra discreta).
                 </p>
               </div>
             )}

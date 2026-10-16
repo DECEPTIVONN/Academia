@@ -16,7 +16,7 @@
  * v4.24.0 — GAVETA (convive com flex/fixed, que só definem a POSIÇÃO):
  *  • academia_pref_player_drawer       'on' | 'off' (padrão off)
  *  • academia_pref_player_drawer_thick espessura da barra em px (3–14, padrão 5)
- *  • academia_pref_player_drawer_vp    altura da barra em % da viewport (40–100, padrão 62)
+ *  • academia_pref_player_drawer_vp    altura da barra em % da viewport (0,5–100, passo 0,5, padrão 0,5)
  */
 
 export type PlayerMode = 'flex' | 'fixed';
@@ -118,14 +118,15 @@ export function setDrawerThickness(px: number): void {
   emitPrefsChanged();
 }
 
-/** Altura da barra como % da viewport (40–100; padrão 62 ≈ altura do player fixo). */
+/** Altura da barra como % da viewport (0,5–100; passo 0,5; padrão 0,5 = discreta). */
+const clampVp = (pct: number) => Math.min(100, Math.max(0.5, Math.round(pct * 2) / 2));
 export function getDrawerVpHeight(): number {
   const n = Number(read(K_DRAWER_VPERSIST));
-  return Number.isFinite(n) ? Math.min(100, Math.max(40, Math.round(n))) : 62;
+  return Number.isFinite(n) ? clampVp(n) : 0.5;
 }
 
 export function setDrawerVpHeight(pct: number): void {
-  write(K_DRAWER_VPERSIST, String(Math.min(100, Math.max(40, Math.round(pct)))));
+  write(K_DRAWER_VPERSIST, String(clampVp(pct)));
   emitPrefsChanged();
 }
 
