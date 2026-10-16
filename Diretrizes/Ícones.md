@@ -227,14 +227,15 @@ Referência rápida dos ícones já implementados. Use os mesmos paths para cons
 <line x1="3" y1="6" x2="21" y2="6"/>
 <path d="M16 10a4 4 0 01-8 0"/>
 
-<!-- Social (escudo + 3 pessoas — estilo Clash Royale) -->
-<path d="M12 2.4l7.2 2.7v6c0 4.6-3 8-7.2 10.4-4.2-2.4-7.2-5.8-7.2-10.4v-6z"/>
-<circle cx="12" cy="11.1" r="1.5"/>
-<path d="M9.2 16.7a2.8 2.8 0 015.6 0"/>
-<circle cx="7.6" cy="10" r="1.15"/>
-<path d="M5.9 15.5a1.7 1.7 0 013.4 0"/>
-<circle cx="16.4" cy="10" r="1.15"/>
-<path d="M14.7 15.5a1.7 1.7 0 013.4 0"/>
+<!-- Social (espadas cruzadas = mesmo ícone de "Liga"; Swords/Lucide) -->
+<polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/>
+<line x1="13" y1="19" x2="19" y2="13"/>
+<line x1="16" y1="16" x2="20" y2="20"/>
+<line x1="19" y1="21" x2="21" y2="19"/>
+<polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/>
+<line x1="5" y1="14" x2="9" y2="18"/>
+<line x1="7" y1="17" x2="4" y2="20"/>
+<line x1="3" y1="19" x2="5" y2="21"/>
 ```
 
 ### Ações

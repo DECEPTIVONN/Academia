@@ -56,6 +56,7 @@ import {
   getDrawerThickness,
   getDrawerVpHeight,
   getPlayerDrawer,
+  getPlayerEnabled,
   getPlayerHideSecs,
   getPlayerMode,
   getPlayerPersist,
@@ -64,6 +65,7 @@ import {
   setDrawerThickness,
   setDrawerVpHeight,
   setPlayerDrawer,
+  setPlayerEnabled,
   setPlayerHideSecs,
   setPlayerMode,
   setPlayerPersist,
@@ -444,6 +446,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     () => readLS(PREF_KEYS.workoutMusic) !== 'false'
   );
   /* v4.22.0 — miniplayer: modo (flexível/fixo), posição fixa e visibilidade */
+  const [playerEnabled, setPlayerEnabledState] = useState(() => getPlayerEnabled());
   const [playerMode, setPlayerModeState] = useState<PlayerMode>(() => getPlayerMode());
   const [playerPos, setPlayerPosState] = useState<PlayerPos>(() => getPlayerPos());
   const [playerPersist, setPlayerPersistState] = useState<PlayerPersist>(() => getPlayerPersist());
@@ -560,6 +563,11 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   };
 
   /* v4.22.0 — handlers do miniplayer (prefs + re-render em sessão) */
+  /* v4.28.0 — interruptor mestre do widget (padrão desligado). */
+  const changePlayerEnabled = (on: boolean) => {
+    setPlayerEnabledState(on);
+    setPlayerEnabled(on);
+  };
   const changePlayerMode = (m: PlayerMode) => {
     setPlayerModeState(m);
     setPlayerMode(m);
@@ -2183,11 +2191,12 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 <div className="set-card__eyebrow">SOM • PLAYER</div>
                 <h3 className="set-card__title">Player de Música</h3>
                 <p className="set-card__desc">
-                  No modo <strong>Flexível</strong> o player é uma pastilha
-                  flutuante que você arrasta. No modo <strong>Fixo</strong> ele
-                  fica parado na posição que você escolher. Ambos usam o mesmo
-                  visual. A <strong>Gaveta</strong> esconde o player numa barra
-                  na lateral: deslize pra dentro pra abrir.
+                  O player fica <strong>oculto por padrão</strong> — ligue em
+                  "Mostrar Player" para exibi-lo. No modo <strong>Fixo</strong>{" "}
+                  ele fica parado na posição escolhida; no{" "}
+                  <strong>Flexível</strong> é uma pastilha que você arrasta. A{" "}
+                  <strong>Gaveta</strong> esconde o player numa barra na
+                  lateral: deslize pra dentro pra abrir.
                 </p>
               </div>
               <span
@@ -2202,11 +2211,39 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   border: '1px solid rgba(var(--primary-rgb, 249, 115, 22), 0.2)',
                 }}
               >
-                {playerMode === 'fixed' ? 'Fixo' : 'Flexível'}
-                {drawerOn ? ' • Gaveta' : ''}
+                {!playerEnabled
+                  ? 'Desativado'
+                  : `${playerMode === 'fixed' ? 'Fixo' : 'Flexível'}${drawerOn ? ' • Gaveta' : ''}`}
               </span>
             </div>
 
+            {/* v4.28.0 — interruptor mestre do WIDGET do player (padrão
+                desligado). Não afeta a música do app ("Tocar Música"). */}
+            <div className="set-toggles" style={{ marginBottom: 4 }}>
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgVolume}</span>
+                  <div>
+                    <span className="set-toggle__label">Mostrar Player</span>
+                    <span className="set-toggle__desc">
+                      Exibe o player flutuante no app. Desligado, ele fica
+                      oculto — a música continua seguindo "Tocar Música".
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={playerEnabled}
+                    onChange={(e) => changePlayerEnabled(e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+            </div>
+
+            {playerEnabled && (
+              <>
             <div className="set-player-modes">
               <button
                 type="button"
@@ -2450,9 +2487,12 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   }}
                 />
                 <p className="set-note" style={{ marginTop: 8 }}>
-                  Altura em % da tela (0,5 a 100; padrão 0,5 = barra discreta).
+                  Altura em % da tela (0,5 a 100; padrão 5,5 = barra de meia
+                  tela).
                 </p>
               </div>
+            )}
+              </>
             )}
           </section>
 

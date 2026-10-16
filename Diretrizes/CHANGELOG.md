@@ -21,7 +21,34 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
-## [v4.27.0] - 2026-10-16
+## [v4.28.0] - 2026-10-16
+
+**Lote de 5 ajustes (latência do áudio / player opt-in / ícone Social / Treinos / splash)**: (1) as faixas ocultas **MAIN, Missões e RESULT** voltam a começar **no 1º toque** — o gesto de autoplay passa a ser armado **já no boot** (um `resume()` pedido **fora** de um gesto pode ficar pendente no Chrome, e a trilha só começava quando outra ação — abrir/fechar Missões etc. — redisparava o play) e o módulo legado **não cria mais** um `<audio preload="auto">` de `MAIN.mp3` (7,2 MB) concorrendo com o `fetch`/decode do motor; (2) o **player flutuante vira opt-in**: novo interruptor **"Mostrar Player"** (Configurações → Áudio e Música → *Player de Música*), **desligado por padrão**, e ao ligar os padrões passam a ser os da **referência fixada** (**Fixo • Esquerda centro • Só após tocar • 5s • Gaveta Ligada • 3px • 5,5%**); (3) o ícone da aba **Social** passa a ser o **mesmo de "Liga"** (espadas cruzadas / *Swords*); (4) na aba **Treinos**, **MONTAR FICHA → MINHA FICHA**; (5) com **imagem personalizada** o logo **EVO FIT / WORKOUT TRACKER** volta a ficar **centralizado** (como no splash padrão), com a barra de progresso fixa no rodapé. `system_map.json` → **3.5.70**.
+
+### Added
+- **`player-prefs.ts` — `academia_pref_player_enabled`**: novas `getPlayerEnabled()` / `setPlayerEnabled()` (valor `'on' | 'off'`, **padrão `'off'`** — widget oculto).
+- **`SettingsFeature.tsx` — interruptor "Mostrar Player"**: bloco `set-toggles`/`set-switch` no topo do card *Player de Música*, ligado a `changePlayerEnabled`; com o widget desligado o card mostra **só o interruptor** e o badge vira **"Desativado"** (os controles detalhados só aparecem com o player ligado).
+
+### Changed
+- **`player-prefs.ts` — novos padrões (referência fixada)**: `getPlayerMode` → **`fixed`**; `getPlayerPos` → **`tc`** (Esquerda centro); `getPlayerPersist` → **`timed`** (Só após tocar); `getPlayerHideSecs` → **5**; `getPlayerDrawer` → **`on`** (Ligada); `getDrawerThickness` → **3**; `getDrawerVpHeight` → **5,5**. Valores antigos válidos continuam valendo — só o *default* mudou. **Fix**: `getDrawerThickness`/`getDrawerVpHeight` agora tratam `null` explicitamente (`Number(null) === 0` caía no ramo "finito" e a altura saía sempre **0,5**, ignorando o padrão).
+- **`FloatingMiniPlayer.tsx`** — gate `if (!getPlayerEnabled()) return null;` (widget some por completo quando desligado); cabeçalho documenta o opt-in e o modo **Fixo** como padrão. A música **não** é afetada (segue "Tocar Música").
+- **`audio-engine.ts` — latência/autoplay**: `initAudioEngine` chama `armGestures()` já no boot (com a trilha), e o handler de gesto só redispara `resumeCurrent()` sob `if (!playing)` — com o gesto armado no boot, sem essa guarda o 1º toque reiniciava a faixa que já estava tocando.
+- **`background-music.ts` — fim do download concorrente**: `initBackgroundMusic` sai **antes** de `getAudio()` quando o motor tomou a posse (`playbackClaimed`), e `setMusicVolume` só mexe no elemento legado sem posse — evita criar o `<audio preload="auto">` de `MAIN.mp3` (7,2 MB) em paralelo ao `fetch`/decode do motor no boot.
+- **`BottomNav.tsx` / `nav-section-items.tsx` — ícone Social**: escudo com 3 pessoas → **espadas cruzadas** (paths do *Swords*/Lucide v0.546, *stroke* `currentColor`, viewBox 24), o **mesmo ícone de "Liga"** dentro da aba Social. `Diretrizes/Ícones.md` (seção Navegação) atualizado.
+- **`TreinosFeature.tsx` / `FichaFeature.tsx` — rótulo**: aba **MINHA FICHA** (antes MONTAR FICHA — `data-tab="montar"`, id `tabBtnMontar` e chave interna `montar` mantidos); texto da ficha vazia ("Vá em Minha Ficha…") e descrição da seção no `nav-section-items` atualizados.
+- **`index.html` (splash com imagem personalizada)**: `.splash-screen--custom .splash-screen__content` passa a `justify-content: center` (sem `padding-top`/gradiente de topo) → **logo centralizado** como no splash padrão; `.splash-screen__bar-wrap` vira `position: absolute` no rodapé (barra de progresso segue colada embaixo).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK (PWA 112 entradas).
+- Probe CDP headless (440×956, `%TEMP%\opencode\probe3.mjs`): **26/26 PASS**.
+  - **(T-A)** boot pré-decodifica MAIN/Missões **sem gesto** (`AudioContext:1`, `decodeAudioData:2`) e **sem** `<audio>` legado de `MAIN.mp3` (lista vazia — prova o fim do download concorrente); após um **gesto real via `Input.dispatchMouseEvent`** (trusted), `AudioBufferSourceNode.start` dispara em **457 ms** (buffer já pronto) e **0 `<audio>` tocando** (segue tudo por Web Audio).
+  - **(T-B)** com **localStorage limpo** o interruptor **"Mostrar Player"** nasce **desmarcado**, os controles detalhados ficam ocultos e o badge mostra **"Desativado"**; ao ligar, os selecionados são **Fixo / Esquerda centro / Só após tocar** com **Tempo visível 5s**, **Gaveta Ligada**, **Espessura 3px** e **Altura 5,5%**; o widget `.fmp` **não** existe com o player off e **existe** com o player on.
+  - **(T-C)** `#bnavSocial` traz as **duas `polyline`** das espadas (`14.5 17.5 …` e `14.5 6.5 …`), **6 `<line>`** e **nenhum `path`** (escudo removido); conferido também **visualmente** (o ícone bate com o de "LIGA" na linha de sub-abas de Social).
+  - **(T-D)** abas da seção Treinos = **`["PERSONALIZAR","MINHA FICHA"]`** (sem "MONTAR FICHA").
+  - **(T-E)** splash custom: `logoCY = 478` de `vh 956` (**centralizado**), `.splash-screen__bar-wrap` com `position:absolute` e `bottom = 956` (rodapé), saudação com `display:none`.
+- Strings no bundle (`dist/assets/*.js`): `MINHA FICHA`/`Mostrar Player` presentes; `MONTAR FICHA` e o `path` do escudo (`M12 2.4l7.2`) ausentes.
+
+
 
 **Lote de 6 ajustes (áudio / posições / gaveta / ícone Social / Treinos / splash)**: (1) as faixas ocultas **MAIN, Missões e RESULT** passam a ser **pré-decodificadas** — o `decodeAudioData` começa **antes** do `resume()` do `AudioContext` (Missões no boot, RESULT ao iniciar o treino) — então **não "demoram mais para aparecer"**; (2) nas posições do player, **"Topo centro" → "Esquerda centro"** e **"Base centro" → "Direita centro"** (âncoras verticalmente centradas nas bordas esquerda/direita); (3) no modo **Flexível** a barra da gaveta passa a nascer na **extremidade mais próxima da última posição** do painel (era um **closure obsoleto** no clique-fora); (4) o ícone da aba **Social** vira um **escudo com 3 pessoas** (estilo Clash Royale, adaptado ao stroke do projeto); (5) na aba **Treinos**, a aba **Exercícios → Personalizar** e a sub-aba **Itens Mágicos → Cartões**; (6) com **imagem personalizada** na tela de carregamento, o texto **"EVO FIT / WORKOUT TRACKER"** volta a aparecer. `system_map.json` → 3.5.69.
 

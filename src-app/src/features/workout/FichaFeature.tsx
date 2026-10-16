@@ -980,7 +980,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
                 <div className="empty-icon">🏋️</div>
                 <p>Nenhum exercício nesta ficha ainda.</p>
                 <p>
-                  Vá em <strong>Montar Ficha</strong> para adicionar exercícios.
+                  Vá em <strong>Minha Ficha</strong> para adicionar exercícios.
                 </p>
               </div>
             </div>

@@ -137,11 +137,15 @@ export function setMusicVolume(volume: number): void {
   } catch {
     /* storage indisponível — segue em memória */
   }
-  const el = getAudio();
-  el.volume = v / 100;
-  // Subir de 0 com a música ligada e pausada: tenta retomar.
-  if (v > 0 && isMusicEnabled() && el.paused) {
-    playMusicNow();
+  // v4.28 — com a posse no audio-engine não há elemento legado a ajustar
+  // (evita criar o <audio preload="auto"> e baixar MAIN.mp3 à toa).
+  if (!playbackClaimed) {
+    const el = getAudio();
+    el.volume = v / 100;
+    // Subir de 0 com a música ligada e pausada: tenta retomar.
+    if (v > 0 && isMusicEnabled() && el.paused) {
+      playMusicNow();
+    }
   }
   emitChange();
 }
@@ -155,11 +159,15 @@ export function initBackgroundMusic(): void {
   if (inited) return;
   inited = true;
 
+  // v4.19.0 — se o audio-engine assumiu a reprodução, só as prefs valem.
+  // v4.28 — este early-return vem ANTES de getAudio(): criar aqui o
+  // <audio preload="auto"> disparava um 2º download de MAIN.mp3 (7 MB)
+  // concorrendo com o fetch/decode do audio-engine no boot, atrasando o 1º
+  // play. Com a posse do motor, o elemento legado nem precisa existir.
+  if (playbackClaimed) return;
+
   const el = getAudio();
   el.volume = getMusicVolume() / 100;
-
-  // v4.19.0 — se o audio-engine assumiu a reprodução, só as prefs valem.
-  if (playbackClaimed) return;
 
   if (isMusicEnabled()) {
     // Tenta direto (funciona em contexts com autoplay permitido —

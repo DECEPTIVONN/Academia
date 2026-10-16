@@ -488,9 +488,12 @@ function armGestures(): void {
   gestureHandler = () => {
     // v4.25.x — o AudioContext só retoma dentro de um gesto; depois a
     // reprodução oculta (Web Audio) segue sozinha (não precisa re-armar).
+    // v4.28 — só (re)dispara o play se ainda NÃO estiver tocando: o gesto
+    // agora também fica armado no boot, e sem esta guarda o 1º toque
+    // reiniciava a faixa que já estava tocando.
     const ctx = getAudioCtx();
     if (ctx && ctx.state === 'suspended') void ctx.resume();
-    resumeCurrent();
+    if (!playing) resumeCurrent();
     const hiddenReady = context !== 'workout-user' && isHiddenSite(context) && !!ctx;
     if (playing || hiddenReady) disarmGestures();
   };
@@ -866,6 +869,12 @@ export function initAudioEngine(): void {
   // Autoplay do ambiente: tenta direto (pode ser permitido); senão, gesto.
   if (isMusicEnabled()) {
     void playSite('main');
+    // v4.28 — arma o gesto JÁ no boot. Um resume() pedido FORA de um gesto
+    // pode ficar pendente no Chrome; sem isto a trilha só começava quando
+    // outra ação (abrir/fechar Missões, etc.) redisparava o play — daí a
+    // sensação de "demora muito para aparecer". No 1º toque o AudioContext
+    // retoma e a faixa — já pré-decodificada — toca na hora.
+    armGestures();
     // v4.27 — pré-decodifica Missões (faixa leve) em 2º plano: abrir o overlay
     // de Missões não espera o fetch + decode.
     void loadHiddenBuffer(SITE_TRACKS.missions.src);

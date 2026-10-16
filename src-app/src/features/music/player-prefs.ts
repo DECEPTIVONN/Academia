@@ -1,22 +1,28 @@
 /**
  * player-prefs.ts — Preferências do miniplayer (v4.22.0-music)
  *
+ * v4.28.0 — o widget é OPT-IN: fica OCULTO por padrão
+ * (academia_pref_player_enabled = 'off'). Ao ligar, os padrões seguem a
+ * referência fixada pelo usuário: Fixo • Esquerda centro • Só após tocar •
+ * 5s • Gaveta Ligada • 3px • 5,5%.
+ *
  * O player tem DOIS modos:
- *  • 'flex' (padrão, como era) — painel flutuante arrastável/redimensionável;
- *  • 'fixed' — pastilha MINIMIZADA no estilo do contador de duração do
+ *  • 'flex' — painel flutuante arrastável/redimensionável;
+ *  • 'fixed' (padrão) — pastilha MINIMIZADA no estilo do contador de duração do
  *    treino (.global-timer), numa posição escolhida nas Configurações, que
- *    fica sempre visível ou só N segundos (padrão 7) após trocar de música.
+ *    fica sempre visível ou só N segundos (padrão 5) após trocar de música.
  *
  * Chaves (localStorage):
- *  • academia_pref_player_mode   'flex' | 'fixed'
- *  • academia_pref_player_pos    'tl'|'tc'|'tr'|'bl'|'bc'|'br'
- *  • academia_pref_player_persist 'always' | 'timed'
- *  • academia_pref_player_secs   segundos (3–60, padrão 7)
+ *  • academia_pref_player_enabled 'on' | 'off' (padrão 'off' — widget oculto)
+ *  • academia_pref_player_mode   'flex' | 'fixed' (padrão 'fixed')
+ *  • academia_pref_player_pos    'tl'|'tc'|'tr'|'bl'|'bc'|'br' (padrão 'tc')
+ *  • academia_pref_player_persist 'always' | 'timed' (padrão 'timed')
+ *  • academia_pref_player_secs   segundos (3–60, padrão 5)
  *
  * v4.24.0 — GAVETA (convive com flex/fixed, que só definem a POSIÇÃO):
- *  • academia_pref_player_drawer       'on' | 'off' (padrão off)
- *  • academia_pref_player_drawer_thick espessura da barra em px (3–14, padrão 5)
- *  • academia_pref_player_drawer_vp    altura da barra em % da viewport (0,5–100, passo 0,5, padrão 0,5)
+ *  • academia_pref_player_drawer       'on' | 'off' (padrão on)
+ *  • academia_pref_player_drawer_thick espessura da barra em px (3–14, padrão 3)
+ *  • academia_pref_player_drawer_vp    altura da barra em % da viewport (0,5–100, passo 0,5, padrão 5,5)
  */
 
 export type PlayerMode = 'flex' | 'fixed';
@@ -25,6 +31,8 @@ export type PlayerPersist = 'always' | 'timed';
 /** v4.24.0 — barra deslizante (gaveta). 'off' = desligada; 'on' = ligada. */
 export type PlayerDrawer = 'off' | 'on';
 
+/* v4.28.0 — interruptor mestre do WIDGET do player (padrão desligado). */
+const K_ENABLED = 'academia_pref_player_enabled';
 const K_MODE = 'academia_pref_player_mode';
 const K_POS = 'academia_pref_player_pos';
 const K_PERSIST = 'academia_pref_player_persist';
@@ -59,8 +67,18 @@ function write(key: string, value: string): void {
   }
 }
 
+/** v4.28.0 — o widget do player fica OCULTO por padrão; só aparece se ligado. */
+export function getPlayerEnabled(): boolean {
+  return read(K_ENABLED) === 'on';
+}
+
+export function setPlayerEnabled(on: boolean): void {
+  write(K_ENABLED, on ? 'on' : 'off');
+  emitPrefsChanged();
+}
+
 export function getPlayerMode(): PlayerMode {
-  return read(K_MODE) === 'fixed' ? 'fixed' : 'flex';
+  return read(K_MODE) === 'flex' ? 'flex' : 'fixed';
 }
 
 export function setPlayerMode(mode: PlayerMode): void {
@@ -72,7 +90,7 @@ export function getPlayerPos(): PlayerPos {
   const v = read(K_POS);
   return v === 'tl' || v === 'tc' || v === 'tr' || v === 'bl' || v === 'bc' || v === 'br'
     ? v
-    : 'tr';
+    : 'tc';
 }
 
 export function setPlayerPos(pos: PlayerPos): void {
@@ -81,7 +99,7 @@ export function setPlayerPos(pos: PlayerPos): void {
 }
 
 export function getPlayerPersist(): PlayerPersist {
-  return read(K_PERSIST) === 'timed' ? 'timed' : 'always';
+  return read(K_PERSIST) === 'always' ? 'always' : 'timed';
 }
 
 export function setPlayerPersist(p: PlayerPersist): void {
@@ -92,9 +110,9 @@ export function setPlayerPersist(p: PlayerPersist): void {
 /** Segundos que a pastilha fixa fica visível após trocar de música (3–60). */
 export function getPlayerHideSecs(): number {
   const raw = read(K_SECS);
-  if (raw === null || raw === '') return 7; // padrão (Number(null) === 0 → nunca parsear cego)
+  if (raw === null || raw === '') return 5; // padrão (Number(null) === 0 → nunca parsear cego)
   const n = Number(raw);
-  return Number.isFinite(n) ? Math.min(60, Math.max(3, Math.round(n))) : 7;
+  return Number.isFinite(n) ? Math.min(60, Math.max(3, Math.round(n))) : 5;
 }
 
 export function setPlayerHideSecs(secs: number): void {
@@ -107,10 +125,12 @@ export function setPlayerHideSecs(secs: number): void {
    definem a posição de onde a barra nasce). Ao deslizar a barra pra dentro
    abre o mesmo player do modo Fixo; clicar fora recolhe. */
 
-/** Espessura da barra, em px (3–14; padrão 5). */
+/** Espessura da barra, em px (3–14; padrão 3). */
 export function getDrawerThickness(): number {
-  const n = Number(read(K_DRAWER_THICK));
-  return Number.isFinite(n) ? Math.min(14, Math.max(3, Math.round(n))) : 5;
+  const raw = read(K_DRAWER_THICK);
+  if (raw === null || raw === '') return 3; // Number(null)===0 → nunca parsear cego
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.min(14, Math.max(3, Math.round(n))) : 3;
 }
 
 export function setDrawerThickness(px: number): void {
@@ -118,11 +138,13 @@ export function setDrawerThickness(px: number): void {
   emitPrefsChanged();
 }
 
-/** Altura da barra como % da viewport (0,5–100; passo 0,5; padrão 0,5 = discreta). */
+/** Altura da barra como % da viewport (0,5–100; passo 0,5; padrão 5,5). */
 const clampVp = (pct: number) => Math.min(100, Math.max(0.5, Math.round(pct * 2) / 2));
 export function getDrawerVpHeight(): number {
-  const n = Number(read(K_DRAWER_VPERSIST));
-  return Number.isFinite(n) ? clampVp(n) : 0.5;
+  const raw = read(K_DRAWER_VPERSIST);
+  if (raw === null || raw === '') return 5.5; // Number(null)===0 → nunca parsear cego
+  const n = Number(raw);
+  return Number.isFinite(n) ? clampVp(n) : 5.5;
 }
 
 export function setDrawerVpHeight(pct: number): void {
@@ -131,7 +153,7 @@ export function setDrawerVpHeight(pct: number): void {
 }
 
 export function getPlayerDrawer(): PlayerDrawer {
-  return read(K_DRAWER) === 'on' ? 'on' : 'off';
+  return read(K_DRAWER) === 'off' ? 'off' : 'on';
 }
 
 export function setPlayerDrawer(v: PlayerDrawer): void {

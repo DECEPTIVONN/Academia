@@ -4,11 +4,14 @@
  * Widget fixo sobre o app (inclusive DURANTE O TREINO), inspirado na
  * referência fixada (arte + título + controles).
  *
+ * v4.28.0 — o widget é OPT-IN: some por completo enquanto "Mostrar Player"
+ *  estiver desligado (padrão). A música não é afetada (segue "Tocar Música").
+ *
  * MODOS (Configurações → Áudio e Música):
- *  • Flexível (padrão) — pastilha ARRASTÁVEL com botão "×" (oculta até a
+ *  • Flexível — pastilha ARRASTÁVEL com botão "×" (oculta até a
  *    próxima faixa). v4.24.0: usa o MESMO design do Fixo (unificação).
- *  • Fixo — pastilha MINIMIZADA fixa na posição escolhida, sempre visível ou
- *    só N segundos (padrão 7) após trocar de música. INALTERADO (v4.22.0).
+ *  • Fixo (padrão) — pastilha MINIMIZADA fixa na posição escolhida, sempre
+ *    visível ou só N segundos (padrão 5) após trocar de música.
  *
  * v4.24.0 — GAVETA (convive com Flexível/Fixo, que só definem a POSIÇÃO):
  *  • Barra accent na borda da tela (esquerda/direita conforme a âncora).
@@ -32,6 +35,7 @@ import {
   getDrawerThickness,
   getDrawerVpHeight,
   getPlayerDrawer,
+  getPlayerEnabled,
   getPlayerHideSecs,
   getPlayerMode,
   getPlayerPersist,
@@ -137,6 +141,8 @@ export function FloatingMiniPlayer() {
   const persist = getPlayerPersist();
   const hideSecs = getPlayerHideSecs();
   const drawerOn = getPlayerDrawer() === 'on';
+  /* v4.28.0 — interruptor mestre do widget (padrão desligado). */
+  const enabled = getPlayerEnabled();
 
   /* Modo Fixo: some Ns após troca (reset nos eventos, nunca no effect) */
   const [timedOut, setTimedOut] = useState(false);
@@ -291,6 +297,8 @@ export function FloatingMiniPlayer() {
      ainda respeta o "×" (hidden). */
   const baseVisible = state.title !== '' || state.playing;
   const flexVisible = mode === 'flex' && !hidden && !timedOut;
+  /* v4.28.0 — widget desligado nas Configurações → não renderiza nada. */
+  if (!enabled) return null;
   if (!baseVisible) return null;
 
   /* ─────────── GAVETA ligada: barra + (opcional) painel expandido ───────────

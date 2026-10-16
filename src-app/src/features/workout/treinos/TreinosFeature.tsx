@@ -355,7 +355,7 @@ export const TreinosFeature: React.FC = () => {
               onClick={() => changeMainTab('montar')}
             >
               {TAB_ICON_MONTAR}
-              MONTAR FICHA
+              MINHA FICHA
             </button>
           </nav>
         </div>
@@ -495,7 +495,7 @@ export const TreinosFeature: React.FC = () => {
           <CustomizacaoSubTabs subtab={subTab} />
         </div>
 
-        {/* ========== TAB: MONTAR FICHA ========== */}
+        {/* ========== TAB: MINHA FICHA ========== */}
         <div
           id="tab-montar"
           className={`t-tab${mainTab === 'montar' ? ' active' : ''}`}
