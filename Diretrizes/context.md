@@ -12,13 +12,13 @@
 
 > ⚠️ **Arquivo desatualizado por várias sessões.** Escrito ao fim da sessão de
 > 2026-10-08 (quando o `system_map` estava em **3.5.24**). O estado atual é
-> `system_map` **3.5.68** e o histórico completo entre `v4.0.15` e `v4.26.0` está
+> `system_map` **3.5.69** e o histórico completo entre `v4.0.15` e `v4.27.0` está
 > no `Diretrizes/CHANGELOG.md`. As seções 2–4 abaixo são **históricas** (fase de
 > paridade da migração React v4). Última sessão registrada aqui: **2026-10-16**
-> (`v4.26.0`) — 6 ajustes de UI/áudio (Web Audio p/ faixas ocultas no player de
-> notificação; modo foco neutro; aba Treinos em MONTAR FICHA + mobile em Modo
-> Coleção + filtros AMOLED; Início responsivo; barra da gaveta posicionada pela
-> última posição do player) + renome do produto para **EVO FIT**. Detalhe no
+> (`v4.27.0`) — 6 ajustes (pré-decodificação das faixas ocultas do player;
+> posições "Esquerda/Direita centro"; barra da gaveta no Flexível seguindo a
+> última posição; ícone Social estilo Clash Royale; aba Treinos → Personalizar /
+> sub-aba Cartões; splash custom exibe EVO FIT / WORKOUT TRACKER). Detalhe no
 > CHANGELOG.
 
 ---

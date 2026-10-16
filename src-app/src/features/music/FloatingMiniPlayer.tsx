@@ -44,9 +44,11 @@ const DRAWER_KEY = 'academia_floating_drawer_open_v1';
 
 type Anchor = 'tl' | 'tc' | 'tr' | 'bl' | 'bc' | 'br';
 
-/** Lado da barra da gaveta conforme a âncora (esquerda/direita da tela). */
+/** Lado da barra da gaveta conforme a âncora (esquerda/direita da tela).
+ *  v4.27 — tc/bc passaram a ser as âncoras VERTICALMENTE centradas à
+ *  esquerda/direita (antes topo/base centro): tc → esquerda, bc → direita. */
 function anchorSide(pos: Anchor): 'left' | 'right' {
-  return pos === 'tl' || pos === 'bl' ? 'left' : 'right';
+  return pos === 'tr' || pos === 'bc' || pos === 'br' ? 'right' : 'left';
 }
 
 /** Posição da pastilha fixa a partir da âncora (padding igual ao contador). */
@@ -55,13 +57,13 @@ function pillStyleFor(pos: Anchor): Record<string, string> {
     case 'tl':
       return { top: 'calc(85px + env(safe-area-inset-top, 0px))', left: '12px' };
     case 'tc':
-      return { top: 'calc(85px + env(safe-area-inset-top, 0px))', left: '50%', transform: 'translateX(-50%)' };
+      return { top: '50%', left: '12px', transform: 'translateY(-50%)' };
     case 'tr':
       return { top: 'calc(85px + env(safe-area-inset-top, 0px))', right: '12px' };
     case 'bl':
       return { bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', left: '12px' };
     case 'bc':
-      return { bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', left: '50%', transform: 'translateX(-50%)' };
+      return { top: '50%', right: '12px', transform: 'translateY(-50%)' };
     default:
       return { bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', right: '12px' };
   }
@@ -157,6 +159,10 @@ export function FloatingMiniPlayer() {
     try { return localStorage.getItem(DRAWER_KEY) === '1'; } catch { return false; }
   });
   const [drawerPanelPos, setDrawerPanelPos] = useState<Pos | null>(null);
+  /* v4.27 — ref espelhando o painel: o handler de clique-fora é registrado
+     quando a gaveta abre e ficaria com drawerPanelPos obsoleto (null) no
+     fechamento, então a barra nunca nascia na posição mais próxima. */
+  const drawerPanelPosRef = useRef<Pos | null>(null);
 
   /* Estado do motor */
   useEffect(() => {
@@ -181,6 +187,12 @@ export function FloatingMiniPlayer() {
     try { localStorage.setItem('academia_floating_player_pos_v1', JSON.stringify(dragPos)); } catch { /* storage off */ }
   }, [dragPos]);
 
+  /* v4.27 — mantém a ref do painel da gaveta em sincronia com o state
+     (lida pelo clique-fora ao minimizar para lembrar a última posição). */
+  useEffect(() => {
+    drawerPanelPosRef.current = drawerPanelPos;
+  }, [drawerPanelPos]);
+
   /* Volta a aparecer quando uma faixa nova começa */
   const lastTitle = useRef(state.title);
   useEffect(() => {
@@ -202,8 +214,10 @@ export function FloatingMiniPlayer() {
     setDrawerOpen(v);
     if (!v) {
       /* v4.25.x — lembra onde o player estava ANTES de minimizar para a
-         barra nascer na extremidade mais próxima dele. */
-      if (drawerPanelPos) setDragPos(drawerPanelPos);
+         barra nascer na extremidade mais próxima dele.
+         v4.27 — lê da REF (não do state capturado no registro do listener). */
+      const last = drawerPanelPosRef.current;
+      if (last) setDragPos(last);
       setDrawerPanelPos(null);
     }
     try { localStorage.setItem(DRAWER_KEY, v ? '1' : '0'); } catch { /* storage off */ }
@@ -308,9 +322,18 @@ export function FloatingMiniPlayer() {
       side = anchorSide(pos);
       barTop = Math.round((window.innerHeight - barH) / 2);
     } else {
-      const isTop = pos === 'tl' || pos === 'tc' || pos === 'tr';
-      side = pos === 'tl' || pos === 'bl' ? 'left' : 'right';
-      barTop = isTop ? inset : Math.round(window.innerHeight - barH - inset);
+      /* v4.27 — âncoras: tl/tr topo; tc (esquerda centro) e bc (direita
+         centro) ficam verticalmente centradas; bl/br base. */
+      const isTop = pos === 'tl' || pos === 'tr';
+      const isMiddle = pos === 'tc' || pos === 'bc';
+      side = anchorSide(pos);
+      barTop = Math.round(
+        isMiddle
+          ? (window.innerHeight - barH) / 2
+          : isTop
+            ? inset
+            : window.innerHeight - barH - inset,
+      );
     }
 
     const anchored: Pos = drawerPanelPos ?? (side === 'left'
@@ -363,12 +386,12 @@ export function FloatingMiniPlayer() {
   /* Posição inicial do Flexível quando ainda não foi arrastado: a âncora escolhida */
   const flexStart: Pos = dragPos ?? (() => {
     const anchor = pillStyleFor(pos);
-    const x = anchor.left === '50%'
-      ? window.innerWidth / 2 - 120
-      : anchor.right !== undefined
-        ? window.innerWidth - 256
-        : 16;
-    const y = anchor.bottom !== undefined ? window.innerHeight - 150 : 96;
+    const x = anchor.right !== undefined ? window.innerWidth - 256 : 16;
+    const y = anchor.top === '50%'
+      ? Math.round(window.innerHeight / 2 - 23)
+      : anchor.bottom !== undefined
+        ? window.innerHeight - 150
+        : 96;
     return clampPos(x, y);
   })();
 

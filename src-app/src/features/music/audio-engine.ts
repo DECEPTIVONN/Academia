@@ -37,6 +37,11 @@
  * não há notificação. A faixa de treino (Black Panther) segue no <audio> e
  * aparece normalmente.
  *
+ * v4.27 — LATÊNCIA: as faixas ocultas passaram a ser PRÉ-DECODIFICADAS
+ * (main/missions no boot; result ao iniciar o treino) e o decode começa
+ * ANTES do resume do AudioContext (o decode não exige gesto). Assim o 1º play
+ * não espera fetch + decode completos — antes elas "demoravam para aparecer".
+ *
  * Autoplay: os contextos são acionados por gestos do usuário (abrir treino,
  * concluir treino, abrir missões) — play() direto; falha → re-arm por gesto.
  */
@@ -226,11 +231,21 @@ async function startHidden(next: HiddenSite, loop: boolean, offset: number): Pro
   const conf = SITE_TRACKS[next];
   const ctx = getAudioCtx();
   if (!ctx) return startHiddenViaElement(conf.src, loop);
+
+  /* v4.27 — começa a DECODIFICAR já, mesmo com o contexto suspenso (o decode
+     não exige gesto). Antes o decode só iniciava após o resume, então o 1º
+     play esperava fetch + decode completos → silêncio longo. Agora o buffer
+     fica pronto enquanto o app espera o 1º gesto. */
+  const bufPromise = loadHiddenBuffer(conf.src);
+
   if (ctx.state !== 'running') {
     try { await ctx.resume(); } catch { /* precisa de gesto */ }
-    if ((ctx.state as string) !== 'running') return false; // retoma no próximo gesto
+    if ((ctx.state as string) !== 'running') {
+      void bufPromise; // segue decodificando p/ o próximo gesto
+      return false; // retoma no próximo gesto
+    }
   }
-  const buf = await loadHiddenBuffer(conf.src);
+  const buf = await bufPromise;
   if (seq !== waStartSeq) return null; // outro start assumiu
   if (!buf) return startHiddenViaElement(conf.src, loop);
 
@@ -807,7 +822,11 @@ export function initAudioEngine(): void {
   });
 
   // Início de treino (TREINAR / StartWorkout) → contexto de treino.
-  window.addEventListener('academia:workout-started', startWorkoutContext);
+  window.addEventListener('academia:workout-started', () => {
+    // v4.27 — pré-decodifica RESULT durante o treino (só toca na conclusão).
+    void loadHiddenBuffer(SITE_TRACKS.result.src);
+    startWorkoutContext();
+  });
 
   // Conclusão (abertura do ConclusaoModal) → faixa RESULT.
   window.addEventListener('academia:workout-completed', () => {
@@ -845,7 +864,12 @@ export function initAudioEngine(): void {
   });
 
   // Autoplay do ambiente: tenta direto (pode ser permitido); senão, gesto.
-  if (isMusicEnabled()) void playSite('main');
+  if (isMusicEnabled()) {
+    void playSite('main');
+    // v4.27 — pré-decodifica Missões (faixa leve) em 2º plano: abrir o overlay
+    // de Missões não espera o fetch + decode.
+    void loadHiddenBuffer(SITE_TRACKS.missions.src);
+  }
 }
 
 /** Pausa/retoma manual (mini-player da interface de Músicas). */

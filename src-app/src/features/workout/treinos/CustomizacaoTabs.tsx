@@ -423,7 +423,7 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
         <div className="theme-section theme-roxo">
           <div className="theme-bg" />
           <div className="theme-content">
-            <div className="profile-section-title">Itens Mágicos</div>
+            <div className="profile-section-title">Cartões</div>
             <div className="banner-grid" id="bannerGrid">
               {classicos.map((b) => (
                 <BannerCard key={b.key} b={b} u={u} active={b.key === pc.banner} onClick={() => pickBanner(b)} />

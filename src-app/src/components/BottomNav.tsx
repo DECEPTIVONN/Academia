@@ -187,7 +187,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       label: 'Social',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+          <path d="M12 2.4l7.2 2.7v6c0 4.6-3 8-7.2 10.4-4.2-2.4-7.2-5.8-7.2-10.4v-6z" />
+          <circle cx="12" cy="11.1" r="1.5" />
+          <path d="M9.2 16.7a2.8 2.8 0 015.6 0" />
+          <circle cx="7.6" cy="10" r="1.15" />
+          <path d="M5.9 15.5a1.7 1.7 0 013.4 0" />
+          <circle cx="16.4" cy="10" r="1.15" />
+          <path d="M14.7 15.5a1.7 1.7 0 013.4 0" />
         </svg>
       ),
     },

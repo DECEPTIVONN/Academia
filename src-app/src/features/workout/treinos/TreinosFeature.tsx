@@ -61,7 +61,7 @@ const SUB_NAV: SubNavDef[] = [
   },
   {
     key: 'itens-magicos',
-    title: 'Itens Mágicos',
+    title: 'Cartões',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={20} height={20}>
         <path d="M12 2l9 10-9 10-9-10z" />
@@ -343,7 +343,7 @@ export const TreinosFeature: React.FC = () => {
               onClick={() => changeMainTab('exercicios')}
             >
               {TAB_ICON_EX}
-              EXERCÍCIOS
+              PERSONALIZAR
             </button>
             <button
               type="button"

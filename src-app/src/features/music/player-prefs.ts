@@ -36,10 +36,10 @@ const K_DRAWER_VPERSIST = 'academia_pref_player_drawer_vp';
 
 export const PLAYER_POSITIONS: Array<{ id: PlayerPos; label: string }> = [
   { id: 'tl', label: 'Topo esquerda' },
-  { id: 'tc', label: 'Topo centro' },
+  { id: 'tc', label: 'Esquerda centro' },
   { id: 'tr', label: 'Topo direita' },
   { id: 'bl', label: 'Base esquerda' },
-  { id: 'bc', label: 'Base centro' },
+  { id: 'bc', label: 'Direita centro' },
   { id: 'br', label: 'Base direita' },
 ];
 
