@@ -383,7 +383,7 @@ export function App() {
 
   const { isActive, startWorkout } = useWorkoutStore();
 
-  /* startWorkoutFromDashboard (secao-dashboard.js L276-304): o PRÓXIMO PASSO do
+  /* startWorkoutFromDashboard (secao-dashboard.js L276-304): o TREINAR do
      Dashboard grava o treino escolhido em db.historico[today] (setTodayTreino),
      inicia o cronômetro (workout_start_time) e só então abre a Ficha — é daí
      que vêm o contador "Duração do Treino" e o botão ENCERRAR TREINO. */
@@ -764,6 +764,7 @@ export function App() {
             </button>
             <div className="ficha-overlay__scroll" id="fichaOverlayScroll">
               <FichaFeature
+                open={isFichaOverlayOpen}
                 onStartWorkout={handleStartWorkout}
                 onRequestEncerrar={handleRequestEncerrar}
                 onWorkoutCompleted={() => setIsConclusaoOpen(true)}

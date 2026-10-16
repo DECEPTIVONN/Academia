@@ -44,6 +44,9 @@ interface FichaFeatureProps {
   onRequestEncerrar: () => void;
   /** Todo marcado (legado: showConclusao com delay de 400ms — L312/L368). */
   onWorkoutCompleted: () => void;
+  /** v4.25.0 — overlay da Ficha aberto: dispara o autoscroll para o conteúdo
+      (pula o hero e aterrissa em "Progresso do treino" + exercícios). */
+  open?: boolean;
 }
 
 /* ── Imagem do exercício (onerror → .premium-placeholder, igual ao legado) ── */
@@ -473,6 +476,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   onStartWorkout,
   onRequestEncerrar,
   onWorkoutCompleted,
+  open = true,
 }) => {
   const { exercises, sheets, history, legacy } = useLocalData();
   const { isActive, startTime, startRestTimer, skipRestTimer } = useWorkoutStore();
@@ -490,6 +494,8 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   /* Containers das views (display toggling, como o DOM legado) */
   const tableViewRef = useRef<HTMLDivElement>(null);
   const gridViewRef = useRef<HTMLDivElement>(null);
+  /* v4.25.0 — âncora do autoscroll (abre a Ficha "aterrissando" no progresso) */
+  const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     void loadEntry();
@@ -573,6 +579,26 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
       suggested: determineNextTreino(data),
     };
   }, [history, data]);
+
+  /* v4.25.0 — autoscroll ao ABRIR a Ficha: pula o hero e posiciona o
+     "Progresso do treino" no topo do scroller (.ficha-overlay__scroll),
+     deixando os exercícios em vista. Roda em passes curtos porque o conteúdo
+     acima (sugestão/timer) assenta depois do start; corrige só se errou > 4px. */
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    const goto = () => {
+      const el = progressRef.current;
+      const scroller = el?.closest('.ficha-overlay__scroll') as HTMLElement | null;
+      if (!el || !scroller) return;
+      const delta = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      if (Math.abs(delta) < 2) return;
+      scroller.scrollTo({ top: Math.max(0, scroller.scrollTop + delta), behavior: 'auto' });
+    };
+    const timers = [120, 500, 900, 1500].map((ms) => window.setTimeout(goto, ms));
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, [open, suggestion]);
 
   /* Mutações (espelham os handlers de change de secao-ficha.js) ── */
 
@@ -906,7 +932,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
             </div>
 
             {/* ===== PROGRESSO ===== */}
-            <div className="progress-wrapper">
+            <div className="progress-wrapper" ref={progressRef}>
               <div className="progress-meta">
                 <span className="progress-label">Progresso do treino</span>
                 <span className="progress-nums">

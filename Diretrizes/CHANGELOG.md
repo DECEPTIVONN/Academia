@@ -21,6 +21,20 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.25.0] - 2026-10-16
+
+**Botão do Início renomeado para "TREINAR" + autoscroll ao abrir a Ficha (pula o hero e aterrissa em "Progresso do treino")**: na aba **Início**, o CTA do card da ficha sugerida deixa de ser **"PRÓXIMO PASSO"** e passa a ser **"TREINAR"** (mesmo `id` `dashBtnStartText`, nenhum comportamento alterado). Ao abrir a interface de treino (overlay da Ficha), o scroller **`.ficha-overlay__scroll`** agora rola automaticamente até **"Progresso do treino"** (`.progress-wrapper`), deixando o **hero acima fora de vista** e os **exercícios em tela** — conforme a imagem de referência. O scroll roda em **passes curtos** (120/500/900/1500 ms, só corrige se o desvio > 2px) porque o conteúdo acima (timer/sugestão) assenta depois do start. `system_map.json` → 3.5.67.
+
+### Changed
+- **`DashboardFeature.tsx`** — rótulo do botão do card de ficha: `PRÓXIMO PASSO` → **`TREINAR`**; comentários/doc-string atualizados.
+- **`FichaFeature.tsx`** — nova prop opcional **`open`**; `progressRef` no `.progress-wrapper` e efeito de **autoscroll** (`scrollTo` no `.ficha-overlay__scroll`) ao abrir, em passes de correção.
+- **`App.tsx`** — passa **`open={isFichaOverlayOpen}`** para `FichaFeature`; comentário do `handleOpenFicha` atualizado.
+- **Comentários** — `audio-engine.ts`, `dashboard.css`, `ficha-overlay.css` e `7-nav-icons.css` deixam de citar "PRÓXIMO PASSO" e passam a citar "TREINAR".
+
+### Verificado
+- `npx tsc --noEmit` 0 · `npx oxlint` 0 · `npx vite build` OK.
+- Probe CDP (mobile 430×932): **8/8 PASS** — botão do Início com texto "TREINAR"; abrir a Ficha rola ~610px; **"Progresso do treino" no topo (delta 0px)**; hero fora de vista (topo negativo); primeiro exercício visível; fechar e reabrir volta a rolar. Screenshot conferido (`v425_ficha.png`).
+
 ## [v4.24.1] - 2026-10-15
 
 **Altura da barra da gaveta com mínimo em 0,5% (antes 40%, exagerado) + restaurar as opções de Visibilidade do player ("Sempre ativo" / "Só após tocar") em todos os modos**: o slider **Altura da barra** passa a ir de **0,5% a 100%** (passo de **0,5%**, padrão **0,5% = barra discreta**) — antes o mínimo era 40%, deixando a barra enorme. O bloco **Visibilidade** estava preso dentro do modo **Fixo** e por isso sumia nos outros modos; agora aparece **sempre** (Flexível, Fixo e Gaveta), com as duas opções **Sempre ativo** e **Só após tocar** (o player/barra some após N s — padrão **7s** — da última troca de música, e reaparece ao começar outra). O **auto-ocultar** passou a valer também para o **Flexível** e para a **barra da gaveta** (antes só o Fixo). O seletor **Posição na tela** agora aparece quando o modo é **Fixo** ou quando a **Gaveta** está ligada (a barra nasce do lado da âncora). `system_map.json` → 3.5.66.

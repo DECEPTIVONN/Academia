@@ -606,7 +606,7 @@ export function initAudioEngine(): void {
     }
   });
 
-  // Início de treino (PRÓXIMO PASSO / StartWorkout) → contexto de treino.
+  // Início de treino (TREINAR / StartWorkout) → contexto de treino.
   window.addEventListener('academia:workout-started', startWorkoutContext);
 
   // Conclusão (abertura do ConclusaoModal) → faixa RESULT.

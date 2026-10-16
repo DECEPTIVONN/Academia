@@ -297,7 +297,7 @@ main {
    mantido no DOM para preservar a lógica de cronômetro em
    initGlobalTimer()/stopGlobalTimer(). O estado padrão "INICIAR TREINO"
    fica oculto porque o cronômetro agora é iniciado exclusivamente pelo
-   "PRÓXIMO PASSO" do Dashboard (ver secao-dashboard.js). Quando o timer
+   "TREINAR" do Dashboard (ver secao-dashboard.js). Quando o timer
    está rodando, o botão ganha .active e vira "ENCERRAR TREINO",
    permitindo que o usuário pare manualmente com confirmação via modal. */
 .btn-start-workout {

@@ -4,7 +4,7 @@
  * Port 1:1 do fragmento legado `componentes/secoes/dashboard.html` (v3.5.7):
  * header calling-card (#dashProfileCard) com avatar, botões de topo, saudação
  * e pílula de missões; arena card com radar + barra de XP; card da ficha
- * sugerida com CTA "PRÓXIMO PASSO" e card de ciclo.
+ * sugerida com CTA "TREINAR" e card de ciclo.
  *
  * Dados ligados ao IndexedDB (useLocalData) com as fórmulas do legado:
  *   XP = dias concluídos × 10 · nível = floor(xp/100)+1
@@ -382,15 +382,15 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
               <span id="dashWkBadge" style={{ display: 'none' }} />
             </button>
 
-            {/* startWorkoutFromDashboard (secao-dashboard.js L276-304): o PRÓXIMO
-                PASSO inicia o cronômetro (localStorage workout_start_time) e só
+            {/* startWorkoutFromDashboard (secao-dashboard.js L276-304): o botão
+                TREINAR inicia o cronômetro (localStorage workout_start_time) e só
                 depois abre a Ficha — ver App.handleOpenFicha */}
             <button
               className="dash-next-step-btn"
               id="dashBtnIniciar"
               onClick={() => onOpenFicha(suggestion)}
             >
-              <span className="btn-text" id="dashBtnStartText">PRÓXIMO PASSO</span>
+              <span className="btn-text" id="dashBtnStartText">TREINAR</span>
               <span className="neon-glow-left-pill" />
               <span className="neon-glow-right-pill" />
             </button>

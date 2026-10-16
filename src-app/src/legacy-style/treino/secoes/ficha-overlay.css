@@ -2,7 +2,7 @@
    FICHA OVERLAY (Interface fullscreen com fade — v3.2.0+)
    ==========================================================================
    Converte a antiga seção Ficha (slide 0 do Swipe Viewport) em um overlay
-   modal fullscreen, acionado exclusivamente pelo botão "PRÓXIMO PASSO" do
+   modal fullscreen, acionado exclusivamente pelo botão "TREINAR" do
    Dashboard. Sem header fixo (decisão: full-bleed imersivo, com o hero
    original servindo como cabeçalho visual). Z-index 600 (mesmo do Perfil,
    abaixo do news-overlay).
