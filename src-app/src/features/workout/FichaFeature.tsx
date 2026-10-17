@@ -663,8 +663,12 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   };
 
   /* fadeIn ao terminar o re-render da view ativa (secao-ficha.js L153/L212/L271:
-     renderFicha refaz o container e reaplica ui-fade-in a cada atualização) */
-  const viewAnimKey = `${viewMode}|${checks.join(',')}|${fichaIds.join(',')}`;
+     renderFicha refaz o container e reaplica ui-fade-in a cada atualização).
+     v4.30.1: `checks` SAIU da chave — marcar/desmarcar um exercício reaplicava
+     o ui-fade-in (e reiniciava TODOS os .stagger-item), o que aparecia como um
+     "refresh" da página inteira a cada toque. O fade segue na troca de
+     visualização (tabela/grid) e de ficha. */
+  const viewAnimKey = `${viewMode}|${fichaIds.join(',')}`;
   useEffect(() => {
     fadeIn(activeViewRef());
     // eslint-disable-next-line react-hooks/exhaustive-deps -- espelha o fadeIn final de renderFicha

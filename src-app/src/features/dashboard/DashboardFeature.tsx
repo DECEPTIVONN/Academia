@@ -229,8 +229,9 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
               </div>
             </header>
 
-            {/* Nome + clã (placeholder) — colados no pé da coluna, para
-                alinhar com a base da MISSÕES */}
+            {/* Nome colado no pé da coluna, alinhado à base da MISSÕES.
+                v4.30.1: usuário sem clã não exibe nada (não há campo de clã no
+                perfil ainda) — a linha "SEM CLÃ" saiu do markup. */}
             <div className="dash-identity">
               <span className="dash-identity__welcome" id="dashGreeting">
                 {greetingText}
@@ -238,7 +239,6 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
               <h1 className="dash-identity__name" id="dashUserName">
                 {userName}
               </h1>
-              <span className="dash-identity__clan">SEM CLÃ</span>
             </div>
           </div>
 
@@ -327,6 +327,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
             exercises={sheetExercises}
             legacy={legacy}
             showMaestria={false}
+            firstStat="sheet"
           />
 
           <div className="dash-arena-footer">

@@ -985,8 +985,11 @@
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 .section-slide[data-section='dashboard'] .dash-cycle-segments > span.filled {
-  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
-  box-shadow: 0 0 6px rgba(59, 130, 246, 0.65);
+  /* v4.30.1 — a divisão preenchida usa a SKIN DE BARRA do usuário
+     (--bar-skin-fill/--bar-skin-glow, definidas por applyBarSkinToDOM).
+     Fallback = skin "Padrão" (ciano) quando as vars ainda não existem. */
+  background: var(--bar-skin-fill, linear-gradient(90deg, #dbfcff, #00dbe9));
+  box-shadow: var(--bar-skin-glow, 0 0 10px rgba(0, 219, 233, 0.3));
 }
 
 /* Botão de OFENSIVA (substituiu o Social): chama + dias, em coluna. */

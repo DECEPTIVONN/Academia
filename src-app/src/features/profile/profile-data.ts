@@ -672,6 +672,11 @@ export function applyBarSkinToDOM(skinKey: string): void {
       el.style.setProperty('background', style.background, 'important');
       el.style.setProperty('box-shadow', style.boxShadow || 'none', 'important');
     });
+  /* v4.30.1 — expõe a skin como custom property no <body> para as 30 divisões
+     do Início: elas são <span> re-renderizados pelo React (um style inline
+     seria apagado a cada troca de progresso), então a cor vem por CSS var. */
+  document.body.style.setProperty('--bar-skin-fill', style.background);
+  document.body.style.setProperty('--bar-skin-glow', style.boxShadow || 'none');
 }
 
 /** Espelha `_getPreviewStyle` (secao-customizacao.js L810–817) — preview inline das barras. */

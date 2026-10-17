@@ -12,20 +12,27 @@
 
 > ⚠️ **Arquivo desatualizado por várias sessões.** Escrito ao fim da sessão de
 > 2026-10-08 (quando o `system_map` estava em **3.5.24**). O estado atual é
-> `system_map` **3.5.72** e o histórico completo entre `v4.0.15` e `v4.30.0` está
+> `system_map` **3.5.73** e o histórico completo entre `v4.0.15` e `v4.30.1` está
 > no `Diretrizes/CHANGELOG.md`. As seções 2–4 abaixo são **históricas** (fase de
 > paridade da migração React v4). Última sessão registrada aqui: **2026-10-16**
-> (`v4.30.0`) — aba **Início**: o **Radar Fit** sai do Início (segue só na
-> Progresso) e o card central passa a ser a **prévia da ficha do dia** no mesmo
-> desenho do seletor de treino (grid Royale 4 colunas + aeróbico + métricas, sem
-> MAESTRIA/EMBLEMAS) com a **barra de progresso do CICLO em 30 divisões** logo
-> abaixo; o botão **Social** vira **OFENSIVA** (chama + dias de sequência),
-> **Notícias** ganha cara de jornal (`newspaper`), o rótulo "Missões" sai da
-> pílula; a linha "Bem vindo de volta," vira **texto contextual** (saudação só no
-> 1º acesso do dia, "Treino de hoje concluído ✓" se concluído, "Treino de hoje:
-> FICHA X" ao voltar) e a **tela cheia** abre espaçamento vertical maior no
-> Início; a linha inferior (miniatura + TREINAR + CICLO) fica intacta. Novo
-> `features/dashboard/FichaDeck.tsx` compartilha o deck com o `SheetSelectorModal`.
+> (`v4.30.1`) — ajustes no **Início**: as **30 divisões** da barra acendem com a
+> **skin de barra do usuário** (`--bar-skin-fill`/`--bar-skin-glow` publicadas por
+> `applyBarSkinToDOM`), a prévia troca o **volume médio de carga** pela **letra da
+> ficha** ("TREINO B", rótulo "FICHA DO DIA" — o modal seletor **segue com o
+> volume**), o usuário **sem clã** deixa de exibir a linha "SEM CLÃ", e na **Ficha**
+> marcar/desmarcar exercício **não reaplica mais o `ui-fade-in`** (fim do "refresh"
+> de página a cada check). Na mesma sessão (`v4.30.0`) a aba **Início**: o
+> **Radar Fit** sai do Início (segue só na Progresso) e o card central passa a ser a
+> **prévia da ficha do dia** no mesmo desenho do seletor de treino (grid Royale 4
+> colunas + aeróbico + métricas, sem MAESTRIA/EMBLEMAS) com a **barra de progresso
+> do CICLO em 30 divisões** logo abaixo; o botão **Social** vira **OFENSIVA** (chama
+> + dias de sequência), **Notícias** ganha cara de jornal (`newspaper`), o rótulo
+> "Missões" sai da pílula; a linha "Bem vindo de volta," vira **texto contextual**
+> (saudação só no 1º acesso do dia, "Treino de hoje concluído ✓" se concluído,
+> "Treino de hoje: FICHA X" ao voltar) e a **tela cheia** abre espaçamento vertical
+> maior no Início; a linha inferior (miniatura + TREINAR + CICLO) fica intacta.
+> Novo `features/dashboard/FichaDeck.tsx` compartilha o deck com o
+> `SheetSelectorModal`.
 > Sessão anterior (`v4.29.0`): topo do **Início** no estilo **Clash Royale**
 > (2 colunas 60/40 com bases alinhadas, outline branca da pílula de Missões
 > removida, radar centralizado) e **1º gesto do áudio** corrigido (o `resume()`

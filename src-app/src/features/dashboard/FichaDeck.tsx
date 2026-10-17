@@ -61,6 +61,9 @@ interface FichaDeckProps {
   legacy: LegacyRaw | null;
   /** `false` esconde o widget MAESTRIA/EMBLEMAS (usado na prévia do Início). */
   showMaestria?: boolean;
+  /** 1º widget do rodapé: `volume` (padrão, modal) ou `sheet` (letra da
+   *  ficha — "TREINO A" — usado na prévia do Início, v4.30.1). */
+  firstStat?: 'volume' | 'sheet';
   emptyMessage?: React.ReactNode;
 }
 
@@ -69,6 +72,7 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
   exercises,
   legacy,
   showMaestria = true,
+  firstStat = 'volume',
   emptyMessage,
 }) => {
   /* ids de gradiente únicos: o mesmo componente pode estar montado 2x na
@@ -128,22 +132,47 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
         )}
       </div>
 
-      {/* Footer: volume / maestria / cardio */}
+      {/* Footer: ficha (ou volume) / maestria / cardio */}
       <div className="dash-mini-deck__footer">
         <div className="dash-mini-deck__stat-container">
           <div className="dash-mini-deck__stat-widget">
-            <svg className="dash-mini-deck__stat-icon elixir" viewBox="0 0 24 24" fill={`url(#${elixirId})`} width={22} height={22}>
-              <defs>
-                <linearGradient id={elixirId} x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ec4899" />
-                  <stop offset="100%" stopColor="#a855f7" />
-                </linearGradient>
-              </defs>
-              <path d="M12 21a6 6 0 006-6c0-4-6-11-6-11s-6 7-6 11a6 6 0 006 6z" />
-            </svg>
-            <span className="dash-mini-deck__stat-val">{volumeAvg}</span>
+            {firstStat === 'sheet' ? (
+              <>
+                {/* v4.30.1 — na prévia do Início o 1º widget mostra a LETRA da
+                    ficha do dia em vez do volume médio de carga. */}
+                <svg
+                  className="dash-mini-deck__stat-icon sheet"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinejoin="round"
+                  width={22}
+                  height={22}
+                >
+                  <path d="M12 2l8 3v6c0 5-3.4 8.4-8 11-4.6-2.6-8-6-8-11V5l8-3z" />
+                  <path d="M12 6.5v10" strokeWidth="1.6" />
+                </svg>
+                <span className="dash-mini-deck__stat-val">TREINO {sheet?.sheetKey ?? '—'}</span>
+              </>
+            ) : (
+              <>
+                <svg className="dash-mini-deck__stat-icon elixir" viewBox="0 0 24 24" fill={`url(#${elixirId})`} width={22} height={22}>
+                  <defs>
+                    <linearGradient id={elixirId} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ec4899" />
+                      <stop offset="100%" stopColor="#a855f7" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M12 21a6 6 0 006-6c0-4-6-11-6-11s-6 7-6 11a6 6 0 006 6z" />
+                </svg>
+                <span className="dash-mini-deck__stat-val">{volumeAvg}</span>
+              </>
+            )}
           </div>
-          <span className="dash-mini-deck__stat-label">VOLUME MÉDIO DE CARGA</span>
+          <span className="dash-mini-deck__stat-label">
+            {firstStat === 'sheet' ? 'FICHA DO DIA' : 'VOLUME MÉDIO DE CARGA'}
+          </span>
         </div>
 
         {showMaestria && (
