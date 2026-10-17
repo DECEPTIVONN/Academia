@@ -12,18 +12,25 @@
 
 > ⚠️ **Arquivo desatualizado por várias sessões.** Escrito ao fim da sessão de
 > 2026-10-08 (quando o `system_map` estava em **3.5.24**). O estado atual é
-> `system_map` **3.5.71** e o histórico completo entre `v4.0.15` e `v4.29.0` está
+> `system_map` **3.5.72** e o histórico completo entre `v4.0.15` e `v4.30.0` está
 > no `Diretrizes/CHANGELOG.md`. As seções 2–4 abaixo são **históricas** (fase de
 > paridade da migração React v4). Última sessão registrada aqui: **2026-10-16**
-> (`v4.29.0`) — topo da aba **Início** no estilo **Clash Royale** (2 colunas:
-> banner menor + nome/clã à esquerda ~60%, botões + MISSÕES à direita ~40%, bases
-> alinhadas; outline branca da pílula de Missões removida; radar centralizado com
-> margens laterais) e **1º gesto do áudio** corrigido (o `resume()` do
-> `AudioContext` resolve antes de o estado virar `running` e a checagem imediata
-> abortava a MAIN no 1º toque). Sessão anterior (`v4.28.0`): latência das faixas
-> ocultas, player opt-in "Mostrar Player", ícone da aba Social = Liga, aba
-> Treinos → Minha Ficha e splash custom com logo centralizado. Detalhe no
-> CHANGELOG.
+> (`v4.30.0`) — aba **Início**: o **Radar Fit** sai do Início (segue só na
+> Progresso) e o card central passa a ser a **prévia da ficha do dia** no mesmo
+> desenho do seletor de treino (grid Royale 4 colunas + aeróbico + métricas, sem
+> MAESTRIA/EMBLEMAS) com a **barra de progresso do CICLO em 30 divisões** logo
+> abaixo; o botão **Social** vira **OFENSIVA** (chama + dias de sequência),
+> **Notícias** ganha cara de jornal (`newspaper`), o rótulo "Missões" sai da
+> pílula; a linha "Bem vindo de volta," vira **texto contextual** (saudação só no
+> 1º acesso do dia, "Treino de hoje concluído ✓" se concluído, "Treino de hoje:
+> FICHA X" ao voltar) e a **tela cheia** abre espaçamento vertical maior no
+> Início; a linha inferior (miniatura + TREINAR + CICLO) fica intacta. Novo
+> `features/dashboard/FichaDeck.tsx` compartilha o deck com o `SheetSelectorModal`.
+> Sessão anterior (`v4.29.0`): topo do **Início** no estilo **Clash Royale**
+> (2 colunas 60/40 com bases alinhadas, outline branca da pílula de Missões
+> removida, radar centralizado) e **1º gesto do áudio** corrigido (o `resume()`
+> do `AudioContext` resolve antes de o estado virar `running` e a checagem
+> imediata abortava a MAIN no 1º toque). Detalhe no CHANGELOG.
 
 ---
 

@@ -546,6 +546,12 @@ export function App() {
     document.body.classList.toggle('perfil-overlay-open', isPerfilOverlayOpen && !isPerfilClosing);
   }, [isPerfilOverlayOpen, isPerfilClosing]);
 
+  /* v4.30.0: marca a tela cheia no <html> para o layout do Início abrir mais
+     espaço vertical (shell.css — só em telas cheias; no modo normal nada muda). */
+  useEffect(() => {
+    document.documentElement.classList.toggle('app-fullscreen', isFullscreen);
+  }, [isFullscreen]);
+
   const closePerfilOverlay = useCallback(() => {
     setIsPerfilClosing(true);
     // Foco volta ao elemento que originou a abertura (cartão de visitas)

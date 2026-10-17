@@ -3,35 +3,39 @@
  *
  * Port 1:1 do fragmento legado `componentes/secoes/dashboard.html` (v3.5.7):
  * header calling-card (#dashProfileCard) com avatar, botões de topo, saudação
- * e pílula de missões; arena card com radar + barra de XP; card da ficha
- * sugerida com CTA "TREINAR" e card de ciclo.
+ * e pílula de missões; card central com a PRÉVIA DA FICHA DO DIA + barra de
+ * progresso do ciclo (30 divisões); card da ficha sugerida com CTA "TREINAR"
+ * e card de ciclo.
  *
  * Dados ligados ao IndexedDB (useLocalData) com as fórmulas do legado:
  *   XP = dias concluídos × 10 · nível = floor(xp/100)+1
  *   sugestão = db.historico[today].treino || determineTreinoDoDia()
  *   ciclo = currentCycleStartDate/currentCycleBreakdown (cópia bruta legacyState)
  *
- * O radar é o Radar Fit real (Fase 3): buildRadarSvgHtml + side effects via
- * <RadarChart/>, modo MENSAL/TOTAL compartilhado com a Progresso (useRadarMode).
+ * v4.30.0: o Radar Fit saiu do Início (segue só na Progresso) e o card central
+ * passou a mostrar a ficha do dia no MESMO desenho do seletor de treino
+ * (<FichaDeck/>, sem o widget MAESTRIA/EMBLEMAS). A saudação virou contextual
+ * e o botão social deu lugar ao de ofensiva (dias de sequência).
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
 import {
   getCycleStats,
   getExerciseMap,
+  getStreak,
   getTodayTreino,
   getXp,
   pickExercises,
+  today,
   type SheetKey,
 } from '@/core/db/queries';
 import { SheetSelectorModal } from '@/features/dashboard/SheetSelectorModal';
+import { FichaDeck } from '@/features/dashboard/FichaDeck';
 import { MissionsOverlay } from '@/features/dashboard/MissionsOverlay';
 import { NewsOverlay } from '@/features/news/NewsOverlay';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { IDENTITY_EMBLEMS, SPRITESHEET_URL } from '@/features/profile/profile-data';
-import { RadarChart } from '@/features/gamification/RadarChart';
-import { useRadarMode } from '@/features/gamification/useRadarFit';
 
 interface DashboardFeatureProps {
   onNavigate: (section: string) => void;
@@ -60,12 +64,41 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   /* v4.8.3-navbars: overlays Missões/Notícias controlados pelo App */
   const missionsOpen = overlay === 'missions';
   const newsOpen = overlay === 'news';
-  /* Modo do radar global (legado: currentRadarMode compartilhado) */
-  const radarMode = useRadarMode((s) => s.mode);
-  const setRadarMode = useRadarMode((s) => s.setMode);
   /* Sugestão escolhida manualmente no modal; descartada quando os dados mudam */
   const [override, setOverride] = useState<{ key: string; letter: SheetKey } | null>(null);
   const [failedThumb, setFailedThumb] = useState<string | null>(null);
+
+  /* ── Saudação contextual (v4.30.0) ────────────────────────────────
+     "Bem vindo de volta," é a saudação de entrada e aparece só no 1º
+     acesso do dia ao site (data marcada em localStorage). Ao sair do Início
+     e voltar, o texto passa a ser o treino do dia ("Treino de hoje: FICHA X");
+     se o treino de hoje já foi concluído, "Treino de hoje concluído ✓". */
+  const [firstAccessToday] = useState(() => {
+    try {
+      return localStorage.getItem('academia_dash_greeting_date') !== today();
+    } catch {
+      return false;
+    }
+  });
+  const [leftDashboard, setLeftDashboard] = useState(false);
+
+  /* Marca o dia (escrita idempotente, fora do render). */
+  useEffect(() => {
+    try {
+      localStorage.setItem('academia_dash_greeting_date', today());
+    } catch {
+      /* localStorage indisponível — segue sem marcar */
+    }
+  }, []);
+
+  /* Sair do Início converte a saudação para o contexto do dia. */
+  useEffect(() => {
+    const onSection = (e: Event) => {
+      if ((e as CustomEvent<string>).detail !== 'dashboard') setLeftDashboard(true);
+    };
+    document.addEventListener('sectionchange', onSection);
+    return () => document.removeEventListener('sectionchange', onSection);
+  }, []);
 
   const dataKey = useMemo(
     () => `${history.length}|${sheets.length}|${history[0]?.date ?? ''}`,
@@ -81,15 +114,24 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
     const sheetExercises = pickExercises(sheet?.exerciseIds ?? [], getExerciseMap(exercises));
     const xp = getXp(history);
     const cycle = getCycleStats(data);
-    return { suggestion, sheet, sheetExercises, xp, cycle };
+    const streak = getStreak(history);
+    const completedToday = history.some((h) => h.date === today() && h.completed);
+    return { suggestion, sheet, sheetExercises, xp, cycle, streak, completedToday };
   }, [exercises, sheets, history, legacy, override, dataKey]);
 
-  const { suggestion, sheet, sheetExercises, xp, cycle } = derived;
+  const { suggestion, sheet, sheetExercises, xp, cycle, streak, completedToday } = derived;
   const hasCardio = Boolean(sheet?.aerobic?.tipo);
   const totalItems = sheetExercises.length + (hasCardio ? 1 : 0);
-  const levelProgress = xp % 100;
   const thumb = sheetExercises.find((ex) => ex.imageUrl)?.imageUrl ?? null;
   const thumbFailed = thumb !== null && failedThumb === thumb;
+
+  /* Texto do topo (v4.30.0): conclusão > saudação de entrada > treino do dia */
+  const greetingText = completedToday
+    ? 'Treino de hoje concluído ✓'
+    : firstAccessToday && !leftDashboard
+      ? 'Bem vindo de volta,'
+      : `Treino de hoje: FICHA ${suggestion}`;
+  const cycleDone = Math.min(cycle.done, cycle.total);
 
   const userName = pc?.nome || legacy?.profileCustomization?.nome || 'ATLETA';
 
@@ -190,7 +232,9 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
             {/* Nome + clã (placeholder) — colados no pé da coluna, para
                 alinhar com a base da MISSÕES */}
             <div className="dash-identity">
-              <span className="dash-identity__welcome">Bem vindo de volta,</span>
+              <span className="dash-identity__welcome" id="dashGreeting">
+                {greetingText}
+              </span>
               <h1 className="dash-identity__name" id="dashUserName">
                 {userName}
               </h1>
@@ -198,23 +242,29 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
             </div>
           </div>
 
-          {/* Coluna direita: botões (social/notícias/menu) + MISSÕES */}
+          {/* Coluna direita: botões (ofensiva/notícias/menu) + MISSÕES */}
           <div className="dash-top-right">
             <div className="dash-top-btns">
               <div className="flex items-center gap-2">
+                {/* v4.30.0 — substitui o antigo botão Social: mostra a OFENSIVA
+                    (dias de sequência) como na referência (chama + valor). */}
                 <button
-                  className="dash-header-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all"
-                  id="dashBtnSocial"
-                  aria-label="Social"
-                  onClick={(e) => {
-                    stop(e);
-                    onNavigate('social');
-                  }}
+                  className="dash-header-btn dash-streak-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center transition-all"
+                  id="dashBtnOfensiva"
+                  aria-label={`Ofensiva: ${streak} ${streak === 1 ? 'dia' : 'dias'}`}
+                  title={`Ofensiva: ${streak} ${streak === 1 ? 'dia' : 'dias'}`}
+                  onClick={stop}
                 >
-                  <span className="material-symbols-outlined text-[24px]">person</span>
+                  <span className="material-symbols-outlined dash-streak-btn__icon">
+                    local_fire_department
+                  </span>
+                  <span className="dash-streak-btn__val" id="dashStreakValue">
+                    {streak}
+                  </span>
                 </button>
+                {/* Notícias — desenho de "jornal" (ícone + badge) */}
                 <button
-                  className="dash-header-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all relative"
+                  className="dash-header-btn dash-news-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center transition-all relative"
                   id="dashBtnNoticias"
                   aria-label="Notícias"
                   onClick={(e) => {
@@ -222,11 +272,11 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                     onOverlayChange('news');
                   }}
                 >
-                  <span className="material-symbols-outlined text-[24px]">calendar_today</span>
+                  <span className="material-symbols-outlined">newspaper</span>
                   <span className="notification-dot absolute top-3 right-3 w-2 h-2 bg-chest-red rounded-full" />
                 </button>
                 <button
-                  className="dash-header-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all"
+                  className="dash-header-btn dash-menu-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all"
                   id="dashBtnMenu"
                   aria-label="Menu"
                   onClick={stop}
@@ -235,7 +285,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                 </button>
               </div>
             </div>
-            {/* Missões — colada no pé da coluna, sem a outline branca */}
+            {/* Missões — sem o rótulo "Missões" (v4.30.0) */}
             <div
               className="dash-missions"
               id="dashBtnMissoes"
@@ -245,9 +295,6 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                 onOverlayChange('missions');
               }}
             >
-              <div className="dash-missions__label font-label-caps text-[9px] bg-black/70 px-2 py-0.5 rounded text-white/90 uppercase whitespace-nowrap">
-                Missões
-              </div>
               <div className="dash-missions-pill flex items-center bg-black/60 backdrop-blur-md rounded-full">
                 <div className="dash-missions-hexagon bg-[#d97706] hexagon flex items-center justify-center shadow-[0_0_10px_rgba(217,119,6,0.6)]">
                   <span className="material-symbols-outlined text-white">crown</span>
@@ -269,57 +316,18 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
           </div>
         </div>
 
-        {/* ── ARENA CARD (radar + barra de XP) ── */}
-        <div className="dash-arena-card">
-          <div className="dash-arena-content">
-            <div className="dash-radar-header">
-              <h3>Atributos de Performance</h3>
-              <div className="dash-radar-toggle">
-                <button
-                  className={`btn btn-sm ${radarMode === 'mensal' ? 'active' : ''}`}
-                  id="btnDashRadarMensal"
-                  onClick={() => setRadarMode('mensal')}
-                  style={{
-                    padding: '4px 12px',
-                    fontSize: '.7rem',
-                    borderRadius: '6px',
-                    background: radarMode === 'mensal' ? 'var(--primary)' : 'transparent',
-                    color: radarMode === 'mensal' ? '#000' : 'var(--text-secondary)',
-                    border: 'none',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    transition: '.3s',
-                  }}
-                >
-                  MENSAL
-                </button>
-                <button
-                  className={`btn btn-sm ${radarMode === 'total' ? 'active' : ''}`}
-                  id="btnDashRadarTotal"
-                  onClick={() => setRadarMode('total')}
-                  style={{
-                    padding: '4px 12px',
-                    fontSize: '.7rem',
-                    borderRadius: '6px',
-                    background: radarMode === 'total' ? 'var(--primary)' : 'transparent',
-                    color: radarMode === 'total' ? '#000' : 'var(--text-secondary)',
-                    border: 'none',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    transition: '.3s',
-                  }}
-                >
-                  TOTAL
-                </button>
-              </div>
-            </div>
-
-            <RadarChart
-              containerId="dashRadarChartContainer"
-              gradientId="dashRadarGrad"
-              className="dash-radar-container"
-            />
-          </div>
+        {/* ── PRÉVIA DA FICHA DO DIA (substitui o radar — v4.30.0) ──
+            Mesmo desenho do seletor de treino: grid Royale 4 colunas + linha
+            de aeróbico + métricas (sem o widget MAESTRIA/EMBLEMAS). Logo
+            abaixo, a barra de progresso do CICLO em 30 divisões — cada treino
+            concluído preenche uma. ── */}
+        <div className="dash-arena-card dash-ficha-card">
+          <FichaDeck
+            sheet={sheet}
+            exercises={sheetExercises}
+            legacy={legacy}
+            showMaestria={false}
+          />
 
           <div className="dash-arena-footer">
             <button
@@ -339,10 +347,18 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
             </button>
 
             <div className="dash-arena-progress-container">
-              <div className="dash-arena-progress-track">
-                <div className="dash-arena-progress-fill progress-fill" id="dashProgressFill" style={{ width: `${Math.min(levelProgress, 100)}%` }}>
-                  <div className="dash-progress-shimmer" />
-                </div>
+              <div
+                className="dash-arena-progress-track dash-cycle-segments"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={cycle.total}
+                aria-valuenow={cycleDone}
+                aria-label={`Ciclo: ${cycleDone} de ${cycle.total} treinos`}
+                id="dashCycleSegments"
+              >
+                {Array.from({ length: cycle.total }, (_, i) => (
+                  <span key={i} className={i < cycleDone ? 'filled' : undefined} />
+                ))}
               </div>
             </div>
           </div>

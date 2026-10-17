@@ -707,8 +707,8 @@
     grid-area: banner;
   }
 
-  /* Arena/radar ocupa a coluna direita inteira (span das 2 linhas);
-     o conteúdo flex:1 centraliza e empurra a barra de XP para o pé. */
+  /* Prévia da ficha ocupa a coluna direita inteira (span das 2 linhas);
+     o corpo do deck flex:1 preenche o card e empurra a barra para o pé. */
   .section-slide[data-section='dashboard'] .dash-container .dash-arena-card {
     grid-area: arena;
     margin-top: 0;
@@ -716,8 +716,8 @@
   }
   .section-slide[data-section='dashboard']
     .dash-container
-    .dash-arena-card
-    .dash-arena-content {
+    .dash-ficha-card
+    .dash-mini-deck__body {
     flex: 1;
   }
 
@@ -750,18 +750,21 @@
   display: none;
 }
 
-/* Radar (quadrado): escala com a altura — era o maior consumidor de espaço. */
-.section-slide[data-section='dashboard'] .dash-radar-container {
-  min-height: 0 !important;
+/* Prévia da ficha do dia (v4.30.0): o corpo do deck é quem rola e limita a
+   altura do card — o grid Royale de 4 colunas pode ser mais alto que o
+   espaço disponível entre o topo e o card inferior. Só no mobile: no desktop
+   o card é a coluna direita do grid e estica com a linha. */
+@media (max-width: 1023px) {
+  .section-slide[data-section='dashboard'] .dash-ficha-card .dash-mini-deck__body {
+    min-height: 0;
+    max-height: clamp(150px, 34vh, 320px);
+  }
 }
-.section-slide[data-section='dashboard'] .dash-radar-container .radar-wrapper {
-  max-width: min(280px, 30vh) !important;
+.section-slide[data-section='dashboard'] .dash-ficha-card .dash-mini-deck__body {
+  padding: 10px;
 }
-
-/* Card arena: menos respiro vertical em telas baixas. */
-.section-slide[data-section='dashboard'] .dash-arena-content {
-  padding-top: clamp(8px, 1.6vh, 14px);
-  padding-bottom: clamp(4px, 1vh, 8px);
+.section-slide[data-section='dashboard'] .dash-ficha-card .dash-mini-deck__footer {
+  padding: 8px 10px;
 }
 .section-slide[data-section='dashboard'] .dash-arena-footer {
   padding-top: clamp(8px, 1.6vh, 12px);
@@ -952,14 +955,106 @@
   min-width: 20px;
 }
 
-/* Radar/barra de XP = miniatura de arena do CR: centralizado e com margens
-   laterais (não ocupa toda a largura). No desktop o card é a coluna direita
-   do grid — lá nada muda. */
+/* ============================================================
+   INÍCIO — PRÉVIA DA FICHA + BARRA DE 30 DIVISÕES (v4.30.0)
+   ============================================================
+   O card central deixou de ser o radar (que segue só na Progresso) e passou
+   a mostrar a ficha do dia no MESMO desenho do seletor de treino (grid Royale
+   + linha de aeróbico + métricas), sem o widget MAESTRIA. Logo abaixo vem a
+   barra de progresso do CICLO: 30 divisões, uma por treino concluído. O card
+   ocupa a largura toda — o grid de 4 colunas precisa do espaço (a "arena"
+   centralizada do v4.29.0 não faz mais sentido). */
+
+.section-slide[data-section='dashboard'] .dash-arena-card.dash-ficha-card {
+  width: 100%;
+}
+
+/* Barra de 30 divisões — cada treino concluído acende uma. */
+.section-slide[data-section='dashboard'] .dash-cycle-segments {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  background: transparent;
+}
+.section-slide[data-section='dashboard'] .dash-cycle-segments > span {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.35);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.section-slide[data-section='dashboard'] .dash-cycle-segments > span.filled {
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.65);
+}
+
+/* Botão de OFENSIVA (substituiu o Social): chama + dias, em coluna. */
+.section-slide[data-section='dashboard'] .dash-top-btns .dash-streak-btn {
+  flex-direction: column;
+  gap: 0;
+  color: #fdba74;
+  background: linear-gradient(180deg, rgba(251, 146, 60, 0.2) 0%, rgba(124, 45, 18, 0.28) 100%) !important;
+  border-color: rgba(251, 146, 60, 0.45) !important;
+}
+.section-slide[data-section='dashboard'] .dash-top-btns .dash-streak-btn:hover {
+  background: linear-gradient(180deg, rgba(251, 146, 60, 0.32) 0%, rgba(124, 45, 18, 0.38) 100%) !important;
+  border-color: rgba(251, 146, 60, 0.7) !important;
+}
+.section-slide[data-section='dashboard'] .dash-top-btns .dash-streak-btn .dash-streak-btn__icon {
+  font-size: clamp(16px, 4.6vw, 20px) !important;
+  line-height: 1;
+}
+.section-slide[data-section='dashboard'] .dash-top-btns .dash-streak-btn .dash-streak-btn__val {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(10px, 2.8vw, 12px) !important;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+  color: #fdba74;
+}
+
+/* Botão de NOTÍCIAS — cara de jornal (ícone newspaper + badge vermelho). */
+.section-slide[data-section='dashboard'] .dash-top-btns .dash-news-btn {
+  color: #fca5a5;
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.16) 0%, rgba(127, 29, 29, 0.26) 100%) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+.section-slide[data-section='dashboard'] .dash-top-btns .dash-news-btn:hover {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.3) 0%, rgba(127, 29, 29, 0.36) 100%) !important;
+  border-color: rgba(239, 68, 68, 0.65) !important;
+}
+
+/* Botão de MENU — leve acento roxo para não ficar idêntico aos demais. */
+.section-slide[data-section='dashboard'] .dash-top-btns .dash-menu-btn {
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.4) !important;
+}
+
+/* A MISSÕES perdeu o rótulo (v4.30.0) — a pílula vai sozinha para o pé. */
+.section-slide[data-section='dashboard'] .dash-missions {
+  gap: 0;
+}
+
+/* ============================================================
+   INÍCIO — ESPAÇO VERTICAL EXTRA EM TELA CHEIA (v4.30.0)
+   ============================================================
+   Só em tela cheia — botão "Tela cheia" do app (classe `app-fullscreen` no
+   <html>, aplicada pelo App) OU app instalado (display-mode standalone/
+   fullscreen). No modo normal nada muda. O `gap` do container separa os 3
+   blocos: topo (nome/clã/missões) · prévia + barra · botões inferiores.
+
+   Nota: o `gap` do container é o ponto único de ajuste do espaçamento
+   vertical, porque os 3 blocos são os 3 filhos diretos do container. */
 @media (max-width: 1023px) {
-  .section-slide[data-section='dashboard'] .dash-arena-card {
-    width: min(88%, 380px);
-    margin-left: auto;
-    margin-right: auto;
+  html.app-fullscreen .section-slide[data-section='dashboard'] .dash-container {
+    gap: clamp(18px, 4vh, 40px);
+  }
+}
+@media (max-width: 1023px) and (display-mode: standalone),
+  (max-width: 1023px) and (display-mode: fullscreen) {
+  .section-slide[data-section='dashboard'] .dash-container {
+    gap: clamp(18px, 4vh, 40px);
   }
 }
 

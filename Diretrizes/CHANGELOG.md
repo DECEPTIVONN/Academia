@@ -21,6 +21,35 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.30.0] - 2026-10-16
+
+**Início: prévia da ficha do dia no lugar do radar, barra de 30 divisões, saudação contextual e botão de ofensiva**: (1) o card central deixa de ser o **Radar Fit** (que segue **só na Progresso**, intacto) e passa a mostrar a **prévia da ficha do dia** no **mesmo desenho do seletor de treino** — grid Royale de 4 colunas + linha de aeróbico + métricas — **sem o widget MAESTRIA/EMBLEMAS**; logo abaixo vem a **barra de progresso do CICLO em 30 divisões** (cada treino concluído acende uma). (2) O botão **Social** do topo vira **OFENSIVA** (chama + dias de sequência, ref. do usuário); **Notícias** ganha cara de jornal (ícone `newspaper` + badge) e **Menu** um acento próprio; o rótulo **"Missões"** sai da pílula. (3) A linha **"Bem vindo de volta,"** vira **texto contextual**: 1º acesso do dia ao site → saudação; treino de hoje concluído → **"Treino de hoje concluído ✓"**; ao sair do Início e voltar → **"Treino de hoje: FICHA X"**. (4) Em **tela cheia** (botão do app OU app instalado) o Início abre **espaçamento vertical maior** entre topo, prévia+barra e botões inferiores; no modo normal nada muda. A linha inferior (miniatura + TREINAR + CICLO) fica **intacta**. `system_map.json` → **3.5.72**.
+
+### Added
+- **`features/dashboard/FichaDeck.tsx` (novo)**: corpo do deck Royale extraído do `SheetSelectorModal` — grid de 4 colunas (`.deck-card`), linha de aeróbico e rodapé de métricas — para o modal e a **prévia do Início** mostrarem exatamente o mesmo desenho. Exporta `DeckCard` e `FichaDeck` (`showMaestria` esconde o widget MAESTRIA/EMBLEMAS; `showStats` esconde o rodapé inteiro). Os ids de gradiente do SVG (elixir) usam `useId()` porque o componente pode estar montado **2× na página** (modal + prévia) — ids duplicados seriam HTML inválido.
+- **`shell.css` — seção "INÍCIO — PRÉVIA DA FICHA + BARRA DE 30 DIVISÕES (v4.30.0)"**: `.dash-ficha-card` em **largura total** (o grid de 4 colunas precisa do espaço; a "arena" centralizada do v4.29.0 deixou de fazer sentido), `.dash-cycle-segments > span` (30 divisões flexíveis, `.filled` em azul) e os estilos dos botões `.dash-streak-btn` (chama + valor, coluna) e `.dash-news-btn` (acento vermelho) / `.dash-menu-btn` (acento roxo).
+- **`shell.css` — seção "INÍCIO — ESPAÇO VERTICAL EXTRA EM TELA CHEIA (v4.30.0)"**: `html.app-fullscreen` (≤1023px) e `@media (display-mode: standalone/fullscreen)` sobem o `gap` do `.dash-container` para `clamp(18px, 4vh, 40px)` — o gap é o ponto único de ajuste, pois os 3 blocos são filhos diretos do container. `App.tsx` ganha o efeito que aplica/remove a classe `app-fullscreen` no `<html>` a partir de `isFullscreen` (`useCrossBrowserFullscreen`).
+
+### Changed
+- **`DashboardFeature.tsx` — card central**: o `RadarChart` + toggle MENSAL/TOTAL saíram do markup e entraram `<FichaDeck showMaestria={false}/>` + `<div class="dash-arena-progress-track dash-cycle-segments">` com `cycle.total` (30) divisões, das quais `cycle.done` recebem `.filled`; a coroa (`#dashBtnSeletorCrown`) e o rodapé do card permanecem. `RadarChart`/`useRadarMode` deixaram de ser importados aqui (o radar segue na Progresso).
+- **`DashboardFeature.tsx` — botões do topo**: `#dashBtnSocial` (pessoa → navegava para Social) foi **substituído por `#dashBtnOfensiva`** (chama `local_fire_department` + `#dashStreakValue` = `getStreak(history)`, sem navegação); `#dashBtnNoticias` trocou o ícone `calendar_today` por **`newspaper`**; `#dashBtnMenu` mantém o hambúrguer. O rótulo `.dash-missions__label` ("Missões") foi removido da pílula.
+- **`DashboardFeature.tsx` — saudação contextual**: novo estado derivado `greetingText` = `completedToday ? 'Treino de hoje concluído ✓' : (firstAccessToday && !leftDashboard) ? 'Bem vindo de volta,' : 'Treino de hoje: FICHA {suggestion}'`. O "1º acesso do dia" é marcado em `localStorage` (`academia_dash_greeting_date`, leitura no `useState` e escrita em efeito idempotente — sem `setState` síncrono em efeito) e a volta ao Início é detectada pelo evento `sectionchange` (detail !== 'dashboard').
+- **`SheetSelectorModal.tsx`**: corpo + rodapé passam a renderizar `<FichaDeck/>` (o `DeckCard` e o rodapé duplicados saíram do arquivo); header (abas A–J, swap, view toggle) e comportamento de troca de ficha inalterados.
+
+### Removed
+- **`shell.css` — regras mortas do radar no Início**: `.dash-radar-container { min-height: 0 }` e `.radar-wrapper { max-width: min(280px,30vh) }` (o radar não vive mais aqui) e o override `width: min(88%, 380px)` do card (agora largura total). Os elementos ocultos de compatibilidade do legado (`#dashLiga`, `#dashLevel`, `#dashUserXp`, `#dashProgressSegments`) seguem no markup.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK (PWA 112 entradas).
+- Probe CDP headless (440×956) com histórico injetado via a cópia legada (`academia_treino`):
+  - **1º acesso do dia** → saudação **"Bem vindo de volta,"**, ofensiva **5**, **5/30** na pílula e **5 de 30** divisões acesas.
+  - **Voltar ao Início** (clique em TREINOS → INÍCIO) → **"Treino de hoje: FICHA B"** (a próxima ficha após a última concluída).
+  - **Treino de hoje concluído** → **"Treino de hoje concluído ✓"**, 6 divisões acesas.
+  - **Ficha vazia** → mensagem "Nenhuma ficha pronta ainda" dentro do card.
+  - **Tela cheia** → `gap` do container 9,56 px → **38,24 px** (`app-fullscreen`), sem overflow (956 px).
+  - **Desktop (1280×900)** → grid `"banner arena" / "workout arena"` mantido; **modal seletor** abre com grid 5 cards + rodapé VOLUME/MAESTRIA/CARDIO e ids de gradiente únicos.
+  - Overlays de Notícias/Missões abrem normalmente (`#dashBtnNoticias` / `#dashBtnMissoes`); **0 erros** de console.
+
 ## [v4.29.0] - 2026-10-16
 
 **Topo da aba Início no estilo Clash Royale + correção do 1º gesto do áudio**: (1) o cabeçalho da Home deixa de ser um cartão *full-width* de 200px e vira **duas colunas** — banner do perfil (**menor**, ~60%) com **nome + clã** logo **abaixo** dele, e, à direita (~40%), os botões **Social/Notícias/Menu** com a **MISSÕES** embaixo; as colunas têm a mesma altura e o último bloco de cada uma é empurrado para o pé, então a base de "nome + clã" **alinha com a base da MISSÕES** (como no Clash Royale). A **outline branca** da pílula de Missões foi removida (`border-prestige-gold` não existe no tema TW4 e a cor caía no fallback claro do preflight) e o **radar/barra de XP** passa a ser a "miniatura de arena": **centralizado e com margens laterais** (não ocupa toda a largura). (2) A música **MAIN volta a começar no 1º gesto**: o `resume()` do `AudioContext` resolve **antes** de o estado virar `running`, e a checagem imediata de `ctx.state` abortava o play no 1º toque (a faixa só começava no 2º, quando começava); agora há espera limitada pela virada do estado e o gesto só é desarmado **depois** de a faixa tocar de fato. `system_map.json` → **3.5.71**.
