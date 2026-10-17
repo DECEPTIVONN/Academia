@@ -12,9 +12,21 @@
 
 > ⚠️ **Arquivo desatualizado por várias sessões.** Escrito ao fim da sessão de
 > 2026-10-08 (quando o `system_map` estava em **3.5.24**). O estado atual é
-> `system_map` **3.5.74** e o histórico completo entre `v4.0.15` e `v4.31.0` está
+> `system_map` **3.5.75** e o histórico completo entre `v4.0.15` e `v4.31.1` está
 > no `Diretrizes/CHANGELOG.md`. As seções 2–4 abaixo são **históricas** (fase de
 > paridade da migração React v4). Última sessão registrada aqui: **2026-10-17**
+> (`v4.31.1`) — ajustes no **Início**: a **linha verde de cardio** abaixo do grid
+> da prévia dá lugar ao **nome do treino** ("TREINO B" + etiqueta FICHA DO DIA, no
+> acento do tema) e o **1º widget do rodapé volta a ser o VOLUME MÉDIO DE CARGA**
+> (o modal seletor segue com volume/maestria/cardio); o botão **menu** ganha um
+> **popup estilo Clash Royale** (Registro de Treinos · Rankings · Mensagens ·
+> Configurações · Ajuda · **Fit ID**) e o **Fit ID** abre uma tela de identidade
+> inspirada no Supercell ID (Recompensas de Identificação · Amigos · Meus Dados);
+> o **header do seletor de treinos em "Minha Ficha"** abandona o **preto AMOLED**
+> e passa a usar o tom do restante da aba; o **peso inicial sugerido passa a
+> PREENCHER o campo Carga** do formulário (sem sobrescrever o que o usuário digita);
+> e a **chama fica CINZA** quando a ofensiva está em **0 dias**. Sessão anterior:
+> **2026-10-17**
 > (`v4.31.0`) — **prévia do Início sem barra de rolagem** (o corpo do deck cresce
 > até caber a ficha inteira; o `.dash-container` rola como último recurso),
 > **cardio padrão em todo treino** (`DEFAULT_AEROBIC`/`effectiveAerobic`: 10 min de

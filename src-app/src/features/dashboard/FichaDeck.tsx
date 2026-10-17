@@ -6,7 +6,10 @@
  * mesmo desenho: grid de 4 colunas (deck-card) + linha de aeróbico + rodapé de
  * métricas (volume médio / maestria / cardio).
  *
- * A prévia do Início esconde o widget MAESTRIA/EMBLEMAS via `showMaestria`.
+ * A prévia do Início esconde o widget MAESTRIA/EMBLEMAS via `showMaestria` e,
+ * via `bodyRow='sheet'` (v4.31.1), troca a linha verde de cardio (abaixo do
+ * grid) pelo NOME da ficha do dia ("TREINO A · FICHA DO DIA"). O rodapé segue
+ * idêntico ao do modal: volume médio de carga + cardio configurado.
  */
 
 import React, { useId, useMemo } from 'react';
@@ -62,9 +65,10 @@ interface FichaDeckProps {
   legacy: LegacyRaw | null;
   /** `false` esconde o widget MAESTRIA/EMBLEMAS (usado na prévia do Início). */
   showMaestria?: boolean;
-  /** 1º widget do rodapé: `volume` (padrão, modal) ou `sheet` (letra da
-   *  ficha — "TREINO A" — usado na prévia do Início, v4.30.1). */
-  firstStat?: 'volume' | 'sheet';
+  /** Linha do CORPO abaixo do grid: `cardio` (padrão, modal seletor) ou
+   *  `sheet` (nome do treino — "TREINO A" — usado na prévia do Início,
+   *  v4.31.1: o antigo destaque verde de cardio dá lugar ao nome do treino). */
+  bodyRow?: 'cardio' | 'sheet';
   emptyMessage?: React.ReactNode;
 }
 
@@ -73,7 +77,7 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
   exercises,
   legacy,
   showMaestria = true,
-  firstStat = 'volume',
+  bodyRow = 'cardio',
   emptyMessage,
 }) => {
   /* ids de gradiente únicos: o mesmo componente pode estar montado 2x na
@@ -125,7 +129,27 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
                 <DeckCard key={ex.id} exercise={ex} index={index} />
               ))}
             </div>
-            {hasCardio && (
+            {bodyRow === 'sheet' ? (
+              /* v4.31.1 — na PRÉVIA do Início a linha abaixo do grid deixa de
+                 repetir o cardio e passa a identificar a ficha do dia
+                 ("TREINO A · FICHA DO DIA"), no acento do tema. */
+              <div className="dash-mini-deck__sheet-row">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                  width={16}
+                  height={16}
+                >
+                  <path d="M12 2l8 3v6c0 5-3.4 8.4-8 11-4.6-2.6-8-6-8-11V5l8-3z" />
+                  <path d="M12 6.5v10" strokeWidth="1.6" />
+                </svg>
+                <span>TREINO {sheet?.sheetKey ?? '—'}</span>
+                <span className="dash-mini-deck__sheet-row-tag">FICHA DO DIA</span>
+              </div>
+            ) : (
               <div className="dash-mini-deck__cardio-row">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={16} height={16}>
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -139,47 +163,22 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
         )}
       </div>
 
-      {/* Footer: ficha (ou volume) / maestria / cardio */}
+      {/* Footer: volume médio / maestria / cardio */}
       <div className="dash-mini-deck__footer">
         <div className="dash-mini-deck__stat-container">
           <div className="dash-mini-deck__stat-widget">
-            {firstStat === 'sheet' ? (
-              <>
-                {/* v4.30.1 — na prévia do Início o 1º widget mostra a LETRA da
-                    ficha do dia em vez do volume médio de carga. */}
-                <svg
-                  className="dash-mini-deck__stat-icon sheet"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinejoin="round"
-                  width={22}
-                  height={22}
-                >
-                  <path d="M12 2l8 3v6c0 5-3.4 8.4-8 11-4.6-2.6-8-6-8-11V5l8-3z" />
-                  <path d="M12 6.5v10" strokeWidth="1.6" />
-                </svg>
-                <span className="dash-mini-deck__stat-val">TREINO {sheet?.sheetKey ?? '—'}</span>
-              </>
-            ) : (
-              <>
-                <svg className="dash-mini-deck__stat-icon elixir" viewBox="0 0 24 24" fill={`url(#${elixirId})`} width={22} height={22}>
-                  <defs>
-                    <linearGradient id={elixirId} x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#ec4899" />
-                      <stop offset="100%" stopColor="#a855f7" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M12 21a6 6 0 006-6c0-4-6-11-6-11s-6 7-6 11a6 6 0 006 6z" />
-                </svg>
-                <span className="dash-mini-deck__stat-val">{volumeAvg}</span>
-              </>
-            )}
+            <svg className="dash-mini-deck__stat-icon elixir" viewBox="0 0 24 24" fill={`url(#${elixirId})`} width={22} height={22}>
+              <defs>
+                <linearGradient id={elixirId} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ec4899" />
+                  <stop offset="100%" stopColor="#a855f7" />
+                </linearGradient>
+              </defs>
+              <path d="M12 21a6 6 0 006-6c0-4-6-11-6-11s-6 7-6 11a6 6 0 006 6z" />
+            </svg>
+            <span className="dash-mini-deck__stat-val">{volumeAvg}</span>
           </div>
-          <span className="dash-mini-deck__stat-label">
-            {firstStat === 'sheet' ? 'FICHA DO DIA' : 'VOLUME MÉDIO DE CARGA'}
-          </span>
+          <span className="dash-mini-deck__stat-label">VOLUME MÉDIO DE CARGA</span>
         </div>
 
         {showMaestria && (

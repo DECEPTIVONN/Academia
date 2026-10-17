@@ -672,6 +672,7 @@ export function App() {
                 onNavigate={(sec) => navigateSection(sec as SectionType)}
                 onOpenFicha={handleOpenFicha}
                 onOpenPerfil={() => setIsPerfilOverlayOpen(true)}
+                onOpenSettings={openProfileSettings}
                 overlay={dashOverlay}
                 onOverlayChange={setDashOverlay}
               />

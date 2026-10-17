@@ -1308,6 +1308,43 @@
   stroke: #4ade80;
 }
 
+/* v4.31.1 — LINHA DE IDENTIFICAÇÃO DA FICHA (prévia do Início): ocupa o lugar
+   da linha verde de cardio e mostra o nome do treino do dia no acento do tema.
+   (Verde no app é a cor de cardio; a ficha usa o acento primário.) */
+.dash-mini-deck__sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.1);
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+  border-radius: 12px;
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.dash-mini-deck__sheet-row svg {
+  flex-shrink: 0;
+  color: var(--primary-light, #a78bfa);
+}
+
+.dash-mini-deck__sheet-row-tag {
+  margin-left: 2px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
+  font-size: 0.62rem;
+  letter-spacing: 1.2px;
+  color: var(--primary-light, #a78bfa);
+}
+
 /* Empty State */
 .dash-mini-deck__empty {
   padding: 50px 20px;

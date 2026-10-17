@@ -33,14 +33,18 @@ import {
 import { SheetSelectorModal } from '@/features/dashboard/SheetSelectorModal';
 import { FichaDeck } from '@/features/dashboard/FichaDeck';
 import { MissionsOverlay } from '@/features/dashboard/MissionsOverlay';
+import { InicioMenuModal } from '@/features/dashboard/InicioMenuModal';
+import { FitIdOverlay } from '@/features/dashboard/FitIdOverlay';
 import { NewsOverlay } from '@/features/news/NewsOverlay';
 import { useProfileState } from '@/features/profile/useProfileState';
-import { IDENTITY_EMBLEMS, SPRITESHEET_URL } from '@/features/profile/profile-data';
+import { IDENTITY_EMBLEMS, SPRITESHEET_URL, tituloNome } from '@/features/profile/profile-data';
 
 interface DashboardFeatureProps {
   onNavigate: (section: string) => void;
   onOpenFicha: (letter: SheetKey) => void;
   onOpenPerfil: () => void;
+  /** Hub de configurações do Perfil (usado pelo menu e pelo Fit ID). */
+  onOpenSettings: () => void;
   /* v4.8.3-navbars: estado dos overlays Missões/Notícias liftado para o App
      (a drawer mobile consegue abri-los de qualquer seção) */
   overlay: 'missions' | 'news' | null;
@@ -51,6 +55,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   onNavigate,
   onOpenFicha,
   onOpenPerfil,
+  onOpenSettings,
   overlay,
   onOverlayChange,
 }) => {
@@ -61,6 +66,9 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   const pc = profile?.customization;
 
   const [selectorOpen, setSelectorOpen] = useState(false);
+  /* v4.31.1 — menu popup do Início + tela de identidade Fit ID */
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [fitIdOpen, setFitIdOpen] = useState(false);
   /* v4.8.3-navbars: overlays Missões/Notícias controlados pelo App */
   const missionsOpen = overlay === 'missions';
   const newsOpen = overlay === 'news';
@@ -141,6 +149,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   const emblemPc = pc ?? legacy?.profileCustomization;
   const emblem = IDENTITY_EMBLEMS.find((e) => e.id === (emblemPc?.mainEmblem || 'prestigio-1'));
   const emblemPulsing = emblemPc?.mainEmblemPulse !== false;
+
+  /* v4.31.1 — avatar do Fit ID: usa a imagem do emblema quando existe; sprites
+     exigem recorte/crop, então caem no dicebear — igual ao card do Perfil. */
+  const avatarUrl =
+    emblem && emblem.type === 'image' && emblem.url
+      ? emblem.url
+      : `https://api.dicebear.com/7.x/avataaars/svg?seed=${emblemPc?.avatarSeed || 'Deceptivon'}`;
+  const titulo = tituloNome(pc?.titulo ?? legacy?.profileCustomization?.titulo);
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
@@ -249,7 +265,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                 {/* v4.30.0 — substitui o antigo botão Social: mostra a OFENSIVA
                     (dias de sequência) como na referência (chama + valor). */}
                 <button
-                  className="dash-header-btn dash-streak-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center transition-all"
+                  className={`dash-header-btn dash-streak-btn${streak === 0 ? ' dash-streak-btn--off' : ''} w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center transition-all`}
                   id="dashBtnOfensiva"
                   aria-label={`Ofensiva: ${streak} ${streak === 1 ? 'dia' : 'dias'}`}
                   title={`Ofensiva: ${streak} ${streak === 1 ? 'dia' : 'dias'}`}
@@ -279,7 +295,10 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                   className="dash-header-btn dash-menu-btn w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface hover:bg-electric-purple/20 transition-all"
                   id="dashBtnMenu"
                   aria-label="Menu"
-                  onClick={stop}
+                  onClick={(e) => {
+                    stop(e);
+                    setMenuOpen(true);
+                  }}
                 >
                   <span className="material-symbols-outlined text-[24px]">menu</span>
                 </button>
@@ -327,7 +346,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
             exercises={sheetExercises}
             legacy={legacy}
             showMaestria={false}
-            firstStat="sheet"
+            bodyRow="sheet"
           />
 
           <div className="dash-arena-footer">
@@ -458,6 +477,28 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
 
       {/* Overlay de Notícias (treino.html L303-427) — acionado pelo #dashBtnNoticias */}
       <NewsOverlay open={newsOpen} onClose={() => onOverlayChange(null)} />
+
+      {/* v4.31.1 — Menu popup do Início (estilo Clash Royale) + Fit ID */}
+      <InicioMenuModal
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onOpenMessages={() => onNavigate('social')}
+        onOpenSettings={onOpenSettings}
+        onOpenFitId={() => setFitIdOpen(true)}
+      />
+      <FitIdOverlay
+        open={fitIdOpen}
+        onClose={() => setFitIdOpen(false)}
+        name={userName}
+        avatarUrl={avatarUrl}
+        title={titulo}
+        xp={xp}
+        streak={streak}
+        sheets={sheets}
+        exercises={exercises}
+        history={history}
+        onOpenSettings={onOpenSettings}
+      />
     </div>
   );
 };

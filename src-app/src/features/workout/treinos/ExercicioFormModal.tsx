@@ -5,7 +5,7 @@
  * renderExChart) + upload/q-tags de app.js L179–188/L433–440.
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Exercise, ExerciseTag, MuscleGroup } from '@/core/db/schema';
 import { showToast } from '@/lib/toast';
@@ -173,9 +173,16 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
   const fileRef = useRef<HTMLInputElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
-  /* v4.31.0 — peso inicial sugerido pelo NOME digitado: aparece como dica no
-     placeholder do campo Carga (o valor salvo continua sendo o digitado). */
+  /* v4.31.1 — peso inicial sugerido pelo NOME/grupo/tags: ele PREENCHE o campo
+     Carga por padrão. Enquanto o usuário não digitar nada, o campo acompanha a
+     sugestão (inclusive ao trocar o nome); ao editar, o valor do usuário manda.
+     Num exercício já salvo a sugestão só entra quando a carga está vazia. */
   const sugestaoCarga = getSuggestedLoad({ name: nome, muscleGroup: grupo, tags });
+  const cargaTouchedRef = useRef(Boolean(editEx?.load));
+  useEffect(() => {
+    if (cargaTouchedRef.current) return;
+    setCarga(sugestaoCarga ?? '');
+  }, [sugestaoCarga]);
 
   /* Upload (app.js L179–188): click área → input; máx. 2MB; FileReader */
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -381,7 +388,10 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
                 id="inputCarga"
                 placeholder={sugestaoCarga ? `Sugerido: ${sugestaoCarga}` : 'Ex: 40kg'}
                 value={carga}
-                onChange={(e) => setCarga(e.target.value)}
+                onChange={(e) => {
+                  cargaTouchedRef.current = true;
+                  setCarga(e.target.value);
+                }}
               />
             </div>
             <div className="form-group">
