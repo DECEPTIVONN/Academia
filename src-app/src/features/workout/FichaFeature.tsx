@@ -14,6 +14,8 @@ import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
 import { idb } from '@/core/db/idb';
 import type { Exercise, SheetKey } from '@/core/db/schema';
+import { effectiveAerobic } from '@/core/db/schema';
+import { getSuggestedLoadIfMissing } from '@/lib/suggested-load';
 import {
   applyFichaCompletion,
   determineNextTreino,
@@ -192,6 +194,8 @@ const FichaTableRow: React.FC<CardProps & { idPrefix: string }> = ({
 
   const cargaHtml =
     ex.load || ex.tags.includes('Peso do Corpo') ? ` · ${formatCarga(ex)}` : '';
+  /* v4.31.0 — exercício ainda sem carga definida: dica do peso inicial. */
+  const cargaSugerida = getSuggestedLoadIfMissing(ex);
 
   return (
     <tr
@@ -213,6 +217,9 @@ const FichaTableRow: React.FC<CardProps & { idPrefix: string }> = ({
           {ex.sets}×{ex.reps}
           <span>REPS</span>
           {cargaHtml}
+          {cargaSugerida && (
+            <span className="carga-sugerida"> · Sugerido: {cargaSugerida}</span>
+          )}
         </div>
         <div className="series-grid-table">{cells}</div>
       </td>
@@ -244,6 +251,9 @@ const FichaCard: React.FC<CardProps & { mode: 'grid' | 'deck' }> = ({
     mode === 'grid' && (ex.load || ex.tags.includes('Peso do Corpo'))
       ? ` | Carga: ${formatCarga(ex)}`
       : '';
+  /* v4.31.0 — sem carga definida: dica do peso inicial sugerido (só no grid,
+     que é onde a carga aparece). */
+  const cargaSugerida = mode === 'grid' ? getSuggestedLoadIfMissing(ex) : null;
 
   return (
     <div
@@ -283,6 +293,11 @@ const FichaCard: React.FC<CardProps & { mode: 'grid' | 'deck' }> = ({
             />
           </div>
         </div>
+        {cargaSugerida && (
+          <div className="carga-sugerida deck-card-sugerida">
+            Sugerido: {cargaSugerida}
+          </div>
+        )}
       </div>
       <div className="deck-card-actions">
         <div
@@ -523,8 +538,11 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   const fichaIds = useMemo(() => sheet?.exerciseIds ?? [], [sheet]);
   const exMap = useMemo(() => getExerciseMap(exercises), [exercises]);
   const exercicios = useMemo(() => pickExercises(fichaIds, exMap), [fichaIds, exMap]);
-  const hasAe = Boolean(sheet?.aerobic?.tipo);
-  const ae = sheet?.aerobic ?? null;
+  /* v4.31.0 — cardio padrão de todo treino (10 min de esteira a 3 km/h): a
+     linha de cardio aparece sempre que a ficha tem exercícios, com os valores
+     configurados ou o padrão (`effectiveAerobic`). */
+  const hasAe = exercicios.length > 0 || Boolean(sheet?.aerobic?.tipo);
+  const ae = effectiveAerobic(sheet?.aerobic);
   const aeId = `ae-${treino}`;
 
   /* Container visível (secao-ficha.js L48-50: table-scroll-wrap / grid) */

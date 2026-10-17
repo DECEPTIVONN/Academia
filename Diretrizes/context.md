@@ -12,9 +12,18 @@
 
 > ⚠️ **Arquivo desatualizado por várias sessões.** Escrito ao fim da sessão de
 > 2026-10-08 (quando o `system_map` estava em **3.5.24**). O estado atual é
-> `system_map` **3.5.73** e o histórico completo entre `v4.0.15` e `v4.30.1` está
+> `system_map` **3.5.74** e o histórico completo entre `v4.0.15` e `v4.31.0` está
 > no `Diretrizes/CHANGELOG.md`. As seções 2–4 abaixo são **históricas** (fase de
-> paridade da migração React v4). Última sessão registrada aqui: **2026-10-16**
+> paridade da migração React v4). Última sessão registrada aqui: **2026-10-17**
+> (`v4.31.0`) — **prévia do Início sem barra de rolagem** (o corpo do deck cresce
+> até caber a ficha inteira; o `.dash-container` rola como último recurso),
+> **cardio padrão em todo treino** (`DEFAULT_AEROBIC`/`effectiveAerobic`: 10 min de
+> esteira a 3 km/h — aparece na prévia, no Minha Ficha e na linha de cardio da Ficha
+> e **não é gravado no banco**, para fichas vazias não passarem por "prontas") e
+> **peso inicial sugerido por nome do exercício** (`lib/suggested-load.ts`;
+> "Sugerido: 30 kg" na tabela/grid da Ficha, na aba Exercícios, no Modo Foco e no
+> placeholder do campo Carga — nunca grava no `load`). Sessão anterior:
+> **2026-10-16**
 > (`v4.30.1`) — ajustes no **Início**: as **30 divisões** da barra acendem com a
 > **skin de barra do usuário** (`--bar-skin-fill`/`--bar-skin-glow` publicadas por
 > `applyBarSkinToDOM`), a prévia troca o **volume médio de carga** pela **letra da

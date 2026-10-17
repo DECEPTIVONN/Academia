@@ -9,6 +9,7 @@ import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Exercise, ExerciseTag, MuscleGroup } from '@/core/db/schema';
 import { showToast } from '@/lib/toast';
+import { getSuggestedLoad } from '@/lib/suggested-load';
 import {
   buildHistorico,
   saveExerciseRecord,
@@ -171,6 +172,10 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
   const [imagem, setImagem] = useState<string | null>(() => editEx?.imageUrl ?? null);
   const fileRef = useRef<HTMLInputElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
+
+  /* v4.31.0 — peso inicial sugerido pelo NOME digitado: aparece como dica no
+     placeholder do campo Carga (o valor salvo continua sendo o digitado). */
+  const sugestaoCarga = getSuggestedLoad({ name: nome, muscleGroup: grupo, tags });
 
   /* Upload (app.js L179–188): click área → input; máx. 2MB; FileReader */
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -371,7 +376,13 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
             </div>
             <div className="form-group">
               <label htmlFor="inputCarga">Carga</label>
-              <input type="text" id="inputCarga" placeholder="Ex: 40kg" value={carga} onChange={(e) => setCarga(e.target.value)} />
+              <input
+                type="text"
+                id="inputCarga"
+                placeholder={sugestaoCarga ? `Sugerido: ${sugestaoCarga}` : 'Ex: 40kg'}
+                value={carga}
+                onChange={(e) => setCarga(e.target.value)}
+              />
             </div>
             <div className="form-group">
               <label htmlFor="inputDescanso">Descanso (s)</label>

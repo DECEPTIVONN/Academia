@@ -76,6 +76,25 @@ export interface AerobicConfig {
   tempo: string;    // minutos
 }
 
+/**
+ * Cardio padrão de TODO treino (v4.31.0): 10 minutos de esteira a 3 km/h de
+ * velocidade média. Usado como fallback de leitura quando a ficha não tem
+ * aeróbico configurado (`aerobic: null`) — vale para fichas já existentes e
+ * para as novas, sem precisar migrar dados.
+ */
+export const DEFAULT_AEROBIC: AerobicConfig = {
+  tipo: 'Esteira',
+  vel: '3',
+  tempo: '10',
+};
+
+/** Cardio efetivo de uma ficha: o configurado ou o padrão (`DEFAULT_AEROBIC`). */
+export function effectiveAerobic(
+  aerobic: AerobicConfig | null | undefined
+): AerobicConfig {
+  return aerobic?.tipo ? aerobic : DEFAULT_AEROBIC;
+}
+
 /* ── Histórico de Treino ── */
 export interface WorkoutHistory {
   id?: string;

@@ -750,14 +750,19 @@
   display: none;
 }
 
-/* Prévia da ficha do dia (v4.30.0): o corpo do deck é quem rola e limita a
-   altura do card — o grid Royale de 4 colunas pode ser mais alto que o
-   espaço disponível entre o topo e o card inferior. Só no mobile: no desktop
-   o card é a coluna direita do grid e estica com a linha. */
+/* Prévia da ficha do dia (v4.30.0): o corpo do deck é quem define a altura do
+   card — o grid Royale de 4 colunas podia ser mais alto que o espaço disponível
+   entre o topo e o card inferior.
+   v4.31.0 — a prévia NÃO rola mais: o corpo cresce até caber a ficha inteira
+   (2 linhas do grid + linha de cardio) e a barra de rolagem interna sumiu.
+   O `.dash-container` continua rolando como último recurso (scrollbar oculta).
+   Só no mobile: no desktop o card é a coluna direita do grid e estica com a
+   linha. */
 @media (max-width: 1023px) {
   .section-slide[data-section='dashboard'] .dash-ficha-card .dash-mini-deck__body {
     min-height: 0;
-    max-height: clamp(150px, 34vh, 320px);
+    max-height: none;
+    overflow: visible;
   }
 }
 .section-slide[data-section='dashboard'] .dash-ficha-card .dash-mini-deck__body {
@@ -765,6 +770,37 @@
 }
 .section-slide[data-section='dashboard'] .dash-ficha-card .dash-mini-deck__footer {
   padding: 8px 10px;
+}
+
+/* ============================================================
+   PESO INICIAL SUGERIDO (v4.31.0)
+   ============================================================
+   Dica discreta ao lado da carga nas telas de exercício (ficha · tabela/grid e
+   aba Personalizar): "Sugerido: 30 kg". Aparece só quando o exercício ainda
+   não tem carga definida — não é um valor salvo, é orientação de início. */
+.carga-sugerida {
+  color: var(--text-secondary, #a1a1aa);
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* Dica equivalente no Modo Foco (abaixo de SÉRIES/REPS/CARGA). */
+.focus-carga-sugerida {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+/* No card do grid da ficha o espaço é estreito (4 colunas a partir de 360px):
+   a dica ocupa a linha inteira abaixo dos botões, em vez de disputar largura
+   com eles. */
+.ficha-overlay .deck-card-sugerida {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  text-align: center;
+  font-size: 0.68rem;
+  line-height: 1.15;
 }
 .section-slide[data-section='dashboard'] .dash-arena-footer {
   padding-top: clamp(8px, 1.6vh, 12px);

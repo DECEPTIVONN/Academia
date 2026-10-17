@@ -11,6 +11,7 @@
 import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { AerobicConfig, Exercise, SheetKey } from '@/core/db/schema';
+import { DEFAULT_AEROBIC } from '@/core/db/schema';
 import { getMaestriaState, computeMasteryTotals, type MaestriaState } from '@/features/gamification/maestria';
 import type { LegacyRaw } from '@/core/db/queries';
 import { getExerciseDescription } from './exercise-descriptions';
@@ -111,10 +112,12 @@ export const AerobicoModal: React.FC<{
   onClose: () => void;
   onSave: (ae: AerobicConfig) => void;
 }> = ({ open, letter, aerobic, onClose, onSave }) => {
-  /* openAerobicoModal (L1070–1080): pré-preenche ao abrir — remontagem via `key` */
-  const [tipo, setTipo] = useState(() => aerobic?.tipo ?? '');
-  const [vel, setVel] = useState(() => aerobic?.vel ?? '');
-  const [tempo, setTempo] = useState(() => aerobic?.tempo ?? '');
+  /* openAerobicoModal (L1070–1080): pré-preenche ao abrir — remontagem via `key`.
+     v4.31.0 — sem cardio configurado, abre já com o PADRÃO do app (10 min de
+     esteira a 3 km/h); campo vazio na ficha não deixa o formulário em branco. */
+  const [tipo, setTipo] = useState(() => aerobic?.tipo || DEFAULT_AEROBIC.tipo);
+  const [vel, setVel] = useState(() => aerobic?.vel || DEFAULT_AEROBIC.vel);
+  const [tempo, setTempo] = useState(() => aerobic?.tempo || DEFAULT_AEROBIC.tempo);
 
   if (!open) return null;
 

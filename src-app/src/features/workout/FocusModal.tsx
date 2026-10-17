@@ -16,6 +16,7 @@ import { useLocalData } from '@/hooks/useLocalData';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
 import type { Exercise, WorkoutHistory } from '@/core/db/schema';
+import { getSuggestedLoadIfMissing } from '@/lib/suggested-load';
 import {
   formatCarga,
   getExerciseMap,
@@ -234,6 +235,9 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
     ? `${pad2(Math.floor(restTimeRemaining / 60))}:${pad2(restTimeRemaining % 60)}`
     : 'DESCANSAR';
 
+  /* v4.31.0 — exercício ainda sem carga definida: dica do peso inicial. */
+  const sugestaoCarga = ex ? getSuggestedLoadIfMissing(ex) : null;
+
   return (
     <div
       className="modal-overlay"
@@ -300,6 +304,12 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
                   <span className="f-vol-lbl">CARGA</span>
                 </div>
               </div>
+
+              {sugestaoCarga && (
+                <div className="focus-carga-sugerida">
+                  <span className="carga-sugerida">Peso inicial sugerido: {sugestaoCarga}</span>
+                </div>
+              )}
 
               <div className="focus-notes" id="focusNotes">
                 {ex.notes && (

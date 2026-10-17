@@ -9,6 +9,7 @@
 import React, { useState } from 'react';
 import type { Exercise } from '@/core/db/schema';
 import { formatCarga, grupoBadgeClass } from '@/core/db/queries';
+import { getSuggestedLoadIfMissing } from '@/lib/suggested-load';
 
 /* ── Imagem (onerror → .premium-placeholder, idem FichaFeature/legado) ── */
 
@@ -34,6 +35,13 @@ function cargaHtml(ex: Exercise): string {
     : '';
 }
 
+/** v4.31.0 — dica do peso inicial sugerido (exercício ainda sem carga). */
+function cargaSugeridaNode(ex: Exercise): React.ReactNode {
+  const sugerida = getSuggestedLoadIfMissing(ex);
+  if (!sugerida) return null;
+  return <span className="carga-sugerida"> | Sugerido: {sugerida}</span>;
+}
+
 /* ── treinosGridCard (templates.js L150–177) ── */
 
 export const TreinosGridCard: React.FC<{
@@ -52,6 +60,7 @@ export const TreinosGridCard: React.FC<{
         <span className="ex-card-vol">
           {ex.sets}×{ex.reps}
           {cargaHtml(ex)}
+          {cargaSugeridaNode(ex)}
         </span>
       </div>
       <div className="ex-card-actions">

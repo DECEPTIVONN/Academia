@@ -11,6 +11,7 @@
 
 import React, { useId, useMemo } from 'react';
 import type { Exercise, WorkoutSheet } from '@/core/db/schema';
+import { effectiveAerobic } from '@/core/db/schema';
 import type { LegacyRaw } from '@/core/db/queries';
 
 /** Cartão de exercício no grid Royale (mesmo HTML do legado). */
@@ -80,7 +81,11 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
   const uid = useId().replace(/:/g, '');
   const elixirId = `elixirGrad-${uid}`;
 
-  const hasCardio = Boolean(sheet?.aerobic?.tipo);
+  /* v4.31.0 — todo treino tem cardio POR PADRÃO (10 min de esteira a 3 km/h):
+     quando a ficha não tem aeróbico configurado usamos `DEFAULT_AEROBIC`. Uma
+     ficha sem nenhum exercício continua exibindo o estado vazio. */
+  const cardio = effectiveAerobic(sheet?.aerobic);
+  const hasCardio = exercises.length > 0 || Boolean(sheet?.aerobic?.tipo);
   const total = exercises.length + (hasCardio ? 1 : 0);
 
   /* Rodapé: volume médio (carga × séries × reps ÷ 1000) — igual ao legado */
@@ -125,7 +130,9 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={16} height={16}>
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                 </svg>
-                <span>{sheet?.aerobic?.tipo || 'Aeróbico'} configurado</span>
+                <span>
+                  {cardio.tipo} · {cardio.vel} km/h · {cardio.tempo} min
+                </span>
               </div>
             )}
           </>
@@ -209,11 +216,11 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
             </svg>
             <div className="dash-mini-deck__widget-text">
               <span className="dash-mini-deck__stat-val">
-                {hasCardio ? sheet!.aerobic!.tipo.toUpperCase() : '--'}
+                {hasCardio ? cardio.tipo.toUpperCase() : '--'}
               </span>
               <span className="dash-mini-deck__stat-sub">
                 {hasCardio
-                  ? `${sheet!.aerobic!.vel || '--'} km/h · ${sheet!.aerobic!.tempo || '--'} min`
+                  ? `${cardio.vel || '--'} km/h · ${cardio.tempo || '--'} min`
                   : 'Configurar Cardio'}
               </span>
             </div>

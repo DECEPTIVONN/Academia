@@ -12,6 +12,7 @@
  */
 
 import {
+  effectiveAerobic,
   LOCAL_USER_ID,
   type AerobicConfig,
   type Exercise,
@@ -42,6 +43,10 @@ function defaultSheet(letter: SheetKey): WorkoutSheet {
     userId: LOCAL_USER_ID,
     sheetKey: letter,
     exerciseIds: [],
+    /* v4.31.0 — o cardio padrão (10 min/esteira/3 km/h) NÃO é gravado: ele é
+       aplicado na leitura (`effectiveAerobic`). Gravar aqui faria `fichas
+       vazias` passarem por "prontas" (getAvailableWorkouts/determineNextTreino
+       consideram aeróbico como conteúdo). */
     aerobic: null,
     isArchived: false,
     updatedAt: new Date().toISOString(),
@@ -347,11 +352,14 @@ export function computeDeckStats(
   });
   const avg = list.length ? (totalCarga / list.length).toFixed(1) : '0.0';
 
+  /* v4.31.0 — ficha com exercícios usa o cardio padrão (10 min/esteira/3 km/h)
+     quando não há aeróbico configurado; deck vazio segue "Configurar Cardio". */
+  const ae = list.length > 0 ? effectiveAerobic(aerobic) : aerobic;
   let cardioMain = '--';
   let cardioSub = 'Configurar Cardio';
-  if (aerobic && aerobic.tipo) {
-    cardioMain = aerobic.tempo ? `${aerobic.tempo}min` : '--';
-    cardioSub = `${aerobic.tipo}${aerobic.vel ? ' • ' + aerobic.vel + 'km/h' : ''}`;
+  if (ae && ae.tipo) {
+    cardioMain = ae.tempo ? `${ae.tempo}min` : '--';
+    cardioSub = `${ae.tipo}${ae.vel ? ' • ' + ae.vel + 'km/h' : ''}`;
   }
 
   return { avg, cardioMain, cardioSub };
