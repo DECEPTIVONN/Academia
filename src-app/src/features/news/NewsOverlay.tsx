@@ -504,7 +504,17 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
   };
 
   return toBody(
-    <div id="news-overlay" className="news-overlay" style={{ display: open ? 'block' : 'none' }} ref={overlayRef}>
+    <div
+      id="news-overlay"
+      className="news-overlay"
+      ref={overlayRef}
+      style={{
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.25s ease, visibility 0.25s ease',
+      }}
+    >
       {/* Main List View */}
       <div
         className={detail ? 'w-full relative z-10 flex flex-col hidden-view' : 'w-full relative z-10 flex flex-col'}

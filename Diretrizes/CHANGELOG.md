@@ -22,6 +22,17 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.35.2] - 2026-10-18
+
+**Interfaces de Configurações/Notícias/Missões — transições suaves de entrada/saída** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) **Notícias** (`NewsOverlay`) e **Missões** (`MissionsOverlay`): a abertura/fechamento usava `display: open ? 'block' : 'none'` (instantâneo); passou a usar `opacity` + `visibility` + `pointer-events` com `transition: opacity 0.25s ease, visibility 0.25s ease`, mantendo os overlays montados (display toggle removido). (2) **Configurações**: já animadas pelo overlay de Perfil (`perfil-overlay.css` — `perfilOverlayFadeIn`/`FadeOut` + classe `is-closing`), nada a mudar. O lock de scroll do body segue ativo quando aberto.
+
+### Changed
+- **`src-app/src/features/news/NewsOverlay.tsx`** — style de display toggle → opacity/visibility/pointer-events com transição.
+- **`src-app/src/features/dashboard/MissionsOverlay.tsx`** — idem.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.35.1] - 2026-10-18
 
 **Aba Social — símbolo do clã e avatares passam a usar emblemas de identificação** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O emblema do clã (caixa "BR") foi substituído pelo emblema **Prestígio 1** (imagem de `IDENTITY_EMBLEMS`) no mesmo formato do emblema de maestria (escudo `clip-path: polygon(0% 0%, 100% 0%, 100% 85%, 50% 100%, 0% 85%)`). (2) O texto "Clã de Elite" foi removido (ficou apenas "18/50 Membros"). (3) Os avatares dos usuários (FriendRow e ParticipantRow) passaram a exibir a imagem do emblema Prestígio 1 (em vez do glifo/gradiente anterior).

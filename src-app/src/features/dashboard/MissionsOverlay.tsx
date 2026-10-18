@@ -200,7 +200,12 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
     <div
       id="missions-overlay"
       className="missions-overlay"
-      style={{ display: open ? 'block' : 'none' }}
+      style={{
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.25s ease, visibility 0.25s ease',
+      }}
     >
       {/* Dynamic Background */}
       <div className="arena-bg">
