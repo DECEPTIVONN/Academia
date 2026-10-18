@@ -22,6 +22,27 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.35.5] - 2026-10-18
+
+**Maestria individual (corte do emblema superior) e Social (outline branca no botão de fechar)** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Na interface de maestria individual, o emblema de maestria no topo estava parcialmente cortado: aumentado o `padding-top` do `.maestria-ex-container` (25→40px) e o `top` do `.maestria-ex-top-decor` (-12→-18px), dando mais espaço vertical para o emblema. Aplicado em `6-maestria.css` (React legacy-style + Legacy + www). (2) Em Social, nas sub-abas Liga e Guilda, o botão de fechar (voltar para Amigos) tinha uma outline branca: removida via `outline-none`/`focus:outline-none`/`focus:ring-0`/`focus-visible:ring-0` + `style={{ outline: 'none' }}`.
+
+### Changed
+- **`src-app/src/legacy-style/treino/6-maestria.css`**, **`Legacy/style/treino/6-maestria.css`**, **`www/style/treino/6-maestria.css`** — `.maestria-ex-container` padding-top 25→40px; `.maestria-ex-top-decor` top -12→-18px.
+- **`src-app/src/features/social/LigasFeature.tsx`** — botão de fechar (voltar para Amigos) sem outline branca.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.35.4] - 2026-10-18
+
+**Interface de editar treino (ExercicioFormModal) — aprimoramento visual** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). O modal usava o estilo legado (fundo `#111` opaco, borda simples). Modernizado para o padrão premium do app: fundo glassmorphism (`rgba(10,5,20,0.85)` + `backdrop-filter: blur(20px)`), borda roxa translúcida, sombra com glow do acento, linha de acento gradiente no topo (`::before`) e título do header com gradiente texto (branco → `--primary-light`). Aplicado em `2-modals.css` (React legacy-style + Legacy + www). Sem alteração de TSX — estrutura/funcionalidade preservadas.
+
+### Changed
+- **`src-app/src/legacy-style/treino/2-modals.css`**, **`Legacy/style/treino/2-modals.css`**, **`www/style/treino/2-modals.css`** — `.modal-form` com glassmorphism premium + título gradiente.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.35.3] - 2026-10-18
 
 **Transições suaves — liga semanal/mensal e subconfigurações** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Aba Social, sub-aba Liga: a troca entre **Liga Semanal** e **Liga Mensal** (toggle) agora usa `AnimatePresence mode="wait"` + `motion.div` (opacity + deslocamento vertical 10px, 250ms easeOut), em vez de troca instantânea. (2) Interface de Configurações (`HubShell`): a navegação entre telas (raiz → grupo → leaf, via `navStack`) agora usa `AnimatePresence mode="wait"` + `motion.div` (opacity + deslocamento horizontal 12px, 200ms easeOut), em vez de troca instantânea. `motion`/`AnimatePresence` já estavam disponíveis (`motion/react`).

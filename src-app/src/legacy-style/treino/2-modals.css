@@ -2,6 +2,10 @@
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal-form,.modal-picker,.modal-confirm,.modal-conclusao{background:#111;border:1px solid var(--card-border);border-radius:20px;padding:32px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
+/* Premium glass (Exercício form + modais de formulário) */
+.modal-form{background:rgba(10,5,20,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(139,92,246,0.3);box-shadow:0 24px 64px rgba(0,0,0,0.6),0 0 48px rgba(139,92,246,0.18);position:relative;overflow:hidden;}
+.modal-form::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--primary-light),transparent);pointer-events:none;}
+.modal-form-header h3{font-size:1.25rem;font-weight:800;letter-spacing:.5px;background:linear-gradient(135deg,#fff,var(--primary-light));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
 @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
 .modal-form-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
 .modal-form-header h3{font-size:1.2rem;font-weight:700;color:var(--text);}
