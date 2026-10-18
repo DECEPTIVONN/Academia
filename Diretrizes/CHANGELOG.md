@@ -21,6 +21,7 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+<<<<<<< HEAD
 ## [v4.34.7] - 2026-10-18
 
 **Aba Social — ajustes de espaçamento e rolagem** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Redução do vão superior em cada sub-aba (padding-top do `.soc` 16→8px, `.soc-tabs` 16→8px, `.soc-panel` 20→10px). (2) Na sub-aba Aliança, a lista de amigos/membros do clã deixa o `max-h-[300px]` fixo e passa a expandir (`flex-1 min-h-0`), com rolagem interna apenas se não couber no restante da página — vale também fora da tela cheia. (3) Na sub-aba Guilda, o chat (scroller) ganha `pb-24` e altura reduzida (`calc(100vh-360px)`/`calc(100vh-340px)`, min-h 360) para as mensagens não ficarem ocultas pela barra de navegação inferior.
@@ -46,6 +47,8 @@
 ### Verificado
 - `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
 
+=======
+>>>>>>> a45cec381ee1781f72370c86752ff54ed1929f85
 ## [v4.34.5] - 2026-10-18
 
 **Aba Montar Ficha — fundo do menu do deck deixa de ser roxo e passa a usar o tom de preto do restante da interface; botão de Detalhes adicionado aos exercícios fora do deck** (a pedido do usuário; as duas imagens anexadas não puderam ser lidas por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O menu de ações que aparece ao clicar em um exercício do deck (`.deck-card-menu`) tinha fundo roxo concentrado (`#1a0b2e`); passou a usar `var(--card-bg)` (o mesmo tom de preto dos demais cards/containers), nas duas regras (normal e royale-view override), em `cards.css` (React legacy-style + Legacy + www). (2) Nos exercícios da coleção (fora do deck ativo) foi adicionado um botão de Detalhes (ícone de lupa) ao lado do botão de Editar (lápis) na linha do card, abrindo os detalhes do exercício (CR) — `TreinosCollectionCard` (cards.tsx) + prop `onDetails` repassada por `MontarTab` (`onOpenCR`).
