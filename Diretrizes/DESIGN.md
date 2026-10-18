@@ -209,6 +209,7 @@ Os exercícios de treino são representados como cartões tridimensionais coleci
 ```
 
 *   **Fundo e Bordas:** `.deck-card` usa um gradiente de fundo inclinado em 145 graus (`linear-gradient(145deg, #1e293b, #0f172a)`), cantos curvos de `14px` e borda fina translúcida de `1px`.
+*   **Prévia do Início (v4.33.0):** a **prévia da ficha do dia** no Início **reusa esta mesma anatomia** (card `linear-gradient(145deg, #1e293b, #0f172a)` + borda branca 10%, header `rgba(0,0,0,.4)`) dentro do contêiner `.dash-arena-card`, que adota o **tom de preto da aba Minha Ficha** (`var(--card-bg)` + `var(--card-border)`, o par do `.deck-builder-container`). Era o único lugar que ainda usava o **violeta fixo do antigo "radar fit"** (gradientes `rgba(27,10,43,.8)`→`rgba(13,4,22,.95)` e `#0e0d1a`→`#07060d`, cards `rgba(21,20,40,.85)` + borda `#23223f`, widgets `rgba(21,20,40,.75)` + `#23223f`): o roxo fixo saiu e restou o **acento do tema** apenas onde é interação (hover, outline de destaque do TREINAR, ícone de cardio via `--primary-light`).
 *   **Efeito Hover com Lift 3D:** Ao passar o mouse, o cartão se eleva no eixo Y (`transform: translateY(-8px) scale(1.02)`) com curva de aceleração elástica `cubic-bezier(0.175, 0.885, 0.32, 1.275)` e emite um brilho colorido correspondente à sua categoria na borda.
 *   **Brilhos Temáticos por Categoria Muscular:**
     *   🔴 **Peito:** Borda superior vermelha (`#e94560`) e glow vermelho.

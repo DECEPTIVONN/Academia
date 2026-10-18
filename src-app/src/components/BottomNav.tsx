@@ -160,11 +160,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       id: 'treinos',
       domId: 'bnavTreinos',
       label: 'Treinos',
+      /* v4.33.0 — halteres (imagem de referência do usuário): barra central +
+         2 anilhas por lado (a de fora mais baixa, a de dentro mais alta). */
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11" />
-          <circle cx="4" cy="12" r="1.5" />
-          <circle cx="20" cy="12" r="1.5" />
+          <rect x="2.5" y="8.5" width="3" height="7" rx="1.5" />
+          <rect x="6.5" y="6" width="3.5" height="12" rx="1.75" />
+          <line x1="10" y1="12" x2="14" y2="12" />
+          <rect x="14" y="6" width="3.5" height="12" rx="1.75" />
+          <rect x="18.5" y="8.5" width="3" height="7" rx="1.5" />
         </svg>
       ),
     },

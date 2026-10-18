@@ -12,9 +12,26 @@
 
 > ⚠️ **Arquivo desatualizado por várias sessões.** Escrito ao fim da sessão de
 > 2026-10-08 (quando o `system_map` estava em **3.5.24**). O estado atual é
-> `system_map` **3.5.76** e o histórico completo entre `v4.0.15` e `v4.32.0` está
+> `system_map` **3.5.77** e o histórico completo entre `v4.0.15` e `v4.33.0` está
 > no `Diretrizes/CHANGELOG.md`. As seções 2–4 abaixo são **históricas** (fase de
 > paridade da migração React v4). Última sessão registrada aqui: **2026-10-17**
+> (`v4.33.0`) — seis pedidos do usuário no **Início/Treinos**: (1) a **prévia do Início**
+> perde o **violeta fixo herdado do "radar fit"** e assume o **tom de preto da aba Minha
+> Ficha** — `.dash-arena-card`/`.dash-mini-deck` com `var(--card-bg)` + `var(--card-border)`
+> (o par exato do `.deck-builder-container`), cards com o gradiente slate
+> `#1e293b→#0f172a` + borda branca 10%, header `rgba(0,0,0,.4)`, widgets
+> `rgba(0,0,0,.2)`/`rgba(255,255,255,.05)`, linha "TREINO X · FICHA DO DIA" sem o
+> tingimento do acento (texto claro), hairline do rodapé do ciclo e trilha das 30
+> divisões neutras e o **ícone de cardio** em `currentColor` + `var(--primary-light)`;
+> o `--card-border` violeta 20% **ficou de propósito** (é o próprio token da aba de
+> referência); (2) o **menu do Início** ganha **TELA CHEIA** (entrar/sair) entre "Ajuda"
+> e "Fit ID", via `useCrossBrowserFullscreen` (mesmo estado do Drawer/Sidebar);
+> (3) as **letras "KG"** do prato de volume foram **refeitas** (traço 42; G geométrico
+> com anel de 146 aberto no alto à direita + barra do anel ao centro); (4) as **outlines
+> dos 3 botões** da barra inferior: **seletor de ficha** e **ciclo** com preta discreta
+> `rgba(0,0,0,.8)` e **TREINAR** com a **outline de destaque** `var(--primary)` (era
+> `#4a1d82`); (5) a **aba TREINOS** vira **halteres** (4 anilhas + barra, na BottomNav e
+> na Sidebar); (6) a sub-aba **PERSONALIZAR** vira **3 sliders** (knob em anel). Sessão anterior: **2026-10-17**
 > (`v4.32.0`) — **o VOLUME MÉDIO DE CARGA passa a ser calculado de verdade** (média
 > das **cargas EFETIVAS**: a salva no campo `carga` ou, se ainda vazia, a **sugerida**
 > — `parseLoadKg`/`effectiveLoadKg`/`averageLoadKg` em `lib/suggested-load.ts`), a

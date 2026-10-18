@@ -26,10 +26,21 @@ import { AerobicoModal, ConfirmModal, CRDetailsModal, ImageModal, MaestriaGeralM
 /* ── Ícones (treinos.html L7–40) ── */
 
 const TAB_ICON_EX = (
+  /* v4.33.0 — o ícone improvisado de halteres deu lugar aos 3 SLIDERS da
+     imagem de referência do usuário (a aba é "PERSONALIZAR"): cada linha é uma
+     barra com o botão/knob (anel) em posição diferente. Geometria calibrada
+     para 16px: linhas y=5.5/12/18.5, anel r=1.9 com traço 2.2 (furo de ~1px
+     na tela; knobs maiores que isso se sobrepõem entre as linhas). */
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
-    <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11" />
-    <circle cx="4" cy="12" r="1.5" />
-    <circle cx="20" cy="12" r="1.5" />
+    <line x1="2" y1="5.5" x2="8" y2="5.5" />
+    <line x1="14" y1="5.5" x2="22" y2="5.5" />
+    <circle cx="11" cy="5.5" r="1.9" strokeWidth="2.2" />
+    <line x1="2" y1="12" x2="13" y2="12" />
+    <line x1="19" y1="12" x2="22" y2="12" />
+    <circle cx="16" cy="12" r="1.9" strokeWidth="2.2" />
+    <line x1="2" y1="18.5" x2="6" y2="18.5" />
+    <line x1="12" y1="18.5" x2="22" y2="18.5" />
+    <circle cx="9" cy="18.5" r="1.9" strokeWidth="2.2" />
   </svg>
 );
 

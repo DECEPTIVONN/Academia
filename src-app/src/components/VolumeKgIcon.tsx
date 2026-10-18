@@ -14,6 +14,10 @@
  *   • "KG" é desenhado com paths (traço), não <text>: o desenho não depende de
  *     fonte carregada e escala igual em qualquer tamanho.
  *
+ * v4.33.0 — as letras "KG" foram REFEITAS: no tamanho do widget (22px) o
+ * desenho antigo virava um borrão (o anel do G tinha contra-forma menor que
+ * 1px). Agora têm corpo maior, traço mais pesado e contra-forma aberta.
+ *
  * Usado no rodapé do deck (prévia do Início, seletor de fichas e "Minha Ficha").
  */
 
@@ -26,16 +30,24 @@ const PLATE_PATH =
   'H 32 C 18 470 10 462 16 448 L 158 192 C 162 182 172 176 186 176 Z';
 const HANDLE_PATH = 'M 218 84 H 294 A 12 12 0 0 1 306 96 V 190 H 206 V 96 A 12 12 0 0 1 218 84 Z';
 
-/* "KG" em traço (38) com pontas arredondadas — o vazado do prato. Espaçamento
-   entre K e G proposital: em 22px (rodapé) duas letras coladas viram um borrão
-   (ver o zoom do rodapé em verify/probe da v4.32.0). */
-const LETTER_STROKE = 38;
+/* "KG" em traço — o vazado do prato. v4.33.0: as letras estavam ilegíveis em
+   22px (o arco do G tinha contra-forma de ~0,5px e virava um borrão). Foram
+   refeitas maiores e mais pesadas, dentro do trapézio do prato:
+     • corpo da letra 135 (y 290→425) e traço 42 (≈1,9px renderizado);
+     • G geométrico clássico (o do logo do Google): anel de raio 52 (≈6,3px de
+       diâmetro) ABERTO no alto à direita (arco de 46° a -6°) com barra
+       horizontal no meio indo do anel até o centro — a versão anterior (boca
+       larga a ±32° + barra baixa) virava um "C com um risco" no tamanho real;
+     • K com haste centrada e dois braços simétricos;
+     • folga de 26 entre as letras (K 124→216 · G 242→388) e o conjunto
+       centralizado no eixo do prato (centro 256). */
+const LETTER_STROKE = 42;
 const LETTER_PATHS = [
-  'M 150 250 V 400', // K · haste
-  'M 150 325 L 198 250', // K · braço superior
-  'M 150 325 L 198 400', // K · braço inferior
-  'M 360.1 303 A 44 44 0 1 0 360.1 347', // G · arco (boca à direita)
-  'M 360.1 347 H 305', // G · barra central entrando na boca
+  'M 145 290 V 425', // K · haste
+  'M 145 357 L 195 290', // K · braço superior
+  'M 145 357 L 195 425', // K · braço inferior
+  'M 351.1 319.6 A 52 52 0 1 0 366.7 362.4', // G · anel (aberto no alto à direita)
+  'M 366.7 357 H 315', // G · barra horizontal do anel até o centro
 ];
 
 interface VolumeKgIconProps {

@@ -210,10 +210,14 @@ Referência rápida dos ícones já implementados. Use os mesmos paths para cons
 <line x1="9" y1="13" x2="15" y2="13"/>
 <line x1="9" y1="17" x2="12" y2="17"/>
 
-<!-- Treinos / Haltere (barbell) -->
-<path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/>
-<circle cx="4" cy="12" r="1.5"/>
-<circle cx="20" cy="12" r="1.5"/>
+<!-- Treinos / Halteres (v4.33.0 — imagem de referência do usuário:
+     BottomNav.tsx + nav-section-items.tsx; barra central + 2 anilhas por
+     lado, a de fora mais baixa e a de dentro mais alta) -->
+<rect x="2.5" y="8.5" width="3" height="7" rx="1.5"/>
+<rect x="6.5" y="6" width="3.5" height="12" rx="1.75"/>
+<line x1="10" y1="12" x2="14" y2="12"/>
+<rect x="14" y="6" width="3.5" height="12" rx="1.75"/>
+<rect x="18.5" y="8.5" width="3" height="7" rx="1.5"/>
 
 <!-- Progresso (ECG/pulso) -->
 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -308,6 +312,25 @@ Referência rápida dos ícones já implementados. Use os mesmos paths para cons
 <path d="M6 2h12a2 2 0 012 2v14"/>
 ```
 
+### Abas e sub-abas do Treinos (v4.33.0)
+
+```html
+<!-- PERSONALIZAR (3 sliders — imagem de referência do usuário; TAB_ICON_EX em
+     features/workout/treinos/TreinosFeature.tsx, renderizado em 16px).
+     Geometria CALIBRADA para 16px: linhas em y=5.5/12/18.5 e knob em ANEL
+     r=1.9 com stroke-width 2.2 — knobs maiores que o espaçamento entre as
+     linhas se sobrepõem e o ícone vira uma corrente de círculos. -->
+<line x1="2" y1="5.5" x2="8" y2="5.5"/>
+<line x1="14" y1="5.5" x2="22" y2="5.5"/>
+<circle cx="11" cy="5.5" r="1.9" stroke-width="2.2"/>
+<line x1="2" y1="12" x2="13" y2="12"/>
+<line x1="19" y1="12" x2="22" y2="12"/>
+<circle cx="16" cy="12" r="1.9" stroke-width="2.2"/>
+<line x1="2" y1="18.5" x2="6" y2="18.5"/>
+<line x1="12" y1="18.5" x2="22" y2="18.5"/>
+<circle cx="9" cy="18.5" r="1.9" stroke-width="2.2"/>
+```
+
 ### Grupos Musculares
 
 ```html
@@ -315,7 +338,8 @@ Referência rápida dos ícones já implementados. Use os mesmos paths para cons
 <path d="M12 20V10M6 20V14M18 20V8"/>
 <path d="M3 6c3-2 6-2 9 0s6 2 9 0"/>
 
-<!-- Costas / Treinos (barbell) -->
+<!-- Costas (barbell - desenho antigo, ainda usado nas etiquetas/cards de
+     grupo muscular; a navegação Treinos migrou para os halteres na v4.33.0) -->
 <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/>
 <circle cx="4" cy="12" r="1.5"/>
 <circle cx="20" cy="12" r="1.5"/>
@@ -385,7 +409,7 @@ Alguns ícones precisam de preenchimento para comunicar melhor. Nesses casos:
 }
 ```
 
-### Prato de peso "KG" (widget de volume médio de carga) — v4.32.0
+### Prato de peso "KG" (widget de volume médio de carga) — v4.32.0 · letras refeitas na v4.33.0
 
 Segunda exceção: o ícone pedido pelo usuário (imagem de referência) é um **pictograma sólido** — um prato de peso com alça e o texto "KG" —, que um contorno não reproduz. Vive em `src-app/src/components/VolumeKgIcon.tsx` (usado no rodapé do deck: `.dash-mini-deck__stat-icon.kg` no Início e `.volume-kg-icon` no "Minha Ficha").
 
@@ -395,6 +419,12 @@ Regras dessa exceção (diferente do triângulo de play, que é um path `fill="c
 - o "KG" é desenhado com **paths em traço** (nunca `<text>`, para não depender de fonte carregada);
 - o `id` da `<mask>` usa `useId()` — o componente monta mais de uma vez na mesma página.
 
+**v4.33.0 — letras refeitas (legibilidade em 22px):** o desenho original (traço 38, G de raio 44 com contra-forma sub-pixel) virava um borrão no tamanho real do widget. O que mudou:
+
+- traço 38 → **42** e corpo da letra 150 → **135** (y 290→425), com folga de 26 entre as letras e o conjunto centrado no eixo do prato (centro x=256);
+- o **G** passou ao **desenho geométrico clássico** (o do logo do Google): anel de **raio 52** — 146 de diâmetro e **contra-forma de 62** — **aberto no alto à direita** (`A 52 52` de 46° a −6°) com **barra horizontal do anel até o centro** (`M 366.7 357 H 315`). A primeira tentativa (boca larga a ±32° + barra baixa) lia como "C com um risco";
+- o **K** fica com haste em x=145 (`M 145 290 V 425`) e dois braços simétricos.
+
 ```html
 <!-- Estrutura (resumo): prato + alça brancos na mask · letras em preto (furos) -->
 <svg viewBox="0 0 512 512" width="22" height="22">
@@ -402,8 +432,9 @@ Regras dessa exceção (diferente do triângulo de play, que é um path `fill="c
     <mask id="volumeKg-..." maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
       <path d="M 186 176 H 326 … Z" fill="#fff" />          <!-- prato -->
       <path d="M 218 84 H 294 … Z" fill="#fff" />           <!-- alça -->
-      <g fill="none" stroke="#000" stroke-width="38" stroke-linecap="round">
-        <!-- K (haste + 2 braços) e G (arco com boca à direita + barra) -->
+      <g fill="none" stroke="#000" stroke-width="42" stroke-linecap="round">
+        <!-- K (haste M 145 290 V 425 + 2 braços) -->
+        <!-- G (anel A 52 52 aberto no alto à direita + barra M 366.7 357 H 315) -->
       </g>
     </mask>
   </defs>

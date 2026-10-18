@@ -17,7 +17,8 @@
  *     fixa no botão foi removida.
  *
  * Itens, de cima para baixo: Registro de Treinos · Rankings · Mensagens (aba
- * Social) · Configurações (hub do Perfil) · Ajuda · Fit ID.
+ * Social) · Configurações (hub do Perfil) · Ajuda · Tela cheia (entrar/sair,
+ * v4.33.0 — mesmo hook do shell) · Fit ID.
  *
  * Portal para document.body: o .section-strip tem transform/will-change e
  * passaria a ser o containing block do position:fixed (mesma causa-raiz dos
@@ -27,6 +28,7 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { showToast } from '@/lib/toast';
+import { useCrossBrowserFullscreen } from '@/lib/fullscreen';
 import './inicio-menu.css';
 
 const toBody = (node: React.ReactNode) => createPortal(node, document.body);
@@ -85,6 +87,26 @@ const IcoAjuda = (
   </svg>
 );
 
+/* v4.33.0 — tela cheia (entrar/sair): mesmos paths do SvgMaximize/SvgMinimize
+   do shell (nav-items.tsx), no tamanho dos outros itens deste menu. */
+const IcoTelaCheia = (
+  <svg {...ICON_PROPS}>
+    <path d="M8 3H5a2 2 0 00-2 2v3" />
+    <path d="M21 8V5a2 2 0 00-2-2h-3" />
+    <path d="M3 16v3a2 2 0 002 2h3" />
+    <path d="M16 21h3a2 2 0 002-2v-3" />
+  </svg>
+);
+
+const IcoSairTelaCheia = (
+  <svg {...ICON_PROPS}>
+    <path d="M8 3v3a2 2 0 01-2 2H3" />
+    <path d="M21 8h-3a2 2 0 01-2-2V3" />
+    <path d="M3 16h3a2 2 0 012 2v3" />
+    <path d="M16 21v-3a2 2 0 012-2h3" />
+  </svg>
+);
+
 const IcoFitId = (
   <svg {...ICON_PROPS}>
     <path d="M12 2l8 3v6c0 5-3.4 8.4-8 11-4.6-2.6-8-6-8-11V5l8-3z" />
@@ -118,6 +140,11 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
   onOpenFitId,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
+
+  /* v4.33.0 — TELA CHEIA (entrar/sair) dentro do menu: mesmo hook do shell
+     (MobileDrawer/Sidebar HUD), então o estado/botão ficam em sincronia com
+     qualquer outra entrada de tela cheia do app. */
+  const { isFullscreen, toggleFullscreen } = useCrossBrowserFullscreen();
 
   /* Esc fecha + trava o scroll do body enquanto aberto (padrão dos overlays) */
   useEffect(() => {
@@ -197,6 +224,17 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
       },
     ],
     [{ key: 'ajuda', label: 'Ajuda', icon: IcoAjuda, action: () => soon('Ajuda') }],
+    [
+      {
+        key: 'fullscreen',
+        label: isFullscreen ? 'Sair da tela cheia' : 'Tela cheia',
+        icon: isFullscreen ? IcoSairTelaCheia : IcoTelaCheia,
+        action: () => {
+          onClose();
+          toggleFullscreen();
+        },
+      },
+    ],
     [
       {
         key: 'fitid',
