@@ -40,6 +40,15 @@
 .soc {
   padding-top: 8px;
   color: var(--text);
+
+/* Remove outline branca do botão de fechar (sub-abas Liga/Guilda) */
+.soc-close-btn,
+.soc-close-btn:focus,
+.soc-close-btn:focus-visible,
+.soc-close-btn:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
   font-family: var(--font-primary);
 }
 

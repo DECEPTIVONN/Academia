@@ -22,6 +22,18 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.35.6] - 2026-10-18
+
+**Correção — emblema de maestria ainda cortado + outline branca persistente na Social** (a pedido do usuário). (1) A causa do corte não era só o `top` negativo: o decor estava em `top: -18px`, **fora** da caixa do container (acima da borda superior), e o container tem `overflow: hidden`, cortando-o. Corrigido movendo o decor para dentro do container (`top: 8px`) e aumentando o `padding-top` (40→55px) para dar espaço. Aplicado em `6-maestria.css` (React legacy-style + Legacy + www). (2) A outline branca do botão de fechar (Liga/Guilda) persistia apesar de `outline: none` inline; adicionada regra CSS com `!important` em `.soc-close-btn` (`outline: none !important; box-shadow: none !important;` em todos os estados) em `social.css`, além da classe `soc-close-btn` no botão.
+
+### Changed
+- **`src-app/src/legacy-style/treino/6-maestria.css`**, **`Legacy/style/treino/6-maestria.css`**, **`www/style/treino/6-maestria.css`** — `.maestria-ex-container` padding-top 40→55px; `.maestria-ex-top-decor` top -18→8px (dentro do container, não mais cortado).
+- **`src-app/src/features/social/social.css`** — regra `.soc-close-btn` com `!important` removendo outline/box-shadow.
+- **`src-app/src/features/social/LigasFeature.tsx`** — classe `soc-close-btn` + `style outline/boxShadow none`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.35.5] - 2026-10-18
 
 **Maestria individual (corte do emblema superior) e Social (outline branca no botão de fechar)** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Na interface de maestria individual, o emblema de maestria no topo estava parcialmente cortado: aumentado o `padding-top` do `.maestria-ex-container` (25→40px) e o `top` do `.maestria-ex-top-decor` (-12→-18px), dando mais espaço vertical para o emblema. Aplicado em `6-maestria.css` (React legacy-style + Legacy + www). (2) Em Social, nas sub-abas Liga e Guilda, o botão de fechar (voltar para Amigos) tinha uma outline branca: removida via `outline-none`/`focus:outline-none`/`focus:ring-0`/`focus-visible:ring-0` + `style={{ outline: 'none' }}`.

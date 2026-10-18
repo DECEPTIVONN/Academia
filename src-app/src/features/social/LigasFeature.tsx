@@ -1282,8 +1282,8 @@ export function LigasFeature({
             standaloneSound.playMove();
             setActiveSubTab('amigos');
           }}
-          className="p-3.5 bg-slate-900 hover:bg-rose-950/40 border-2 border-slate-850 hover:border-rose-900/45 text-slate-400 hover:text-rose-400 rounded-2xl transition-all cursor-pointer flex items-center justify-center shadow-md shrink-0 active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
-          style={{ outline: 'none' }}
+          className="soc-close-btn p-3.5 bg-slate-900 hover:bg-rose-950/40 border-2 border-slate-850 hover:border-rose-900/45 text-slate-400 hover:text-rose-400 rounded-2xl transition-all cursor-pointer flex items-center justify-center shadow-md shrink-0 active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
+          style={{ outline: 'none', boxShadow: 'none' }}
           title="Voltar para Amigos"
         >
           <X size={18} />

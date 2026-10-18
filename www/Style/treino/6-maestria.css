@@ -425,13 +425,13 @@
     overflow: hidden;
     box-shadow: 0 40px 100px rgba(0,0,0,0.9);
     position: relative;
-    padding-top: 40px; /* Espaço para o decor superior (aumentado para evitar corte) */
+    padding-top: 55px; /* Espaço para o decor superior (aumentado para evitar corte) */
 }
 
 /* Decoração superior (RESTAURADA) */
 .maestria-ex-top-decor {
     position: absolute;
-    top: -18px;
+    top: 8px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 50;
