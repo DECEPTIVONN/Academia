@@ -22,6 +22,17 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.34.8] - 2026-10-18
+
+**Aba Social (mobile/tela cheia) — correção de vão superior e chat oculto pela barra de navegação** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O vão superior persistia: adicionado override `html.app-fullscreen .section-slide[data-section='social'] { padding-top: 0 }` e `.soc { padding-top: 8px }` para a tela cheia, além das reduções anteriores. (2) A lista da Aliança passa a ter `max-h-[calc(100vh-420px)]` (expandida, com rolagem interna apenas se não couber). (3) O chat da Guilda teve a altura reduzida para `calc(100vh-420px)`/`calc(100vh-400px)` (min-h 320) e ganhou `pb-28`, evitando que as mensagens fiquem ocultas pela barra de navegação inferior.
+
+### Changed
+- **`src-app/src/features/social/social.css`** — override de tela cheia para elevar o conteúdo da aba Social.
+- **`src-app/src/features/social/LigasFeature.tsx`** — lista da Aliança: `max-h-[calc(100vh-420px)]`; chat da Guilda: altura reduzida + `pb-28`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.34.7] - 2026-10-18
 
 **Aba Social — ajustes de espaçamento e rolagem** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Redução do vão superior em cada sub-aba (padding-top do `.soc` 16→8px, `.soc-tabs` 16→8px, `.soc-panel` 20→10px). (2) Na sub-aba Aliança, a lista de amigos/membros do clã deixa o `max-h-[300px]` fixo e passa a expandir (`flex-1 min-h-0`), com rolagem interna apenas se não couber no restante da página — vale também fora da tela cheia. (3) Na sub-aba Guilda, o chat (scroller) ganha `pb-24` e altura reduzida (`calc(100vh-360px)`/`calc(100vh-340px)`, min-h 360) para as mensagens não ficarem ocultas pela barra de navegação inferior.
