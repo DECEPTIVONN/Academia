@@ -9,7 +9,7 @@
 | App atual (roda/deploya) | `src-app/` — React v4 + Vite + Tailwind v4; offline-first (Dexie/IndexedDB + fila de sync Supabase) |
 | Legado (congelado) | `Legacy/` — Vanilla JS, só consulta/paridade; espelho em `www/` (entrada do Capacitor) |
 | Versão atual | **v4.34.2-docs** |
-| `system_map.json` | **3.5.82** |
+| `system_map.json` | **3.5.83** |
 | Último commit | `8289adb` (v4.34.0) — o que ainda não está commitado: `git status --short` |
 
 ---

@@ -85,10 +85,6 @@ export const SheetSelectorModal: React.FC<SheetSelectorModalProps> = ({
       aria-hidden={!open}
     >
       <div className="dash-mini-deck">
-        <button className="modal-close-btn dash-mini-deck__close" id="btnFecharSeletorFichas" aria-label="Fechar" onClick={onClose}>
-          ✕
-        </button>
-
         {/* Header: menu + abas A–J + swap + view toggle */}
         <div className="dash-mini-deck__header">
           <button className="dash-mini-deck__menu-btn" id="dashMiniMenuBtn" title="Menu">

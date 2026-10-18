@@ -4,6 +4,20 @@ Este documento serve como a **Bíblia de Estilo e Guia de Referência do Sistema
 
 ---
 
+## 📖 0. Como ler este documento (convenções de caminho)
+
+> **Leia isto antes de usar qualquer caminho citado abaixo.** O documento mistura, historicamente, duas convenções de caminho. A partir de 2026-10-18 a regra é:
+
+| Convenção | Significado | Exemplo |
+| :--- | :--- | :--- |
+| **Com prefixo `src-app/`** | Caminho relativo à **raiz do repositório** — app React atual (`src-app/`) | `src-app/src/styles/shell.css` |
+| **Sem prefixo `src-app/`** | Caminho relativo a **`Legacy/`** (Vanilla JS congelado) — **[LEGADO]** | `style/treino/1-core.css` = `Legacy/style/treino/1-core.css` |
+| **Com prefixo `Diretrizes/`** | Documentação em `Diretrizes/` | `Diretrizes/Ícones.md` |
+
+**Regra de ouro:** se o caminho **não** começa com `src-app/`, `Diretrizes/`, `Planos/` ou `Referências/`, ele é do **legado** (`Legacy/`). Seções marcadas com `[LEGADO]` no título descrevem CSS/JS que **não roda** no app React — servem apenas como referência visual/histórica. Para o app atual, consulte a §15 (Mapa de UI) e `system_map.json → ia_quick_reference.atual_src_app`.
+
+---
+
 ## 📖 1. Filosofia de Design e Estética Geral
 
 O sistema visual do Academia PWA é guiado pela **Estética Gamificada de Alto Engajamento (High-Engagement Gamification)**. Ele extrai referências visuais de três fontes principais:
@@ -86,7 +100,7 @@ Todas as variáveis visuais centrais são definidas no seletor `:root` de `style
 
 ---
 
-## 🌌 3. Fundo Dinâmico e Sistema de Partículas (Arena BG)
+## 🌌 3. Fundo Dinâmico e Sistema de Partículas (Arena BG) [LEGADO]
 
 O fundo da aplicação não é um padrão cinza escuro estático. Ele adota um sistema de arena viva, com efeito Ken Burns em paralaxe, overlays de atenuação e fluxo ascendente de partículas baseadas em elixir.
 
@@ -125,7 +139,7 @@ Para evitar o carregamento de várias imagens pesadas para diferentes cores de f
 
 ---
 
-## 📱 4. Navegação Principal e Swipe Viewport
+## 📱 4. Navegação Principal e Swipe Viewport [LEGADO]
 
 O aplicativo é estruturado como uma SPA (Single Page Application) controlada por gestos de arrastar para o lado (Swipe Viewport) e botões de atalho na base (Bottom Nav Bar).
 
@@ -153,7 +167,7 @@ graph TD
 
 ---
 
-## 🗂️ 5. Sistema de Abas, Sub-abas e Switches Estilo iOS
+## 🗂️ 5. Sistema de Abas, Sub-abas e Switches Estilo iOS [LEGADO]
 
 O Academia PWA gerencia múltiplos níveis de navegação interna nos slides (como no slide de Perfil e Treinos/Montar).
 
@@ -187,7 +201,7 @@ Nas telas de configurações de preferências de treino no Perfil, os botões li
 
 ---
 
-## 🎴 6. Cartões de Exercício, Metas e Views de Ficha
+## 🎴 6. Cartões de Exercício, Metas e Views de Ficha [LEGADO]
 
 Os exercícios de treino são representados como cartões tridimensionais colecionáveis que imitam as cartas do jogo Clash Royale.
 
@@ -245,7 +259,7 @@ Quando o atleta clica sobre o cartão, ele exibe um menu de opções acoplado na
 
 ---
 
-## 🎖️ 7. Sistema de Maestria (Tiers, Molduras e Escudos)
+## 🎖️ 7. Sistema de Maestria (Tiers, Molduras e Escudos) [LEGADO]
 
 O sistema de Maestria quantifica a dedicação do atleta a cada exercício em tiers estruturados de conquistas, imitando o layout de Clash Royale.
 
@@ -276,7 +290,7 @@ O modal de maestria por exercício (`.maestria-ex-container`) apresenta uma ins�
 
 ---
 
-## 🎨 8. Personalização do Perfil (Banners e Emblemas COD-Style)
+## 🎨 8. Personalização do Perfil (Banners e Emblemas COD-Style) [LEGADO]
 
 Inspirado nos menus de customização estética de Call of Duty, o perfil do usuário pode ser remodelado usando banners, molduras, títulos e emblemas.
 
@@ -321,7 +335,7 @@ Disponíveis para usuários Pro ou conquistados por desafios, estes banners usam
 
 ---
 
-## ⏱️ 9. Temporizadores de Descanso (Radar e Ampulheta)
+## ⏱️ 9. Temporizadores de Descanso (Radar e Ampulheta) [LEGADO]
 
 O Academia PWA possui um timer de descanso inteligente que flutua na tela de forma não intrusiva. Ele possui dois layouts visuais altamente polidos selecionáveis nas preferências.
 
@@ -342,7 +356,7 @@ Carrega um vetor SVG dinâmico representando uma ampulheta física estilizada em
 
 ---
 
-## 🎨 10. Manual de Ícones SVG (Resumo de Diretrizes)
+## 🎨 10. Manual de Ícones SVG (Resumo de Diretrizes) [LEGADO]
 
 Todos os ícones das abas, botões e cabeçalhos seguem estritamente as diretrizes contidas em `Diretrizes/Ícones.md`.
 
@@ -359,7 +373,7 @@ Todos os ícones das abas, botões e cabeçalhos seguem estritamente as diretriz
 
 ---
 
-## 🕹️ 11. Elementos Interativos, Botões e Controles Rápidos
+## 🕹️ 11. Elementos Interativos, Botões e Controles Rápidos [LEGADO]
 
 ### 11.1 Botões Primários com Reflexo Radial (`.btn-primary`)
 *   **Reflexo Interno:** Possui um pseudo-elemento `::before` contendo um gradiente radial branco translúcido centrado. No estado inicial, a opacidade é zero.
@@ -378,7 +392,7 @@ Usado nas tabelas de exercícios para marcar séries feitas.
 
 ---
 
-## 🎬 12. Catálogo Completo de Animações (Keyframes CSS)
+## 🎬 12. Catálogo Completo de Animações (Keyframes CSS) [LEGADO]
 
 O aplicativo utiliza um conjunto unificado de keyframes para garantir consistência de velocidade e curvas de aceleração em todas as seções.
 
@@ -471,7 +485,7 @@ Isso é feito em CSS puro multiplicando um índice de variável CSS injetado pel
 
 ---
 
-## 🛠️ 13. Exemplos de Implementação de Componentes (Blueprints)
+## 🛠️ 13. Exemplos de Implementação de Componentes (Blueprints) [LEGADO]
 
 Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) prontos para uso para cada elemento chave do Academia PWA.
 
@@ -909,7 +923,72 @@ Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) p
 
 ---
 
-## 📝 14. Lista de Controle (Checklist) para Adicionar Novos Elementos de Estilo
+---
+
+## 🆕 16. Features do App Atual (React) — CSS e Componentes
+
+> **Escopo:** seções 3–14 acima são **[LEGADO]** (CSS/JS do Vanilla, referência visual). Esta seção documenta as features que existem **apenas no app React** (`src-app/src/`) e seus padrões de CSS/classes. Caminhos relativos a `src-app/src/`.
+
+### 16.1 Música / Miniplayer
+- **Componentes:** `features/music/MusicOverlay.tsx`, `features/music/FloatingMiniPlayer.tsx`, `features/music/WorkoutNowPlayingBar.tsx`, `features/music/player-prefs.ts`, `features/music/background-music.ts`, `features/music/audio-engine.ts`, `features/music/media-store.ts`
+- **CSS:** `features/music/music.css`
+- **Classes:** `.mu-*` (overlay), `.fmp*` (miniplayer flutuante), `.wnp*` (barra now-playing no treino)
+- **Padrões:** player Flexível (painel arrastável) / Fixo (pastilha contador), 6 posições (`PLAYER_POSITIONS`), visibilidade Sempre ativo / Só após trocar, slider de segundos (3–30s), persistência via `player-prefs.ts` + evento `academia:player-prefs-changed`. Contextos de áudio: main (MAIN.mp3 loop) / workout (Black Panther loop) / result (RESULT.mp3 1x) / missions (Revenger Phoenix loop) / workout-user (playlist do usuário).
+
+### 16.2 Social / Ligas
+- **Componentes:** `features/social/SocialFeature.tsx`, `features/social/LigasOverlay.tsx`
+- **CSS:** `features/social/social.css`
+- **Classes:** `#social-*`, `.sl-*`
+- **Padrões:** overlay fullscreen via `createPortal(document.body)`, integração com Supabase (sync multi-dispositivo), ranking de ligas, desafios.
+
+### 16.3 Bloqueio (Lock)
+- **Componentes:** `features/lock/LockScreen.tsx`
+- **CSS:** `features/lock/lock.css` (z-index 1200)
+- **Classes:** `.lock`, `.lock__*`
+- **Padrões:** PIN alfanumérico 4–6 dígitos (hash djb2, nunca cru), biometria fake 1s, inatividade chips 1/2/5/10/15/30 min + Sempre Logado, wallpapers neon/grafite/violeta/magenta por orientação (`lock-wallpapers.ts`), badge "Bloqueio Ativo" quando enabled + pinLen>0. Modo "Automática"/"Só no Botão" persiste via `LOCK_PREF_MAP.bioAuto`.
+
+### 16.4 Busca Global
+- **Componentes:** `features/search/GlobalSearchOverlay.tsx`
+- **CSS:** `features/search/search.css`
+- **Classes:** `.gs-*`
+- **Padrões:** atalho Ctrl/Cmd+K, índice unificado (exercícios + fichas A–J), normalização de acentos (NFD), ranking com score, grupos ordenados pelo melhor match. Overlay fullscreen via `createPortal`.
+
+### 16.5 Desktop (Sidebar/Drawer)
+- **Componentes:** `components/DesktopSidebar.tsx`, `components/MobileDrawer.tsx`, `components/ProfileEmblem.tsx`
+- **CSS:** `styles/shell.css` (`.side-hud`, `.mdw__*`, `#desktopSidebar`)
+- **Padrões:** Sidebar HUD colapsável (z-index 1100), navegação por seções, badges de notificação, ProfileEmblem, animação slide-in/out, integração `useCrossBrowserFullscreen`. Drawer mobile com overlay scrim.
+
+### 16.6 Fit ID
+- **Componentes:** `features/dashboard/FitIdOverlay.tsx`
+- **CSS:** `features/dashboard/fitid-overlay.css`
+- **Classes:** `.fitid-*`
+- **Padrões:** overlay de perfil "Player Card" (Call of Duty style): avatar circular, moldura, banner, títulos desbloqueáveis, emblemas animados. Monta via `createPortal(document.body)`.
+
+### 16.7 Sync / Conta
+- **Componentes:** `features/sync/SyncSettingsPanel.tsx`, `features/sync/ConnectedDevices.tsx`, `features/sync/ScreensCustomizationPanel.tsx`, `features/sync/AppLoadingScreen.tsx`, `features/sync/RemoteSyncToast.tsx`
+- **CSS:** `features/sync/sync.css`
+- **Classes:** `.sync-*`, `.connected-devices`
+- **Padrões:** sync multi-dispositivo (Supabase), fila offline (IndexedDB), push/pull (fichas, histórico, maestria, prefs), resolução de conflitos last-write-wins por `updatedAt`, registro de dispositivo (deviceId, nome, platform), preferências cross-device.
+
+### 16.8 Classes CSS novas (app atual)
+| Classe | Onde | Descrição |
+| :--- | :--- | :--- |
+| `.bnav-icon--fill` | `legacy-style/treino/7-nav-icons.css` | Silhueta preenchida (fill) para ícones da barra inferior (halteres FA solid) — normal `rgba(255,255,255,.35)`, ativo `var(--primary-light)` |
+| `.side-hud-icon--fill` | `styles/shell.css` | Silhueta preenchida para sidebar desktop (`stroke:none; fill:currentColor`) |
+| `.h-stat-fire` / `.h-stat-fire--off` | `legacy-style/treino/1-core.css` | Chama Material Symbol no hero da Ficha (18.4px, `#fdba74`; cinza `#9ca3af` quando streak=0) |
+| `.dash-workout-ex-letter` | `legacy-style/treino/secoes/dashboard.css` | Letra do treino na barra do Início (cinza `rgba(255,255,255,.5)`, Rajdhani 800 0.85rem) |
+| `.dash-workout-ex-count` | `legacy-style/treino/secoes/dashboard.css` | Contêiner flex (`align-items:baseline`) para letra + número na mesma linha |
+| `.mu-*` | `features/music/music.css` | Overlay de músicas/playlists |
+| `.fmp*` | `features/music/music.css` | Miniplayer flutuante |
+| `.wnp*` | `features/music/music.css` | Barra now-playing no treino |
+| `.lock` / `.lock__*` | `features/lock/lock.css` | Tela de bloqueio (z-index 1200) |
+| `.gs-*` | `features/search/search.css` | Busca global |
+| `.fitid-*` | `features/dashboard/fitid-overlay.css` | Overlay Fit ID |
+| `.sync-*` / `.connected-devices` | `features/sync/sync.css` | Painéis de sync/conta |
+
+---
+
+## 📝 14. Lista de Controle (Checklist) para Adicionar Novos Elementos de Estilo [LEGADO]
 
 Antes de submeter qualquer nova interface ou componente visual no projeto Academia PWA, valide contra este checklist técnico de conformidade estática:
 
@@ -949,6 +1028,9 @@ Caminhos das colunas **Componente/CSS** relativos à raiz do repositório. CSS d
 | **Notícias / Missões** | `features/news/NewsOverlay.tsx`, `features/dashboard/MissionsOverlay.tsx` | `features/news/news-overlay.css`, `features/dashboard/missions-overlay.css` | `#news-overlay`, `#missions-overlay`, `.ms-shell` |
 | **Bloqueio (lock)** | `features/lock/LockScreen.tsx` | `features/lock/lock.css` | `.lock`, `.lock__*` (z-index 1200) |
 | **Busca global** | `features/search/GlobalSearchOverlay.tsx` | `features/search/search.css` | Ctrl/Cmd + K, `.gs-*` |
+| **Social / Ligas** | `features/social/SocialFeature.tsx`, `features/social/LigasOverlay.tsx` | `features/social/social.css` | `#social-*`, `.sl-*` |
+| **Fit ID** | `features/dashboard/FitIdOverlay.tsx` | `features/dashboard/fitid-overlay.css` | `.fitid-*` |
+| **Sync / Conta** | `features/sync/SyncSettingsPanel.tsx`, `features/sync/ConnectedDevices.tsx`, `features/sync/ScreensCustomizationPanel.tsx` | `features/sync/sync.css` | `.sync-*`, `.connected-devices` |
 
 **Regras de ouro do CSS (app atual):**
 1. **Ordem de cascata** definida em `main.tsx`: `legacy.css` → `globals.css` → `design-tokens.css` → **`shell.css` por último** (vence empates). Não reordene sem necessidade.
