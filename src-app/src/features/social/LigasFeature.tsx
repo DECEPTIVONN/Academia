@@ -68,7 +68,12 @@ import {
   type LigasFeatureProps,
   type SubTab,
 } from './ligas-data';
+import { IDENTITY_EMBLEMS } from '@/features/profile/profile-data';
 import './social.css';
+
+/* Emblema de identificação "Prestígio 1" (mesmo formato do emblema de
+   maestria — escudo clip-path) usado como símbolo do clã e avatar. */
+const PRESTIGIO_1 = IDENTITY_EMBLEMS.find((e) => e.id === 'prestigio-1');
 
 /* ── LeagueCup (SVG 5-lobed, portado fiel) ── */
 
@@ -247,9 +252,13 @@ function ParticipantRow({
           {rank}
         </div>
         <div
-          className={`w-8 h-8 rounded-full ${item.avatarColor} flex items-center justify-center shrink-0 border border-slate-950/40 shadow-inner relative`}
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-slate-950/40 shadow-inner relative overflow-hidden bg-slate-900"
         >
-          <AvatarGlyph glyph={glyph} size={16} className="text-white" />
+          {PRESTIGIO_1?.type === 'image' && PRESTIGIO_1.url ? (
+            <img src={PRESTIGIO_1.url} alt={PRESTIGIO_1.nome} className="w-full h-full object-cover" />
+          ) : (
+            <AvatarGlyph glyph={glyph} size={16} className="text-white" />
+          )}
           {isSelf && (
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 border border-slate-950 rounded-full animate-pulse" />
           )}
@@ -798,9 +807,13 @@ function FriendRow({
           {rank}
         </div>
         <div
-          className={`w-8 h-8 rounded-full bg-gradient-to-br ${item.avatarColor} flex items-center justify-center shrink-0 border border-slate-950/40 shadow-inner relative`}
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-slate-950/40 shadow-inner relative overflow-hidden bg-slate-900"
         >
-          <AvatarGlyph glyph={glyph} size={16} className="text-white" />
+          {PRESTIGIO_1?.type === 'image' && PRESTIGIO_1.url ? (
+            <img src={PRESTIGIO_1.url} alt={PRESTIGIO_1.nome} className="w-full h-full object-cover" />
+          ) : (
+            <AvatarGlyph glyph={glyph} size={16} className="text-white" />
+          )}
           {item.online && (
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 border border-slate-950 rounded-full animate-pulse" />
           )}
@@ -1231,17 +1244,26 @@ export function LigasFeature({
       ) : (
         <div className="flex-1 p-4 bg-gradient-to-r from-[rgba(var(--primary-rgb,139,92,246),0.25)] via-slate-900/60 to-slate-950/70 backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.3)] rounded-2xl flex items-center justify-between select-none shadow-md">
           <div className="flex items-center gap-3">
-            <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
-              <div className="absolute inset-0 bg-emerald-600 rounded-xl transform rotate-12 border border-yellow-500 shadow-inner" />
-              <div className="absolute w-8 h-8 bg-blue-600 rounded-full border border-yellow-400" />
-              <span className="relative z-10 text-xs font-black text-white">BR</span>
+            <div
+              className="relative w-12 h-12 flex items-center justify-center shrink-0"
+              style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 85%, 50% 100%, 0% 85%)' }}
+            >
+              {PRESTIGIO_1?.type === 'image' && PRESTIGIO_1.url ? (
+                <img
+                  src={PRESTIGIO_1.url}
+                  alt={PRESTIGIO_1.nome}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-emerald-600" />
+              )}
             </div>
             <div>
               <h4 className="text-base font-black text-white uppercase tracking-tight leading-none">
                 {profile.clanName || 'Great Warriors'}
               </h4>
               <p className="text-[10px] ligas-text-accent font-semibold mt-1 uppercase tracking-wide">
-                Clã de Elite • 18/50 Membros
+                18/50 Membros
               </p>
             </div>
           </div>
@@ -1545,7 +1567,18 @@ export function LigasFeature({
 
         {bannerOrToggle}
 
-        {activeSubTab === 'amigos' ? amigosContent : activeSubTab === 'bate-papo' ? batePapoContent : ligaContent}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeSubTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="min-h-0"
+          >
+            {activeSubTab === 'amigos' ? amigosContent : activeSubTab === 'bate-papo' ? batePapoContent : ligaContent}
+          </motion.div>
+        </AnimatePresence>
 
         {renderSeasonEndPortal()}
         {renderMonthlySeasonEndPortal()}

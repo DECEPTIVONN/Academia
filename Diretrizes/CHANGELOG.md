@@ -22,6 +22,26 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.35.1] - 2026-10-18
+
+**Aba Social — símbolo do clã e avatares passam a usar emblemas de identificação** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O emblema do clã (caixa "BR") foi substituído pelo emblema **Prestígio 1** (imagem de `IDENTITY_EMBLEMS`) no mesmo formato do emblema de maestria (escudo `clip-path: polygon(0% 0%, 100% 0%, 100% 85%, 50% 100%, 0% 85%)`). (2) O texto "Clã de Elite" foi removido (ficou apenas "18/50 Membros"). (3) Os avatares dos usuários (FriendRow e ParticipantRow) passaram a exibir a imagem do emblema Prestígio 1 (em vez do glifo/gradiente anterior).
+
+### Changed
+- **`src-app/src/features/social/LigasFeature.tsx`** — import de `IDENTITY_EMBLEMS`; const `PRESTIGIO_1`; emblema do clã vira imagem do emblema em escudo; avatares viram imagem do emblema; remoção de "Clã de Elite".
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.35.0] - 2026-10-18
+
+**Aba Social — transições suaves entre sub-abas** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). A troca de sub-aba (Amigos / Guilda / Liga) era instantânea (renderização condicional direta). Agora o conteúdo é envolvido em `AnimatePresence mode="wait"` + `motion.div` (opacity + leve deslocamento vertical, 200ms easeOut), produzindo fade/slide suave ao entrar/sair. `motion` e `AnimatePresence` já estavam importados (motion/react).
+
+### Added
+- **`src-app/src/features/social/LigasFeature.tsx`** — `AnimatePresence` + `motion.div` (key=activeSubTab) envolvendo o conteúdo da sub-aba ativa.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.34.9] - 2026-10-18
 
 **Aba Social — vão superior alinhado ao das demais abas** (a pedido do usuário). A causa do vão maior era a dupla contagem do `env(safe-area-inset-top)`: o `.section-slide` já fornece o inset (como nas outras abas) e o `.soc` somava outro `env(...)` no padding-top. Corrigido: `.soc { padding-top: 8px }` (sem env), removendo o override de tela cheia anterior que zerava o padding do section-slide. Agora o vão superior da Social é o mesmo das demais abas em todos os modos.
