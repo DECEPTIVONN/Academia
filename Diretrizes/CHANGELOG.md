@@ -22,6 +22,16 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.34.9] - 2026-10-18
+
+**Aba Social — vão superior alinhado ao das demais abas** (a pedido do usuário). A causa do vão maior era a dupla contagem do `env(safe-area-inset-top)`: o `.section-slide` já fornece o inset (como nas outras abas) e o `.soc` somava outro `env(...)` no padding-top. Corrigido: `.soc { padding-top: 8px }` (sem env), removendo o override de tela cheia anterior que zerava o padding do section-slide. Agora o vão superior da Social é o mesmo das demais abas em todos os modos.
+
+### Changed
+- **`src-app/src/features/social/social.css`** — `.soc` padding-top: `calc(8px + env(...))` → `8px` (sem env duplicado); removido override `html.app-fullscreen` anterior.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.34.8] - 2026-10-18
 
 **Aba Social (mobile/tela cheia) — correção de vão superior e chat oculto pela barra de navegação** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O vão superior persistia: adicionado override `html.app-fullscreen .section-slide[data-section='social'] { padding-top: 0 }` e `.soc { padding-top: 8px }` para a tela cheia, além das reduções anteriores. (2) A lista da Aliança passa a ter `max-h-[calc(100vh-420px)]` (expandida, com rolagem interna apenas se não couber). (3) O chat da Guilda teve a altura reduzida para `calc(100vh-420px)`/`calc(100vh-400px)` (min-h 320) e ganhou `pb-28`, evitando que as mensagens fiquem ocultas pela barra de navegação inferior.
