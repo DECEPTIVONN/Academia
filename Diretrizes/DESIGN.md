@@ -919,7 +919,41 @@ Antes de submeter qualquer nova interface ou componente visual no projeto Academ
 *   [ ] **Sincronia de Ícones:** Os ícones SVG usam exclusivamente o padrão contorno definido em `Ícones.md` com `stroke="currentColor"`.
 *   [ ] **Micro-interações:** Hover, active e focus possuem transições suaves de pelo menos `0.25s` com curvas de aceleração adequadas (evite transições secas).
 *   [ ] **Tratamento de Exibição:** Os dados vazios ou de carregamento mostram `.premium-placeholder` com animação de Shimmer e pulso ativas.
-*   [ ] **Sem Token Bloqueado (IA):** O CSS deve ser escrito no módulo de seção correto (dentro de `style/treino/secoes/`) e importado adequadamente por `5-premium-design.css`.
+*   [ ] **Sem Token Bloqueado (IA):** O CSS é escrito no módulo de seção correto — no app atual, `src-app/src/legacy-style/treino/secoes/` (importado pelo agregador `legacy.css`) ou em `src-app/src/styles/` — nunca no agregador.
+
+---
+
+## 🗺️ 15. Mapa de UI — por Área de Tela (onde mexer)
+
+> **Para que serve:** pular a "exploração" (grep/leitura cega) ao mudar qualquer tela. Índice curtível da mesma informação de `system_map.json → ia_quick_reference`, com o foco no **app atual** (`src-app/`). Regra: **1 linha por área**; histórico/motivo de cada mudança fica em `Diretrizes/CHANGELOG.md`.
+
+Caminhos das colunas **Componente/CSS** relativos à raiz do repositório. CSS do app atual vive em `src-app/src/legacy-style/` (espelho do legado) e `src-app/src/styles/`.
+
+| Área de tela | Componente(s) (`src-app/src/…`) | CSS | Âncoras (id / classe) |
+| :--- | :--- | :--- | :--- |
+| **Tokens / cores do tema** | `styles/design-tokens.css`, `features/settings/theme-colors.ts` | `legacy-style/treino/1-core.css` (`:root`), `styles/globals.css` | `--primary`, `--primary-rgb`, `--card-bg`, `--card-border` |
+| **Casca / shell / splash** | `index.html` (splash), `main.tsx`, `App.tsx` | `styles/shell.css` (importado **por último**) | `#splashScreen`, `#root`, `.section-strip`, `.section-slide` |
+| **Início (dashboard)** | `features/dashboard/DashboardFeature.tsx` | `legacy-style/treino/secoes/dashboard.css` + `styles/shell.css` | `.dash-container`, `#dashBtnOfensiva`, `#dashBtnMenu`, `.dash-cycle-segments` |
+| **Prévia da ficha do dia** | `features/dashboard/FichaDeck.tsx` | `legacy-style/treino/secoes/dashboard.css` | `.dash-mini-deck__grid`, `.dash-mini-deck__stat-widget.kg`, `.dash-mini-deck__sheet-row` |
+| **Seletor de fichas** | `features/dashboard/SheetSelectorModal.tsx`, `FichaDeck.tsx`, `DashboardFeature.tsx` (seletor da barra: letra do treino + contagem) | `legacy-style/treino/secoes/dashboard.css` | `.dash-workout-exercise-card`, `#dashWorkoutLetter`, `#dashWkDetail` |
+| **Menu do Início / Fit ID** | `features/dashboard/InicioMenuModal.tsx`, `FitIdOverlay.tsx` | `features/dashboard/inicio-menu.css` | `.inicio-menu`, `.inicio-menu__item`, `.fitid-*` |
+| **Barra inferior (nav)** | `components/BottomNav.tsx`, `nav-items.tsx`, `nav-section-items.tsx` | `legacy-style/treino/7-nav-icons.css` + `styles/shell.css` | `.bottom-nav`, `.bnav-btn`, `.bnav-icon`, `.bnav-oval`, `#bnavMenu` |
+| **Sidebar / Drawer (desktop/mobile)** | `components/DesktopSidebar.tsx`, `MobileDrawer.tsx`, `ProfileEmblem.tsx` | `styles/shell.css` | `.side-hud`, `.mdw__*`, `#desktopSidebar` |
+| **Hero da Ficha + stats** | `features/workout/FichaFeature.tsx` | `legacy-style/treino/1-core.css` (`.h-stat*`), `legacy-style/treino/secoes/ficha-overlay.css` | `.treino-hero`, `#statTotalEx`, `.h-stat-val`, `.h-stat-fire`, `#globalWorkoutTimer` |
+| **Ficha (tabela / grid / foco)** | `features/workout/FichaFeature.tsx`, `FocusModal.tsx` | `legacy-style/treino/secoes/ficha-overlay.css` | `.view-selector`, `#viewBtnFocus`, `chk-*` / `chk-grid-*` |
+| **Seção Treinos (deck builder)** | `features/workout/treinos/*` (`TreinosFeature.tsx`, `MontarTab.tsx`, `cards.tsx`, `TreinosModals.tsx`, `ExercicioFormModal.tsx`, `CustomizacaoTabs.tsx`) | `legacy-style/treino/secoes/{deck-builder,cards,tabs-subnav}.css` | `#section-treinos`, `.t-tab-btn`, `.deck-card`, `.g-chip` |
+| **Progresso / Radar** | `features/training/ProgressoFeature.tsx`, `features/gamification/{radar.ts,RadarChart.tsx,useRadarFit.ts}` | `legacy-style/treino/4-gamificacao.css` | `#radarChartContainer`, `.cycle-xp-fill` |
+| **Gamificação / Share** | `features/gamification/{maestria.ts,maestria-ui.ts,ShareModal.tsx,ColecaoModals.tsx}` | `legacy-style/treino/2-modals.css`, `6-maestria.css` | `#modalShare`, `#modalColecaoExercicios`, `#modalMaestriaEx` |
+| **Perfil / Configurações** | `features/profile/*`, `features/settings/*` | `features/settings/settings.css`, `legacy-style/treino/secoes/perfil-overlay.css` | `#perfil-overlay`, `.set-*`, `.hub-*` |
+| **Músicas / miniplayer** | `features/music/*` (`MusicOverlay.tsx`, `FloatingMiniPlayer.tsx`, `WorkoutNowPlayingBar.tsx`) | `features/music/music.css` | `.mu-*`, `.fmp*`, `.wnp*` |
+| **Notícias / Missões** | `features/news/NewsOverlay.tsx`, `features/dashboard/MissionsOverlay.tsx` | `features/news/news-overlay.css`, `features/dashboard/missions-overlay.css` | `#news-overlay`, `#missions-overlay`, `.ms-shell` |
+| **Bloqueio (lock)** | `features/lock/LockScreen.tsx` | `features/lock/lock.css` | `.lock`, `.lock__*` (z-index 1200) |
+| **Busca global** | `features/search/GlobalSearchOverlay.tsx` | `features/search/search.css` | Ctrl/Cmd + K, `.gs-*` |
+
+**Regras de ouro do CSS (app atual):**
+1. **Ordem de cascata** definida em `main.tsx`: `legacy.css` → `globals.css` → `design-tokens.css` → **`shell.css` por último** (vence empates). Não reordene sem necessidade.
+2. **Todo overlay/modal** monta via `createPortal(document.body)`: o `.section-strip` tem `will-change: transform` e vira o *containing block* do `position: fixed` (causa-raiz histórica de overlays "fora da tela").
+3. **Ícone novo/alterado** → ler `Diretrizes/Ícones.md` antes; silhuetas `fill` (não `stroke`) só nos casos especiais listados lá.
 
 ---
 *Manual desenvolvido e validado por: Antigravity AI — Atualizado em Maio de 2026*

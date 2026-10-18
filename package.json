@@ -5,7 +5,8 @@
   "main": "sw.js",
   "scripts": {
     "build": "npm --prefix src-app run build",
-    "dev": "npm --prefix src-app run dev"
+    "dev": "npm --prefix src-app run dev",
+    "lint:docs": "node tools/doc-lint.mjs"
   },
   "keywords": [],
   "author": "",

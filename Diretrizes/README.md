@@ -63,15 +63,15 @@ Academia/
 │   ├── componentes/           ← JS globais (navbar, footer, temas) + secoes/ (fragmentos)
 │   ├── Assets/                ← BG, Exerciciosgif, FONTS, Images, Arenas, Sounds, libs
 │   └── cache/                 ← Cache interno do SW legado
-├── DESIGN.md                  ← Manual do sistema de design
-├── Personalização-perfil.md   ← Roadmap da feature de personalização
 ├── Diretrizes/                ← Documentação e diretrizes (LEIA ANTES DE EDITAR)
 │   ├── README.md              ← Este arquivo
 │   ├── system_map.json        ← Índice arquitetural (primeira leitura)
 │   ├── CHANGELOG.md           ← Registro obrigatório de todas as alterações
+│   ├── DESIGN.md              ← Manual do sistema de design (tokens/animações/blueprints)
 │   ├── Ícones.md              ← Biblioteca de ícones SVG (ler ao mexer em ícones)
-│   └── navbar-inferior.html   ← Guia/preview da navbar mobile HUD
-├── Planos/                    ← Planejamento e roadmap de features
+│   └── context.md             ← Continuidade de sessão (histórico; ver nota de desatualização)
+├── Planos/                    ← Planejamento e roadmap (inclui Personalização-perfil.md)
+├── Referências/               ← Material de referência (navbar-inferior.html)
 ├── www/                       ← Espelho da versão legada p/ o Capacitor (entry: www/index.html)
 └── Assets/, style/, JS/, ...  ← (movidos para Legacy/ — ver nota abaixo)
 ```
@@ -196,12 +196,19 @@ Se você é um assistente de inteligência artificial manipulando esta base de c
 3. **Leia `Diretrizes/Ícones.md` sempre que for necessário adicionar ou alterar um ícone:** antes de criar/editar qualquer SVG de UI, consulte a biblioteca oficial de ícones para não quebrar o ecossistema de `stroke="currentColor"` e não duplicar ícones existentes.
 4. Não crie códigos monolíticos. Tudo deve ser feito sob a filosofia modular instalada na pasta `treino/`.
 5. **Padrão CSS BEM:** Para qualquer novo estilo ou componente, é **obrigatório** o uso da metodologia BEM para evitar poluição da cascata global.
-6. **Leia o `DESIGN.md` (raiz do projeto)** antes de criar ou alterar qualquer elemento visual — ele é o manual completo de tokens, animações e blueprints do design system.
+6. **Leia o `Diretrizes/DESIGN.md`** antes de criar ou alterar qualquer elemento visual — ele é o manual completo de tokens, animações e blueprints do design system.
 7. **DIRETRIZ OBRIGATÓRIA — informe prazo e progresso de conclusão:** esta é uma **diretriz permanente do projeto** (registrada neste README por decisão de 2026-10-15 e aplicável a toda sessão). Quando a tarefa puder demorar (diagnóstico de bug difícil, migração multi-arquivo, reorganização de pastas, adaptação de layout, verificação visual exaustiva), **não execute em silêncio até o fim**:
    - **Antes de começar:** diga ao usuário uma estimativa de conclusão e quantos passos restam (ex.: `≈7 passos: mover legado → verificar legado → baseline React → desktop Músicas → desktop Missões → desktop Notícias → documentação`).
    - **Durante a execução:** informe o progresso a cada passo concluído (ex.: `Passo 3 de 7 — concluído ✔`), sempre indicando o que já foi feito e o que falta.
    - **Ao final:** confirme a conclusão de todos os passos e o resultado das verificações.
    O usuário deve **sempre** saber onde a tarefa está e quanto falta — falhar nessa comunicação é descumprir uma regra do projeto, mesmo que o código esteja correto.
+8. **DIRETRIZ OBRIGATÓRIA — em caso de dúvida, pergunte ao usuário:** se houver qualquer ambiguidade sobre escopo, formato, prioridade, qual arquivo editar, se um caminho/código existe ou se uma mudança é segura, **pare e pergunte** antes de agir. Adivinhar e prosseguir em silêncio é descumprir uma regra do projeto — mesmo que o resultado pareça correto. Nunca assuma; sempre confirme quando não tiver certeza.
+9. **DIRETRIZ OBRIGATÓRIA — teste apenas no final:** não rode testes, builds, lints ou sondas intermediárias a cada passo. Execute a validação completa (typecheck, oxlint, build, doc-lint, sonda CDP quando aplicável) **uma única vez, ao final** da implementação, quando todos os passos estiverem concluídos. Reportar falhas no meio da execução interrompe o fluxo e gera ruído. Se um passo exigir verificação de sanidade pontual (ex.: parse de JSON), essa é permitida; a validação completa, não.
+10. **DIRETRIZ OBRIGATÓRIA — progresso em tarefas grandes (minutos, porcentagem e fases):** para tarefas grandes (migração multi-arquivo, reorganização de pastas, adaptação de layout, verificação visual exaustiva), além da regra 7, informe ao longo da execução:
+   - **Estimativa em minutos** do que falta (ex.: "≈12 min restantes").
+   - **Porcentagem concluída** (ex.: "60% — 3 de 5 fases").
+   - **Fase atual** (ex.: "Fase 2/5 — movendo legado").
+   O usuário deve sempre saber quanto tempo falta, quanto já foi feito e em qual etapa a tarefa está.
 
 ---
 
@@ -213,13 +220,15 @@ O arquivo `Diretrizes/system_map.json` é o **mapa vivo** do projeto. Ele deve s
 
 | Situação | O que fazer no `system_map.json` |
 | :--- | :--- |
-| **Novo arquivo JS** em `JS/treino/` | Adicionar entrada em `system_modules` ou criar um novo módulo |
-| **Novo arquivo CSS** em `style/treino/` | Adicionar objeto `{ file, purpose }` em `styling_manifest.modules` |
-| **Novo componente** em `componentes/` | Adicionar objeto `{ file, purpose }` em `components.modules` |
-| **Novo asset** (GIF, fonte, imagem) | Atualizar a descrição do diretório correspondente em `assets.directories` |
-| **Novo documento** em `Diretrizes/` ou `Planos/` | Adicionar entrada em `documentation.files` ou `plans.files` |
-| **Arquivo renomeado ou removido** | Localizar e renomear/remover a entrada correspondente |
-| **Nova funcionalidade** que cruza múltiplos arquivos | Adicionar uma nova chave em `ia_quick_reference` com o atalho de edição |
+| **Novo arquivo do app atual** (`src-app/src/`) | Adicionar entrada em `react_app.entry_points` (ou `core_db`) e o atalho em `ia_quick_reference.atual_src_app` |
+| **Novo arquivo legado** (`Legacy/JS/treino/`, `Legacy/style/treino/`, `Legacy/componentes/`) | Adicionar em `system_modules` / `styling_manifest.modules` / `components.modules` **e** o atalho em `ia_quick_reference.legado_referencia` |
+| **Novo asset** (GIF, fonte, imagem) | `Legacy/Assets/` → `assets.directories`; app atual → `react_app.public_assets` |
+| **Novo documento** em `Diretrizes/`, `Planos/` ou `Referências/` | Adicionar entrada em `documentation.files` ou `plans.files` |
+| **Arquivo renomeado ou removido** | Localizar e renomear/remover a entrada correspondente (marque `[REMOVIDO vX.Y]` se for histórico útil) |
+| **Nova funcionalidade** que cruza múltiplos arquivos | Adicionar uma nova chave em `ia_quick_reference` (o "onde editar" — 1 linha) |
+| **Registro de uma mudança** | `Diretrizes/CHANGELOG.md` — **não** dentro do `purpose` de uma entrada deste JSON |
+
+> **Convenção anti-duplicação (a partir de 2026-10-18):** as strings `purpose` deste arquivo devem ser **curtas e atemporais** ("o que é / onde mexer"). O histórico por versão (`vX.Y: ...`) pertence **exclusivamente** ao `Diretrizes/CHANGELOG.md` — antes desta data o `system_map` havia acumulado centenas de referências de versão dentro dos `purpose`, virando um segundo changelog de 130 KB.
 
 ### 📝 Procedimento padrão
 
@@ -228,7 +237,20 @@ O arquivo `Diretrizes/system_map.json` é o **mapa vivo** do projeto. Ele deve s
 2. Incremente o campo "version" (ex: "1.8.0" → "1.9.0")
 3. Atualize "last_updated" para a data de hoje (formato YYYY-MM-DD)
 4. Registre a atualização no CHANGELOG.md
+5. Rode `npm run lint:docs` (nenhum caminho citado pode estar quebrado)
 ```
+
+### 🔎 Verificação automática (doc-lint)
+
+Um índice com caminho errado falha em silêncio — foi assim que este `system_map` passou a apontar para a versão legada por várias sessões sem que ninguém notasse. Para tornar isso impossível de passar batido, existe `tools/doc-lint.mjs`, que varre o `system_map.json`, extrai **todo caminho citado** (em `entry_points`, `system_modules`, `styling_manifest`, `assets`, `documentation`, `plans`, `react_app` e `ia_quick_reference`) e confere se ele existe de fato no repositório:
+
+```powershell
+npm run lint:docs        # na raiz do repositório
+```
+
+- **Sai 1** (falha) se qualquer caminho citado não existir — rode ao fim de qualquer alteração no índice.
+- Também lista, **como informativo** (não falha), os caminhos que só existem sob `Legacy/` (formato curto da doc legada) ou sob `src-app/src/`.
+- Somente leitura: nunca altera arquivos. Aceita um caminho de JSON como argumento para validar uma cópia.
 
 > **Regra de ouro:** O `system_map.json` deve sempre refletir 100% da estrutura real de arquivos do projeto. Um índice desatualizado é pior do que não ter índice.
 
@@ -241,10 +263,14 @@ O arquivo `Diretrizes/system_map.json` é o **mapa vivo** do projeto. Ele deve s
 | Regra | Onde ler/aplicar |
 | :--- | :--- |
 | **Informar estimativa e progresso de conclusão em tarefas demoradas** | `Diretrizes/README.md` → Guia para Agentes, **regra 7 (diretriz obrigatória)** |
+| **Em caso de dúvida, perguntar ao usuário** | `Diretrizes/README.md` → Guia para Agentes, **regra 8 (diretriz obrigatória)** |
+| **Testar apenas no final** | `Diretrizes/README.md` → Guia para Agentes, **regra 9 (diretriz obrigatória)** |
+| **Progresso em tarefas grandes (minutos, porcentagem, fases)** | `Diretrizes/README.md` → Guia para Agentes, **regra 10 (diretriz obrigatória)** |
 | Antes de compilar no Android Studio | `npx cap sync android` (seção "Build do App Android") |
 | Sempre registrar as alterações feitas | `Diretrizes/CHANGELOG.md` (topo do arquivo) |
 | Ler antes de mexer no código/arquitetura | `Diretrizes/system_map.json` |
 | Ler antes de adicionar ou alterar um ícone | `Diretrizes/Ícones.md` |
-| Ler antes de criar/alterar elementos visuais | `DESIGN.md` (raiz do projeto) |
+| Ler antes de criar/alterar elementos visuais | `Diretrizes/DESIGN.md` |
 | Versão atual do app (React) vs. legado (Vanilla) | `src-app/` vs. `Legacy/` (nunca misturar) |
 | Atualizar ao mudar a estrutura de arquivos | `Diretrizes/system_map.json` (procedimento acima) |
+| Validar os caminhos do índice após qualquer alteração | `npm run lint:docs` (`tools/doc-lint.mjs`) |
