@@ -21,6 +21,70 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.34.7] - 2026-10-18
+
+**Aba Social — ajustes de espaçamento e rolagem** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Redução do vão superior em cada sub-aba (padding-top do `.soc` 16→8px, `.soc-tabs` 16→8px, `.soc-panel` 20→10px). (2) Na sub-aba Aliança, a lista de amigos/membros do clã deixa o `max-h-[300px]` fixo e passa a expandir (`flex-1 min-h-0`), com rolagem interna apenas se não couber no restante da página — vale também fora da tela cheia. (3) Na sub-aba Guilda, o chat (scroller) ganha `pb-24` e altura reduzida (`calc(100vh-360px)`/`calc(100vh-340px)`, min-h 360) para as mensagens não ficarem ocultas pela barra de navegação inferior.
+
+### Changed
+- **`src-app/src/features/social/social.css`** — `.soc` padding-top 16→8px; `.soc-tabs` margin-top 16→8px; `.soc-panel` margin-top 20→10px.
+- **`src-app/src/features/social/LigasFeature.tsx`** — lista da Aliança: remove `max-h-[300px]`, adiciona `flex-1 min-h-0`; chat da Guilda: altura reduzida + `pb-24`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.34.6] - 2026-10-18
+
+**Aba Personalizar (Treinos) e Menu do Início** (a pedido do usuário): (1) o botão de Detalhes (lupa) adicionado também aos exercícios da aba Personalizar — tanto no grid (`TreinosGridCard`) quanto na visão coleção (`TreinosCollectionCard`), abrindo os detalhes do exercício (CR); (2) no menu popup do botão Menu da aba Início, **Configurações** e **Tela cheia** passam a ser as **duas primeiras opções** (reordenação dos grupos; o restante segue na ordem anterior).
+
+### Added
+- **`src-app/src/features/workout/treinos/cards.tsx`** — `TreinosGridCard` ganha prop `onDetails?` e um botão "Detalhes" ao lado de "Editar"; `TreinosCollectionCard` já tinha (v4.34.5) e segue.
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — repassa `onDetails={setCrEx}` aos cards do grid e da coleção na aba Personalizar.
+
+### Changed
+- **`src-app/src/features/dashboard/InicioMenuModal.tsx`** — reordenação dos grupos: Configurações + Tela cheia agora são o primeiro grupo (duas primeiras opções); Mensagens fica em grupo próprio; comentário de cabeçalho atualizado.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.34.5] - 2026-10-18
+
+**Aba Montar Ficha — fundo do menu do deck deixa de ser roxo e passa a usar o tom de preto do restante da interface; botão de Detalhes adicionado aos exercícios fora do deck** (a pedido do usuário; as duas imagens anexadas não puderam ser lidas por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O menu de ações que aparece ao clicar em um exercício do deck (`.deck-card-menu`) tinha fundo roxo concentrado (`#1a0b2e`); passou a usar `var(--card-bg)` (o mesmo tom de preto dos demais cards/containers), nas duas regras (normal e royale-view override), em `cards.css` (React legacy-style + Legacy + www). (2) Nos exercícios da coleção (fora do deck ativo) foi adicionado um botão de Detalhes (ícone de lupa) ao lado do botão de Editar (lápis) na linha do card, abrindo os detalhes do exercício (CR) — `TreinosCollectionCard` (cards.tsx) + prop `onDetails` repassada por `MontarTab` (`onOpenCR`).
+
+### Changed
+- **`src-app/src/legacy-style/treino/secoes/cards.css`**, **`Legacy/style/treino/secoes/cards.css`**, **`www/style/treino/secoes/cards.css`** — `.deck-card-menu` e o override royale-view trocam `background: #1a0b2e` por `var(--card-bg)`.
+
+### Added
+- **`src-app/src/features/workout/treinos/cards.tsx`** — `TreinosCollectionCard` ganha prop `onDetails?` e um botão de Detalhes (lupa) inline ao lado do botão de Editar.
+- **`src-app/src/features/workout/treinos/MontarTab.tsx`** — repassa `onDetails={onOpenCR}` aos cards da coleção.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.34.4] - 2026-10-18
+
+**Aba Início — modal seletor de fichas: remoção do botão de fechar (✕) e da linha verde de cardio duplicada abaixo dos exercícios** (a pedido do usuário; a imagem de referência anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). No `#modalSeletorFichas`, o botão `#btnFecharSeletorFichas` (✕) foi removido; o fechamento segue disponível pelo clique no backdrop (overlay) e pelo ESC onde aplicável. A linha verde de cardio (`dash-mini-deck__cardio-row`) abaixo do grid de exercícios foi removida, evitando duplicação com o cardio já exibido no rodapé (CARDIO CONFIGURADO), ao lado de VOLUME MÉDIO DE CARGA e MAESTRIA. Mesma alteração replicada na versão legada (`Legacy/` e espelho `www/`).
+
+### Removed
+- **`src-app/src/features/dashboard/SheetSelectorModal.tsx`** — botão `#btnFecharSeletorFichas` (✕) removido do `#modalSeletorFichas` (fechamento por clique no backdrop permanece).
+- **`src-app/src/features/dashboard/FichaDeck.tsx`** — bloco `bodyRow === 'cardio'` (`dash-mini-deck__cardio-row`, linha verde) removido; o rodapé segue exibindo o cardio (CARDIO CONFIGURADO).
+- **`Legacy/componentes/secoes/modais.html`** e **`www/componentes/secoes/modais.html`** — botão `#btnFecharSeletorFichas` removido.
+- **`Legacy/JS/treino/secao-dashboard.js`** e **`www/JS/treino/secao-dashboard.js`** — bloco `dash-mini-deck__cardio-row` (linha verde) removido; listener `#btnFecharSeletorFichas` removido (harmless).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.34.3-docs] - 2026-10-18
+
+**DESIGN.md atualizado para refletir o app React (a pedido do usuário): o documento era do legado e não estava alinhado com a versão atual.** Apenas documentação — nenhum código do site foi alterado. Entregue: (1) **§0 "Como ler este documento"** — explica as 3 convenções de caminho (com `src-app/` = raiz do repo, sem prefixo = `Legacy/`, com `Diretrizes/` = docs) e a regra de ouro de resolução; (2) **seções 3–13 marcadas com `[LEGADO]`** no título (CSS/JS do Vanilla, referência visual); (3) **§15 expandido** com Social/Ligas, Fit ID e Sync/Conta; (4) **nova §16 "Features do App Atual (React)"** documentando Música, Social, Bloqueio, Busca, Desktop, Fit ID, Sync e uma tabela de classes CSS novas (`.bnav-icon--fill`, `.side-hud-icon--fill`, `.h-stat-fire`, `.mu-*`, `.gs-*`, `.lock`, `.fitid-*`, `.sync-*`, etc.). `system_map.json` → **3.5.83**.
+
+### Changed
+- **`Diretrizes/DESIGN.md`** — §0 novo (convenções de caminho), seções 3–14 marcadas `[LEGADO]`, §15 expandido (+Social, +Fit ID, +Sync), §16 novo (features do app atual + classes CSS novas).
+- **`Diretrizes/system_map.json`** → **3.5.83** (last_updated 2026-10-18).
+
+### Verificado
+- `npm run lint:docs` → **exit 0** (300 caminhos, 154 OK, §15 18 linhas, 15 checáveis, 15/15 âncoras vivas, 0 erros).
+- Nenhum código do site (`src-app/`, `Legacy/`, CSS) foi alterado — apenas `Diretrizes/DESIGN.md`.
+
 ## [v4.34.2-docs] - 2026-10-18
 
 **Segunda metade da rodada de documentação (a pedido do usuário): o índice deixa de poder mentir em silêncio, o `context.md` deixa de ser um segundo changelog e o formato do `system_map.json` é restaurado.** Três entregas: (1) **`tools/doc-lint.mjs`** (`npm run lint:docs`) — verifica que **todo caminho citado** no `system_map.json` existe de fato, extraindo os caminhos de `entry_points`, `system_modules`, `html_fragments`, `components`, `styling_manifest`, `assets`, `documentation`, `plans`, `react_app` e `ia_quick_reference` (com expansão de `{a,b}` e reconhecimento de `[REMOVIDO]`); sai **1** se algum não existir; roda hoje com **289 caminhos verificados, 143 OK, 91 só sob `Legacy/` e 1 só sob `src-app/src/`** (os dois últimos **informativos**, não falhas — documentam o formato curto herdado). (2) **`Diretrizes/context.md` reescrito** (560 → 86 linhas): virou o **estado atual** (onde mexer, o que existe, como verificar, regras, divergências conscientes, pendências) e **perdeu os 12 blocos "Sessão anterior: …"** que duplicavam o histórico — o arquivo agora declara explicitamente que **não é changelog**. (3) **`system_map.json` reconstruído a partir do backup original** (→ **3.5.80**), porque a rodada anterior o havia reescrito com `JSON.stringify(arquivo)` — exatamente o que este projeto proíbe — inflando o diff ao expandir os arrays inline (o diff caiu de **694 linhas alteradas para 164**); a versão final mantém o formato original (arrays curtos inline, CRLF) e aplica as mudanças por **substituição literal**. Foi também indexada a nova ferramenta (`tooling.files` → `tools/doc-lint.mjs`) e o `README.md` ganhou a subseção de verificação.
@@ -28,7 +92,7 @@
 ### Added
 - **`tools/doc-lint.mjs`** (novo; raiz → `tools/`) — lint do índice arquitetural: `npm run lint:docs` (script adicionado ao `package.json` da raiz). Percorre os caminhos citados no `Diretrizes/system_map.json`, resolve cada um contra a raiz do repositório e **falha (exit 1) listando os inexistentes**; categorias informativas à parte para os caminhos que só existem sob `Legacy/` (prefixo curto, ex.: `JS/treino/app.js`) e sob `src-app/src/` (ex.: `styles/shell.css`). Somente leitura; aceita um caminho de JSON como argumento (usado no self-test). Expande `{a,b,c}`, ignora seletores/globs/`…` e trata `[REMOVIDO vX.Y]` como esperado. **Motivação:** um índice com caminho errado é pior do que não ter índice justamente porque **falha em silêncio** — foi assim que `ia_quick_reference` passou a apontar para o legado por várias sessões.
 - **`Diretrizes/README.md`** — subseção "🔎 Verificação automática (doc-lint)" em *Manutenção do Índice Arquitetural* (com a explicação do "falha em silêncio", o comando e as 3 notas), passo **5 do "Procedimento padrão"** (`Rode npm run lint:docs`) e nova linha na tabela *Resumo das Regras Absolutas* (`Validar os caminhos do índice após qualquer alteração` → `npm run lint:docs`).
-- **`Diretrizes/README.md` — Guia para Agentes de IA (regras 8–10):** (8) em caso de dúvida, perguntar ao usuário; (9) testar apenas no final; (10) progresso em tarefas grandes com minutos restantes, porcentagem e fase atual. Tabela *Resumo das Regras Absolutas* expandida com as 3 novas regras. `system_map.json` → **3.5.82**. `context.md` §4 ganhou item 6 referenciando as regras 7–10.
+- **`Diretrizes/DESIGN.md` — atualizado para o app React (v4.34.3-docs):** (1) **§0 "Como ler este documento"** — explica as 3 convenções de caminho (com `src-app/` = raiz do repo, sem prefixo = `Legacy/`, com `Diretrizes/` = docs) e a regra de ouro de resolução; (2) **seções 3–13 marcadas com `[LEGADO]`** no título (CSS/JS do Vanilla, referência visual); (3) **§15 expandido** com Social/Ligas, Fit ID e Sync/Conta; (4) **nova §16 "Features do App Atual (React)"** documentando Música, Social, Bloqueio, Busca, Desktop, Fit ID, Sync e uma tabela de classes CSS novas (`.bnav-icon--fill`, `.side-hud-icon--fill`, `.h-stat-fire`, `.mu-*`, `.gs-*`, `.lock`, `.fitid-*`, `.sync-*`, etc.). `system_map.json` → **3.5.83**. Nenhum código do site foi alterado — apenas documentação.
 
 ### Changed
 - **`Diretrizes/context.md` — reescrito como "estado atual"** (560 → 86 linhas, −85%). Estrutura nova: box "o que é / o que **não** é" (não é changelog), tabela-chave (app atual / legado / versão / `system_map` / último commit `8289adb`), **§1 Onde mexer** (aponta para `ia_quick_reference.atual_src_app`, `DESIGN.md §15`, `README.md`), **§2 Estado do app** (Fases 0–5 + o que há além da paridade), **§3 Como verificar** (`tsc -b`, `oxlint`, `build`, `lint:docs` + preview/CDP + a nota de UTF-8 × PowerShell), **§4 Regras obrigatórias** (CHANGELOG, `system_map`, **o formato do arquivo — nunca `JSON.stringify`**, convenção anti-duplicação, gotchas do PowerShell 5.1), **§5 Divergências conscientes** (10 itens), **§6 Pendências** (commit, deploy Vercel com os dois `vercel.json`, `known_gaps`, paridade de deck com `null`, melhorias medidas abaixo da dobra, testes manuais) e **§7 Referências rápidas** (caminhos legados corrigidos para `Legacy/…`). Foram removidos os 12 blocos "Sessão anterior: …", os resumos por versão e a autodeclaração de desatualização (`system_map` 3.5.24) — tudo isso já vive no `CHANGELOG.md` (o texto antigo continua no histórico do Git deste arquivo).

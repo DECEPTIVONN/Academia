@@ -48,7 +48,8 @@ export const TreinosGridCard: React.FC<{
   ex: Exercise;
   onEdit: (ex: Exercise) => void;
   onDel: (ex: Exercise) => void;
-}> = ({ ex, onEdit, onDel }) => (
+  onDetails?: (ex: Exercise) => void;
+}> = ({ ex, onEdit, onDel, onDetails }) => (
   <div className="ex-card" data-id={ex.id}>
     <div className="ex-card-img">
       <ExImg ex={ex} />
@@ -64,6 +65,33 @@ export const TreinosGridCard: React.FC<{
         </span>
       </div>
       <div className="ex-card-actions">
+        {onDetails && (
+          <button
+            type="button"
+            className="btn-ex-edit"
+            data-id={ex.id}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDetails(ex);
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              width={14}
+              height={14}
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>{' '}
+            Detalhes
+          </button>
+        )}
         <button
           type="button"
           className="btn-ex-edit"
@@ -128,8 +156,9 @@ export const TreinosCollectionCard: React.FC<{
   menuActive?: boolean;
   onEdit: (ex: Exercise) => void;
   onDel: (ex: Exercise) => void;
+  onDetails?: (ex: Exercise) => void;
   onCardClick: (ex: Exercise) => void;
-}> = ({ ex, already, menuActive, onEdit, onDel, onCardClick }) => (
+}> = ({ ex, already, menuActive, onEdit, onDel, onDetails, onCardClick }) => (
   <div
     className={`deck-card collection-card card-${ex.muscleGroup}${already ? ' in-deck' : ''}${menuActive ? ' menu-active' : ''}`}
     data-id={ex.id}
@@ -154,6 +183,43 @@ export const TreinosCollectionCard: React.FC<{
         }}
       >
         <span className="deck-card-level">{ex.sets} séries</span>
+        {onDetails && (
+          <button
+            type="button"
+            className="btn-ex-edit btn-ex-edit-inline"
+            data-id={ex.id}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '2px',
+              cursor: 'pointer',
+              color: 'var(--primary-light)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s',
+            }}
+            title="Detalhes do exercício"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDetails(ex);
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              width={12}
+              height={12}
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
+        )}
         <button
           type="button"
           className="btn-ex-edit btn-ex-edit-inline"

@@ -698,6 +698,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
                 already={ids.includes(ex.id)}
                 onEdit={onEdit}
                 onDel={onDelete}
+                onDetails={onOpenCR}
                 onCardClick={onCollectionClick}
               />
             ))}

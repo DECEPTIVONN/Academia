@@ -1348,7 +1348,7 @@ export function LigasFeature({
           </div>
         </div>
 
-        <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 z-10">
+        <div className="space-y-2.5 overflow-y-auto pr-1 z-10 flex-1 min-h-0">
           {sortedList.map((item, index) => {
             const rank = index + 1;
             const isSelf = item.name === 'GABRIEL GS' || item.name === profile.username;
@@ -1389,7 +1389,7 @@ export function LigasFeature({
     <div className="flex flex-col gap-4">
       <div
         ref={chatScrollerRef}
-        className="h-[calc(100vh-320px)] sm:h-[calc(100vh-300px)] min-h-[440px] overflow-y-auto space-y-4 px-1 scroll-smooth"
+        className="h-[calc(100vh-360px)] sm:h-[calc(100vh-340px)] min-h-[360px] overflow-y-auto space-y-4 px-1 pb-24 scroll-smooth"
       >
         {messages.map((msg) => (
           <div

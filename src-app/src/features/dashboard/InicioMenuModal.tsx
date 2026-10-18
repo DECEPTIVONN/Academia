@@ -16,9 +16,9 @@
  *   • "EM BREVE" só aparece AO TOCAR num item placeholder (toast) — a pílula
  *     fixa no botão foi removida.
  *
- * Itens, de cima para baixo: Registro de Treinos · Rankings · Mensagens (aba
- * Social) · Configurações (hub do Perfil) · Ajuda · Tela cheia (entrar/sair,
- * v4.33.0 — mesmo hook do shell) · Fit ID.
+ * Itens, de cima para baixo: Configurações (hub do Perfil) · Tela cheia
+ * (entrar/sair, v4.33.0 — mesmo hook do shell) · Registro de Treinos ·
+ * Rankings · Mensagens (aba Social) · Ajuda · Fit ID.
  *
  * Portal para document.body: o .section-strip tem transform/will-change e
  * passaria a ser o containing block do position:fixed (mesma causa-raiz dos
@@ -200,6 +200,26 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
 
   const groups: MenuItem[][] = [
     [
+      {
+        key: 'config',
+        label: 'Configurações',
+        icon: IcoConfig,
+        action: () => {
+          onClose();
+          onOpenSettings();
+        },
+      },
+      {
+        key: 'fullscreen',
+        label: isFullscreen ? 'Sair da tela cheia' : 'Tela cheia',
+        icon: isFullscreen ? IcoSairTelaCheia : IcoTelaCheia,
+        action: () => {
+          onClose();
+          toggleFullscreen();
+        },
+      },
+    ],
+    [
       { key: 'registro', label: 'Registro de Treinos', icon: IcoRegistro, action: () => soon('Registro de Treinos') },
       { key: 'rankings', label: 'Rankings', icon: IcoRankings, action: () => soon('Rankings') },
     ],
@@ -213,28 +233,8 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
           onOpenMessages();
         },
       },
-      {
-        key: 'config',
-        label: 'Configurações',
-        icon: IcoConfig,
-        action: () => {
-          onClose();
-          onOpenSettings();
-        },
-      },
     ],
     [{ key: 'ajuda', label: 'Ajuda', icon: IcoAjuda, action: () => soon('Ajuda') }],
-    [
-      {
-        key: 'fullscreen',
-        label: isFullscreen ? 'Sair da tela cheia' : 'Tela cheia',
-        icon: isFullscreen ? IcoSairTelaCheia : IcoTelaCheia,
-        action: () => {
-          onClose();
-          toggleFullscreen();
-        },
-      },
-    ],
     [
       {
         key: 'fitid',

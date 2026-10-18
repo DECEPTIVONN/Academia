@@ -481,7 +481,7 @@ export const TreinosFeature: React.FC = () => {
             >
               {list.map((ex) =>
                 effectiveExView === 'grid' ? (
-                  <TreinosGridCard key={ex.id} ex={ex} onEdit={openEdit} onDel={askDelete} />
+                  <TreinosGridCard key={ex.id} ex={ex} onEdit={openEdit} onDel={askDelete} onDetails={setCrEx} />
                 ) : (
                   <TreinosCollectionCard
                     key={ex.id}
@@ -490,6 +490,7 @@ export const TreinosFeature: React.FC = () => {
                     menuActive={menuId === ex.id}
                     onEdit={openEdit}
                     onDel={askDelete}
+                    onDetails={setCrEx}
                     onCardClick={(e) => setMenuId((cur) => (cur === e.id ? null : e.id))}
                   />
                 )

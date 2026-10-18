@@ -125,12 +125,6 @@ function renderDashboardSheet(db, activeWorkout) {
           </div>`;
       }).join('')}
     </div>
-    ${summary.hasCardio ? `
-      <div class="dash-mini-deck__cardio-row">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        <span>${db.aerobicos?.[activeWorkout]?.tipo || 'Aeróbico'} configurado</span>
-      </div>
-    ` : ''}
   `;
 
   // Update footer stats
@@ -329,7 +323,6 @@ export function initDashboard(db) {
 
   document.getElementById('dashBtnIniciar')?.addEventListener('click', () => startWorkoutFromDashboard(loadDB()));
 
-  document.getElementById('btnFecharSeletorFichas')?.addEventListener('click', () => closeModal('modalSeletorFichas'));
 
   document.getElementById('dashMiniSwapBtn')?.addEventListener('click', () => {
     const liveDb = loadDB();
