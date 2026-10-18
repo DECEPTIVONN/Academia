@@ -22,6 +22,28 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.35.9] - 2026-10-18
+
+**Interface de Fit ID redesenhada para o design de `SupercellIdStandalone.tsx`** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). `FitIdOverlay.tsx` deixou de renderizar a UI legada (Player Card Call of Duty) e passou a reutilizar `SupercellIdModal` (portado de `SupercellIdStandalone.tsx` → `src-app/src/features/dashboard/SupercellIdModal.tsx`), que contém o design completo (abas Recompensas/Amigos/Jogos, Passe, etc.). Mantidos o portal para `document.body`, o lock de scroll do body e a interface de props do `DashboardFeature` (os dados do usuário — nome, xp, streak — são mapeados para o `profile` do modal). Unused imports limpos.
+
+### Changed
+- **`src-app/src/features/dashboard/FitIdOverlay.tsx`** — reescrito como wrapper do `SupercellIdModal` (portal + body lock + mapeamento de props).
+- **`src-app/src/features/dashboard/SupercellIdModal.tsx`** — novo (port do standalone).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.35.8] - 2026-10-18
+
+**Interface de Missões redesenhada para o design de `MissoesRecompensasStandalone.tsx`** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). `MissionsOverlay.tsx` deixou de renderizar o mockup legado (DOM de `modais.html` + `missions-overlay.css`) e passou a reutilizar `MissoesRecompensasModal` (portado de `MissoesRecompensasStandalone.tsx` → `src-app/src/features/dashboard/MissoesRecompensasModal.tsx`), que contém o design completo (Passe Royale, missões diárias/semanais com baús, recompensas). Mantidos o portal para `document.body` e o lock de scroll do body do app. Unused imports limpos (useEffect, ícones não usados, estado não lido).
+
+### Changed
+- **`src-app/src/features/dashboard/MissionsOverlay.tsx`** — reescrito como wrapper do `MissoesRecompensasModal` (portal + body lock).
+- **`src-app/src/features/dashboard/MissoesRecompensasModal.tsx`** — novo (port do standalone).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.35.7] - 2026-10-18
 
 **Aba Social — resultados finais (mensal/semanal): ranking não cortado** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). No `SeasonEndPortal` (step 1), a lista de participantes tinha `max-h-[340px]` fixo, cortando o ranking. Passou a `max-h-[calc(100vh-420px)]` com `overflow-y-auto`, expandindo até a parte inferior da interface e rolando internamente apenas se não couber — mesmo comportamento da lista de amigos/membros da sub-aba Aliança.
