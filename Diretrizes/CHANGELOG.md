@@ -22,6 +22,16 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.35.7] - 2026-10-18
+
+**Aba Social — resultados finais (mensal/semanal): ranking não cortado** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). No `SeasonEndPortal` (step 1), a lista de participantes tinha `max-h-[340px]` fixo, cortando o ranking. Passou a `max-h-[calc(100vh-420px)]` com `overflow-y-auto`, expandindo até a parte inferior da interface e rolando internamente apenas se não couber — mesmo comportamento da lista de amigos/membros da sub-aba Aliança.
+
+### Changed
+- **`src-app/src/features/social/LigasFeature.tsx`** — `max-h-[340px]` → `max-h-[calc(100vh-420px)]` na lista de participantes do portal de fim de temporada.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.35.6] - 2026-10-18
 
 **Correção — emblema de maestria ainda cortado + outline branca persistente na Social** (a pedido do usuário). (1) A causa do corte não era só o `top` negativo: o decor estava em `top: -18px`, **fora** da caixa do container (acima da borda superior), e o container tem `overflow: hidden`, cortando-o. Corrigido movendo o decor para dentro do container (`top: 8px`) e aumentando o `padding-top` (40→55px) para dar espaço. Aplicado em `6-maestria.css` (React legacy-style + Legacy + www). (2) A outline branca do botão de fechar (Liga/Guilda) persistia apesar de `outline: none` inline; adicionada regra CSS com `!important` em `.soc-close-btn` (`outline: none !important; box-shadow: none !important;` em todos os estados) em `social.css`, além da classe `soc-close-btn` no botão.

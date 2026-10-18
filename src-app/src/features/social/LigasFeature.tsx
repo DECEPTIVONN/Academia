@@ -626,7 +626,7 @@ function SeasonEndPortal({
                 Placar Final {monthly ? 'Mensal - ' : ''}Divisão {oldDivision}
               </p>
             </div>
-            <div className="border border-[rgba(var(--primary-rgb,139,92,246),0.25)] bg-slate-950/45 rounded-3xl p-3.5 max-h-[340px] overflow-y-auto space-y-2 shadow-xl">
+            <div className="border border-[rgba(var(--primary-rgb,139,92,246),0.25)] bg-slate-950/45 rounded-3xl p-3.5 max-h-[calc(100vh-420px)] overflow-y-auto space-y-2 shadow-xl">
               {participants.length > 0 ? (
                 participants.map((item, index) => {
                   const rankNum = index + 1;
