@@ -22,6 +22,17 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.35.3] - 2026-10-18
+
+**Transições suaves — liga semanal/mensal e subconfigurações** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Aba Social, sub-aba Liga: a troca entre **Liga Semanal** e **Liga Mensal** (toggle) agora usa `AnimatePresence mode="wait"` + `motion.div` (opacity + deslocamento vertical 10px, 250ms easeOut), em vez de troca instantânea. (2) Interface de Configurações (`HubShell`): a navegação entre telas (raiz → grupo → leaf, via `navStack`) agora usa `AnimatePresence mode="wait"` + `motion.div` (opacity + deslocamento horizontal 12px, 200ms easeOut), em vez de troca instantânea. `motion`/`AnimatePresence` já estavam disponíveis (`motion/react`).
+
+### Changed
+- **`src-app/src/features/social/LigasFeature.tsx`** — `ligaContent`: bloco semanal/mensal envolvido em `AnimatePresence` + `motion.div` (key=leagueViewType).
+- **`src-app/src/features/settings/HubShell.tsx`** — import de `motion`/`AnimatePresence`; bloco raiz/grupo/leaf envolvido em `AnimatePresence` + `motion.div` (key=stack.join('/') ).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.35.2] - 2026-10-18
 
 **Interfaces de Configurações/Notícias/Missões — transições suaves de entrada/saída** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) **Notícias** (`NewsOverlay`) e **Missões** (`MissionsOverlay`): a abertura/fechamento usava `display: open ? 'block' : 'none'` (instantâneo); passou a usar `opacity` + `visibility` + `pointer-events` com `transition: opacity 0.25s ease, visibility 0.25s ease`, mantendo os overlays montados (display toggle removido). (2) **Configurações**: já animadas pelo overlay de Perfil (`perfil-overlay.css` — `perfilOverlayFadeIn`/`FadeOut` + classe `is-closing`), nada a mudar. O lock de scroll do body segue ativo quando aberto.

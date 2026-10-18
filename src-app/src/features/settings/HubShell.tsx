@@ -22,6 +22,7 @@
  */
 
 import { useState, type ReactNode } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import './settings.css';
 
 export interface HubTile {
@@ -182,12 +183,20 @@ export function HubShell({
         {actionsNow && <div className="set-header__actions">{actionsNow}</div>}
       </header>
 
-      {isLeaf ? (
-        /* ================= LEAF ================= */
-        <div className="set-screen">{active?.content}</div>
-      ) : (
-        /* ================= RAIZ / GRUPO ================= */
-        <div className="set-screen">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={stack.join('/')}
+          initial={{ opacity: 0, x: 12 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -12 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          {isLeaf ? (
+            /* ================= LEAF ================= */
+            <div className="set-screen">{active?.content}</div>
+          ) : (
+            /* ================= RAIZ / GRUPO ================= */
+            <div className="set-screen">
           {active?.head}
 
           {isRoot && (
@@ -239,6 +248,8 @@ export function HubShell({
           {isRoot ? hubExtra : active?.extra}
         </div>
       )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

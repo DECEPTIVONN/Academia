@@ -1478,7 +1478,15 @@ export function LigasFeature({
 
   const ligaContent = (
     <div className="space-y-4">
-      {leagueViewType === 'semanal' ? (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={leagueViewType}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
+          {leagueViewType === 'semanal' ? (
         <>
           <div className="p-4 bg-gradient-to-br from-[rgba(var(--primary-rgb,139,92,246),0.22)] via-slate-900/70 to-slate-950/80 backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.28)] rounded-2xl flex flex-col sm:flex-row items-center justify-between select-none gap-3 shadow-lg relative overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(var(--primary-rgb,139,92,246),0.1),transparent_50%)] pointer-events-none" />
@@ -1553,6 +1561,8 @@ export function LigasFeature({
           )}
         </>
       )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 
