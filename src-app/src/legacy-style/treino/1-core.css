@@ -28,6 +28,14 @@ html, body {
 .h-stat{text-align:center;}
 .h-stat-val{font-size:2rem;font-weight:900;color:var(--primary-light);}
 .h-stat-lbl{font-size:.75rem;font-weight:600;letter-spacing:2px;color:var(--text-tertiary);text-transform:uppercase;}
+/* v4.34.0 - "Dias Seguidos" usa a MESMA chama (ofensiva) da aba Inicio
+   (Material Symbol local_fire_department, o do botao #dashBtnOfensiva):
+   acesa em laranja e CINZA quando a sequencia esta zerada.
+   Seletor composto (.h-stat-val .h-stat-fire) de proposito: vence a base do
+   Google (`.material-symbols-outlined{font-size:24px}`, spec 0,1,0) sem
+   depender da ordem das folhas. */
+.h-stat-val .h-stat-fire{font-size:1.15rem;line-height:1;vertical-align:middle;margin-left:6px;color:#fdba74;}
+.h-stat-val .h-stat-fire--off{color:#9ca3af;opacity:.9;}
 .h-stat-div{width:1px;height:40px;background:var(--border);}
 /* CONTENT */
 .treino-content{padding:40px 0 80px;}

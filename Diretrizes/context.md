@@ -12,9 +12,25 @@
 
 > ⚠️ **Arquivo desatualizado por várias sessões.** Escrito ao fim da sessão de
 > 2026-10-08 (quando o `system_map` estava em **3.5.24**). O estado atual é
-> `system_map` **3.5.77** e o histórico completo entre `v4.0.15` e `v4.33.0` está
+> `system_map` **3.5.78** e o histórico completo entre `v4.0.15` e `v4.34.0` está
 > no `Diretrizes/CHANGELOG.md`. As seções 2–4 abaixo são **históricas** (fase de
-> paridade da migração React v4). Última sessão registrada aqui: **2026-10-17**
+> paridade da migração React v4). Última sessão registrada aqui: **2026-10-18**
+> (`v4.34.0`) — oito pedidos do usuário no **Início** e na **Ficha**: (1) o **prato de
+> volume perde as letras "KG"** (só o prato: um path preenchido, sem `<mask>` e sem
+> letras); (2) a outline do **TREINAR** volta ao **roxo FIXO `#8b5cf6`** — a v4.33.0
+> tinha usado `var(--primary)`, mas o pedido é a **mesma roxa dos outros dois botões**,
+> não o acento do tema do usuário; (3) o **halteres da aba TREINOS** passa ao **glifo do
+> Font Awesome** (`solid/dumbbell`, silhueta preenchida — as 4 anilhas em `<rect>` da
+> v4.33.0 **se colavam** em 22px) na BottomNav e na Sidebar; (4) no **seletor de ficha**
+> a **letra do treino** sai do selo roxo da miniatura e vai para a **mesma linha do
+> "N ex", em cinza** ("TREINO" / "A 5 ex"); (5) a **prévia do Início** passa a exibir a
+> **cor do grupo muscular** de cada card (as regras existiam desde a v4.30.0 **em
+> minúsculas** e o DOM escreve `card-Peito` — nunca casaram), com a mesma tabela de
+> `cards.css`; (6) o **hero da Ficha** troca o selo "ACADEMIA" por **"EVO FIT"**;
+> (7) a contagem de **EXERCÍCIOS** passa a ser a **da ficha aberta** (era o total do
+> banco, 66); e (8) **"DIAS SEGUIDOS"** ganha a **mesma chama da ofensiva da aba
+> Início** (`local_fire_department`, cinza com a sequência zerada — saiu o `FIRE_SVG`).
+> Sessão anterior: **2026-10-17**
 > (`v4.33.0`) — seis pedidos do usuário no **Início/Treinos**: (1) a **prévia do Início**
 > perde o **violeta fixo herdado do "radar fit"** e assume o **tom de preto da aba Minha
 > Ficha** — `.dash-arena-card`/`.dash-mini-deck` com `var(--card-bg)` + `var(--card-border)`

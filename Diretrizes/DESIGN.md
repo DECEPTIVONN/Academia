@@ -210,15 +210,18 @@ Os exercícios de treino são representados como cartões tridimensionais coleci
 
 *   **Fundo e Bordas:** `.deck-card` usa um gradiente de fundo inclinado em 145 graus (`linear-gradient(145deg, #1e293b, #0f172a)`), cantos curvos de `14px` e borda fina translúcida de `1px`.
 *   **Prévia do Início (v4.33.0):** a **prévia da ficha do dia** no Início **reusa esta mesma anatomia** (card `linear-gradient(145deg, #1e293b, #0f172a)` + borda branca 10%, header `rgba(0,0,0,.4)`) dentro do contêiner `.dash-arena-card`, que adota o **tom de preto da aba Minha Ficha** (`var(--card-bg)` + `var(--card-border)`, o par do `.deck-builder-container`). Era o único lugar que ainda usava o **violeta fixo do antigo "radar fit"** (gradientes `rgba(27,10,43,.8)`→`rgba(13,4,22,.95)` e `#0e0d1a`→`#07060d`, cards `rgba(21,20,40,.85)` + borda `#23223f`, widgets `rgba(21,20,40,.75)` + `#23223f`): o roxo fixo saiu e restou o **acento do tema** apenas onde é interação (hover, outline de destaque do TREINAR, ícone de cardio via `--primary-light`).
+*   **Cor do grupo muscular na prévia (v4.34.0):** cada card da **prévia da ficha do dia** exibe a **faixa de topo na cor do seu grupo muscular** (`.dash-mini-deck__grid .deck-card.card-Peito|Costas|Pernas|Ombros|Bíceps|Tríceps|Core`), com a **mesma tabela de cores do `cards.css`** — um grupo muscular tem **uma cor no app inteiro** (a tabela deixou de ser duplicada). As regras existiam desde a v4.30.0 escritas **em minúsculas** (`.card-peito`) enquanto o DOM escreve `card-Peito` (`card-${exercise.muscleGroup}`): nunca casaram, e a prévia ficava sem as faixas que a aba Minha Ficha já tinha. A `--card-glow` de cada grupo também é declarada aqui.
+*   **Seletor de ficha da barra inferior (v4.34.0):** a **letra do treino** (A/B) deixou o selo roxo sobre a miniatura e mora na **mesma linha do "N ex"**, em **cinza** (`rgba(255,255,255,.5)`): a linha do card fica **"TREINO" / "A 5 ex"** (`.dash-workout-ex-letter` dentro do `.dash-workout-ex-count`, que virou flex com `align-items: baseline`).
 *   **Efeito Hover com Lift 3D:** Ao passar o mouse, o cartão se eleva no eixo Y (`transform: translateY(-8px) scale(1.02)`) com curva de aceleração elástica `cubic-bezier(0.175, 0.885, 0.32, 1.275)` e emite um brilho colorido correspondente à sua categoria na borda.
-*   **Brilhos Temáticos por Categoria Muscular:**
-    *   🔴 **Peito:** Borda superior vermelha (`#e94560`) e glow vermelho.
-    *   🟢 **Costas:** Borda superior verde (`#4ecdc4`) e glow verde.
-    *   🔵 **Pernas:** Borda superior azul/amarelo (`#f9ca24`) e glow azul.
-    *   🟡 **Ombros:** Borda superior roxa (`#a29bfe`) e glow laranja.
-    *   💚 **Bíceps:** Borda superior turquesa (`#55efc4`) e glow turquesa.
-    *   💗 **Tríceps:** Borda superior rosa (`#fd79a8`) e glow rosa.
-    *   ⚫ **Core:** Borda superior dourada (`#fdcb6e`) e glow cinza.
+*   **Brilhos Temáticos por Categoria Muscular** (valores reais do `cards.css` desde a v4.34.0 — a tabela antiga abaixo estava defasada; a **mesma cor** vale para a aba Minha Ficha **e** para a prévia do Início):
+    *   🔴 **Peito:** Borda superior vermelha (`#ef4444`) e glow vermelho.
+    *   🟢 **Costas:** Borda superior verde (`#22c55e`) e glow verde.
+    *   🔵 **Pernas:** Borda superior azul (`#3b82f6`) e glow azul.
+    *   🟡 **Ombros:** Borda superior âmbar (`#f59e0b`) e glow âmbar.
+    *   💗 **Bíceps:** Borda superior rosa (`#ec4899`) e glow rosa.
+    *   🟣 **Tríceps:** Borda superior violeta (`#8b5cf6`) e glow violeta.
+    *   ⚫ **Core:** Borda superior cinza-slate (`#64748b`) e glow cinza.
+    *   🔷 **Aeróbico** (linha/card de cardio, não é grupo muscular): ciano (`#06b6d4`).
 
 ### 6.2 Menu Ativo Tridimensional do Cartão (`.deck-card.menu-active`)
 Quando o atleta clica sobre o cartão, ele exibe um menu de opções acoplado na base, exatamente como no deck de cartas de Clash Royale.

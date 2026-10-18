@@ -160,15 +160,22 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       id: 'treinos',
       domId: 'bnavTreinos',
       label: 'Treinos',
-      /* v4.33.0 — halteres (imagem de referência do usuário): barra central +
-         2 anilhas por lado (a de fora mais baixa, a de dentro mais alta). */
+      /* v4.34.0 — halteres no desenho da imagem de referência do usuário: é o
+         MESMO glifo sólido do Font Awesome que o app já usa nos placeholders
+         (`fas fa-dumbbell`) — barra central + 2 anilhas por lado (a de dentro
+         mais alta, a de fora mais baixa) com o pino externo. Silhueta
+         PREENCHIDA: o traço dos ícones vizinhos não se aplica (classe
+         `bnav-icon--fill`); a cor/estado vêm do `fill` (7-nav-icons.css).
+         Path (CC BY 4.0): Font Awesome Free 6 — solid/dumbbell (640×512). */
       icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2.5" y="8.5" width="3" height="7" rx="1.5" />
-          <rect x="6.5" y="6" width="3.5" height="12" rx="1.75" />
-          <line x1="10" y1="12" x2="14" y2="12" />
-          <rect x="14" y="6" width="3.5" height="12" rx="1.75" />
-          <rect x="18.5" y="8.5" width="3" height="7" rx="1.5" />
+        <svg
+          viewBox="0 0 640 512"
+          fill="currentColor"
+          stroke="none"
+          strokeWidth="0"
+          className="bnav-icon--fill"
+        >
+          <path d="M96 64c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32l0 160 0 64 0 160c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-64-32 0c-17.7 0-32-14.3-32-32l0-64c-17.7 0-32-14.3-32-32s14.3-32 32-32l0-64c0-17.7 14.3-32 32-32l32 0 0-64zm448 0l0 64 32 0c17.7 0 32 14.3 32 32l0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l0 64c0 17.7-14.3 32-32 32l-32 0 0 64c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-160 0-64 0-160c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32zM416 224l0 64-192 0 0-64 192 0z" />
         </svg>
       ),
     },

@@ -656,28 +656,16 @@
   object-fit: cover;
 }
 
-.dash-workout-letter-badge {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 20px;
-  height: 20px;
-  background: #a855f7;
-  border: 1.5px solid #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  z-index: 2;
-}
-
-.dash-workout-letter-badge span {
-  color: #fff;
+/* v4.34.0 — o selo ROXO com a letra do treino (A/B) sobre a miniatura saiu a
+   pedido do usuário: a letra agora aparece na MESMA LINHA do "8 ex", em CINZA
+   (era #a855f7). */
+.dash-workout-ex-letter {
+  color: rgba(255, 255, 255, 0.5);
   font-family: 'Rajdhani', sans-serif;
   font-weight: 800;
-  font-size: 0.75rem;
-  line-height: 1;
+  font-size: 0.85rem;
+  line-height: 1.1;
+  margin-right: 5px;
 }
 
 .dash-workout-card-details {
@@ -697,23 +685,28 @@
   line-height: 1;
 }
 
+/* v4.34.0 — linha do "8 ex": a letra do treino entra na frente do número
+   (flex para os dois ficarem na mesma linha, com o alinhamento do texto). */
 .dash-workout-ex-count {
   color: #fff;
   font-family: 'Rajdhani', sans-serif;
   font-size: 0.85rem;
   font-weight: 800;
   line-height: 1.1;
+  display: flex;
+  align-items: baseline;
 }
 
 /* Center: Metallic Textured "TREINAR" button */
-/* v4.33.0 — recebe a outline de DESTAQUE que era do seletor de ficha e do
-   CICLO (var(--primary) = #8b5cf6 no tema padrão); era #4a1d82 (quase
-   invisível). */
+/* v4.33.0 — recebeu a outline de DESTAQUE que era do seletor de ficha e do
+   CICLO; era #4a1d82 (quase invisível).
+   v4.34.0 — a outline é o ROXO FIXO #8b5cf6 que os outros dois botões usavam
+   (não `var(--primary)`, que segue o acento do usuário). */
 .dash-next-step-btn {
   flex-grow: 1;
   height: 88px;
   background: linear-gradient(180deg, #37333f 0%, #1a181f 100%);
-  border: 1.5px solid var(--primary, #8b5cf6);
+  border: 1.5px solid #8b5cf6;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
   position: relative;
@@ -1237,14 +1230,20 @@
 }
 
 /* Colored top borders matching screenshot */
-.dash-mini-deck__grid .deck-card.card-peito { border-top: 4.5px solid #ef4444; }
-.dash-mini-deck__grid .deck-card.card-ombros { border-top: 4.5px solid #f97316; }
-.dash-mini-deck__grid .deck-card.card-pernas { border-top: 4.5px solid #3b82f6; }
-.dash-mini-deck__grid .deck-card.card-tríceps { border-top: 4.5px solid #a855f7; }
-.dash-mini-deck__grid .deck-card.card-core { border-top: 4.5px solid #475569; }
-.dash-mini-deck__grid .deck-card.card-costas { border-top: 4.5px solid #10b981; }
-.dash-mini-deck__grid .deck-card.card-bíceps { border-top: 4.5px solid #ec4899; }
-.dash-mini-deck__grid .deck-card.card-aeróbico { border-top: 4.5px solid #06b6d4; }
+/* v4.34.0 — cores dos GRUPOS MUSCULARES na prévia (pedido do usuário).
+   As regras existiam desde a v4.30.0 com o nome em MINÚSCULAS (`.card-peito`),
+   mas o DOM escreve `card-Peito` (FichaDeck: `card-${exercise.muscleGroup}`) —
+   nunca casaram, e a prévia ficava sem a faixa colorida que a aba Minha Ficha
+   tem. Agora usam as MESMAS cores de `cards.css` (.card-Peito etc.) e a mesma
+   variável --card-glow: cada grupo muscular tem UMA cor no app inteiro. */
+.dash-mini-deck__grid .deck-card.card-Peito { --card-glow: #ef4444; border-top: 4.5px solid #ef4444; }
+.dash-mini-deck__grid .deck-card.card-Costas { --card-glow: #22c55e; border-top: 4.5px solid #22c55e; }
+.dash-mini-deck__grid .deck-card.card-Pernas { --card-glow: #3b82f6; border-top: 4.5px solid #3b82f6; }
+.dash-mini-deck__grid .deck-card.card-Ombros { --card-glow: #f59e0b; border-top: 4.5px solid #f59e0b; }
+.dash-mini-deck__grid .deck-card.card-Bíceps { --card-glow: #ec4899; border-top: 4.5px solid #ec4899; }
+.dash-mini-deck__grid .deck-card.card-Tríceps { --card-glow: #8b5cf6; border-top: 4.5px solid #8b5cf6; }
+.dash-mini-deck__grid .deck-card.card-Core { --card-glow: #64748b; border-top: 4.5px solid #64748b; }
+.dash-mini-deck__grid .deck-card.card-Aeróbico { --card-glow: #06b6d4; border-top: 4.5px solid #06b6d4; }
 
 .dash-mini-deck__grid .deck-card-header {
   background: rgba(0, 0, 0, 0.4);

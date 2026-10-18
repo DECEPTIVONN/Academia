@@ -402,13 +402,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                     <span>EXERCÍCIO</span>
                   </div>
                 )}
-                <div className="dash-workout-letter-badge">
-                  <span id="dashWorkoutLetter">{suggestion}</span>
-                </div>
               </div>
               <div className="dash-workout-card-details">
                 <span className="dash-workout-label">TREINO</span>
                 <span className="dash-workout-ex-count" id="dashWkDetail">
+                  {/* v4.34.0 — a LETRA do treino (A/B) mora aqui agora, na
+                      mesma linha do "N ex", em cinza (era um selo roxo sobre a
+                      miniatura). */}
+                  <span className="dash-workout-ex-letter" id="dashWorkoutLetter">{suggestion}</span>
                   {totalItems} ex
                 </span>
               </div>

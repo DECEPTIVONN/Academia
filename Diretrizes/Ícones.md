@@ -210,14 +210,16 @@ Referência rápida dos ícones já implementados. Use os mesmos paths para cons
 <line x1="9" y1="13" x2="15" y2="13"/>
 <line x1="9" y1="17" x2="12" y2="17"/>
 
-<!-- Treinos / Halteres (v4.33.0 — imagem de referência do usuário:
-     BottomNav.tsx + nav-section-items.tsx; barra central + 2 anilhas por
-     lado, a de fora mais baixa e a de dentro mais alta) -->
-<rect x="2.5" y="8.5" width="3" height="7" rx="1.5"/>
-<rect x="6.5" y="6" width="3.5" height="12" rx="1.75"/>
-<line x1="10" y1="12" x2="14" y2="12"/>
-<rect x="14" y="6" width="3.5" height="12" rx="1.75"/>
-<rect x="18.5" y="8.5" width="3" height="7" rx="1.5"/>
+<!-- Treinos / Halteres (v4.34.0 — imagem de referência do usuário; BottomNav.tsx
+     + nav-section-items.tsx). É o glifo SÓLIDO do Font Awesome
+     (`svgs/solid/dumbbell`, CC BY 4.0 — crédito no comentário do componente),
+     NÃO um desenho em traço: barra central + 2 anilhas por lado em degrau (as
+     de fora mais baixas) + o pino externo. viewBox="0 0 640 512" próprio (o
+     ícone é mais largo que alto) e a cor/estado vêm do `fill` — ver §8. -->
+<path d="M96 64c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32l0 160 0 64 0 160c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-64-32 0c-17.7 0-32-14.3-32-32l0-64c-17.7 0-32-14.3-32-32s14.3-32 32-32l0-64c0-17.7 14.3-32 32-32l32 0 0-64zm448 0l0 64 32 0c17.7 0 32 14.3 32 32l0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l0 64c0 17.7-14.3 32-32 32l-32 0 0 64c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-160 0-64 0-160c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32zM416 224l0 64-192 0 0-64 192 0z"/>
+<!-- (v4.33.0 — o 1º desenho foi 4 <rect> + <line> em viewBox 24: as anilhas
+     ficavam a ~1 unidade uma da outra com traço 2, então as bordas se
+     sobrepunham e as 5 formas viravam um bloco só em 22px.) -->
 
 <!-- Progresso (ECG/pulso) -->
 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -358,8 +360,10 @@ Referência rápida dos ícones já implementados. Use os mesmos paths para cons
 ### Rodapé do deck (v4.32.0)
 
 ```html
-<!-- Volume médio de carga (prato de peso "KG") — NÃO é stroke:
-     ver §8 (VolumeKgIcon.tsx). 22px no Início, 22×30 no "Minha Ficha". -->
+<!-- Volume médio de carga (prato de peso, SEM letras desde a v4.34.0) — NÃO é
+     stroke: ver §8 (VolumeKgIcon.tsx). 22px no Início, 22×30 no "Minha Ficha". -->
+<!-- No seletor de ficha da barra inferior a letra do treino (A/B) fica na
+     MESMA linha do "N ex", em cinza (.dash-workout-ex-letter, v4.34.0) -->
 ```
 
 ### Conquistas / Status
@@ -409,15 +413,15 @@ Alguns ícones precisam de preenchimento para comunicar melhor. Nesses casos:
 }
 ```
 
-### Prato de peso "KG" (widget de volume médio de carga) — v4.32.0 · letras refeitas na v4.33.0
+### Prato de peso (widget de volume médio de carga) — v4.32.0 · letras removidas na v4.34.0
 
-Segunda exceção: o ícone pedido pelo usuário (imagem de referência) é um **pictograma sólido** — um prato de peso com alça e o texto "KG" —, que um contorno não reproduz. Vive em `src-app/src/components/VolumeKgIcon.tsx` (usado no rodapé do deck: `.dash-mini-deck__stat-icon.kg` no Início e `.volume-kg-icon` no "Minha Ficha").
+Segunda exceção: o ícone pedido pelo usuário (imagem de referência) é um **pictograma sólido** — um prato de peso com alça —, que um contorno não reproduz. Vive em `src-app/src/components/VolumeKgIcon.tsx` (usado no rodapé do deck: `.dash-mini-deck__stat-icon.kg` no Início e `.volume-kg-icon` no "Minha Ficha").
 
 Regras dessa exceção (diferente do triângulo de play, que é um path `fill="currentColor"`):
 
-- o prato é preenchido com `currentColor` (o branco do widget) e as letras são **vazadas por `<mask>`** — assim o ícone acompanha o fundo do card (na referência o prato é preto com letras brancas; no app escuro seria invisível, então a silhueta é invertida);
-- o "KG" é desenhado com **paths em traço** (nunca `<text>`, para não depender de fonte carregada);
-- o `id` da `<mask>` usa `useId()` — o componente monta mais de uma vez na mesma página.
+- o prato é preenchido com `currentColor` (o branco do widget) — assim o ícone acompanha o fundo do card (na referência o prato é preto; no app escuro seria invisível, então a silhueta é invertida);
+- **v4.34.0 — as letras "KG" foram REMOVIDAS** a pedido do usuário ("o ícone ficou bom, mas o texto KG continuou ruim, remova-o"): o desenho agora é **um único `<path fill="currentColor">`** (prato trapezoidal + alça) e o componente **perdeu o `<mask>`, o `useId()` e os paths das letras**. As constantes `PLATE_PATH` e `HANDLE_PATH` seguem no arquivo (é o desenho aprovado).
+- **Histórico das letras (para não repetir):** existiram na v4.32.0 (paths em traço 38, vazados por `<mask>` — o fundo do widget aparecia no lugar delas) e foram **refeitas** na v4.33.0 (traço **42**, corpo 135 em y 290→425, **G geométrico** com anel de **raio 52** aberto no alto à direita + barra do anel até o centro, K com haste em x=145) — mas em **22px** continuavam ilegíveis no widget, e por isso saíram.
 
 **v4.33.0 — letras refeitas (legibilidade em 22px):** o desenho original (traço 38, G de raio 44 com contra-forma sub-pixel) virava um borrão no tamanho real do widget. O que mudou:
 
@@ -426,23 +430,22 @@ Regras dessa exceção (diferente do triângulo de play, que é um path `fill="c
 - o **K** fica com haste em x=145 (`M 145 290 V 425`) e dois braços simétricos.
 
 ```html
-<!-- Estrutura (resumo): prato + alça brancos na mask · letras em preto (furos) -->
-<svg viewBox="0 0 512 512" width="22" height="22">
-  <defs>
-    <mask id="volumeKg-..." maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
-      <path d="M 186 176 H 326 … Z" fill="#fff" />          <!-- prato -->
-      <path d="M 218 84 H 294 … Z" fill="#fff" />           <!-- alça -->
-      <g fill="none" stroke="#000" stroke-width="42" stroke-linecap="round">
-        <!-- K (haste M 145 290 V 425 + 2 braços) -->
-        <!-- G (anel A 52 52 aberto no alto à direita + barra M 366.7 357 H 315) -->
-      </g>
-    </mask>
-  </defs>
-  <path d="…prato… …alça…" fill="currentColor" mask="url(#volumeKg-...)" />
+<!-- Estrutura (v4.34.0): UMA silhueta preenchida — sem <mask> e sem letras -->
+<svg viewBox="0 0 512 512" width="22" height="22" aria-hidden="true" focusable="false">
+  <path d="M 186 176 H 326 … Z M 218 84 H 294 … Z" fill="currentColor" />
 </svg>
 ```
 
-> **Regra:** Só use `fill` em formas fechadas onde o stroke sozinho não é legível (ex: seta/triângulo de play). Nunca use `fill` em ícones de navegação ou filtro.
+> **Regra:** Só use `fill` em formas fechadas onde o stroke sozinho não é legível (ex: seta/triângulo de play). Nunca use `fill` em ícones de navegação ou filtro — **exceção desde a v4.34.0:** o **halteres da seção Treinos** (glifo do Font Awesome, §7), que é uma silhueta preenchida no desenho da imagem de referência do usuário; nos demais ícones de navegação o traço segue obrigatório.
+
+### Halteres da seção Treinos — v4.34.0
+
+Terceira exceção (e a única **na navegação**): o ícone da seção TREINOS é uma **silhueta preenchida** — o glifo `solid/dumbbell` do **Font Awesome** (`viewBox="0 0 640 512"`, path em §7), o **mesmo** `fas fa-dumbbell` que o app já usa nos placeholders de imagem de exercício. Vive em `src-app/src/components/BottomNav.tsx` (barra inferior) e `src-app/src/components/nav-section-items.tsx` (Sidebar do desktop).
+
+- o desenho é `fill="currentColor"` com **`stroke="none"` e `strokeWidth={0}`** — a largura de traço é a única propriedade que o CSS base dos ícones **não** define, então zerá-la garante que o traço (mesmo com a cor aplicada pela regra `.bnav-icon svg { stroke: … }`) não apareça;
+- a **cor e os estados** vêm de regras próprias de `fill`: **`.bnav-icon--fill`** em `legacy-style/treino/7-nav-icons.css` (normal `rgba(255,255,255,.35)`, **ativo `var(--primary-light)`** com o mesmo glow dos vizinhos, hover 70%) e **`.side-hud-icon--fill`** em `styles/shell.css` (`fill: currentColor`, seguindo a cor do item da Sidebar);
+- o `viewBox` é **640×512** (o desenho é mais largo que alto): dentro dos 22×22 do slot, o `preserveAspectRatio` padrão centraliza a silhueta (≈22×17,6), como o glifo faz em qualquer tamanho;
+- **atribuição:** ícones do Font Awesome Free 6 são **CC BY 4.0** — o crédito está no comentário do componente nos dois arquivos (o app já embarca `public/vendor/fontawesome.min.css` + webfonts, então nada novo é distribuído com o build).
 
 ---
 

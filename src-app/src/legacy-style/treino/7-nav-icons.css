@@ -122,6 +122,24 @@ main {
   transition: stroke .3s ease, filter .3s ease;
 }
 
+/* v4.34.0 — ícone de TREINOS: halteres em SILHUETA (preenchido), no desenho da
+   imagem de referência do usuário (o mesmo glifo do Font Awesome que o app usa
+   nos placeholders). O traço dos outros ícones não se aplica: a cor vem do
+   `fill`, com os mesmos tons e estados dos vizinhos. */
+.bnav-icon svg.bnav-icon--fill {
+  stroke: none;
+  fill: rgba(255, 255, 255, 0.35);
+  transition: fill .3s ease, filter .3s ease;
+}
+.bnav-btn.active .bnav-icon svg.bnav-icon--fill {
+  fill: var(--primary-light);
+}
+@media (hover: hover) {
+  .bnav-btn:hover .bnav-icon svg.bnav-icon--fill {
+    fill: rgba(255, 255, 255, 0.7);
+  }
+}
+
 /* ---- Label ---- */
 .bnav-label {
   font-size: 0.62rem;

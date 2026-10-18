@@ -463,21 +463,10 @@ const FichaCardioRow: React.FC<CardioProps> = ({
 
 /* ── Feature ── */
 
-const FIRE_SVG = (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    width={16}
-    height={16}
-    style={{ color: '#f97316', marginLeft: 2, display: 'inline-block', verticalAlign: 'middle' }}
-  >
-    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-  </svg>
-);
+/* v4.34.0 — o ícone de "Dias Seguidos" do hero é a MESMA chama (ofensiva) da
+   aba Início: o Material Symbol `local_fire_department`, usado pelo botão
+   #dashBtnOfensiva. O FIRE_SVG (chama desenhada em traço, laranja) saiu — era
+   um desenho diferente do da aba Início e só aparecia com a sequência > 0. */
 
 function formatElapsed(ms: number): string {
   const hours = Math.floor(ms / 3600000);
@@ -731,7 +720,9 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
         <div className="hero-orb orb-1" />
         <div className="hero-orb orb-2" />
         <div className="treino-hero-content">
-          <div className="treino-badge-label">🏋️ ACADEMIA</div>
+          {/* v4.34.0 — "ACADEMIA" virou "EVO FIT" (mesmo nome da marca usado
+              no lock screen e no Fit ID). */}
+          <div className="treino-badge-label">🏋️ EVO FIT</div>
           <h1 className="treino-hero-title">
             Fichas de <span className="gradient-text">Treino</span>
           </h1>
@@ -740,8 +731,12 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
           </p>
           <div className="treino-hero-stats">
             <div className="h-stat">
+              {/* v4.34.0 — antes exibia `exercises.length` (o TOTAL do banco:
+                  66) e não a ficha aberta. Agora usa `total`, a mesma conta do
+                  botão seletor do Início: exercícios da ficha + a linha de
+                  cardio (quando existe). */}
               <div className="h-stat-val" id="statTotalEx">
-                {exercises.length}
+                {total}
               </div>
               <div className="h-stat-lbl">Exercícios</div>
             </div>
@@ -754,9 +749,17 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
             </div>
             <div className="h-stat-div" />
             <div className="h-stat">
+              {/* v4.34.0 — a chama agora é a MESMA da aba Início (Material
+                  Symbol da ofensiva) e aparece SEMPRE, ficando cinza quando a
+                  sequência está zerada (mesmo estado do #dashBtnOfensiva). */}
               <div className="h-stat-val" id="statStreak">
                 {streak}
-                {streak > 0 && FIRE_SVG}
+                <span
+                  className={`material-symbols-outlined h-stat-fire${streak === 0 ? ' h-stat-fire--off' : ''}`}
+                  aria-hidden="true"
+                >
+                  local_fire_department
+                </span>
               </div>
               <div className="h-stat-lbl">Dias Seguidos</div>
             </div>

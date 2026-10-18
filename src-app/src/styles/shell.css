@@ -459,6 +459,12 @@
   stroke: currentColor;
   transition: filter 0.25s ease;
 }
+/* v4.34.0 — o ícone de halteres (seção Treinos) é uma SILHUETA preenchida
+   (Font Awesome solid/dumbbell): a cor vem do `fill`, não do traço. */
+.side-hud__icon svg.side-hud-icon--fill {
+  stroke: none;
+  fill: currentColor;
+}
 .side-hud__item--active .side-hud__icon svg {
   filter: drop-shadow(0 0 6px var(--primary));
 }
