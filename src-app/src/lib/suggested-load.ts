@@ -150,3 +150,70 @@ export function getSuggestedLoadIfMissing(ex: {
   if (ex.load) return null;
   return getSuggestedLoad(ex);
 }
+
+/* ============================================================
+   CARGA EFETIVA / VOLUME MÉDIO DE CARGA (v4.32.0)
+   ============================================================
+   O campo `load` é TEXTO livre ("30 kg", "12 kg cada lado", "Peso do
+   Corpo"), então o cálculo do "volume médio de carga" precisa de um parse
+   explícito — `parseFloat('30 kg')` funciona, mas `parseFloat` de uma string
+   vazia devolvia 0 e o rodapé ficava sempre em 0.0 (o seed nunca grava
+   `load`; ver v4.31.0). Estas 3 funções são o ÚNICO parse de carga para
+   métricas: telas não devem repetir regex/parseFloat.
+   ============================================================ */
+
+/** Exercício (ou parte dele) suficiente para o cálculo da carga. */
+export interface LoadBearingExercise {
+  name?: string;
+  muscleGroup?: string;
+  tags?: readonly string[];
+  load?: string | null;
+}
+
+/**
+ * Converte a string de carga em kg (número).
+ *
+ *  - "30 kg"                → 30
+ *  - "12,5 kg"              → 12.5
+ *  - "12 kg cada lado"      → 24 (o peso vai nos DOIS lados da barra — decisão
+ *                             do usuário em v4.32.0)
+ *  - "Peso do Corpo" / ""   → 0 (sem carga externa/noção de kg)
+ */
+export function parseLoadKg(value?: string | null): number {
+  const raw = String(value ?? '').trim();
+  if (!raw) return 0;
+  /* "Peso do Corpo" não tem número — o regex abaixo já devolveria 0; o teste
+     explícito deixa a intenção legível (e cobre "Peso do Corpo 10 kg"? não:
+     aí o número vence, que é o desejado). */
+  if (/peso\s*do\s*corpo/i.test(raw) && !/\d/.test(raw)) return 0;
+
+  const match = raw.replace(',', '.').match(/\d+(?:\.\d+)?/);
+  if (!match) return 0;
+
+  const kg = parseFloat(match[0]);
+  if (!Number.isFinite(kg)) return 0;
+  return /cada\s*lado/i.test(raw) ? kg * 2 : kg;
+}
+
+/**
+ * Carga EFETIVA (kg) do exercício: a carga SALVA no campo `load` e, quando
+ * ele ainda está vazio, a carga SUGERIDA pelo nome/grupo muscular (v4.31.0).
+ * É esse número que alimenta o "volume médio de carga" — era exatamente o que
+ * faltava: o peso sugerido aparecia na tela mas não entrava na conta.
+ */
+export function effectiveLoadKg(ex: LoadBearingExercise): number {
+  const saved = parseLoadKg(ex.load);
+  if (saved > 0) return saved;
+  return parseLoadKg(getSuggestedLoad(ex));
+}
+
+/**
+ * Volume médio de carga (kg) de uma lista de exercícios: média simples das
+ * cargas EFETIVAS. Exercícios sem carga externa (peso do corpo/core) entram
+ * como 0 — mesma contagem do legado (divide pelo total de exercícios).
+ */
+export function averageLoadKg(list: readonly LoadBearingExercise[]): number {
+  if (list.length === 0) return 0;
+  const total = list.reduce((sum, ex) => sum + effectiveLoadKg(ex), 0);
+  return total / list.length;
+}

@@ -1334,6 +1334,14 @@
   color: var(--primary-light, #a78bfa);
 }
 
+/* v4.32.0 — na PRÉVIA do Início a linha da ficha sobe para ANTES do grid (o
+   nome do treino abre a prévia, pedido do usuário): o respiro de 14px vira
+   margem INFERIOR (separando do grid) em vez de superior. */
+.dash-mini-deck__sheet-row--head {
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+
 .dash-mini-deck__sheet-row-tag {
   margin-left: 2px;
   padding: 2px 8px;
@@ -1387,8 +1395,12 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.dash-mini-deck__stat-icon.elixir {
-  filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.5));
+/* v4.32.0 — ícone do widget VOLUME MÉDIO DE CARGA: prato de peso "KG"
+   (imagem de referência do usuário) no lugar do elixir rosa — silhueta branca
+   com glow suave, como os demais ícones do rodapé. */
+.dash-mini-deck__stat-icon.kg {
+  color: #ffffff;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
 }
 
 .dash-mini-deck__stat-icon.star {

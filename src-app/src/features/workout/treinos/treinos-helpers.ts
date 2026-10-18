@@ -22,6 +22,7 @@ import {
 import { emitDbReady, getUserSheets, idb, upsertSheet } from '@/core/db/idb';
 import { SHEET_ORDER, today, type LocalData } from '@/core/db/queries';
 import { patchLegacyState } from '@/core/db/legacy-state';
+import { effectiveLoadKg } from '@/lib/suggested-load';
 import { showToast } from '@/lib/toast';
 
 /* ── Helpers básicos (db.js L373 uid / L387 formatCarga já em queries) ── */
@@ -346,9 +347,12 @@ export function computeDeckStats(
   const map = new Map(exercises.map((e) => [e.id, e]));
   const list = ids.map((id) => map.get(id)).filter((e): e is Exercise => Boolean(e));
 
+  /* v4.32.0 — carga EFETIVA: a salva (`load`) ou, se ainda não definida, a
+     SUGERIDA pelo nome/grupo (v4.31.0). Antes o legado/React lia só o campo
+     salvo, que o seed nunca preenche, e o rodapé ficava em 0.0. */
   let totalCarga = 0;
   list.forEach((ex) => {
-    totalCarga += parseFloat(String(ex.load)) || 0;
+    totalCarga += effectiveLoadKg(ex);
   });
   const avg = list.length ? (totalCarga / list.length).toFixed(1) : '0.0';
 

@@ -6,26 +6,27 @@
    NavigationShellStandalone.tsx de referência, mas 100% no design system
    do Academia (tokens roxos, glassmorphism, BEM, sem cores hardcoded):
 
-   • < 1024px (MOBILE)  → Top Bar fixo no fluxo (avatar/busca/tela cheia)
-                          + Bottom Nav legada (inalterada).
+   • < 1024px (MOBILE)  → Top Bar fixo no fluxo (avatar/busca/tela cheia) — REMOVIDA na v4.32.0
+                          + Bottom Nav legada (inalterada; os utilitários da barra — avatar, busca e
+                           tela cheia — seguem no Drawer da Bottom Nav e no
+                           banner do Início).
    • ≥ 1024px (DESKTOP) → Sidebar HUD esquerda (76px colapsada / 264px
                           expandida) com perfil, XP, seções e utilitários;
                           Bottom Nav oculta e slides com largura 100%
                           (o 100vw legado estouraria sob a sidebar).
 
-   BEM: .top-bar* / .side-hud* / .shell-body*
+   BEM: .side-hud* / .shell-body*
    ============================================================ */
 
 /* ---------- Utilidades de layout shell ---------- */
 .shell-body {
   position: relative;
-  /* v4.13.0 — o deslocamento da Top Bar mobile (56px) saiu daqui e passou a
-     viver em .section-slide (padding-top, regra na seção da Top Bar abaixo).
-     A barra é FIXED e 100% transparente: com o padding no .shell-body o
-     conteúdo era CORTADO em y=56 e a faixa da barra escondia a interface ao
-     rolar ("a barra se sobrepõe à interface"). Como o scroll acontece dentro
-     do slide, o offset ali faz o conteúdo começar abaixo da barra em repouso e
-     passar POR TRÁS dela (visível através do fundo transparente) ao rolar. */
+  /* v4.32.0 — a Top Bar mobile foi REMOVIDA: sem barra fixa, nenhum offset de
+     topo vive aqui nem no .section-slide (o conteúdo começa no topo).
+     Histórico (v4.13.0): o deslocamento de 56px havia saído daqui para o
+     .section-slide — a barra era FIXED/transparente e, com o padding no
+     .shell-body, o conteúdo era CORTADO em y=56 e a faixa da barra escondia a
+     interface ao rolar ("a barra se sobrepõe à interface"). */
 }
 
 /* v4.12.0 — `main { min-height: 100vh }` do main.css (não-camadado) vence
@@ -39,127 +40,23 @@
 }
 
 /* ============================================================
-   TOP BAR MOBILE (< 1024px)
+   TOP BAR MOBILE — REMOVIDA (v4.32.0)
    ============================================================
-   Barra FIXED translúcida por cima do conteúdo (paridade com o
-   MobileTopBar do NavigationShellStandalone.tsx de referência):
-   sem texto de marca, só avatar à esquerda e ações à direita,
-   altura fixa 56px (sem safe-area no height — em tela cheia o
-   inset podia inflar a barra), itens colados no topo (flex-start).
+   A barra fixa de 56px do mobile (avatar/busca/tela cheia) foi desmontada a
+   pedido do usuário: "remova a barra superior para aproveitar melhor o espaço
+   da tela". Os recursos dela seguem disponíveis na Bottom Nav → Drawer
+   (avatar/Perfil, busca, tela cheia) e no banner do Início.
+   Com isso o offset de 56px do container de scroll (.section-slide) saiu: o
+   conteúdo volta a começar no topo, como antes da v4.6.0, e nenhuma regra
+   .top-bar* existe mais (as molduras [data-frame] do avatar migraram para o
+   avatar do banner do Início, em secoes/dashboard.css). O desktop (≥1024px)
+   nunca teve essa barra — a Sidebar HUD é quem permanece.
    ============================================================ */
-.top-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 350;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  height: 56px;
-  /* Alinha horizontalmente com o card do banner de perfil do Dashboard:
-     .dash-container tem max-width 480px (content-box) + padding 0 18px
-     = 516px border-box centrado; o banner sangra com margin -18px até
-     a borda do container. O padding abaixo reproduz esse offset — em
-     telas estreitas cai no mínimo 14px (sem safe-area extra). */
-  padding: 6px max(14px, calc((100% - 516px) / 2)) 0
-    max(14px, calc((100% - 516px) / 2));
-  /* v4.8.4-color-standard: totalmente transparente — o fundo dinâmico da
-     arena aparece por trás; avatar/botões mantêm seus próprios fundos de vidro. */
-  background: transparent;
-  border-bottom: 0;
-  user-select: none;
-  box-sizing: border-box;
-}
 
-.top-bar__avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--card-border);
-  /* Neutro (mesmo #1c1b1b do #dash-profile-avatar): o tema NÃO pode tingir
-     o emblema — mix-blend-mode: screen sobre --gradient colorido lavava a
-     imagem com a cor primária (v4.8.0-premium-motion). */
-  background: #1c1b1b;
-  color: #fff;
-  font-family: var(--font-family);
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-  flex-shrink: 0;
-}
-.top-bar__avatar:hover {
-  border-color: var(--primary-light);
-  box-shadow: 0 0 10px var(--shadow);
-}
-.top-bar__avatar:active {
-  transform: scale(0.92);
-}
-
-.top-bar__actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.top-bar__btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--card-border);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  padding: 0;
-}
-.top-bar__btn:hover {
-  color: var(--text);
-  background: var(--card-hover);
-  border-color: var(--primary);
-}
-.top-bar__btn:active {
-  transform: scale(0.92);
-}
-.top-bar__btn--active {
-  color: var(--primary-light);
-  border-color: var(--primary);
-  box-shadow: 0 0 8px var(--shadow);
-}
-.top-bar__btn svg {
-  width: 16px;
-  height: 16px;
-  stroke: currentColor;
-}
-
-/* v4.13.0 — barra 100% transparente também no toque: com o conteúdo rolando
-   por trás, a faixa da barra não pode engolir gestos/arrastos — só o avatar
-   e os botões capturam eventos (o resto passa para o slide abaixo). */
-.top-bar {
-  pointer-events: none;
-}
-.top-bar__avatar,
-.top-bar__btn {
-  pointer-events: auto;
-}
-
-/* v4.13.0 — offset da Top Bar (56px) vive no container de scroll: em repouso
-   o conteúdo começa abaixo da barra (mesmo layout de antes); ao rolar ele
-   sobe para dentro da faixa e fica visível atrás da barra transparente.
-   No desktop (≥1024px) não há Top Bar → padding zerado. */
+/* Offset da antiga Top Bar (56px) removido: só o inset do notch no iOS/tela
+   cheia (0px no Chrome/Android, onde env() não é suportado). */
 .section-slide {
-  padding-top: 56px;
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* ── v4.14.0 — navbar inferior sempre visível no mobile ──
@@ -185,8 +82,8 @@
 }
 
 @media (min-width: 1024px) {
-  .top-bar {
-    display: none;
+  .section-slide {
+    padding-top: 0;
   }
 }
 
@@ -199,6 +96,9 @@
    .section-slide (v4.13.0; antes vivia no .shell-body).
    Em tela cheia com notch isso duplicava o inset e criava um
    vazio enorme entre a barra e as sub-abas. Mantém só os 20px.
+   v4.32.0: a Top Bar saiu; quem cobre o notch agora é o padding-top
+   `env(safe-area-inset-top)` do próprio .section-slide — os 20px
+   continuam sendo o respiro das sub-abas.
    ============================================================ */
 .section-subtabs {
   margin-top: 20px;
@@ -238,8 +138,8 @@
   }
 
   /* Conteúdo compensa a largura da sidebar (fixa ou colapsada).
-     Desktop não tem Top Bar fixa → o offset de 56px do .section-slide é
-     zerado logo abaixo (o padding-left continua sendo o da sidebar). */
+     v4.32.0 — sem Top Bar nem no mobile; aqui o padding-left é o único
+     deslocamento do shell (o .section-slide zera o inset do notch). */
   .shell-body {
     padding-left: 76px;
     transition: padding-left 0.35s cubic-bezier(0.25, 1, 0.5, 1);
@@ -248,7 +148,9 @@
     padding-left: 264px;
   }
 
-  /* v4.13.0 — sem Top Bar no desktop: conteúdo começa no topo (como antes). */
+  /* v4.32.0 — no desktop o inset do notch (env) é zerado: a Sidebar HUD e a
+     grade do Início já dão o respiro do topo (v4.13.0 zerava o offset da
+     Top Bar, que não existe nem no mobile desde a v4.32.0). */
   .section-slide {
     padding-top: 0;
   }
@@ -1674,29 +1576,10 @@
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-/* Molduras de avatar da top bar mobile (8-customizacao.css L358–385 só
-   atinge .profile-avatar; o botão da top bar recebeu data-frame e usa o
-   outline no próprio elemento, já que o interior tem overflow:hidden). */
-.top-bar__avatar[data-frame="bronze"] {
-  outline: 2px solid #f97316;
-  outline-offset: 2px;
-  box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
-}
-.top-bar__avatar[data-frame="prata"] {
-  outline: 2px solid #94a3b8;
-  outline-offset: 2px;
-  box-shadow: 0 0 10px rgba(148, 163, 184, 0.5);
-}
-.top-bar__avatar[data-frame="ouro"] {
-  outline: 2px solid #fbbf24;
-  outline-offset: 2px;
-  box-shadow: 0 0 14px rgba(251, 191, 36, 0.6);
-}
-.top-bar__avatar[data-frame="elite"] {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 2px var(--primary), 0 0 18px var(--primary);
-}
+/* v4.32.0 — as molduras de avatar da top bar mobile (data-frame bronze/prata/
+   ouro/elite) saíram junto com a barra. O avatar do banner do Início tem a
+   própria regra (secoes/dashboard.css, .dash-profile-avatar) e o Perfil usa
+   8-customizacao.css. */
 
 /* v4.8.4.3-deck-amoled — header do seletor de treinos (Montar Ficha):
    deck-builder.css:16 usa #150b24 (roxo) !important.

@@ -7,15 +7,18 @@
  * métricas (volume médio / maestria / cardio).
  *
  * A prévia do Início esconde o widget MAESTRIA/EMBLEMAS via `showMaestria` e,
- * via `bodyRow='sheet'` (v4.31.1), troca a linha verde de cardio (abaixo do
- * grid) pelo NOME da ficha do dia ("TREINO A · FICHA DO DIA"). O rodapé segue
- * idêntico ao do modal: volume médio de carga + cardio configurado.
+ * via `bodyRow='sheet'` (v4.31.1), troca a linha verde de cardio pelo NOME da
+ * ficha do dia ("TREINO A · FICHA DO DIA") — desde a v4.32.0 essa linha fica
+ * ACIMA do grid (nome do treino no topo da prévia, pedido do usuário).
+ * O rodapé segue idêntico ao do modal: volume médio de carga + cardio.
  */
 
-import React, { useId, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import type { Exercise, WorkoutSheet } from '@/core/db/schema';
 import { effectiveAerobic } from '@/core/db/schema';
 import type { LegacyRaw } from '@/core/db/queries';
+import { averageLoadKg } from '@/lib/suggested-load';
+import { VolumeKgIcon } from '@/components/VolumeKgIcon';
 
 /** Cartão de exercício no grid Royale (mesmo HTML do legado). */
 export const DeckCard: React.FC<{ exercise: Exercise; index: number }> = ({ exercise, index }) => (
@@ -80,11 +83,6 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
   bodyRow = 'cardio',
   emptyMessage,
 }) => {
-  /* ids de gradiente únicos: o mesmo componente pode estar montado 2x na
-     página (modal + prévia) — ids duplicados no SVG são inválidos. */
-  const uid = useId().replace(/:/g, '');
-  const elixirId = `elixirGrad-${uid}`;
-
   /* v4.31.0 — todo treino tem cardio POR PADRÃO (10 min de esteira a 3 km/h):
      quando a ficha não tem aeróbico configurado usamos `DEFAULT_AEROBIC`. Uma
      ficha sem nenhum exercício continua exibindo o estado vazio. */
@@ -92,14 +90,14 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
   const hasCardio = exercises.length > 0 || Boolean(sheet?.aerobic?.tipo);
   const total = exercises.length + (hasCardio ? 1 : 0);
 
-  /* Rodapé: volume médio (carga × séries × reps ÷ 1000) — igual ao legado */
+  /* Rodapé: VOLUME MÉDIO DE CARGA (v4.32.0) — média das cargas EFETIVAS dos
+     exercícios: a carga SALVA no campo `load` e, quando ele ainda está vazio,
+     a carga SUGERIDA pelo nome/grupo muscular (v4.31.0). Antes o cálculo lia
+     só o campo salvo — que o seed nunca preenche — e o widget mostrava 0.0.
+     Mesma métrica/formatação do rodapé do "Minha Ficha" (computeDeckStats). */
   const volumeAvg = useMemo(() => {
     if (exercises.length === 0) return '0.0';
-    const totalVol = exercises.reduce((sum, ex) => {
-      const carga = parseFloat(String(ex.load).replace(',', '.')) || 0;
-      return sum + carga * ex.sets * (parseInt(ex.reps, 10) || 0);
-    }, 0);
-    return (totalVol / exercises.length / 1000).toFixed(1);
+    return averageLoadKg(exercises).toFixed(1);
   }, [exercises]);
 
   /* Rodapé: maestria (nível ≥ 3 na maestria legada) */
@@ -124,16 +122,12 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
           </div>
         ) : (
           <>
-            <div className="dash-mini-deck__grid">
-              {exercises.map((ex, index) => (
-                <DeckCard key={ex.id} exercise={ex} index={index} />
-              ))}
-            </div>
-            {bodyRow === 'sheet' ? (
-              /* v4.31.1 — na PRÉVIA do Início a linha abaixo do grid deixa de
-                 repetir o cardio e passa a identificar a ficha do dia
-                 ("TREINO A · FICHA DO DIA"), no acento do tema. */
-              <div className="dash-mini-deck__sheet-row">
+            {bodyRow === 'sheet' && (
+              /* v4.31.1 — na PRÉVIA do Início a linha do cardio vira a
+                 identificação da ficha do dia ("TREINO A · FICHA DO DIA"), no
+                 acento do tema. v4.32.0: essa linha subiu para ANTES do grid —
+                 o nome do treino abre a prévia (pedido do usuário). */
+              <div className="dash-mini-deck__sheet-row dash-mini-deck__sheet-row--head">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -149,7 +143,13 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
                 <span>TREINO {sheet?.sheetKey ?? '—'}</span>
                 <span className="dash-mini-deck__sheet-row-tag">FICHA DO DIA</span>
               </div>
-            ) : (
+            )}
+            <div className="dash-mini-deck__grid">
+              {exercises.map((ex, index) => (
+                <DeckCard key={ex.id} exercise={ex} index={index} />
+              ))}
+            </div>
+            {bodyRow === 'cardio' && (
               <div className="dash-mini-deck__cardio-row">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={16} height={16}>
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -167,15 +167,9 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
       <div className="dash-mini-deck__footer">
         <div className="dash-mini-deck__stat-container">
           <div className="dash-mini-deck__stat-widget">
-            <svg className="dash-mini-deck__stat-icon elixir" viewBox="0 0 24 24" fill={`url(#${elixirId})`} width={22} height={22}>
-              <defs>
-                <linearGradient id={elixirId} x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ec4899" />
-                  <stop offset="100%" stopColor="#a855f7" />
-                </linearGradient>
-              </defs>
-              <path d="M12 21a6 6 0 006-6c0-4-6-11-6-11s-6 7-6 11a6 6 0 006 6z" />
-            </svg>
+            {/* v4.32.0 — ícone "prato de peso KG" (imagem de referência do
+                usuário) no lugar do elixir rosa. */}
+            <VolumeKgIcon className="dash-mini-deck__stat-icon kg" size={22} />
             <span className="dash-mini-deck__stat-val">{volumeAvg}</span>
           </div>
           <span className="dash-mini-deck__stat-label">VOLUME MÉDIO DE CARGA</span>

@@ -331,6 +331,13 @@ Referência rápida dos ícones já implementados. Use os mesmos paths para cons
 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
 ```
 
+### Rodapé do deck (v4.32.0)
+
+```html
+<!-- Volume médio de carga (prato de peso "KG") — NÃO é stroke:
+     ver §8 (VolumeKgIcon.tsx). 22px no Início, 22×30 no "Minha Ficha". -->
+```
+
 ### Conquistas / Status
 
 ```html
@@ -376,6 +383,32 @@ Alguns ícones precisam de preenchimento para comunicar melhor. Nesses casos:
   fill: currentColor;
   stroke: none;
 }
+```
+
+### Prato de peso "KG" (widget de volume médio de carga) — v4.32.0
+
+Segunda exceção: o ícone pedido pelo usuário (imagem de referência) é um **pictograma sólido** — um prato de peso com alça e o texto "KG" —, que um contorno não reproduz. Vive em `src-app/src/components/VolumeKgIcon.tsx` (usado no rodapé do deck: `.dash-mini-deck__stat-icon.kg` no Início e `.volume-kg-icon` no "Minha Ficha").
+
+Regras dessa exceção (diferente do triângulo de play, que é um path `fill="currentColor"`):
+
+- o prato é preenchido com `currentColor` (o branco do widget) e as letras são **vazadas por `<mask>`** — assim o ícone acompanha o fundo do card (na referência o prato é preto com letras brancas; no app escuro seria invisível, então a silhueta é invertida);
+- o "KG" é desenhado com **paths em traço** (nunca `<text>`, para não depender de fonte carregada);
+- o `id` da `<mask>` usa `useId()` — o componente monta mais de uma vez na mesma página.
+
+```html
+<!-- Estrutura (resumo): prato + alça brancos na mask · letras em preto (furos) -->
+<svg viewBox="0 0 512 512" width="22" height="22">
+  <defs>
+    <mask id="volumeKg-..." maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <path d="M 186 176 H 326 … Z" fill="#fff" />          <!-- prato -->
+      <path d="M 218 84 H 294 … Z" fill="#fff" />           <!-- alça -->
+      <g fill="none" stroke="#000" stroke-width="38" stroke-linecap="round">
+        <!-- K (haste + 2 braços) e G (arco com boca à direita + barra) -->
+      </g>
+    </mask>
+  </defs>
+  <path d="…prato… …alça…" fill="currentColor" mask="url(#volumeKg-...)" />
+</svg>
 ```
 
 > **Regra:** Só use `fill` em formas fechadas onde o stroke sozinho não é legível (ex: seta/triângulo de play). Nunca use `fill` em ícones de navegação ou filtro.

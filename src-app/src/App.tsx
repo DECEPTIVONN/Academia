@@ -13,7 +13,6 @@ import { ConclusaoModal } from '@/features/workout/ConclusaoModal';
 import { ProfileFeature } from '@/features/profile/ProfileFeature';
 import { applySavedTheme } from '@/features/settings/theme-colors';
 import { BottomNav, type SectionType } from '@/components/BottomNav';
-import { MobileTopBar } from '@/components/MobileTopBar';
 import { MobileDrawer } from '@/components/MobileDrawer';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { GlobalSearchOverlay } from '@/features/search/GlobalSearchOverlay';
@@ -599,16 +598,6 @@ export function App() {
         </div>
 
         <div className="relative z-10 flex flex-col h-full">
-          {/* ====== TOP BAR MOBILE (v4.6.0-shell) ======
-              < 1024px: avatar/busca/tela cheia (escondida no desktop via
-              shell.css; no desktop quem aparece é a Sidebar HUD). */}
-          <MobileTopBar
-            onOpenProfile={() => setIsPerfilOverlayOpen(true)}
-            onOpenSearch={() => setIsSearchOpen(true)}
-            isFullscreen={isFullscreen}
-            onToggleFullscreen={toggleFullscreen}
-          />
-
           {/* ====== SIDEBAR HUD DESKTOP (v4.6.0-shell) ======
               ≥ 1024px: 76px colapsada / 264px expandida (hover ou pin). */}
           <DesktopSidebar

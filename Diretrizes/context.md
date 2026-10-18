@@ -12,9 +12,30 @@
 
 > ⚠️ **Arquivo desatualizado por várias sessões.** Escrito ao fim da sessão de
 > 2026-10-08 (quando o `system_map` estava em **3.5.24**). O estado atual é
-> `system_map` **3.5.75** e o histórico completo entre `v4.0.15` e `v4.31.1` está
+> `system_map` **3.5.76** e o histórico completo entre `v4.0.15` e `v4.32.0` está
 > no `Diretrizes/CHANGELOG.md`. As seções 2–4 abaixo são **históricas** (fase de
 > paridade da migração React v4). Última sessão registrada aqui: **2026-10-17**
+> (`v4.32.0`) — **o VOLUME MÉDIO DE CARGA passa a ser calculado de verdade** (média
+> das **cargas EFETIVAS**: a salva no campo `carga` ou, se ainda vazia, a **sugerida**
+> — `parseLoadKg`/`effectiveLoadKg`/`averageLoadKg` em `lib/suggested-load.ts`), a
+> **mesma métrica e o mesmo formato do "Minha Ficha"**; antes a prévia do Início
+> exibia `0.0` porque usava a tonelagem `Σ(carga×séries×reps)/n/1000` e o seed nunca
+> grava `load`. O widget troca o **elixir rosa** por um **prato de peso "KG"**
+> (`components/VolumeKgIcon.tsx`: silhueta branca com as letras "KG" **vazadas por
+> `<mask>`**, recriada da **imagem de referência** do usuário — exceção documentada
+> em `Diretrizes/Ícones.md` §8). Na **prévia do Início** o **nome do treino**
+> ("TREINO X · FICHA DO DIA") **sobe para o topo, antes do grid de exercícios**
+> (classe `.dash-mini-deck__sheet-row--head`). O **menu do Início** é **refeito**
+> sobre a imagem de referência: painel **ancorado no botão** (medido em
+> `useLayoutEffect`, `top/right/max-height` escritos no nó), **estreito** (≈ metade
+> da tela), **sem cabeçalho e sem ✕**, com seta para o botão, itens no **desenho do
+> próprio app** (ícone em quadrado arredondado + rótulo, grupos separados por
+> hairline) e o **"em breve" só ao tocar** no placeholder (a pílula fixa saiu). A
+> **barra superior mobile é REMOVIDA** (componente `MobileTopBar.tsx` apagado do
+> `App.tsx` + todas as regras `.top-bar*`; a **Sidebar HUD do desktop permanece**) e
+> o `.section-slide` fica só com `padding-top: env(safe-area-inset-top)` — busca,
+> tela cheia e avatar seguem no **Drawer** da barra inferior. Sessão anterior:
+> **2026-10-17**
 > (`v4.31.1`) — ajustes no **Início**: a **linha verde de cardio** abaixo do grid
 > da prévia dá lugar ao **nome do treino** ("TREINO B" + etiqueta FICHA DO DIA, no
 > acento do tema) e o **1º widget do rodapé volta a ser o VOLUME MÉDIO DE CARGA**

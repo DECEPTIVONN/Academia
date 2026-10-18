@@ -17,6 +17,7 @@ import { getMaestriaState } from '@/features/gamification/maestria';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
 import { fadeIn } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
+import { VolumeKgIcon } from '@/components/VolumeKgIcon';
 import { useTreinosStore, type DeckView } from './treinos-store';
 import {
   addFromCollection,
@@ -609,7 +610,8 @@ export const MontarTab: React.FC<MontarTabProps> = ({
         <div className="deck-footer">
           <div className="footer-stat">
             <div className="deck-volume">
-              <div className="volume-drop" />
+              {/* v4.32.0 — prato de peso "KG" no lugar do triângulo .volume-drop */}
+              <VolumeKgIcon className="volume-kg-icon" size={24} />
               <span className="volume-val" id="deckAvgVolume">
                 {stats.avg}
               </span>
