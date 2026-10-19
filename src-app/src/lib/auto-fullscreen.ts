@@ -11,8 +11,12 @@
  *  • quando a pref muda em sessão, o evento
  *    `academia:auto-fullscreen-changed` (dispatchado pelo SettingsFeature)
  *    arma/desarma em tempo real;
- *  • em display-mode standalone (app instalado) ou onde a Fullscreen API não
- *    existe (ex.: iOS Safari fora de <video>), nada é armado — já é "app".
+ *  • em PWA instalado (`display-mode: standalone`) a pref TAMBÉM funciona:
+ *    standalone não é tela cheia (a barra de status do sistema continua
+ *    visível) e a Fullscreen API é permitida mediante gesto — antes o
+ *    `!isStandalone()` desarmava tudo e a opção não fazia nada no app
+ *    instalado. Onde a API não existe (iOS Safari, que só a implementa em
+ *    `<video>`), nada é armado.
  */
 
 import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
@@ -23,19 +27,9 @@ const GESTURE_EVENTS = ['pointerdown', 'touchstart', 'click'] as const;
 let armed = false;
 let attemptInFlight = false;
 
-function isStandalone(): boolean {
-  try {
-    if (window.matchMedia?.('(display-mode: standalone)').matches) return true;
-    // iOS Safari (PWA adicionada à tela inicial)
-    return (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-  } catch {
-    return false;
-  }
-}
-
 function canUseFullscreen(): boolean {
   // iOS só implementa requestFullscreen em elementos <video>.
-  return typeof document.documentElement.requestFullscreen === 'function' && !isStandalone();
+  return typeof document.documentElement.requestFullscreen === 'function';
 }
 
 function onGesture(): void {

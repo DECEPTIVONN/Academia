@@ -21,6 +21,20 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.38.14] - 2026-10-19
+
+**Tela cheia automática passa a funcionar no PWA instalado** (a pedido do usuário). A pref `academia_pref_auto_fullscreen` era desarmada em `display-mode: standalone` porque o código assumia que "app instalado já é tela cheia". Standalone, porém, mantém a barra de status/janela do sistema — e a Fullscreen API é permitida no PWA instalado mediante gesto. Removido o guard `!isStandalone()` de `canUseFullscreen()` em `lib/auto-fullscreen.ts`: com a opção ligada, o primeiro clique/toque no app instalado agora entra em tela cheia (e reativa após sair), no Android e no desktop. Onde a API não existe (iOS Safari fora de `<video>`), nada é armado, como antes.
+
+### Fixed
+- **`src-app/src/lib/auto-fullscreen.ts`** — removido `isStandalone()`/guard de `canUseFullscreen()`; a pref de tela cheia automática volta a armar os listeners no PWA instalado (`standalone` ≠ `fullscreen`). Comentário de cabeçalho atualizado.
+
+### Changed
+- **`Diretrizes/system_map.json`** → **3.5.90** (last_updated 2026-10-19; purpose de `lib/auto-fullscreen.ts` corrigido — descrevia o hook de `fullscreen.ts`).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 · `npm run build` OK · `npm run lint:docs` exit 0.
+- Sonda CDP (preview 4173 + Chrome headless 9222): **6/6 PASS** — com `display-mode: standalone` simulado no documento, a pref ligada arma o gesto e chama `requestFullscreen` (stub); desligada não chama; no modo navegador normal o comportamento permanece.
+
 ## [v4.38.13] - 2026-10-19
 
 **Retomada do treino ao reabrir o app e remoção do autoscroll extra ao preencher exercício** (a pedido do usuário). (1) **Retomada:** `isFichaOverlayOpen` em `App.tsx` agora nasce aberto quando há treino em andamento hoje (`workout_start_time` restaurado por `store/workout-store.ts`) — port do auto-open do legado (`Legacy/JS/treino/app.js` L48–66). Recarregar/fechar o navegador durante o treino devolve o usuário direto à interface de treino, com checks e cronômetro preservados (a persistência já existente foi mantida). No boot também é disparado uma única vez `academia:workout-started` para restaurar o contexto de música do treino (playlist do usuário ou faixa de treino), como no clique em TREINAR; se já houver playlist/faixa tocando, o motor mantém a ativa. (2) **Autoscroll:** em `FichaFeature.tsx`, o efeito de autoscroll de abertura trocou as deps `[open, suggestion]` por `[open, loading]`. Marcar/desmarcar exercício regrava a entrada do dia → `academia:db-ready` → `useLocalData` recarrega → `suggestion` ganhava nova identidade e reexecutava o efeito, puxando o scroll de volta ao topo dos exercícios. O autoscroll hero → exercícios na abertura permanece inalterado; checks/séries não rolam mais a tela.
