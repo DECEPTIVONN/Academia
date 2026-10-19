@@ -120,9 +120,10 @@ export const MontarMenuModal: React.FC<MontarMenuModalProps> = ({
       const rect = btn?.getBoundingClientRect();
       // Painel abaixo do botão Menu, alinhado à direita do botão.
       const top = rect ? Math.min(rect.bottom + 10, window.innerHeight - 200) : 72;
-      const right = rect ? Math.max(12, window.innerWidth - rect.right) : 14;
+      const left = rect ? Math.max(12, rect.left) : 14;
       panel.style.top = `${Math.round(top)}px`;
-      panel.style.right = `${Math.round(right)}px`;
+      panel.style.left = `${Math.round(left)}px`;
+      panel.style.right = 'auto';
       panel.style.width = 'min(60vw, 240px)';
       panel.style.maxHeight = `${Math.max(180, Math.round(window.innerHeight - top - 16))}px`;
     };

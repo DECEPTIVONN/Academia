@@ -22,6 +22,26 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.37.8] - 2026-10-18
+
+**Detalhes do exercício (CRDetailsModal) — adaptação do layout de `DetalhesPecaStandalone.tsx`** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). Adaptações: (1) removido o botão de fechar (✕). (2) Ícone de medalha (maestria) corrigido (emojis 🏋️/🏆 → SVGs stroke). (3) Abas reordenadas: [prévia do exercício, stats (segunda aba inalterada), descrição (terceira aba = antiga primeira)]. A prévia do exercício (imagem) ficou na primeira aba; a raridade (músculo) e o tipo (Peso livre) já são exibidos no header; o ícone de medalha direciona para a maestria específica; o botão de editar exercício (equivalente à "melodia de nível") permanece no footer.
+
+### Changed
+- **`src-app/src/features/workout/treinos/TreinosModals.tsx`** — CRDetailsModal: removido botão de fechar; medalha 🏋️/🏆 → SVGs; abas reordenadas (preview → stats → descrição).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.37.7] - 2026-10-18
+
+**Correção — painel do MontarMenuModal alinhado à esquerda do botão Menu** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). O painel era ancorado pela **direita** do botão (`right`), fazendo-o estender para a direita e sair da tela. Alterado para ancoragem pela **esquerda** (`left = rect.left`, `right = auto`), de modo que o limite esquerdo do painel coincida com o limite esquerdo do botão Menu, com o painel aparecendo abaixo do botão.
+
+### Changed
+- **`src-app/src/features/workout/treinos/MontarMenuModal.tsx`** — âncora `left` (em vez de `right`), `right: 'auto'`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.37.6] - 2026-10-18
 
 **Correções — ícone EVO FIT removido, menu da Minha Ficha posicionado abaixo do botão, fundo do menu do deck opaco** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Removido o ícone (SVG dumbbell) antes do texto "EVO FIT" no badge do hero da Ficha (`FichaFeature.tsx`), deixando apenas o texto. (2) O menu popup da Minha Ficha (`MontarMenuModal`) agora aparece **abaixo** do botão Menu (top = `rect.bottom + 10`, com clamp para não sair da tela) e com largura reduzida (`min(60vw, 240px)`). (3) O fundo do menu de ações do deck (`.deck-card-menu`, que aparecia transparente) passou a `rgba(10, 5, 20, 0.95)` (opaco, mesmo tom de preto do restante da aba) nas duas regras (normal e royale-view override), em `cards.css` (React legacy-style + Legacy + www).
