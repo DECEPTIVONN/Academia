@@ -55,13 +55,26 @@ const isDesktopNav = (): boolean =>
    (paridade com o transform do nav.js legado); desktop = 0. */
 const slideBaseX = (idx: number): number => (isDesktopNav() ? 0 : -idx * window.innerWidth);
 
+/* app.js L48-66 (port): há treino em andamento HOJE? O cronômetro é preservado
+   entre recarregamentos por `workout_start_time` (ver store/workout-store.ts) —
+   a Ficha reabre sozinha para o usuário continuar de onde parou. A guarda de
+   data espelha o legado (`timerAtivo`): um treino esquecido de ontem não reabre. */
+const isWorkoutInProgressToday = (): boolean => {
+  const start = useWorkoutStore.getState().startTime;
+  if (!start) return false;
+  return new Date(start).toDateString() === new Date().toDateString();
+};
+
 export function App() {
   const [activeSection, setActiveSection] = useState<SectionType>('dashboard');
   /* v4.8.3-navbars: overlay do Dashboard (Missões/Notícias) liftado para o
      App — a drawer mobile consegue abri-los de qualquer seção. Limpo em
      navigateSection ao sair do Início (não reabre ao voltar). */
   const [dashOverlay, setDashOverlay] = useState<'missions' | 'news' | null>(null);
-  const [isFichaOverlayOpen, setIsFichaOverlayOpen] = useState(false);
+  /* v4.38.13 — a Ficha já nasce aberta quando o cronômetro do dia está ativo
+     (app.js L48-66): recarregar/fechar o navegador durante o treino devolve o
+     usuário à interface de treino, não ao Início. */
+  const [isFichaOverlayOpen, setIsFichaOverlayOpen] = useState(isWorkoutInProgressToday);
   const [isPerfilOverlayOpen, setIsPerfilOverlayOpen] = useState(false);
   const [isPerfilClosing, setIsPerfilClosing] = useState(false);
   const [isConclusaoOpen, setIsConclusaoOpen] = useState(false);
@@ -511,6 +524,18 @@ export function App() {
     document.body.classList.toggle('ficha-overlay-open', isFichaOverlayOpen);
     return () => document.body.classList.remove('ficha-overlay-open');
   }, [isFichaOverlayOpen]);
+
+  /* v4.38.13 — retomada do treino no boot: restaura o contexto de música do
+     treino (playlist do usuário ou faixa de treino), igual ao clique em TREINAR
+     (handleOpenFicha). Roda uma única vez; se já houver uma playlist/faixa
+     tocando, o próprio motor decide (startWorkoutContext respeita a playlist
+     ativa do usuário — audio-engine.ts). */
+  const workoutResumedRef = useRef(false);
+  useEffect(() => {
+    if (workoutResumedRef.current || !isWorkoutInProgressToday()) return;
+    workoutResumedRef.current = true;
+    window.dispatchEvent(new CustomEvent('academia:workout-started'));
+  }, []);
 
   /* Tema salvo + classes/aria do overlay do Perfil
       (perfil-overlay.js openPerfilOverlay L37–75 / closePerfilOverlay L78–114)

@@ -21,6 +21,21 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.38.13] - 2026-10-19
+
+**Retomada do treino ao reabrir o app e remoção do autoscroll extra ao preencher exercício** (a pedido do usuário). (1) **Retomada:** `isFichaOverlayOpen` em `App.tsx` agora nasce aberto quando há treino em andamento hoje (`workout_start_time` restaurado por `store/workout-store.ts`) — port do auto-open do legado (`Legacy/JS/treino/app.js` L48–66). Recarregar/fechar o navegador durante o treino devolve o usuário direto à interface de treino, com checks e cronômetro preservados (a persistência já existente foi mantida). No boot também é disparado uma única vez `academia:workout-started` para restaurar o contexto de música do treino (playlist do usuário ou faixa de treino), como no clique em TREINAR; se já houver playlist/faixa tocando, o motor mantém a ativa. (2) **Autoscroll:** em `FichaFeature.tsx`, o efeito de autoscroll de abertura trocou as deps `[open, suggestion]` por `[open, loading]`. Marcar/desmarcar exercício regrava a entrada do dia → `academia:db-ready` → `useLocalData` recarrega → `suggestion` ganhava nova identidade e reexecutava o efeito, puxando o scroll de volta ao topo dos exercícios. O autoscroll hero → exercícios na abertura permanece inalterado; checks/séries não rolam mais a tela.
+
+### Fixed
+- **`src-app/src/App.tsx`** — Ficha reabre no boot quando há treino do dia em andamento (`isWorkoutInProgressToday` + `useState` preguiçoso) e restaura a música de treino (`academia:workout-started`, uma vez).
+- **`src-app/src/features/workout/FichaFeature.tsx`** — autoscroll de abertura depende de `open`/`loading` (antes `suggestion`), eliminando o retorno ao topo a cada exercício preenchido.
+
+### Changed
+- **`Diretrizes/system_map.json`** → **3.5.89** (last_updated 2026-10-19; purposes de `App.tsx` e `FichaFeature.tsx` atualizados).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0 (300 caminhos, 154 OK, 0 erros).
+- Sonda CDP (preview 4173 + Chrome headless 9222): **7/7 PASS** — Ficha reabre com treino do dia (`display=flex`, cronômetro visível, ENCERRAR TREINO), autoscroll de abertura ativo (`scrollTop=682`), marcar exercício **não** move o scroll (`antes=1282 → depois=1282`) e treino de ontem não reabre (`display=none`).
+
 <<<<<<< HEAD
 ## [v4.38.12] - 2026-10-18
 

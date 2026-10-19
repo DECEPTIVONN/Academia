@@ -482,7 +482,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   onWorkoutCompleted,
   open = true,
 }) => {
-  const { exercises, sheets, history, legacy } = useLocalData();
+  const { exercises, sheets, history, legacy, loading } = useLocalData();
   const { isActive, startTime, startRestTimer, skipRestTimer } = useWorkoutStore();
   const entry = useTodayEntryStore((s) => s.entry);
   const loadEntry = useTodayEntryStore((s) => s.load);
@@ -590,7 +590,13 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   /* v4.25.0 — autoscroll ao ABRIR a Ficha: pula o hero e posiciona o
      "Progresso do treino" no topo do scroller (.ficha-overlay__scroll),
      deixando os exercícios em vista. Roda em passes curtos porque o conteúdo
-     acima (sugestão/timer) assenta depois do start; corrige só se errou > 4px. */
+     acima (sugestão/timer) assenta depois do start; corrige só se errou > 4px.
+     v4.38.13 — as deps passam a ser [open, loading] (antes [open, suggestion]):
+     marcar/desmarcar um exercício regrava a entrada do dia → 'academia:db-ready'
+     → useLocalData recarrega → o useMemo `suggestion` muda de identidade e o
+     efeito reexecutava, puxando o scroll de volta ao topo dos exercícios a cada
+     item marcado. `loading` só muda na primeira carga, então o autoscroll roda
+     na abertura e, no máximo, quando os dados chegam — nunca a cada check. */
   useEffect(() => {
     if (!open) {
       return undefined;
@@ -605,7 +611,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     };
     const timers = [120, 500, 900, 1500].map((ms) => window.setTimeout(goto, ms));
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [open, suggestion]);
+  }, [open, loading]);
 
   /* Mutações (espelham os handlers de change de secao-ficha.js) ── */
 
