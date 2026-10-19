@@ -8,7 +8,7 @@
  */
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MissoesRecompensasModal } from './MissoesRecompensasModal';
+import MissoesRecompensasStandalone from './MissoesRecompensasModal';
 
 const toBody = (node: React.ReactNode) => createPortal(node, document.body);
 
@@ -28,7 +28,7 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
     };
   }, [open]);
 
-  return toBody(<MissoesRecompensasModal isOpen={open} onClose={onClose} />);
+  return toBody(<MissoesRecompensasStandalone isOpen={open} onClose={onClose} />);
 }
 
 export default MissionsOverlay;

@@ -45,9 +45,20 @@
 .soc-close-btn,
 .soc-close-btn:focus,
 .soc-close-btn:focus-visible,
-.soc-close-btn:active {
+.soc-close-btn:active,
+.soc-close-btn:hover {
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* Reset global de outline/box-shadow em botões da Social (evita anel branco) */
+.ligas-root button,
+.soc button,
+.ligas-root button:focus,
+.ligas-root button:focus-visible,
+.soc button:focus,
+.soc button:focus-visible {
+  outline: none !important;
 }
   font-family: var(--font-primary);
 }

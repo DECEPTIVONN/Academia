@@ -7,7 +7,7 @@
  */
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { SupercellIdModal } from './SupercellIdModal';
+import SupercellIdStandalone from './SupercellIdModal';
 
 const toBody = (node: React.ReactNode) => createPortal(node, document.body);
 
@@ -53,7 +53,7 @@ export const FitIdOverlay: React.FC<FitIdOverlayProps> = ({
   };
 
   return toBody(
-    <SupercellIdModal isOpen={open} onClose={onClose} profile={profile} />
+    <SupercellIdStandalone isOpen={open} onClose={onClose} profile={profile} />
   );
 };
 

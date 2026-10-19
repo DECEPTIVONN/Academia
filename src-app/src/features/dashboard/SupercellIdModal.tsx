@@ -1,35 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import '@/features/auth/auth-screen.css';
 import {
     Settings,
     X,
     Users,
+    User,
     Award,
     Shield,
-    Info,
+    Mail,
     Plus,
+    ChevronRight,
     ArrowLeft,
     Check,
-    Lock,
     Gamepad2,
-    HelpCircle,
     LogOut,
     RefreshCw,
-    Zap,
-    CheckCircle,
-    QrCode,
-    Smartphone,
-    Monitor,
-    RotateCcw,
-    Sparkles,
-    Search,
-    ChevronRight
+    ExternalLink
 } from 'lucide-react';
 
 // ============================================================================
-// 1. TIPOS & MODELOS DE DADOS (SUPERCELL ID STANDALONE)
+// 1. TIPOS & MODELOS DE DADOS
 // ============================================================================
+
+export type TetrominoType = 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L' | 'X';
 
 export interface PlayerProfile {
     username: string;
@@ -39,7 +33,13 @@ export interface PlayerProfile {
     gems: number;
     xp: number;
     level: number;
-    email?: string;
+}
+
+export interface SupercellIdModalProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+    profile?: PlayerProfile;
+    onUpdateProfile?: (newProfile: PlayerProfile) => void;
 }
 
 export interface Friend {
@@ -52,18 +52,8 @@ export interface Friend {
     online: boolean;
 }
 
-export interface SupercellGame {
-    id: string;
-    name: string;
-    tagline: string;
-    icon: string;
-    bannerColor: string;
-    stats: string;
-    connected: boolean;
-}
-
 // Preset accounts to switch between
-const PRESET_ACCOUNTS: PlayerProfile[] = [
+export const PRESET_ACCOUNTS = [
     {
         username: 'DearGabrielGS',
         clanName: 'GABRIEL GS',
@@ -96,77 +86,11 @@ const PRESET_ACCOUNTS: PlayerProfile[] = [
     }
 ];
 
-const INITIAL_FRIENDS: Friend[] = [
-    { name: 'EnjoyedStableMaju', clan: 'RETR', trophies: 1720, level: 8, emoji: '👩‍🎤', avatarBg: 'from-pink-500 to-rose-600', online: true },
-    { name: 'EVIONTECH', clan: 'ELITE', trophies: 5410, level: 12, emoji: '🧔', avatarBg: 'from-yellow-500 to-amber-600', online: true },
-    { name: 'LyricalSkyron', clan: 'CYBER', trophies: 3120, level: 9, emoji: '🤴', avatarBg: 'from-blue-500 to-indigo-600', online: false },
-    { name: 'HANNEMANN', clan: 'T-SPN', trophies: 840, level: 4, emoji: '🥷', avatarBg: 'from-slate-700 to-slate-900', online: true },
-    { name: 'JEFERSON-PR', clan: 'ELITE', trophies: 4100, level: 10, emoji: '🧙‍♂️', avatarBg: 'from-purple-500 to-fuchsia-600', online: false },
-    { name: 'magomaju', clan: 'CYBER', trophies: 2950, level: 7, emoji: '🌵', avatarBg: 'from-green-500 to-emerald-600', online: true }
-];
-
-const SUPERCELL_GAMES: SupercellGame[] = [
-    {
-        id: 'clash_royale',
-        name: 'Clash Royale',
-        tagline: 'Estratégia e Duelos de Cartas',
-        icon: '👑',
-        bannerColor: 'from-blue-600 to-indigo-900',
-        stats: 'Arena 5 · 1.385 Troféus',
-        connected: true
-    },
-    {
-        id: 'brawl_stars',
-        name: 'Brawl Stars',
-        tagline: 'Ação 3v3 e Battle Royale',
-        icon: '⭐',
-        bannerColor: 'from-amber-500 to-yellow-600',
-        stats: 'Ranque Mítico · 22.400 Troféus',
-        connected: true
-    },
-    {
-        id: 'clash_of_clans',
-        name: 'Clash of Clans',
-        tagline: 'Construa, Batalhe e Evolua a Vila',
-        icon: '⚔️',
-        bannerColor: 'from-red-600 to-orange-700',
-        stats: 'Centro de Vila 14 · Liga Titã',
-        connected: true
-    },
-    {
-        id: 'squad_busters',
-        name: 'Squad Busters',
-        tagline: 'Batalhas Épicas em Grupo',
-        icon: '💥',
-        bannerColor: 'from-emerald-600 to-green-800',
-        stats: 'Mundo Verde · Nível de Esquadrão 42',
-        connected: true
-    },
-    {
-        id: 'hay_day',
-        name: 'Hay Day',
-        tagline: 'A Fazenda Mais Famosa do Mundo',
-        icon: '🌽',
-        bannerColor: 'from-lime-600 to-emerald-800',
-        stats: 'Fazenda Nível 38',
-        connected: false
-    },
-    {
-        id: 'boom_beach',
-        name: 'Boom Beach',
-        tagline: 'Invada Bases e Salve os Ilhéus',
-        icon: '💣',
-        bannerColor: 'from-cyan-600 to-blue-800',
-        stats: 'Quartel General Nível 18',
-        connected: false
-    }
-];
-
 // ============================================================================
 // 2. SISTEMA DE ÁUDIO WEB AUDIO API STANDALONE (ZERO ARQUIVOS EXTERNOS)
 // ============================================================================
 
-class SupercellIdSoundEffects {
+class SoundManagerStandalone {
     private ctx: AudioContext | null = null;
 
     private initCtx() {
@@ -181,121 +105,177 @@ class SupercellIdSoundEffects {
         }
     }
 
-    playClick() {
+    playMove() {
         try {
             this.initCtx();
             if (!this.ctx) return;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(520, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(780, this.ctx.currentTime + 0.06);
+            osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
             gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.06);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start();
-            osc.stop(this.ctx.currentTime + 0.06);
-        } catch {
-            // Audio fallback
-        }
+            osc.stop(this.ctx.currentTime + 0.05);
+        } catch { }
     }
 
-    playSuccess() {
-        try {
-            this.initCtx();
-            if (!this.ctx) return;
-            const now = this.ctx.currentTime;
-            [587.33, 739.99, 880.00].forEach((freq, idx) => {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, now + idx * 0.06);
-                gain.gain.setValueAtTime(0.15, now + idx * 0.06);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.2);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now + idx * 0.06);
-                osc.stop(now + idx * 0.06 + 0.25);
-            });
-        } catch {
-            // Audio fallback
-        }
-    }
-
-    playSwitch() {
+    playHold() {
         try {
             this.initCtx();
             if (!this.ctx) return;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(320, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(640, this.ctx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+            osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start();
-            osc.stop(this.ctx.currentTime + 0.12);
-        } catch {
-            // Audio fallback
-        }
+            osc.stop(this.ctx.currentTime + 0.08);
+        } catch { }
+    }
+
+    playLevelUp() {
+        try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                gain.gain.setValueAtTime(0.15, now + idx * 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.22);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + idx * 0.06);
+                osc.stop(now + idx * 0.06 + 0.25);
+            });
+        } catch { }
+    }
+
+    playScoreSaved() {
+        try {
+            this.initCtx();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(750, this.ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.1);
+        } catch { }
     }
 }
 
-const scAudio = new SupercellIdSoundEffects();
+const soundManager = new SoundManagerStandalone();
+
+const DEFAULT_PROFILE: PlayerProfile = {
+    username: 'DearGabrielGS',
+    clanName: 'GABRIEL GS',
+    trophies: 1385,
+    gold: 50739,
+    gems: 4165,
+    xp: 850,
+    level: 7
+};
 
 // ============================================================================
-// 3. COMPONENTE PRINCIPAL SUPERCELL ID MODAL
+// 3. COMPONENTE STANDALONE (EXATAMENTE IGUAL A src/components/SupercellIdModal.tsx)
 // ============================================================================
 
-export interface SupercellIdProps {
-    isOpen?: boolean;
-    onClose?: () => void;
-    profile?: PlayerProfile;
-    onUpdateProfile?: (newProfile: PlayerProfile) => void;
-}
-
-export function SupercellIdModal({
+export default function SupercellIdStandalone({
     isOpen = true,
-    onClose,
-    profile: externalProfile,
-    onUpdateProfile: externalUpdateProfile
-}: SupercellIdProps) {
-    const [profile, setProfile] = useState<PlayerProfile>(externalProfile || PRESET_ACCOUNTS[0]);
+    onClose = () => { },
+    profile: propProfile,
+    onUpdateProfile: propUpdateProfile
+}: SupercellIdModalProps) {
+    // Local fallback profile
+    const [localProfile, setLocalProfile] = useState<PlayerProfile>(DEFAULT_PROFILE);
+    const profile = propProfile || localProfile;
+    const onUpdateProfile = (newProfile: PlayerProfile) => {
+        if (propUpdateProfile) {
+            propUpdateProfile(newProfile);
+        } else {
+            setLocalProfile(newProfile);
+        }
+    };
+
     const [activeTab, setActiveTab] = useState<'rewards' | 'friends' | 'games'>('rewards');
     const [isSettingsMode, setIsSettingsMode] = useState<boolean>(false);
-
-    // Settings toggles
     const [statusOnline, setStatusOnline] = useState<boolean>(true);
     const [receiveFriendRequests, setReceiveFriendRequests] = useState<boolean>(true);
     const [receiveNews, setReceiveNews] = useState<boolean>(true);
     const [betaTester, setBetaTester] = useState<boolean>(false);
 
-    // Friends state
-    const [friendsList, setFriendsList] = useState<Friend[]>(INITIAL_FRIENDS);
-    const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-    const [friendSearchQuery, setFriendSearchQuery] = useState<string>('');
+    // Custom states that update profile or local storage
+    const [connectedEmail, setConnectedEmail] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem(`sc_email_${profile.username}`) || 'deargabriel@gmail.com';
+        }
+        return 'deargabriel@gmail.com';
+    });
 
-    // Drawers & Modals
-    const [editingField, setEditingField] = useState<'username' | 'email' | 'addFriend' | 'faq' | 'about' | 'switch' | 'qrcode' | null>(null);
+    const [friendsList, setFriendsList] = useState<Friend[]>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem(`sc_friends_${profile.username}`);
+            if (saved) {
+                try { return JSON.parse(saved); } catch (e) { console.error(e); }
+            }
+        }
+        return [
+            { name: 'EnjoyedStableMaju', clan: 'RETR', trophies: 1720, level: 8, emoji: '👩‍🎤', avatarBg: 'from-pink-500 to-rose-600', online: true },
+            { name: 'EVIONTECH', clan: 'ELITE', trophies: 5410, level: 12, emoji: '🧔', avatarBg: 'from-yellow-500 to-amber-600', online: true },
+            { name: 'LyricalSkyron', clan: 'CYBER', trophies: 3120, level: 9, emoji: '🤴', avatarBg: 'from-blue-500 to-indigo-600', online: false },
+            { name: 'HANNEMANN', clan: 'T-SPN', trophies: 840, level: 4, emoji: '🥷', avatarBg: 'from-slate-700 to-slate-900', online: true },
+            { name: 'JEFERSON-PR', clan: 'ELITE', trophies: 4100, level: 10, emoji: '🧙‍♂️', avatarBg: 'from-purple-500 to-fuchsia-600', online: false },
+            { name: 'magomaju', clan: 'CYBER', trophies: 2950, level: 7, emoji: '🌵', avatarBg: 'from-green-500 to-emerald-600', online: true }
+        ];
+    });
+
+    // Action panels / drawers inside modal
+    const [editingField, setEditingField] = useState<'username' | 'email' | 'addFriend' | 'faq' | 'about' | 'switch' | null>(null);
     const [inputVal, setInputVal] = useState<string>('');
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [faqTitle, setFaqTitle] = useState<string>('');
+    const [faqText, setFaqText] = useState<string>('');
+    const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
 
-    const showToast = (msg: string) => {
-        setToastMessage(msg);
-        setTimeout(() => setToastMessage(null), 2800);
-    };
+    // Sync email when profile changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setConnectedEmail(localStorage.getItem(`sc_email_${profile.username}`) || 'deargabriel@gmail.com');
+        }
+    }, [profile.username]);
 
-    const handleOpenEdit = (field: 'username' | 'email' | 'addFriend' | 'faq' | 'about' | 'switch' | 'qrcode') => {
-        scAudio.playClick();
+    // Save friends to localStorage whenever it changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(`sc_friends_${profile.username}`, JSON.stringify(friendsList));
+        }
+    }, [friendsList, profile.username]);
+
+    if (!isOpen) return null;
+
+    const handleOpenEdit = (field: 'username' | 'email' | 'addFriend') => {
+        soundManager.playMove();
         setEditingField(field);
         if (field === 'username') {
             setInputVal(profile.username);
         } else if (field === 'email') {
-            setInputVal(profile.email || 'deargabriel@gmail.com');
+            setInputVal(connectedEmail);
         } else {
             setInputVal('');
         }
@@ -303,940 +283,859 @@ export function SupercellIdModal({
 
     const handleSaveEdit = () => {
         if (!inputVal.trim()) return;
-        scAudio.playSuccess();
+        soundManager.playLevelUp();
 
         if (editingField === 'username') {
-            const next = { ...profile, username: inputVal.trim() };
-            setProfile(next);
-            if (externalUpdateProfile) externalUpdateProfile(next);
-            showToast('Nome atualizado no Supercell ID!');
+            const nextProfile = {
+                ...profile,
+                username: inputVal.trim()
+            };
+            onUpdateProfile(nextProfile);
+            if (typeof window !== 'undefined') {
+                localStorage.setItem(`sc_email_${inputVal.trim()}`, connectedEmail);
+            }
         } else if (editingField === 'email') {
-            const next = { ...profile, email: inputVal.trim() };
-            setProfile(next);
-            if (externalUpdateProfile) externalUpdateProfile(next);
-            showToast('E-mail do Supercell ID atualizado!');
+            setConnectedEmail(inputVal.trim());
+            if (typeof window !== 'undefined') {
+                localStorage.setItem(`sc_email_${profile.username}`, inputVal.trim());
+            }
         } else if (editingField === 'addFriend') {
-            const emojis = ['🥷', '🧙', '🦸', '👸', '🤖', '🦊', '🦁', '🐉'];
-            const gradients = [
-                'from-purple-500 to-indigo-600',
-                'from-blue-500 to-cyan-600',
-                'from-amber-500 to-orange-600',
-                'from-emerald-500 to-teal-600',
-                'from-pink-500 to-rose-600'
+            const randLevel = Math.floor(Math.random() * 10) + 3;
+            const randTrophies = Math.floor(Math.random() * 4000) + 500;
+            const emojis = ['🕵️', '🧟', '🧑‍🚀', '👸', '🧙', '🦸', '🦹', '🐱', '🐼', '🤖'];
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            const gradientBgs = [
+                'from-teal-500 to-emerald-600',
+                'from-indigo-500 to-purple-600',
+                'from-orange-500 to-red-600',
+                'from-pink-500 to-rose-600',
+                'from-sky-500 to-blue-600'
             ];
+            const randomBg = gradientBgs[Math.floor(Math.random() * gradientBgs.length)];
+
             const newFriend: Friend = {
                 name: inputVal.trim(),
-                clan: 'BRASIL',
-                trophies: Math.floor(Math.random() * 3000) + 1000,
-                level: Math.floor(Math.random() * 8) + 4,
-                emoji: emojis[Math.floor(Math.random() * emojis.length)],
-                avatarBg: gradients[Math.floor(Math.random() * gradients.length)],
-                online: true
+                clan: 'RETR',
+                trophies: randTrophies,
+                level: randLevel,
+                emoji: randomEmoji,
+                avatarBg: randomBg,
+                online: Math.random() > 0.3
             };
-            setFriendsList(prev => [newFriend, ...prev]);
-            showToast(`Pedido de amizade enviado para ${newFriend.name}!`);
+
+            setFriendsList([newFriend, ...friendsList]);
         }
 
         setEditingField(null);
+        setInputVal('');
     };
 
-    const handleSwitchAccount = (acc: PlayerProfile) => {
-        scAudio.playSwitch();
-        setProfile(acc);
-        if (externalUpdateProfile) externalUpdateProfile(acc);
+    const handleSwitchAccount = (preset: typeof PRESET_ACCOUNTS[0]) => {
+        soundManager.playLevelUp();
+
+        const updatedProfile: PlayerProfile = {
+            ...profile,
+            username: preset.username,
+            clanName: preset.clanName,
+            trophies: preset.trophies,
+            gold: preset.gold,
+            gems: preset.gems,
+            level: preset.level,
+            xp: preset.xp
+        };
+
+        onUpdateProfile(updatedProfile);
+
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(`sc_email_${preset.username}`, preset.email);
+        }
+        setConnectedEmail(preset.email);
+
         setEditingField(null);
         setIsSettingsMode(false);
-        showToast(`Conectado à conta: ${acc.username}`);
     };
 
-    const handleRemoveFriend = (friendName: string) => {
-        scAudio.playClick();
-        setFriendsList(prev => prev.filter(f => f.name !== friendName));
-        setSelectedFriend(null);
-        showToast(`${friendName} removido da lista de amigos.`);
+    const handleLogOut = () => {
+        if (typeof window !== 'undefined' && window.confirm('Deseja realmente sair do Supercell ID? Seu perfil local será mantido, mas você voltará para a conta padrão.')) {
+            soundManager.playScoreSaved();
+            handleSwitchAccount(PRESET_ACCOUNTS[0]);
+        }
     };
 
-    if (!isOpen) return null;
+    const openFaq = (title: string, text: string) => {
+        soundManager.playMove();
+        setFaqTitle(title);
+        setFaqText(text);
+        setEditingField('faq');
+    };
+
+    const handleRemoveFriend = (name: string) => {
+        if (typeof window !== 'undefined' && window.confirm(`Tem certeza que deseja remover ${name} da sua lista de amigos?`)) {
+            soundManager.playHold();
+            setFriendsList(friendsList.filter(f => f.name !== name));
+            setSelectedFriend(null);
+        }
+    };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md select-none">
-            <div className="absolute inset-0" onClick={onClose} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm select-none" id="supercell-id-container">
+            {/* Background click to close */}
+            <div className="absolute inset-0 cursor-default" onClick={onClose} />
 
-            {/* Main Supercell ID Container */}
+            {/* Main Supercell ID Modal Frame */}
             <motion.div
-                initial={{ scale: 0.94, opacity: 0, y: 15 }}
+                initial={{ scale: 0.92, opacity: 0, y: 15 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.94, opacity: 0, y: 15 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 260 }}
-                className="relative z-10 w-full max-w-xl bg-gradient-to-b from-[#0c1833] via-[#091226] to-[#040813] border-2 border-blue-500/50 rounded-3xl shadow-[0_0_50px_rgba(59,130,246,0.3)] flex flex-col max-h-[92vh] overflow-hidden text-slate-100"
-                onClick={e => e.stopPropagation()}
+                exit={{ scale: 0.92, opacity: 0, y: 15 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                className="relative bg-[#f4f6f8] text-slate-800 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.85)] flex flex-col max-h-[92vh]"
             >
-                {/* ==================================================================== */}
-                {/* TOP SUPERCELL ID BRANDED HEADER */}
-                {/* ==================================================================== */}
-                <div className="px-5 py-4 border-b border-blue-500/20 bg-blue-950/40 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-3">
-                        {/* Supercell ID Logo Badge */}
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 p-0.5 shadow-[0_0_15px_rgba(59,130,246,0.5)] flex items-center justify-center">
-                            <span className="font-black text-white text-xs tracking-tighter">SC ID</span>
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-sm sm:text-base font-black tracking-wide text-white uppercase drop-shadow">
-                                    SUPERCELL ID
-                                </h2>
-                                <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                    CONECTADO
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-blue-300 font-medium">
-                                Sua conta global protegida e sincronizada na nuvem
-                            </p>
-                        </div>
-                    </div>
+                {/* Dynamic header background based on screen context */}
+                <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
 
-                    <div className="flex items-center gap-2">
-                        {/* Settings Mode Toggle */}
+                {/* ================= HEADER AREA ================= */}
+                <div className="p-5 flex items-center justify-between border-b border-slate-200 bg-white relative z-10 shrink-0">
+                    {/* Left Button (Gear Settings or Back button) */}
+                    {isSettingsMode ? (
                         <button
-                            onClick={() => {
-                                scAudio.playClick();
-                                setIsSettingsMode(prev => !prev);
-                            }}
-                            title="Configurações do Supercell ID"
-                            className={`w-8 h-8 rounded-xl border flex items-center justify-center cursor-pointer transition-all active:scale-95 ${isSettingsMode
-                                    ? 'bg-blue-600 border-blue-400 text-white'
-                                    : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:text-white'
-                                }`}
+                            onClick={() => { soundManager.playMove(); setIsSettingsMode(false); }}
+                            className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all active:scale-90"
+                            id="sc-settings-back-btn"
                         >
-                            <Settings className="w-4 h-4" />
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
+                    ) : (
+                        <button
+                            onClick={() => { soundManager.playMove(); setIsSettingsMode(true); }}
+                            className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all active:scale-90"
+                            id="sc-settings-gear-btn"
+                            title="Configurações do Supercell ID"
+                        >
+                            <Settings className="w-5 h-5" />
+                        </button>
+                    )}
 
-                        {onClose && (
-                            <button
-                                onClick={() => {
-                                    scAudio.playClick();
-                                    onClose();
-                                }}
-                                className="w-8 h-8 rounded-xl bg-slate-900/80 hover:bg-rose-500/30 border border-slate-700 hover:border-rose-400 text-slate-300 hover:text-white flex items-center justify-center cursor-pointer transition-all active:scale-95"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* ==================================================================== */}
-                {/* USER PROFILE MINI-CARD & ONLINE STATUS */}
-                {/* ==================================================================== */}
-                <div className="px-5 py-3.5 bg-slate-950/40 border-b border-blue-900/30 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-3">
-                        {/* User Avatar with Status Dot */}
-                        <div className="relative">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 border-2 border-blue-400/80 flex items-center justify-center text-2xl shadow-md">
-                                🧙‍♂️
+                    {/* Center Header: Avatar (Main Menu) or Title (Settings Mode) */}
+                    {!isSettingsMode ? (
+                        <div className="flex flex-col items-center">
+                            {/* Profile Barbarian Ring Avatar */}
+                            <div className="relative group">
+                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600 p-1 shadow-[0_4px_15px_rgba(245,158,11,0.25)] relative">
+                                    <div className="w-full h-full rounded-full bg-slate-900 border-2 border-white flex items-center justify-center text-4xl overflow-hidden">
+                                        👑
+                                    </div>
+                                </div>
+                                {statusOnline && (
+                                    <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-md animate-pulse" />
+                                )}
                             </div>
-                            <div
-                                className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-950 ${statusOnline ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-500'
-                                    }`}
-                            />
-                        </div>
 
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="font-black text-white text-sm tracking-wide">
+                            {/* ID Name */}
+                            <div className="mt-2.5 flex items-center gap-1.5 bg-slate-100 px-3.5 py-1 rounded-full border border-slate-200">
+                                <div className="bg-slate-900 text-white font-extrabold text-[8px] px-1 py-0.2 rounded tracking-tighter uppercase font-sans border border-slate-700">
+                                    ID
+                                </div>
+                                <span className="text-xs font-black tracking-tight text-slate-900 uppercase">
                                     {profile.username}
                                 </span>
-                                <button
-                                    onClick={() => handleOpenEdit('username')}
-                                    className="text-slate-400 hover:text-blue-300 text-xs cursor-pointer"
-                                    title="Editar nome"
-                                >
-                                    ✎
-                                </button>
                             </div>
-                            <p className="text-[11px] text-slate-400 font-mono">
-                                {profile.email || 'deargabriel@gmail.com'}
-                            </p>
-                        </div>
-                    </div>
 
-                    {/* Online status switch */}
+                            {/* Clan Name or Email */}
+                            <span className="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-widest">
+                                🏆 {profile.clanName || 'SEM CLÃ'}
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="flex-1 text-center">
+                            <span className="text-sm font-black uppercase text-slate-900 tracking-wider">
+                                Configurações
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Right Button (Close Modal) */}
                     <button
-                        onClick={() => {
-                            scAudio.playClick();
-                            setStatusOnline(prev => !prev);
-                            showToast(statusOnline ? 'Status alterado para Offline' : 'Status alterado para Online');
-                        }}
-                        className={`px-3 py-1.5 rounded-xl border text-[11px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${statusOnline
-                                ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
-                                : 'bg-slate-900 border-slate-700 text-slate-400'
-                            }`}
+                        onClick={onClose}
+                        className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all active:scale-90"
+                        id="sc-modal-close-btn"
                     >
-                        <span className={`w-2 h-2 rounded-full ${statusOnline ? 'bg-emerald-400' : 'bg-slate-500'}`} />
-                        <span>{statusOnline ? 'Online' : 'Inativo'}</span>
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* ==================================================================== */}
-                {/* TABS NAVIGATION */}
-                {/* ==================================================================== */}
-                {!isSettingsMode && (
-                    <div className="px-4 pt-3 pb-2 bg-slate-950/20 border-b border-blue-900/20 flex gap-2 shrink-0">
-                        <button
-                            onClick={() => {
-                                scAudio.playClick();
-                                setActiveTab('rewards');
-                            }}
-                            className={`flex-1 py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${activeTab === 'rewards'
-                                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 border-blue-400 text-white shadow-[0_0_15px_rgba(59,130,246,0.35)]'
-                                    : 'bg-slate-900/50 hover:bg-slate-900 border-slate-800 text-slate-400'
-                                }`}
-                        >
-                            <Award className="w-4 h-4 text-amber-400" />
-                            <span>Vantagens</span>
-                        </button>
+                {/* ================= MAIN CONTENT BODY ================= */}
+                <div className="flex-grow overflow-y-auto p-4 space-y-4 relative z-10 no-scrollbar">
 
-                        <button
-                            onClick={() => {
-                                scAudio.playClick();
-                                setActiveTab('friends');
-                            }}
-                            className={`flex-1 py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${activeTab === 'friends'
-                                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 border-blue-400 text-white shadow-[0_0_15px_rgba(59,130,246,0.35)]'
-                                    : 'bg-slate-900/50 hover:bg-slate-900 border-slate-800 text-slate-400'
-                                }`}
-                        >
-                            <Users className="w-4 h-4 text-emerald-400" />
-                            <span>Amigos ({friendsList.length})</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                scAudio.playClick();
-                                setActiveTab('games');
-                            }}
-                            className={`flex-1 py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${activeTab === 'games'
-                                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 border-blue-400 text-white shadow-[0_0_15px_rgba(59,130,246,0.35)]'
-                                    : 'bg-slate-900/50 hover:bg-slate-900 border-slate-800 text-slate-400'
-                                }`}
-                        >
-                            <Gamepad2 className="w-4 h-4 text-purple-400" />
-                            <span>Meus Jogos</span>
-                        </button>
-                    </div>
-                )}
-
-                {/* ==================================================================== */}
-                {/* MAIN BODY CONTENT */}
-                {/* ==================================================================== */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 no-scrollbar">
-                    {/* SETTINGS VIEW */}
-                    {isSettingsMode ? (
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <button
-                                    onClick={() => setIsSettingsMode(false)}
-                                    className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
-                                >
-                                    <ArrowLeft className="w-4 h-4" />
-                                    <span>Voltar ao Perfil</span>
-                                </button>
-                                <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-                                    Configurações Supercell ID
-                                </span>
-                            </div>
-
-                            {/* Toggles Card */}
-                            <div className="p-4 rounded-2xl bg-slate-900/80 border border-blue-900/40 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h4 className="text-xs font-black text-white uppercase">Visível para amigos</h4>
-                                        <p className="text-[10px] text-slate-400">Seus amigos podem ver quando você está online</p>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        checked={statusOnline}
-                                        onChange={e => setStatusOnline(e.target.checked)}
-                                        className="w-5 h-5 accent-blue-500 rounded cursor-pointer"
-                                    />
-                                </div>
-
-                                <div className="border-t border-slate-800/80 pt-3 flex items-center justify-between">
-                                    <div>
-                                        <h4 className="text-xs font-black text-white uppercase">Receber solicitações de amizade</h4>
-                                        <p className="text-[10px] text-slate-400">Permitir que outros jogadores enviem convites</p>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        checked={receiveFriendRequests}
-                                        onChange={e => setReceiveFriendRequests(e.target.checked)}
-                                        className="w-5 h-5 accent-blue-500 rounded cursor-pointer"
-                                    />
-                                </div>
-
-                                <div className="border-t border-slate-800/80 pt-3 flex items-center justify-between">
-                                    <div>
-                                        <h4 className="text-xs font-black text-white uppercase">Notícias e ofertas especiais</h4>
-                                        <p className="text-[10px] text-slate-400">Receba emotes exclusivos e atualizações por e-mail</p>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        checked={receiveNews}
-                                        onChange={e => setReceiveNews(e.target.checked)}
-                                        className="w-5 h-5 accent-blue-500 rounded cursor-pointer"
-                                    />
-                                </div>
-
-                                <div className="border-t border-slate-800/80 pt-3 flex items-center justify-between">
-                                    <div>
-                                        <h4 className="text-xs font-black text-white uppercase">Programa Beta Tester</h4>
-                                        <p className="text-[10px] text-slate-400">Acesso antecipado a novos recursos e modos</p>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        checked={betaTester}
-                                        onChange={e => setBetaTester(e.target.checked)}
-                                        className="w-5 h-5 accent-blue-500 rounded cursor-pointer"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Account Management & Switcher */}
-                            <div className="p-4 rounded-2xl bg-slate-900/80 border border-blue-900/40 space-y-3">
-                                <h4 className="text-xs font-black text-white uppercase flex items-center gap-2">
-                                    <RefreshCw className="w-4 h-4 text-blue-400" /> Alternar de Conta
-                                </h4>
-                                <div className="space-y-2">
-                                    {PRESET_ACCOUNTS.map(acc => {
-                                        const isCurrent = acc.username === profile.username;
-                                        return (
-                                            <div
-                                                key={acc.username}
-                                                onClick={() => handleSwitchAccount(acc)}
-                                                className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${isCurrent
-                                                        ? 'bg-blue-600/20 border-blue-500 text-white'
-                                                        : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300'
-                                                    }`}
-                                            >
-                                                <div>
-                                                    <p className="text-xs font-black">{acc.username}</p>
-                                                    <p className="text-[10px] text-slate-400 font-mono">
-                                                        {acc.trophies} Troféus · Nível {acc.level}
-                                                    </p>
-                                                </div>
-                                                {isCurrent ? (
-                                                    <span className="text-[9px] font-black uppercase bg-blue-500/20 text-blue-400 border border-blue-500/40 px-2 py-0.5 rounded-full">
-                                                        Conta Ativa
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-[10px] text-slate-400 font-bold hover:text-white">
-                                                        Trocar →
-                                                    </span>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* FAQ & Support Buttons */}
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    onClick={() => handleOpenEdit('faq')}
-                                    className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-xs font-bold text-slate-300 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
-                                >
-                                    <HelpCircle className="w-4 h-4 text-blue-400" />
-                                    <span>Dúvidas Frequentes</span>
-                                </button>
-                                <button
-                                    onClick={() => handleOpenEdit('about')}
-                                    className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-xs font-bold text-slate-300 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
-                                >
-                                    <Info className="w-4 h-4 text-cyan-400" />
-                                    <span>Termos & Sobre</span>
-                                </button>
-                            </div>
-
-                            {/* Logout Action */}
-                            <button
-                                onClick={() => {
-                                    scAudio.playClick();
-                                    showToast('Sessão encerrada com segurança.');
-                                    if (onClose) onClose();
-                                }}
-                                className="w-full py-2.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/50 border border-rose-500/40 text-rose-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span>Encerrar Sessão do Supercell ID</span>
-                            </button>
-                        </div>
-                    ) : (
+                    {/* ========== A. MENU TABS VIEW (NORMAL MODE) ========== */}
+                    {!isSettingsMode ? (
                         <>
-                            {/* TAB 1: RECOMPENSAS & VANTAGENS */}
+                            {/* Three Tab Controls */}
+                            <div className="grid grid-cols-3 gap-1.5 p-1 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                                <button
+                                    onClick={() => { soundManager.playMove(); setActiveTab('rewards'); }}
+                                    className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all ${activeTab === 'rewards'
+                                            ? 'bg-slate-100 text-indigo-600 font-black shadow-inner'
+                                            : 'text-slate-500 hover:text-slate-900 font-bold'
+                                        }`}
+                                >
+                                    <Award className="w-5 h-5" />
+                                    <span className="text-[9px] uppercase tracking-wider">ID Rewards</span>
+                                </button>
+
+                                <button
+                                    onClick={() => { soundManager.playMove(); setActiveTab('friends'); }}
+                                    className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all relative ${activeTab === 'friends'
+                                            ? 'bg-slate-100 text-indigo-600 font-black shadow-inner'
+                                            : 'text-slate-500 hover:text-slate-900 font-bold'
+                                        }`}
+                                >
+                                    <Users className="w-5 h-5" />
+                                    <span className="text-[9px] uppercase tracking-wider">Amigos</span>
+                                    {/* Micro indicator badge for online friends */}
+                                    <span className="absolute top-1 right-4 w-2 h-2 rounded-full bg-emerald-500 border border-white" />
+                                </button>
+
+                                <button
+                                    onClick={() => { soundManager.playMove(); setActiveTab('games'); }}
+                                    className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all ${activeTab === 'games'
+                                            ? 'bg-slate-100 text-indigo-600 font-black shadow-inner'
+                                            : 'text-slate-500 hover:text-slate-900 font-bold'
+                                        }`}
+                                >
+                                    <Gamepad2 className="w-5 h-5" />
+                                    <span className="text-[9px] uppercase tracking-wider">Meus Jogos</span>
+                                </button>
+                            </div>
+
+                            {/* TAB CONTENT: 1. REWARDS */}
                             {activeTab === 'rewards' && (
                                 <div className="space-y-4">
-                                    {/* Hero Connected Banner */}
-                                    <div className="p-4 rounded-3xl bg-gradient-to-r from-blue-900/60 via-indigo-950/70 to-slate-950 border-2 border-blue-500/50 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
-                                        <div className="flex items-center gap-3.5">
-                                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-500 to-cyan-400 p-0.5 flex items-center justify-center text-3xl shadow-md shrink-0">
-                                                🧙‍♂️
+                                    {/* Holographic Points/Trophy Card */}
+                                    <div className="relative p-6 rounded-3xl border border-indigo-400 bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 text-white shadow-xl overflow-hidden flex flex-col justify-between aspect-[16/10] select-none">
+                                        {/* Visual glowing grid lines */}
+                                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.25),_transparent_70%)] pointer-events-none" />
+                                        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#818cf8_1px,transparent_1px)] [background-size:12px_12px]" />
+
+                                        {/* Logo & ID Shield */}
+                                        <div className="flex items-center justify-between relative z-10">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="bg-white text-slate-900 font-black text-[9px] px-1.5 py-0.5 rounded tracking-tighter leading-none border border-indigo-300">
+                                                    SUPER<br />CELL
+                                                </div>
+                                                <span className="text-xs font-black tracking-widest text-indigo-300">ID</span>
                                             </div>
-                                            <div>
-                                                <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider">
-                                                    VANTAGEM EXCLUSIVA ATIVADA
+                                            <Shield className="w-6 h-6 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
+                                        </div>
+
+                                        {/* Score / Trophies PTS */}
+                                        <div className="my-2 relative z-10">
+                                            <span className="text-[10px] uppercase font-black tracking-widest text-indigo-300">Pontuação do Império</span>
+                                            <div className="flex items-baseline gap-1 mt-0.5">
+                                                <span className="text-4xl font-black font-sans tracking-tight text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.25)]">
+                                                    {profile.trophies * 3 + 125}
                                                 </span>
-                                                <h3 className="text-base font-black text-white uppercase">
-                                                    Emote Exclusivo do Mago
-                                                </h3>
-                                                <p className="text-[11px] text-slate-300 leading-snug">
-                                                    Vinculação com Supercell ID desbloqueia este emote e salva seu progresso para sempre.
-                                                </p>
+                                                <span className="text-base font-black text-indigo-400">PTS</span>
                                             </div>
                                         </div>
 
-                                        <div className="shrink-0 flex items-center gap-2">
-                                            <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-black uppercase flex items-center gap-1">
-                                                <Check className="w-3.5 h-3.5" /> Resgatado
+                                        {/* Account card bottom banner */}
+                                        <div className="flex items-center justify-between border-t border-indigo-500/20 pt-3 relative z-10 mt-1">
+                                            <span className="text-xs font-black tracking-wide text-indigo-200 uppercase truncate">
+                                                {profile.username}
                                             </span>
-                                        </div>
-                                    </div>
-
-                                    {/* 4 Supercell ID Pillars */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-blue-900/40 flex items-start gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
-                                                <Shield className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-black text-white uppercase">Backup Seguro na Nuvem</h4>
-                                                <p className="text-[11px] text-slate-400 leading-tight mt-0.5">
-                                                    Troque de aparelho ou reinstale o jogo sem perder uma única carta ou troféu.
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-blue-900/40 flex items-start gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                                                <Zap className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-black text-white uppercase">+250 Gemas Grátis</h4>
-                                                <p className="text-[11px] text-slate-400 leading-tight mt-0.5">
-                                                    Bônus direto entregue ao vincular seu e-mail pela primeira vez.
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-blue-900/40 flex items-start gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
-                                                <Gamepad2 className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-black text-white uppercase">Todos os Jogos Integrados</h4>
-                                                <p className="text-[11px] text-slate-400 leading-tight mt-0.5">
-                                                    Amigos conectados no Clash Royale aparecem no Brawl Stars e vice-versa.
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-blue-900/40 flex items-start gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                                                <Lock className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-black text-white uppercase">Proteção 2FA</h4>
-                                                <p className="text-[11px] text-slate-400 leading-tight mt-0.5">
-                                                    Códigos de verificação seguros enviados por e-mail para cada novo login.
-                                                </p>
+                                            <div className="bg-indigo-600/30 text-indigo-300 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-indigo-500/20">
+                                                CONECTADO
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Share QR Code Button */}
-                                    <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-2xl flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5 text-xs text-slate-300">
-                                            <QrCode className="w-5 h-5 text-blue-400" />
-                                            <span>Compartilhe seu perfil usando seu Código QR único</span>
+                                    {/* Informative Promotion Banner */}
+                                    <div
+                                        onClick={() => {
+                                            soundManager.playLevelUp();
+                                            if (typeof window !== 'undefined') {
+                                                window.alert("Promoção Especial: Complete missões no Retro Tetris para ganhar XP e resgatar bônus de moedas e gemas na estrada de Copas!");
+                                            }
+                                        }}
+                                        className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-indigo-400 transition-all active:scale-98 group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
+                                                🎁
+                                            </div>
+                                            <div className="text-left">
+                                                <h4 className="text-xs font-black text-slate-900 uppercase">Junte pontos e ganhe prêmios</h4>
+                                                <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
+                                                    Complete conquistas de Tetris para desbloquear itens exclusivos.
+                                                </p>
+                                            </div>
                                         </div>
-                                        <button
-                                            onClick={() => handleOpenEdit('qrcode')}
-                                            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] uppercase cursor-pointer"
-                                        >
-                                            Ver QR Code
-                                        </button>
+                                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0" />
                                     </div>
                                 </div>
                             )}
 
-                            {/* TAB 2: AMIGOS */}
+                            {/* TAB CONTENT: 2. AMIGOS (FRIENDS) */}
                             {activeTab === 'friends' && (
-                                <div className="space-y-4">
-                                    {/* Top Bar with Add Friend button */}
-                                    <div className="flex items-center justify-between gap-3">
-                                        <div className="relative flex-1">
-                                            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                                            <input
-                                                type="text"
-                                                placeholder="Buscar amigo por nome..."
-                                                value={friendSearchQuery}
-                                                onChange={e => setFriendSearchQuery(e.target.value)}
-                                                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                                            />
-                                        </div>
-
-                                        <button
-                                            onClick={() => handleOpenEdit('addFriend')}
-                                            className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                            <span>Adicionar</span>
-                                        </button>
-                                    </div>
-
-                                    {/* Friends List */}
-                                    <div className="space-y-2.5">
-                                        {friendsList
-                                            .filter(f => f.name.toLowerCase().includes(friendSearchQuery.toLowerCase()))
-                                            .map(friend => (
-                                                <div
-                                                    key={friend.name}
-                                                    onClick={() => {
-                                                        scAudio.playClick();
-                                                        setSelectedFriend(friend);
-                                                    }}
-                                                    className="p-3 rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-blue-900/30 hover:border-blue-500/50 flex items-center justify-between gap-3 transition-all cursor-pointer"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="relative">
-                                                            <div className={`w-11 h-11 rounded-xl bg-gradient-to-tr ${friend.avatarBg} flex items-center justify-center text-xl shadow-md`}>
-                                                                {friend.emoji}
-                                                            </div>
-                                                            <span
-                                                                className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-slate-900 ${friend.online ? 'bg-emerald-400' : 'bg-slate-600'
-                                                                    }`}
-                                                            />
-                                                        </div>
-
-                                                        <div>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="font-black text-white text-xs">{friend.name}</span>
-                                                                <span className="text-[9px] font-bold text-blue-400 bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-800/40">
-                                                                    {friend.clan}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
-                                                                <span>🏆 {friend.trophies}</span>
-                                                                <span>·</span>
-                                                                <span>Nível {friend.level}</span>
-                                                                <span>·</span>
-                                                                <span className={friend.online ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
-                                                                    {friend.online ? 'Online' : 'Offline'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <ChevronRight className="w-4 h-4 text-slate-500" />
-                                                </div>
-                                            ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* TAB 3: MEUS JOGOS */}
-                            {activeTab === 'games' && (
                                 <div className="space-y-3">
-                                    <p className="text-xs text-slate-400 px-1">
-                                        Jogos da Supercell vinculados à mesma conta do Supercell ID:
-                                    </p>
+                                    {/* Subtitle count */}
+                                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase px-1">
+                                        <span>Lista de Amigos ({friendsList.length})</span>
+                                        <span className="text-emerald-500">
+                                            ● {friendsList.filter(f => f.online).length} online
+                                        </span>
+                                    </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {SUPERCELL_GAMES.map(game => (
+                                    {/* Friends List Container */}
+                                    <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                                        {friendsList.map((friend) => (
                                             <div
-                                                key={game.id}
-                                                className="p-3.5 rounded-2xl bg-slate-900/80 border border-blue-900/30 flex flex-col justify-between gap-3 hover:border-blue-500/40 transition-all"
+                                                key={friend.name}
+                                                onClick={() => { soundManager.playMove(); setSelectedFriend(friend); }}
+                                                className="flex items-center justify-between p-3.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl shadow-sm transition-all cursor-pointer group"
                                             >
-                                                <div className="flex items-start gap-3">
-                                                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${game.bannerColor} flex items-center justify-center text-2xl shadow-md shrink-0`}>
-                                                        {game.icon}
+                                                <div className="flex items-center gap-3">
+                                                    {/* Circular Avatar */}
+                                                    <div className="relative shrink-0">
+                                                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${friend.avatarBg} flex items-center justify-center text-xl shadow-inner border-2 border-white`}>
+                                                            {friend.emoji}
+                                                        </div>
+                                                        {friend.online && (
+                                                            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+                                                        )}
                                                     </div>
-                                                    <div className="min-w-0">
-                                                        <h4 className="text-xs font-black text-white uppercase tracking-wide truncate">
-                                                            {game.name}
+
+                                                    <div className="text-left">
+                                                        <h4 className="text-xs font-black text-slate-900 tracking-wide uppercase group-hover:text-indigo-600 transition-colors">
+                                                            {friend.name}
                                                         </h4>
-                                                        <p className="text-[10px] text-slate-400 truncate">{game.tagline}</p>
-                                                        <p className="text-[10px] text-amber-400 font-mono font-bold mt-1">
-                                                            {game.stats}
-                                                        </p>
+                                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                                                            🏆 {friend.clan} | LVL {friend.level}
+                                                        </span>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center justify-between border-t border-slate-800/80 pt-2 text-[10px]">
-                                                    {game.connected ? (
-                                                        <span className="text-emerald-400 font-black uppercase flex items-center gap-1">
-                                                            <CheckCircle className="w-3.5 h-3.5" /> Conectado
+                                                {/* Right trophies stat */}
+                                                <div className="text-right flex items-center gap-2">
+                                                    <div className="text-right">
+                                                        <span className="text-xs font-black text-amber-600 font-mono tracking-tight block leading-none">
+                                                            {friend.trophies}
                                                         </span>
-                                                    ) : (
-                                                        <span className="text-slate-500 font-bold">Não instalado</span>
-                                                    )}
-
-                                                    <button
-                                                        onClick={() => {
-                                                            scAudio.playClick();
-                                                            showToast(`Abrindo ${game.name}...`);
-                                                        }}
-                                                        className="px-3 py-1 rounded-lg bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white font-black uppercase tracking-wider transition-colors cursor-pointer"
-                                                    >
-                                                        Jogar
-                                                    </button>
+                                                        <span className="text-[8px] font-bold text-slate-400 uppercase leading-none">
+                                                            copas
+                                                        </span>
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-slate-400" />
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
+
+                                    {/* Add Friend Floating Button */}
+                                    <div className="flex justify-end pt-2">
+                                        <button
+                                            onClick={() => handleOpenEdit('addFriend')}
+                                            className="px-4 py-2.5 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white rounded-xl shadow-md border border-indigo-400 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                                        >
+                                            <Plus className="w-4 h-4" /> Adicionar Amigos
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* TAB CONTENT: 3. MEUS JOGOS */}
+                            {activeTab === 'games' && (
+                                <div className="space-y-3">
+                                    <span className="text-[11px] font-bold text-slate-500 uppercase px-1 block">
+                                        Conexão de Jogos Supercell
+                                    </span>
+
+                                    {/* List of Mock games */}
+                                    <div className="space-y-2.5">
+                                        {/* Retro Tetris */}
+                                        <div className="p-4 bg-white border-2 border-indigo-500/40 rounded-2xl shadow-md flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-2xl text-white shadow">
+                                                    👾
+                                                </div>
+                                                <div className="text-left">
+                                                    <h4 className="text-xs font-black text-slate-900 uppercase">Retro Tetris</h4>
+                                                    <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.2 rounded uppercase">
+                                                        Conectado
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-xs font-black text-amber-600 font-mono tracking-tight block leading-none">
+                                                    {profile.trophies}
+                                                </span>
+                                                <span className="text-[8px] font-bold text-slate-400 uppercase">copas</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Clash Royale */}
+                                        <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 bg-rose-600 rounded-xl flex items-center justify-center text-2xl text-white shadow">
+                                                    👑
+                                                </div>
+                                                <div className="text-left">
+                                                    <h4 className="text-xs font-black text-slate-900 uppercase">Clash Royale</h4>
+                                                    <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">
+                                                        Supercell ID Conectado
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-xs font-black text-slate-600 font-mono tracking-tight block leading-none">
+                                                    5.340
+                                                </span>
+                                                <span className="text-[8px] font-bold text-slate-400 uppercase">troféus</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Brawl Stars */}
+                                        <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-2xl text-white shadow">
+                                                    ⭐
+                                                </div>
+                                                <div className="text-left">
+                                                    <h4 className="text-xs font-black text-slate-900 uppercase">Brawl Stars</h4>
+                                                    <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">
+                                                        Supercell ID Conectado
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-xs font-black text-slate-600 font-mono tracking-tight block leading-none">
+                                                    24.150
+                                                </span>
+                                                <span className="text-[8px] font-bold text-slate-400 uppercase">troféus</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Clash of Clans */}
+                                        <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 bg-amber-700 rounded-xl flex items-center justify-center text-2xl text-white shadow">
+                                                    🏰
+                                                </div>
+                                                <div className="text-left">
+                                                    <h4 className="text-xs font-black text-slate-900 uppercase">Clash of Clans</h4>
+                                                    <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">
+                                                        Supercell ID Conectado
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-xs font-black text-slate-600 font-mono tracking-tight block leading-none">
+                                                    CV 14
+                                                </span>
+                                                <span className="text-[8px] font-bold text-slate-400 uppercase">centro</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </>
+                    ) : (
+                        // ========== B. SETTINGS MODE (CONFIGURAÇÕES) ==========
+                        <div className="space-y-4 text-left">
+                            {/* Toggles Container */}
+                            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+                                {/* Mostrar status on-line */}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="text-xs font-black text-slate-900 uppercase">Mostrar status on-line</h4>
+                                        <p className="text-[9px] text-slate-500">Seus amigos podem ver quando você está ativo.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => { soundManager.playMove(); setStatusOnline(!statusOnline); }}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${statusOnline ? 'bg-emerald-500 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                    >
+                                        <span className="w-4.5 h-4.5 rounded-full bg-white shadow-md" />
+                                    </button>
+                                </div>
+
+                                {/* Receber pedidos de amizade */}
+                                <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                                    <div>
+                                        <h4 className="text-xs font-black text-slate-900 uppercase">Receber pedidos de amizade</h4>
+                                        <p className="text-[9px] text-slate-500">Permitir que outros jogadores enviem solicitações.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => { soundManager.playMove(); setReceiveFriendRequests(!receiveFriendRequests); }}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${receiveFriendRequests ? 'bg-emerald-500 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                    >
+                                        <span className="w-4.5 h-4.5 rounded-full bg-white shadow-md" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Account Box Container (Player ID, Email change, Account Switch, LogOut) */}
+                            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+                                {/* ID de jogador */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-start gap-2.5">
+                                        <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
+                                            <User className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block leading-none">ID de jogador</span>
+                                            <span className="text-xs font-black text-slate-900 uppercase tracking-tight">{profile.username}</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleOpenEdit('username')}
+                                        className="px-2.5 py-1 text-[10px] font-black text-indigo-600 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-all"
+                                    >
+                                        ALTERAR
+                                    </button>
+                                </div>
+
+                                {/* Email address */}
+                                <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                                    <div className="flex items-start gap-2.5">
+                                        <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
+                                            <Mail className="w-4 h-4" />
+                                        </div>
+                                        <div className="min-w-0 max-w-[180px]">
+                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block leading-none">Conectou-se com</span>
+                                            <span className="text-xs font-bold text-slate-800 truncate block">{connectedEmail}</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleOpenEdit('email')}
+                                        className="px-2.5 py-1 text-[10px] font-black text-indigo-600 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-all"
+                                    >
+                                        ALTERAR
+                                    </button>
+                                </div>
+
+                                {/* Alternar conta button */}
+                                <div
+                                    onClick={() => { soundManager.playMove(); setEditingField('switch'); }}
+                                    className="flex items-center justify-between border-t border-slate-100 pt-4 cursor-pointer hover:bg-slate-50 -mx-4 px-4 py-2 transition-all group"
+                                >
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-indigo-600 shrink-0">
+                                            <RefreshCw className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-xs font-black text-slate-900 uppercase">Alternar conta</h4>
+                                            <p className="text-[9px] text-slate-500">Mudar para outra conta salva do Supercell ID.</p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                                </div>
+
+                                {/* Sair button */}
+                                <div
+                                    onClick={handleLogOut}
+                                    className="flex items-center gap-2.5 border-t border-slate-100 pt-4 cursor-pointer hover:bg-red-50 -mx-4 px-4 py-2 text-red-600 transition-all group"
+                                >
+                                    <div className="w-8 h-8 rounded bg-red-50 flex items-center justify-center text-red-600 shrink-0">
+                                        <LogOut className="w-4 h-4" />
+                                    </div>
+                                    <div className="text-left">
+                                        <h4 className="text-xs font-black uppercase">Sair</h4>
+                                        <p className="text-[9px] text-red-500/70">Desconectar temporariamente do Supercell ID.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Protection Banner */}
+                            <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-start gap-3 relative">
+                                <div className="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-lg text-orange-500 shrink-0">
+                                    🛡️
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="text-xs font-black text-slate-900 uppercase">Proteção da conta</h4>
+                                    <p className="text-[9.5px] text-slate-500 leading-normal mt-0.5">
+                                        Proteja sua conta Supercell ID com uma medida extra de segurança por celular ou chaves de segurança.
+                                    </p>
+                                    <button
+                                        onClick={() => {
+                                            soundManager.playLevelUp();
+                                            if (typeof window !== 'undefined') {
+                                                window.alert("Proteção de conta Ativada com sucesso!");
+                                            }
+                                        }}
+                                        className="mt-2 px-3 py-1 bg-slate-900 text-white font-black text-[9px] uppercase tracking-wider rounded shadow hover:bg-slate-800 transition-all"
+                                    >
+                                        ATIVAR
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Email subscription details */}
+                            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">ASSINATURAS DO EMAIL</span>
+
+                                {/* Receber notícias e atualizações */}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="text-xs font-black text-slate-900 uppercase">Notícias e atualizações</h4>
+                                        <p className="text-[9px] text-slate-500">Receba boletins semanais das arenas Supercell.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => { soundManager.playMove(); setReceiveNews(!receiveNews); }}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${receiveNews ? 'bg-emerald-500 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                    >
+                                        <span className="w-4.5 h-4.5 rounded-full bg-white shadow-md" />
+                                    </button>
+                                </div>
+
+                                {/* Lançamentos em beta */}
+                                <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                                    <div>
+                                        <h4 className="text-xs font-black text-slate-900 uppercase">Lançamentos em beta</h4>
+                                        <p className="text-[9px] text-slate-500">Convites para testar novos recursos em primeira mão.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => { soundManager.playMove(); setBetaTester(!betaTester); }}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${betaTester ? 'bg-emerald-500 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                    >
+                                        <span className="w-4.5 h-4.5 rounded-full bg-white shadow-md" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Informações list links */}
+                            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-slate-100">
+                                <div className="p-3 bg-slate-50/50">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">INFORMAÇÕES</span>
+                                </div>
+
+                                <div
+                                    onClick={() => openFaq('O que é o Supercell ID?', 'O Supercell ID é uma ferramenta de login segura criada pela Supercell para salvar e resgatar o progresso de todos os seus jogos mobile em qualquer dispositivo, protegendo de perdas e facilitando a transição de contas de forma instantânea.')}
+                                    className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-slate-800"
+                                >
+                                    <span>O que é o Supercell ID?</span>
+                                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                                </div>
+
+                                <div
+                                    onClick={() => openFaq('FAQs de Ajuda', '1. Como mudo meu e-mail?\nBasta clicar no botão ALTERAR ao lado do seu e-mail nas configurações e seguir os passos de autenticação rápida.\n\n2. Como posso salvar minha conta?\nContanto que você tenha associado um e-mail válido, seus recordes de blocos e Copas do Retro Tetris serão salvos automaticamente na nuvem.')}
+                                    className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-slate-800"
+                                >
+                                    <span>FAQs</span>
+                                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                                </div>
+
+                                <div
+                                    onClick={() => openFaq('Vídeo de tutorial', 'Tutoriais de vídeo em breve! Nossa equipe está preparando guias interativos para você aproveitar todas as recompensas de clã e arena vinculadas à sua conta de empilhar blocos.')}
+                                    className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-slate-800"
+                                >
+                                    <span>Vídeo de tutorial</span>
+                                    <ExternalLink className="w-4 h-4 text-slate-400" />
+                                </div>
+
+                                <div
+                                    onClick={() => openFaq('Termos de Uso', 'Ao criar e conectar um Supercell ID, você concorda com nossos termos de licença de usuário final, comprometendo-se com o jogo justo, respeito nas salas de chat de clã, e proteção dos seus dados pessoais.')}
+                                    className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-slate-800"
+                                >
+                                    <span>Termos de Uso</span>
+                                    <ExternalLink className="w-4 h-4 text-slate-400" />
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
 
-                {/* ==================================================================== */}
-                {/* FOOTER BAR */}
-                {/* ==================================================================== */}
-                <div className="px-5 py-3 border-t border-blue-500/20 bg-slate-950/60 flex items-center justify-between text-xs text-slate-400 shrink-0">
-                    <div className="flex items-center gap-1.5 text-[11px]">
-                        <Shield className="w-3.5 h-3.5 text-blue-400" />
-                        <span>Supercell ID Seguro · v4.12</span>
-                    </div>
-
-                    <button
-                        onClick={() => handleOpenEdit('switch')}
-                        className="text-[11px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                        <span>Trocar Conta</span>
-                        <ChevronRight className="w-3 h-3" />
-                    </button>
-                </div>
-            </motion.div>
-
-            {/* ==================================================================== */}
-            {/* FRIEND INSPECTION MODAL */}
-            {/* ==================================================================== */}
-            <AnimatePresence>
-                {selectedFriend && (
-                    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                {/* ================= EXTRA ACTION SHEETS / DETAILED MODAL VIEWS ================= */}
+                <AnimatePresence>
+                    {editingField !== null && (
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="relative max-w-sm w-full bg-slate-900 border-2 border-blue-500/60 rounded-3xl p-5 text-center flex flex-col items-center shadow-2xl"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 30 }}
+                            className="absolute inset-0 bg-white z-50 flex flex-col p-6"
+                            id="sc-subpanel-drawer"
                         >
-                            <button
-                                onClick={() => setSelectedFriend(null)}
-                                className="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-
-                            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${selectedFriend.avatarBg} flex items-center justify-center text-3xl shadow-lg my-2`}>
-                                {selectedFriend.emoji}
+                            {/* Drawer Header */}
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+                                <button
+                                    onClick={() => { soundManager.playMove(); setEditingField(null); }}
+                                    className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center active:scale-90 transition-all"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
+                                <span className="text-xs font-black uppercase tracking-wider text-slate-900">
+                                    {editingField === 'username' && 'Alterar Nome de Usuário'}
+                                    {editingField === 'email' && 'Trocar E-mail Conectado'}
+                                    {editingField === 'addFriend' && 'Adicionar Amigo por Tag'}
+                                    {editingField === 'faq' && faqTitle}
+                                    {editingField === 'switch' && 'Selecionar Conta Supercell ID'}
+                                </span>
+                                <div className="w-8 h-8" /> {/* Balance placeholder */}
                             </div>
 
-                            <h3 className="text-base font-black text-white uppercase">{selectedFriend.name}</h3>
-                            <p className="text-xs text-blue-400 font-bold">Clã: {selectedFriend.clan}</p>
+                            {/* Drawer Body */}
+                            <div className="flex-grow overflow-y-auto py-5 text-left no-scrollbar">
 
-                            <div className="grid grid-cols-2 gap-2 w-full my-4">
-                                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                                    <span className="text-[10px] text-slate-400 uppercase font-black block">Troféus</span>
-                                    <span className="font-mono font-black text-sm text-amber-300">
-                                        🏆 {selectedFriend.trophies}
-                                    </span>
+                                {/* 1. EDIT NICKNAME / EMAIL / ADD FRIEND INPUT */}
+                                {(editingField === 'username' || editingField === 'email' || editingField === 'addFriend') && (
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                                            {editingField === 'username' && 'Novo apelido de jogador'}
+                                            {editingField === 'email' && 'Novo endereço de e-mail'}
+                                            {editingField === 'addFriend' && 'Digite o nome do amigo'}
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            value={inputVal}
+                                            onChange={(e) => setInputVal(e.target.value)}
+                                            placeholder={editingField === 'addFriend' ? 'Ex: BarbarianMaster' : ''}
+                                            className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        />
+
+                                        <p className="text-[9.5px] text-slate-500 leading-normal">
+                                            {editingField === 'username' && 'Seu novo apelido será atualizado imediatamente nos recordes locais, no chat do clã e na estrada competitiva.'}
+                                            {editingField === 'email' && 'Enviaremos um código de autenticação rápida de 6 dígitos para o novo e-mail para validar a alteração.'}
+                                            {editingField === 'addFriend' && 'O jogador receberá um convite para o clã e aparecerá online na sua lista de amigos.'}
+                                        </p>
+
+                                        <button
+                                            onClick={handleSaveEdit}
+                                            disabled={!inputVal.trim()}
+                                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                                        >
+                                            {editingField === 'addFriend' ? 'Enviar Convite' : 'Confirmar Alteração'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* 2. FAQ DISPLAY CONTAINER */}
+                                {editingField === 'faq' && (
+                                    <div className="space-y-4 text-slate-600 text-xs font-semibold leading-relaxed whitespace-pre-line">
+                                        {faqText}
+                                    </div>
+                                )}
+
+                                {/* 3. SWITCH ACCOUNT LIST DISPLAY */}
+                                {editingField === 'switch' && (
+                                    <div className="space-y-3.5">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Contas Salvas</span>
+
+                                        <div className="space-y-2">
+                                            {PRESET_ACCOUNTS.map((preset) => {
+                                                const isCurrent = profile.username === preset.username;
+
+                                                return (
+                                                    <div
+                                                        key={preset.username}
+                                                        onClick={() => !isCurrent && handleSwitchAccount(preset)}
+                                                        className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${isCurrent
+                                                                ? 'bg-indigo-50 border-indigo-300 pointer-events-none'
+                                                                : 'bg-slate-50 hover:bg-slate-100 border-slate-200 cursor-pointer active:scale-98'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-full bg-slate-900 border-2 border-white flex items-center justify-center text-xl shadow">
+                                                                👑
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <h4 className="text-xs font-black text-slate-900 uppercase">
+                                                                    {preset.username}
+                                                                </h4>
+                                                                <span className="text-[9px] text-slate-500 font-bold block mt-0.5">
+                                                                    {preset.email}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="text-right">
+                                                            {isCurrent ? (
+                                                                <span className="flex items-center gap-0.5 text-[9px] font-black text-indigo-600 uppercase bg-white border border-indigo-200 px-2.5 py-0.8 rounded-full">
+                                                                    <Check className="w-3 h-3 text-indigo-600 inline" /> ATIVA
+                                                                </span>
+                                                            ) : (
+                                                                <div className="text-right">
+                                                                    <span className="text-xs font-black text-amber-600 font-mono tracking-tight block leading-none">
+                                                                        {preset.trophies}
+                                                                    </span>
+                                                                    <span className="text-[8px] font-bold text-slate-400 uppercase block">
+                                                                        copas
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* ================= FRIEND INTERACTION DRAWER OVERLAY ================= */}
+                <AnimatePresence>
+                    {selectedFriend !== null && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 40 }}
+                            className="absolute inset-x-0 bottom-0 bg-white rounded-t-[2.5rem] p-5 shadow-[0_-15px_40px_rgba(0,0,0,0.25)] border-t border-slate-200 z-[60] text-center"
+                            id="friend-action-drawer"
+                        >
+                            {/* Close mini line */}
+                            <div className="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
+
+                            <div className="flex flex-col items-center gap-2 mb-5">
+                                <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${selectedFriend.avatarBg} flex items-center justify-center text-3xl shadow-md border-2 border-slate-100`}>
+                                    {selectedFriend.emoji}
                                 </div>
-                                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                                    <span className="text-[10px] text-slate-400 uppercase font-black block">Status</span>
-                                    <span className={`font-black text-xs ${selectedFriend.online ? 'text-emerald-400' : 'text-slate-500'}`}>
-                                        {selectedFriend.online ? 'Online Agora' : 'Offline'}
-                                    </span>
-                                </div>
+                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide leading-none mt-1">
+                                    {selectedFriend.name}
+                                </h3>
+                                <span className="text-[9.5px] text-slate-500 font-bold uppercase tracking-widest">
+                                    🏆 {selectedFriend.clan} | Nível {selectedFriend.level} | {selectedFriend.trophies} Copas
+                                </span>
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${selectedFriend.online ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
+                                    {selectedFriend.online ? '● ONLINE AGORA' : '○ OFFLINE'}
+                                </span>
                             </div>
 
-                            <div className="w-full space-y-2">
+                            {/* Interaction Buttons Grid */}
+                            <div className="grid grid-cols-2 gap-3 mb-2">
                                 <button
                                     onClick={() => {
-                                        scAudio.playSuccess();
-                                        showToast(`Convite de duelo enviado para ${selectedFriend.name}!`);
+                                        soundManager.playLevelUp();
+                                        if (typeof window !== 'undefined') {
+                                            window.alert(`Desafio de batalha enviado para ${selectedFriend.name}! Aguardando resposta...`);
+                                        }
                                         setSelectedFriend(null);
                                     }}
-                                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs uppercase tracking-wider cursor-pointer shadow-md"
+                                    className="py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow border border-indigo-400 transition-all active:scale-95 cursor-pointer"
                                 >
-                                    Convidar para Duelo Amistoso
+                                    Friendly Battle ⚔️
                                 </button>
 
                                 <button
                                     onClick={() => handleRemoveFriend(selectedFriend.name)}
-                                    className="w-full py-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 font-bold text-xs uppercase tracking-wider cursor-pointer"
+                                    className="py-3 bg-red-50 hover:bg-red-100 text-red-600 font-black text-xs uppercase tracking-widest rounded-xl border border-red-100 transition-all active:scale-95 cursor-pointer"
                                 >
-                                    Remover Amigo
+                                    Remover Amigo 🗑️
                                 </button>
                             </div>
+
+                            <button
+                                onClick={() => setSelectedFriend(null)}
+                                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase rounded-xl transition-all active:scale-95 mt-1 cursor-pointer"
+                            >
+                                Voltar
+                            </button>
                         </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                    )}
+                </AnimatePresence>
 
-            {/* ==================================================================== */}
-            {/* EDIT MODAL / DRAWER */}
-            {/* ==================================================================== */}
-            <AnimatePresence>
-                {editingField && (
-                    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="relative max-w-sm w-full bg-slate-900 border-2 border-blue-500 rounded-3xl p-5 text-left flex flex-col shadow-2xl"
-                        >
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-sm font-black text-white uppercase">
-                                    {editingField === 'username' && 'Alterar Nome de Usuário'}
-                                    {editingField === 'email' && 'Alterar E-mail do SC ID'}
-                                    {editingField === 'addFriend' && 'Adicionar Amigo por ID'}
-                                    {editingField === 'switch' && 'Alternar Conta'}
-                                    {editingField === 'qrcode' && 'Seu Código QR Supercell ID'}
-                                    {editingField === 'faq' && 'Perguntas Frequentes'}
-                                    {editingField === 'about' && 'Sobre o Supercell ID'}
-                                </h3>
-                                <button
-                                    onClick={() => setEditingField(null)}
-                                    className="text-slate-400 hover:text-white cursor-pointer"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            {/* Text Input for edits */}
-                            {(editingField === 'username' || editingField === 'email' || editingField === 'addFriend') && (
-                                <div className="space-y-3">
-                                    <input
-                                        type={editingField === 'email' ? 'email' : 'text'}
-                                        value={inputVal}
-                                        onChange={e => setInputVal(e.target.value)}
-                                        placeholder={
-                                            editingField === 'username'
-                                                ? 'Digite seu novo apelido...'
-                                                : editingField === 'email'
-                                                    ? 'nome@provedor.com'
-                                                    : 'Digite a tag ou nome do amigo...'
-                                        }
-                                        className="w-full bg-slate-950 border border-blue-500/60 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                                    />
-
-                                    <button
-                                        onClick={handleSaveEdit}
-                                        className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider cursor-pointer transition-colors shadow-md"
-                                    >
-                                        Salvar & Confirmar
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* QR Code view */}
-                            {editingField === 'qrcode' && (
-                                <div className="flex flex-col items-center py-3 space-y-3">
-                                    <div className="w-44 h-44 bg-white p-3 rounded-2xl shadow-xl flex items-center justify-center">
-                                        <div className="w-full h-full border-4 border-slate-900 rounded-lg flex flex-col items-center justify-center text-slate-900">
-                                            <QrCode className="w-28 h-28" />
-                                            <span className="text-[9px] font-mono font-bold mt-1">#SCID-{profile.username}</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-[11px] text-slate-400 text-center">
-                                        Aponte a câmera de outro jogador para conectar instantaneamente como amigos.
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* FAQ Accordion */}
-                            {editingField === 'faq' && (
-                                <div className="space-y-2 text-xs text-slate-300 max-h-60 overflow-y-auto no-scrollbar">
-                                    <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-                                        <h5 className="font-bold text-white mb-1">Como resgato minhas gemas grátis?</h5>
-                                        <p className="text-[11px] text-slate-400">Ao vincular seu e-mail no Supercell ID pela primeira vez, as 250 gemas são adicionadas imediatamente ao seu saldo.</p>
-                                    </div>
-                                    <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-                                        <h5 className="font-bold text-white mb-1">Posso jogar em múltiplos aparelhos?</h5>
-                                        <p className="text-[11px] text-slate-400">Sim! Basta fazer login com seu Supercell ID em qualquer dispositivo para continuar de onde parou.</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* About Text */}
-                            {editingField === 'about' && (
-                                <div className="text-xs text-slate-400 space-y-2">
-                                    <p>O Supercell ID é um serviço oficial da Supercell que protege suas contas de jogos e permite que você jogue em múltiplos aparelhos com total segurança.</p>
-                                    <p className="text-[10px] text-slate-500">Versão: 4.12.0 · Termos de Serviço e Política de Privacidade aplicáveis.</p>
-                                </div>
-                            )}
-
-                            {/* Switch Account Quick List */}
-                            {editingField === 'switch' && (
-                                <div className="space-y-2">
-                                    {PRESET_ACCOUNTS.map(acc => (
-                                        <div
-                                            key={acc.username}
-                                            onClick={() => handleSwitchAccount(acc)}
-                                            className="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500 cursor-pointer flex items-center justify-between"
-                                        >
-                                            <span className="text-xs font-black text-white">{acc.username}</span>
-                                            <span className="text-[10px] font-mono text-amber-400">{acc.trophies} 🏆</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            {/* Toast Notification */}
-            <AnimatePresence>
-                {toastMessage && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 30 }}
-                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-70 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-2xl shadow-2xl font-black text-xs uppercase tracking-wide flex items-center gap-2 border border-blue-300"
-                    >
-                        <Sparkles className="w-4 h-4 text-white" />
-                        <span>{toastMessage}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-}
-
-// ============================================================================
-// 4. WRAPPER STANDALONE COM CONTROLES DE PREVIEW (DESKTOP / MOBILE SWITCHER)
-// ============================================================================
-
-export default function SupercellIdStandalone() {
-    const [isOpen, setIsOpen] = useState<boolean>(true);
-    const [viewportMode, setViewportMode] = useState<'desktop' | 'mobile'>('desktop');
-    const [profile, setProfile] = useState<PlayerProfile>(PRESET_ACCOUNTS[0]);
-
-    const handleReset = () => {
-        scAudio.playClick();
-        setProfile(PRESET_ACCOUNTS[0]);
-    };
-
-    return (
-        <div className="min-h-screen bg-[#040813] text-slate-100 flex flex-col font-sans select-none">
-            {/* Top Standalone Bar */}
-            <header className="bg-slate-950 border-b border-blue-950 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0 z-30">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white font-black text-xs">
-                        SC
-                    </div>
-                    <div>
-                        <h1 className="text-sm font-black uppercase text-white tracking-wider">
-                            Interface Standalone: Supercell ID
-                        </h1>
-                        <p className="text-[11px] text-blue-300">
-                            Referência Autêntica com Amigos, Jogos, Alternador de Contas e Suporte Desktop / Mobile
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {/* Viewport switch */}
-                    <div className="flex bg-slate-900 border border-slate-800 rounded-xl p-0.5 text-xs">
-                        <button
-                            onClick={() => setViewportMode('desktop')}
-                            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${viewportMode === 'desktop' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
-                                }`}
-                        >
-                            <Monitor className="w-3.5 h-3.5" />
-                            <span>Desktop</span>
-                        </button>
-                        <button
-                            onClick={() => setViewportMode('mobile')}
-                            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${viewportMode === 'mobile' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
-                                }`}
-                        >
-                            <Smartphone className="w-3.5 h-3.5" />
-                            <span>Mobile</span>
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={handleReset}
-                        title="Resetar dados"
-                        className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 cursor-pointer transition-colors"
-                    >
-                        <RotateCcw className="w-4 h-4" />
-                    </button>
-
-                    <button
-                        onClick={() => setIsOpen(prev => !prev)}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 text-white font-black text-xs uppercase tracking-wider shadow-md cursor-pointer transition-transform active:scale-95"
-                    >
-                        {isOpen ? 'Fechar Modal' : 'Abrir Modal'}
-                    </button>
-                </div>
-            </header>
-
-            {/* Main Preview Container */}
-            <main className="flex-1 flex items-center justify-center p-4 sm:p-6 overflow-hidden relative">
-                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:20px_20px]" />
-
-                {viewportMode === 'mobile' ? (
-                    // Mobile Mockup Frame
-                    <div className="w-[390px] h-[780px] bg-slate-950 border-4 border-slate-800 rounded-[3rem] shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col">
-                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-5 bg-slate-800 rounded-full z-50 flex items-center justify-center">
-                            <div className="w-10 h-1 bg-slate-700 rounded-full" />
-                        </div>
-
-                        <div className="flex-1 w-full h-full relative overflow-hidden pt-6">
-                            {isOpen && (
-                                <SupercellIdModal
-                                    isOpen={isOpen}
-                                    onClose={() => setIsOpen(false)}
-                                    profile={profile}
-                                    onUpdateProfile={setProfile}
-                                />
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    // Desktop View
-                    <div className="w-full h-full flex items-center justify-center">
-                        {isOpen ? (
-                            <SupercellIdModal
-                                isOpen={isOpen}
-                                onClose={() => setIsOpen(false)}
-                                profile={profile}
-                                onUpdateProfile={setProfile}
-                            />
-                        ) : (
-                            <div className="text-center p-8 bg-slate-900/60 border border-blue-950 rounded-3xl max-w-md">
-                                <Shield className="w-12 h-12 text-blue-400 mx-auto mb-3" />
-                                <h3 className="text-lg font-black uppercase text-white mb-1">
-                                    Supercell ID Fechado
-                                </h3>
-                                <p className="text-xs text-slate-400 mb-4">
-                                    Clique no botão para reabrir a interface de conexões e amigos.
-                                </p>
-                                <button
-                                    onClick={() => setIsOpen(true)}
-                                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer"
-                                >
-                                    Abrir Supercell ID
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </main>
+            </motion.div>
         </div>
     );
 }

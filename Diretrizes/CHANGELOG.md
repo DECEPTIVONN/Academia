@@ -22,6 +22,38 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.36.2] - 2026-10-18
+
+**Correção — outline/borda branca persistente no botão de fechar da Social (Liga/Guilda)** (a pedido do usuário). Causa raiz identificada: a classe `border-slate-850` **não existe** no Tailwind (a paleta slate vai até 950, sem 850), então a cor da borda caía no fallback `currentColor` (cor do texto, cinza claro/branco), parecendo uma outline branca. Substituído `slate-850` → `slate-700` (classe válida) nos 3 usos em `LigasFeature.tsx` (rankBadgeClass, botão de fechar, quick reply). Mantidas as regras CSS com `!important` e o inline `outline/boxShadow/border` no botão de fechar.
+
+### Changed
+- **`src-app/src/features/social/LigasFeature.tsx`** — `slate-850` → `slate-700` (3 ocorrências).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.36.1] - 2026-10-18
+
+**Interface de Missões re-sincronizada com `MissoesRecompensasStandalone.tsx` (arquivo atualizado)** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). O arquivo `MissoesRecompensasStandalone.tsx` da raiz foi atualizado pelo usuário; re-portado para `src-app/src/features/dashboard/MissoesRecompensasModal.tsx` (sobrescrevendo a versão anterior). `MissionsOverlay.tsx` segue como wrapper (portal + body lock). Unused imports limpos (apenas warnings não bloqueantes permanecem).
+
+### Changed
+- **`src-app/src/features/dashboard/MissoesRecompensasModal.tsx`** — re-portado a partir do `MissoesRecompensasStandalone.tsx` atualizado.
+- **`src-app/src/features/dashboard/MissionsOverlay.tsx`** — ajustado para o default export `MissoesRecompensasStandalone`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.36.0] - 2026-10-18
+
+**Interface de Fit ID re-sincronizada com `SupercellIdStandalone.tsx` (arquivo atualizado)** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). O arquivo `SupercellIdStandalone.tsx` da raiz foi atualizado pelo usuário; re-portado para `src-app/src/features/dashboard/SupercellIdModal.tsx` (sobrescrevendo a versão anterior). `FitIdOverlay.tsx` segue como wrapper (portal + body lock + mapeamento de props). Unused imports limpos (apenas warnings de fast-refresh/set-state-in-effect permanecem, não bloqueantes).
+
+### Changed
+- **`src-app/src/features/dashboard/SupercellIdModal.tsx`** — re-portado a partir do `SupercellIdStandalone.tsx` atualizado.
+- **`src-app/src/features/dashboard/FitIdOverlay.tsx`** — ajustado para o default export `SupercellIdStandalone`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.35.9] - 2026-10-18
 
 **Interface de Fit ID redesenhada para o design de `SupercellIdStandalone.tsx`** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). `FitIdOverlay.tsx` deixou de renderizar a UI legada (Player Card Call of Duty) e passou a reutilizar `SupercellIdModal` (portado de `SupercellIdStandalone.tsx` → `src-app/src/features/dashboard/SupercellIdModal.tsx`), que contém o design completo (abas Recompensas/Amigos/Jogos, Passe, etc.). Mantidos o portal para `document.body`, o lock de scroll do body e a interface de props do `DashboardFeature` (os dados do usuário — nome, xp, streak — são mapeados para o `profile` do modal). Unused imports limpos.

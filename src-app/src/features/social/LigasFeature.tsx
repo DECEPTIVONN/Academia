@@ -210,7 +210,7 @@ function rankBadgeClass(rank: number): string {
   if (rank === 1) return 'text-yellow-950 bg-amber-400 border-amber-300 shadow-[0_0_8px_rgba(234,179,8,0.4)]';
   if (rank === 2) return 'text-slate-900 bg-slate-300 border-slate-200';
   if (rank === 3) return 'text-amber-900 bg-amber-600 border-amber-500';
-  return 'text-slate-400 bg-slate-900 border-slate-850';
+  return 'text-slate-400 bg-slate-900 border-slate-700';
 }
 
 function rowTone(isSelf: boolean, isTop3: boolean, isBot3: boolean): string {
@@ -1282,8 +1282,8 @@ export function LigasFeature({
             standaloneSound.playMove();
             setActiveSubTab('amigos');
           }}
-          className="soc-close-btn p-3.5 bg-slate-900 hover:bg-rose-950/40 border-2 border-slate-850 hover:border-rose-900/45 text-slate-400 hover:text-rose-400 rounded-2xl transition-all cursor-pointer flex items-center justify-center shadow-md shrink-0 active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
-          style={{ outline: 'none', boxShadow: 'none' }}
+          className="soc-close-btn p-3.5 bg-slate-900 hover:bg-rose-950/40 border-2 border-slate-700 hover:border-rose-900/45 text-slate-400 hover:text-rose-400 rounded-2xl transition-all cursor-pointer flex items-center justify-center shrink-0 active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
+          style={{ outline: 'none', boxShadow: 'none', border: '2px solid #1e293b' }}
           title="Voltar para Amigos"
         >
           <X size={18} />
@@ -1448,7 +1448,7 @@ export function LigasFeature({
           <button
             key={reply}
             onClick={() => handleQuickReplyClick(reply)}
-            className="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-850 hover:border-slate-700 text-xs text-slate-300 rounded-full transition-all active:scale-95 shrink-0 cursor-pointer"
+            className="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-700 text-xs text-slate-300 rounded-full transition-all active:scale-95 shrink-0 cursor-pointer"
           >
             {reply}
           </button>
