@@ -1,12 +1,12 @@
 /**
  * FitIdOverlay.tsx — Tela de identidade "Fit ID"
  *
- * Redesenhada para usar o design/estilo de `SupercellIdStandalone.tsx`
- * (portado em `SupercellIdModal.tsx`), mantendo a mesma interface de props
- * para não quebrar o DashboardFeature.
+ * Redesenhada para usar o design de SupercellIdStandalone.tsx, com
+ * animação de entrada/saída via AnimatePresence.
  */
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import SupercellIdStandalone from './SupercellIdModal';
 
 const toBody = (node: React.ReactNode) => createPortal(node, document.body);
@@ -29,10 +29,10 @@ export const FitIdOverlay: React.FC<FitIdOverlayProps> = ({
   open,
   onClose,
   name,
+  avatarUrl,
   xp,
   streak,
 }) => {
-  /* Lock de scroll do body enquanto aberto (padrão dos overlays do app). */
   useEffect(() => {
     if (!open) return undefined;
     const prev = document.body.style.overflow;
@@ -53,7 +53,19 @@ export const FitIdOverlay: React.FC<FitIdOverlayProps> = ({
   };
 
   return toBody(
-    <SupercellIdStandalone isOpen={open} onClose={onClose} profile={profile} />
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="fitid"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
+          <SupercellIdStandalone isOpen={open} onClose={onClose} profile={profile} avatarUrl={avatarUrl} />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

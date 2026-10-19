@@ -1,13 +1,12 @@
 /**
  * MissionsOverlay.tsx — Overlay de Missões (redesenhado)
  *
- * Agora reutiliza o componente `MissoesRecompensasModal` (portado de
- * `MissoesRecompensasStandalone.tsx`), que contém o design/estilo completo
- * (Passe Royale, missões diárias/semanais com baús, etc.), mantendo o padrão
- * de portal para document.body e o lock de scroll do body do app.
+ * Reutiliza `MissoesRecompensasModal` (design de MissoesRecompensasStandalone.tsx),
+ * com animação de entrada/saída via AnimatePresence.
  */
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import MissoesRecompensasStandalone from './MissoesRecompensasModal';
 
 const toBody = (node: React.ReactNode) => createPortal(node, document.body);
@@ -18,7 +17,6 @@ interface MissionsOverlayProps {
 }
 
 export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
-  /* Lock de scroll do body enquanto aberto (padrão dos overlays do app). */
   useEffect(() => {
     if (!open) return undefined;
     const prev = document.body.style.overflow;
@@ -28,7 +26,21 @@ export function MissionsOverlay({ open, onClose }: MissionsOverlayProps) {
     };
   }, [open]);
 
-  return toBody(<MissoesRecompensasStandalone isOpen={open} onClose={onClose} />);
+  return toBody(
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="missions"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
+          <MissoesRecompensasStandalone isOpen={open} onClose={onClose} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }
 
 export default MissionsOverlay;

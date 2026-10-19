@@ -35,10 +35,11 @@ export interface PlayerProfile {
     level: number;
 }
 
-export interface SupercellIdModalProps {
+export interface FITIdModalProps {
     isOpen?: boolean;
     onClose?: () => void;
     profile?: PlayerProfile;
+    avatarUrl?: string;
     onUpdateProfile?: (newProfile: PlayerProfile) => void;
 }
 
@@ -194,15 +195,16 @@ const DEFAULT_PROFILE: PlayerProfile = {
 };
 
 // ============================================================================
-// 3. COMPONENTE STANDALONE (EXATAMENTE IGUAL A src/components/SupercellIdModal.tsx)
+// 3. COMPONENTE STANDALONE (EXATAMENTE IGUAL A src/components/FITIdModal.tsx)
 // ============================================================================
 
-export default function SupercellIdStandalone({
+export default function FITIdStandalone({
     isOpen = true,
     onClose = () => { },
     profile: propProfile,
+    avatarUrl,
     onUpdateProfile: propUpdateProfile
-}: SupercellIdModalProps) {
+}: FITIdModalProps) {
     // Local fallback profile
     const [localProfile, setLocalProfile] = useState<PlayerProfile>(DEFAULT_PROFILE);
     const profile = propProfile || localProfile;
@@ -239,7 +241,7 @@ export default function SupercellIdStandalone({
         return [
             { name: 'EnjoyedStableMaju', clan: 'RETR', trophies: 1720, level: 8, emoji: '👩‍🎤', avatarBg: 'from-pink-500 to-rose-600', online: true },
             { name: 'EVIONTECH', clan: 'ELITE', trophies: 5410, level: 12, emoji: '🧔', avatarBg: 'from-yellow-500 to-amber-600', online: true },
-            { name: 'LyricalSkyron', clan: 'CYBER', trophies: 3120, level: 9, emoji: '🤴', avatarBg: 'from-blue-500 to-indigo-600', online: false },
+            { name: 'LyricalSkyron', clan: 'CYBER', trophies: 3120, level: 9, emoji: '🤴', avatarBg: 'from-blue-500 to-[var(--primary-dark)]', online: false },
             { name: 'HANNEMANN', clan: 'T-SPN', trophies: 840, level: 4, emoji: '🥷', avatarBg: 'from-slate-700 to-slate-900', online: true },
             { name: 'JEFERSON-PR', clan: 'ELITE', trophies: 4100, level: 10, emoji: '🧙‍♂️', avatarBg: 'from-purple-500 to-fuchsia-600', online: false },
             { name: 'magomaju', clan: 'CYBER', trophies: 2950, level: 7, emoji: '🌵', avatarBg: 'from-green-500 to-emerald-600', online: true }
@@ -306,7 +308,7 @@ export default function SupercellIdStandalone({
             const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
             const gradientBgs = [
                 'from-teal-500 to-emerald-600',
-                'from-indigo-500 to-purple-600',
+                'from-[var(--primary)] to-purple-600',
                 'from-orange-500 to-red-600',
                 'from-pink-500 to-rose-600',
                 'from-sky-500 to-blue-600'
@@ -356,7 +358,7 @@ export default function SupercellIdStandalone({
     };
 
     const handleLogOut = () => {
-        if (typeof window !== 'undefined' && window.confirm('Deseja realmente sair do Supercell ID? Seu perfil local será mantido, mas você voltará para a conta padrão.')) {
+        if (typeof window !== 'undefined' && window.confirm('Deseja realmente sair do FIT ID? Seu perfil local será mantido, mas você voltará para a conta padrão.')) {
             soundManager.playScoreSaved();
             handleSwitchAccount(PRESET_ACCOUNTS[0]);
         }
@@ -382,7 +384,7 @@ export default function SupercellIdStandalone({
             {/* Background click to close */}
             <div className="absolute inset-0 cursor-default" onClick={onClose} />
 
-            {/* Main Supercell ID Modal Frame */}
+            {/* Main FIT ID Modal Frame */}
             <motion.div
                 initial={{ scale: 0.92, opacity: 0, y: 15 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -391,7 +393,7 @@ export default function SupercellIdStandalone({
                 className="relative bg-[#f4f6f8] text-slate-800 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.85)] flex flex-col max-h-[92vh]"
             >
                 {/* Dynamic header background based on screen context */}
-                <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[var(--primary)]/10 via-transparent to-transparent pointer-events-none" />
 
                 {/* ================= HEADER AREA ================= */}
                 <div className="p-5 flex items-center justify-between border-b border-slate-200 bg-white relative z-10 shrink-0">
@@ -409,7 +411,7 @@ export default function SupercellIdStandalone({
                             onClick={() => { soundManager.playMove(); setIsSettingsMode(true); }}
                             className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all active:scale-90"
                             id="sc-settings-gear-btn"
-                            title="Configurações do Supercell ID"
+                            title="Configurações do FIT ID"
                         >
                             <Settings className="w-5 h-5" />
                         </button>
@@ -420,9 +422,13 @@ export default function SupercellIdStandalone({
                         <div className="flex flex-col items-center">
                             {/* Profile Barbarian Ring Avatar */}
                             <div className="relative group">
-                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600 p-1 shadow-[0_4px_15px_rgba(245,158,11,0.25)] relative">
+                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--primary)] via-[var(--primary-dark)] to-[var(--primary)] p-1 shadow-[0_4px_15px_rgba(var(--primary-rgb,139,92,246),0.35)] relative">
                                     <div className="w-full h-full rounded-full bg-slate-900 border-2 border-white flex items-center justify-center text-4xl overflow-hidden">
-                                        👑
+                                        {avatarUrl ? (
+                                            <img src={avatarUrl} alt={profile.username} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-3xl">👤</span>
+                                        )}
                                     </div>
                                 </div>
                                 {statusOnline && (
@@ -474,7 +480,7 @@ export default function SupercellIdStandalone({
                                 <button
                                     onClick={() => { soundManager.playMove(); setActiveTab('rewards'); }}
                                     className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all ${activeTab === 'rewards'
-                                            ? 'bg-slate-100 text-indigo-600 font-black shadow-inner'
+                                            ? 'bg-slate-100 text-[var(--primary-dark)] font-black shadow-inner'
                                             : 'text-slate-500 hover:text-slate-900 font-bold'
                                         }`}
                                 >
@@ -485,7 +491,7 @@ export default function SupercellIdStandalone({
                                 <button
                                     onClick={() => { soundManager.playMove(); setActiveTab('friends'); }}
                                     className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all relative ${activeTab === 'friends'
-                                            ? 'bg-slate-100 text-indigo-600 font-black shadow-inner'
+                                            ? 'bg-slate-100 text-[var(--primary-dark)] font-black shadow-inner'
                                             : 'text-slate-500 hover:text-slate-900 font-bold'
                                         }`}
                                 >
@@ -498,7 +504,7 @@ export default function SupercellIdStandalone({
                                 <button
                                     onClick={() => { soundManager.playMove(); setActiveTab('games'); }}
                                     className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all ${activeTab === 'games'
-                                            ? 'bg-slate-100 text-indigo-600 font-black shadow-inner'
+                                            ? 'bg-slate-100 text-[var(--primary-dark)] font-black shadow-inner'
                                             : 'text-slate-500 hover:text-slate-900 font-bold'
                                         }`}
                                 >
@@ -511,7 +517,7 @@ export default function SupercellIdStandalone({
                             {activeTab === 'rewards' && (
                                 <div className="space-y-4">
                                     {/* Holographic Points/Trophy Card */}
-                                    <div className="relative p-6 rounded-3xl border border-indigo-400 bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 text-white shadow-xl overflow-hidden flex flex-col justify-between aspect-[16/10] select-none">
+                                    <div className="relative p-6 rounded-3xl border border-[var(--primary-light)] bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 text-white shadow-xl overflow-hidden flex flex-col justify-between aspect-[16/10] select-none">
                                         {/* Visual glowing grid lines */}
                                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.25),_transparent_70%)] pointer-events-none" />
                                         <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#818cf8_1px,transparent_1px)] [background-size:12px_12px]" />
@@ -519,31 +525,31 @@ export default function SupercellIdStandalone({
                                         {/* Logo & ID Shield */}
                                         <div className="flex items-center justify-between relative z-10">
                                             <div className="flex items-center gap-1.5">
-                                                <div className="bg-white text-slate-900 font-black text-[9px] px-1.5 py-0.5 rounded tracking-tighter leading-none border border-indigo-300">
+                                                <div className="bg-white text-slate-900 font-black text-[9px] px-1.5 py-0.5 rounded tracking-tighter leading-none border border-[var(--primary-light)]">
                                                     SUPER<br />CELL
                                                 </div>
-                                                <span className="text-xs font-black tracking-widest text-indigo-300">ID</span>
+                                                <span className="text-xs font-black tracking-widest text-[var(--primary-light)]">ID</span>
                                             </div>
-                                            <Shield className="w-6 h-6 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
+                                            <Shield className="w-6 h-6 text-[var(--primary-light)] drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
                                         </div>
 
                                         {/* Score / Trophies PTS */}
                                         <div className="my-2 relative z-10">
-                                            <span className="text-[10px] uppercase font-black tracking-widest text-indigo-300">Pontuação do Império</span>
+                                            <span className="text-[10px] uppercase font-black tracking-widest text-[var(--primary-light)]">Pontuação do Império</span>
                                             <div className="flex items-baseline gap-1 mt-0.5">
                                                 <span className="text-4xl font-black font-sans tracking-tight text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.25)]">
                                                     {profile.trophies * 3 + 125}
                                                 </span>
-                                                <span className="text-base font-black text-indigo-400">PTS</span>
+                                                <span className="text-base font-black text-[var(--primary-light)]">PTS</span>
                                             </div>
                                         </div>
 
                                         {/* Account card bottom banner */}
-                                        <div className="flex items-center justify-between border-t border-indigo-500/20 pt-3 relative z-10 mt-1">
-                                            <span className="text-xs font-black tracking-wide text-indigo-200 uppercase truncate">
+                                        <div className="flex items-center justify-between border-t border-[var(--primary)]/20 pt-3 relative z-10 mt-1">
+                                            <span className="text-xs font-black tracking-wide text-white/20 uppercase truncate">
                                                 {profile.username}
                                             </span>
-                                            <div className="bg-indigo-600/30 text-indigo-300 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-indigo-500/20">
+                                            <div className="bg-[var(--primary-dark)]/30 text-[var(--primary-light)] text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-[var(--primary)]/20">
                                                 CONECTADO
                                             </div>
                                         </div>
@@ -557,10 +563,10 @@ export default function SupercellIdStandalone({
                                                 window.alert("Promoção Especial: Complete missões no Retro Tetris para ganhar XP e resgatar bônus de moedas e gemas na estrada de Copas!");
                                             }
                                         }}
-                                        className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-indigo-400 transition-all active:scale-98 group"
+                                        className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--primary-light)] transition-all active:scale-98 group"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
+                                            <div className="w-10 h-10 rounded-xl bg-white/5 text-[var(--primary-dark)] flex items-center justify-center text-xl shrink-0">
                                                 🎁
                                             </div>
                                             <div className="text-left">
@@ -570,7 +576,7 @@ export default function SupercellIdStandalone({
                                                 </p>
                                             </div>
                                         </div>
-                                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0" />
+                                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-[var(--primary-dark)] transition-colors shrink-0" />
                                     </div>
                                 </div>
                             )}
@@ -606,7 +612,7 @@ export default function SupercellIdStandalone({
                                                     </div>
 
                                                     <div className="text-left">
-                                                        <h4 className="text-xs font-black text-slate-900 tracking-wide uppercase group-hover:text-indigo-600 transition-colors">
+                                                        <h4 className="text-xs font-black text-slate-900 tracking-wide uppercase group-hover:text-[var(--primary-dark)] transition-colors">
                                                             {friend.name}
                                                         </h4>
                                                         <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
@@ -635,7 +641,7 @@ export default function SupercellIdStandalone({
                                     <div className="flex justify-end pt-2">
                                         <button
                                             onClick={() => handleOpenEdit('addFriend')}
-                                            className="px-4 py-2.5 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white rounded-xl shadow-md border border-indigo-400 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                                            className="px-4 py-2.5 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-dark)] hover:from-[var(--primary-light)] hover:to-[var(--primary)] text-white rounded-xl shadow-md border border-[var(--primary-light)] font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                                         >
                                             <Plus className="w-4 h-4" /> Adicionar Amigos
                                         </button>
@@ -647,20 +653,20 @@ export default function SupercellIdStandalone({
                             {activeTab === 'games' && (
                                 <div className="space-y-3">
                                     <span className="text-[11px] font-bold text-slate-500 uppercase px-1 block">
-                                        Conexão de Jogos Supercell
+                                        Conexão de Jogos FIT
                                     </span>
 
                                     {/* List of Mock games */}
                                     <div className="space-y-2.5">
                                         {/* Retro Tetris */}
-                                        <div className="p-4 bg-white border-2 border-indigo-500/40 rounded-2xl shadow-md flex items-center justify-between">
+                                        <div className="p-4 bg-white border-2 border-[var(--primary)]/40 rounded-2xl shadow-md flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-2xl text-white shadow">
+                                                <div className="w-12 h-12 bg-[var(--primary-dark)] rounded-xl flex items-center justify-center text-2xl text-white shadow">
                                                     👾
                                                 </div>
                                                 <div className="text-left">
                                                     <h4 className="text-xs font-black text-slate-900 uppercase">Retro Tetris</h4>
-                                                    <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.2 rounded uppercase">
+                                                    <span className="text-[9px] font-bold text-[var(--primary-dark)] bg-white/5 border border-white/10 px-1.5 py-0.2 rounded uppercase">
                                                         Conectado
                                                     </span>
                                                 </div>
@@ -682,7 +688,7 @@ export default function SupercellIdStandalone({
                                                 <div className="text-left">
                                                     <h4 className="text-xs font-black text-slate-900 uppercase">Clash Royale</h4>
                                                     <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">
-                                                        Supercell ID Conectado
+                                                        FIT ID Conectado
                                                     </span>
                                                 </div>
                                             </div>
@@ -703,7 +709,7 @@ export default function SupercellIdStandalone({
                                                 <div className="text-left">
                                                     <h4 className="text-xs font-black text-slate-900 uppercase">Brawl Stars</h4>
                                                     <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">
-                                                        Supercell ID Conectado
+                                                        FIT ID Conectado
                                                     </span>
                                                 </div>
                                             </div>
@@ -724,7 +730,7 @@ export default function SupercellIdStandalone({
                                                 <div className="text-left">
                                                     <h4 className="text-xs font-black text-slate-900 uppercase">Clash of Clans</h4>
                                                     <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">
-                                                        Supercell ID Conectado
+                                                        FIT ID Conectado
                                                     </span>
                                                 </div>
                                             </div>
@@ -788,7 +794,7 @@ export default function SupercellIdStandalone({
                                     </div>
                                     <button
                                         onClick={() => handleOpenEdit('username')}
-                                        className="px-2.5 py-1 text-[10px] font-black text-indigo-600 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-all"
+                                        className="px-2.5 py-1 text-[10px] font-black text-[var(--primary-dark)] hover:bg-white/5 border border-white/20 rounded-lg transition-all"
                                     >
                                         ALTERAR
                                     </button>
@@ -807,7 +813,7 @@ export default function SupercellIdStandalone({
                                     </div>
                                     <button
                                         onClick={() => handleOpenEdit('email')}
-                                        className="px-2.5 py-1 text-[10px] font-black text-indigo-600 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-all"
+                                        className="px-2.5 py-1 text-[10px] font-black text-[var(--primary-dark)] hover:bg-white/5 border border-white/20 rounded-lg transition-all"
                                     >
                                         ALTERAR
                                     </button>
@@ -819,15 +825,15 @@ export default function SupercellIdStandalone({
                                     className="flex items-center justify-between border-t border-slate-100 pt-4 cursor-pointer hover:bg-slate-50 -mx-4 px-4 py-2 transition-all group"
                                 >
                                     <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-indigo-600 shrink-0">
+                                        <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-[var(--primary-dark)] shrink-0">
                                             <RefreshCw className="w-4 h-4" />
                                         </div>
                                         <div>
                                             <h4 className="text-xs font-black text-slate-900 uppercase">Alternar conta</h4>
-                                            <p className="text-[9px] text-slate-500">Mudar para outra conta salva do Supercell ID.</p>
+                                            <p className="text-[9px] text-slate-500">Mudar para outra conta salva do FIT ID.</p>
                                         </div>
                                     </div>
-                                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-[var(--primary-dark)] transition-colors" />
                                 </div>
 
                                 {/* Sair button */}
@@ -840,7 +846,7 @@ export default function SupercellIdStandalone({
                                     </div>
                                     <div className="text-left">
                                         <h4 className="text-xs font-black uppercase">Sair</h4>
-                                        <p className="text-[9px] text-red-500/70">Desconectar temporariamente do Supercell ID.</p>
+                                        <p className="text-[9px] text-red-500/70">Desconectar temporariamente do FIT ID.</p>
                                     </div>
                                 </div>
                             </div>
@@ -853,7 +859,7 @@ export default function SupercellIdStandalone({
                                 <div className="flex-1">
                                     <h4 className="text-xs font-black text-slate-900 uppercase">Proteção da conta</h4>
                                     <p className="text-[9.5px] text-slate-500 leading-normal mt-0.5">
-                                        Proteja sua conta Supercell ID com uma medida extra de segurança por celular ou chaves de segurança.
+                                        Proteja sua conta FIT ID com uma medida extra de segurança por celular ou chaves de segurança.
                                     </p>
                                     <button
                                         onClick={() => {
@@ -877,7 +883,7 @@ export default function SupercellIdStandalone({
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h4 className="text-xs font-black text-slate-900 uppercase">Notícias e atualizações</h4>
-                                        <p className="text-[9px] text-slate-500">Receba boletins semanais das arenas Supercell.</p>
+                                        <p className="text-[9px] text-slate-500">Receba boletins semanais das arenas FIT.</p>
                                     </div>
                                     <button
                                         onClick={() => { soundManager.playMove(); setReceiveNews(!receiveNews); }}
@@ -909,10 +915,10 @@ export default function SupercellIdStandalone({
                                 </div>
 
                                 <div
-                                    onClick={() => openFaq('O que é o Supercell ID?', 'O Supercell ID é uma ferramenta de login segura criada pela Supercell para salvar e resgatar o progresso de todos os seus jogos mobile em qualquer dispositivo, protegendo de perdas e facilitando a transição de contas de forma instantânea.')}
+                                    onClick={() => openFaq('O que é o FIT ID?', 'O FIT ID é uma ferramenta de login segura criada pela FIT para salvar e resgatar o progresso de todos os seus jogos mobile em qualquer dispositivo, protegendo de perdas e facilitando a transição de contas de forma instantânea.')}
                                     className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-slate-800"
                                 >
-                                    <span>O que é o Supercell ID?</span>
+                                    <span>O que é o FIT ID?</span>
                                     <ChevronRight className="w-4 h-4 text-slate-400" />
                                 </div>
 
@@ -933,7 +939,7 @@ export default function SupercellIdStandalone({
                                 </div>
 
                                 <div
-                                    onClick={() => openFaq('Termos de Uso', 'Ao criar e conectar um Supercell ID, você concorda com nossos termos de licença de usuário final, comprometendo-se com o jogo justo, respeito nas salas de chat de clã, e proteção dos seus dados pessoais.')}
+                                    onClick={() => openFaq('Termos de Uso', 'Ao criar e conectar um FIT ID, você concorda com nossos termos de licença de usuário final, comprometendo-se com o jogo justo, respeito nas salas de chat de clã, e proteção dos seus dados pessoais.')}
                                     className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-slate-800"
                                 >
                                     <span>Termos de Uso</span>
@@ -967,7 +973,7 @@ export default function SupercellIdStandalone({
                                     {editingField === 'email' && 'Trocar E-mail Conectado'}
                                     {editingField === 'addFriend' && 'Adicionar Amigo por Tag'}
                                     {editingField === 'faq' && faqTitle}
-                                    {editingField === 'switch' && 'Selecionar Conta Supercell ID'}
+                                    {editingField === 'switch' && 'Selecionar Conta FIT ID'}
                                 </span>
                                 <div className="w-8 h-8" /> {/* Balance placeholder */}
                             </div>
@@ -989,7 +995,7 @@ export default function SupercellIdStandalone({
                                             value={inputVal}
                                             onChange={(e) => setInputVal(e.target.value)}
                                             placeholder={editingField === 'addFriend' ? 'Ex: BarbarianMaster' : ''}
-                                            className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                                         />
 
                                         <p className="text-[9.5px] text-slate-500 leading-normal">
@@ -1001,7 +1007,7 @@ export default function SupercellIdStandalone({
                                         <button
                                             onClick={handleSaveEdit}
                                             disabled={!inputVal.trim()}
-                                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+                                            className="w-full py-3 bg-[var(--primary-dark)] hover:bg-[var(--primary)] text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
                                         >
                                             {editingField === 'addFriend' ? 'Enviar Convite' : 'Confirmar Alteração'}
                                         </button>
@@ -1029,7 +1035,7 @@ export default function SupercellIdStandalone({
                                                         key={preset.username}
                                                         onClick={() => !isCurrent && handleSwitchAccount(preset)}
                                                         className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${isCurrent
-                                                                ? 'bg-indigo-50 border-indigo-300 pointer-events-none'
+                                                                ? 'bg-white/5 border-[var(--primary-light)] pointer-events-none'
                                                                 : 'bg-slate-50 hover:bg-slate-100 border-slate-200 cursor-pointer active:scale-98'
                                                             }`}
                                                     >
@@ -1049,8 +1055,8 @@ export default function SupercellIdStandalone({
 
                                                         <div className="text-right">
                                                             {isCurrent ? (
-                                                                <span className="flex items-center gap-0.5 text-[9px] font-black text-indigo-600 uppercase bg-white border border-indigo-200 px-2.5 py-0.8 rounded-full">
-                                                                    <Check className="w-3 h-3 text-indigo-600 inline" /> ATIVA
+                                                                <span className="flex items-center gap-0.5 text-[9px] font-black text-[var(--primary-dark)] uppercase bg-white border border-white/20 px-2.5 py-0.8 rounded-full">
+                                                                    <Check className="w-3 h-3 text-[var(--primary-dark)] inline" /> ATIVA
                                                                 </span>
                                                             ) : (
                                                                 <div className="text-right">
@@ -1112,7 +1118,7 @@ export default function SupercellIdStandalone({
                                         }
                                         setSelectedFriend(null);
                                     }}
-                                    className="py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow border border-indigo-400 transition-all active:scale-95 cursor-pointer"
+                                    className="py-3 bg-[var(--primary-dark)] hover:bg-[var(--primary)] text-white font-black text-xs uppercase tracking-widest rounded-xl shadow border border-[var(--primary-light)] transition-all active:scale-95 cursor-pointer"
                                 >
                                     Friendly Battle ⚔️
                                 </button>

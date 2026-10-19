@@ -22,6 +22,29 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.36.4] - 2026-10-18
+
+**Missões e FIT ID — paleta adaptada + animações de entrada/saída** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) **Missões**: paleta `indigo-*` → tokens do site (`var(--primary)`/`var(--primary-dark)`/`var(--primary-light)` e `slate-*`/`white/*`), alinhando ao estilo roxo do app. (2) **Missões e FIT ID**: animação de entrada/saída via `AnimatePresence` + `motion.div` (fade 0.25s) nos wrappers `MissionsOverlay` e `FitIdOverlay`, mantendo o portal para `document.body` e o lock de scroll do body. FIT ID já tinha paleta adaptada e imagem do usuário na rodada anterior.
+
+### Changed
+- **`src-app/src/features/dashboard/MissoesRecompensasModal.tsx`** — paleta indigo→primary (substituições em classes e strings).
+- **`src-app/src/features/dashboard/MissionsOverlay.tsx`** — wrapper com `AnimatePresence` + `motion.div` (fade entrada/saída).
+- **`src-app/src/features/dashboard/FitIdOverlay.tsx`** — wrapper com `AnimatePresence` + `motion.div` (fade entrada/saída).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.36.3] - 2026-10-18
+
+**FIT ID — adaptação de paleta, renomeação e imagem do usuário** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) **Paleta**: todas as referências a `indigo-*` em `SupercellIdModal.tsx` foram substituídas pelos tokens do site (`var(--primary)` / `var(--primary-dark)` / `var(--primary-light)` e `slate-*`/`white/*`), alinhando o FIT ID ao estilo roxo do app. (2) **Renomeação**: "Supercell ID" → "FIT ID" em todos os textos (títulos, FAQs, mensagens, etc.). (3) **Imagem central**: o placeholder de coroa (👑) foi substituído pela imagem do usuário (`avatarUrl`, passada pelo `FitIdOverlay` a partir do `DashboardFeature`); fallback para 👤 quando não houver imagem. (4) Anel do avatar adaptado para gradiente do acento do site.
+
+### Changed
+- **`src-app/src/features/dashboard/SupercellIdModal.tsx`** — paleta indigo→primary (10+ substituições), renomeação Supercell ID→FIT ID, avatar central usa `avatarUrl`.
+- **`src-app/src/features/dashboard/FitIdOverlay.tsx`** — passa `avatarUrl` ao modal.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.36.2] - 2026-10-18
 
 **Correção — outline/borda branca persistente no botão de fechar da Social (Liga/Guilda)** (a pedido do usuário). Causa raiz identificada: a classe `border-slate-850` **não existe** no Tailwind (a paleta slate vai até 950, sem 850), então a cor da borda caía no fallback `currentColor` (cor do texto, cinza claro/branco), parecendo uma outline branca. Substituído `slate-850` → `slate-700` (classe válida) nos 3 usos em `LigasFeature.tsx` (rankBadgeClass, botão de fechar, quick reply). Mantidas as regras CSS com `!important` e o inline `outline/boxShadow/border` no botão de fechar.

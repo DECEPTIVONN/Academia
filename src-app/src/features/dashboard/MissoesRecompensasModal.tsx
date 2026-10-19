@@ -406,7 +406,7 @@ export default function MissoesRecompensasStandalone({
                 pointsReward: 25,
                 chestName: 'Baú Mágico',
                 chestImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBfeU_eT2-MFQUDgjJIBLdIiqaZ1VB8l9RfcsQ-ufKTsknf2CjKeX8r1YlHtr4nFAuNoUHbdcPeKkk8uGm8J1SVUIPPP-7oXmI4qCkXYbgCxU6EQjI3tPNXBWPJGhU_5BBya488ZbIHfGkoOr3PTuK5QaTp4be5iGNpPhJFbb-5bPRZMAjVcB1GkngBiYDUwCfZDpZNkJRD4PI_A8xl5kR2tIpi-PzDkseERk3Af6XKuT2sQTRKgsbULffu-7r9GLvD9ipIrNYNdCc',
-                chestColor: 'from-indigo-600 to-purple-800 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.6)]'
+                chestColor: 'from-[var(--primary)] to-purple-800 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.6)]'
             },
             {
                 id: 'w3',
@@ -422,7 +422,7 @@ export default function MissoesRecompensasStandalone({
                 pointsReward: 15,
                 chestName: 'Baú Lendário',
                 chestImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCE0GENrPbQakwsSnuGsmyPsXZmykwkMYgnVqAEmf_9yqs7axhPx0VV4a8qVBAvr7uZsxIcDXxgx2XgO0y0Ok-glifYaeQZL69ZWiCevQzj17EyibAxjJlBCde4Rfp5QdZAa4ewuC-_VCZELDvIrRDsESgWNCrRbckXyFOsPd4wcRjD58FmZhd6GlDvNg93vkGrRD8FLqkuRlfpOW2iAnptvbME91sk2MXHGpHd2XP0_sid1fAJgx3vu0Yf0JE-9wsCg7AKzIFXmr0',
-                chestColor: 'from-amber-400 via-rose-500 to-indigo-600 border-yellow-300 shadow-[0_0_25px_rgba(245,158,11,0.75)]'
+                chestColor: 'from-amber-400 via-rose-500 to-[var(--primary)] border-yellow-300 shadow-[0_0_25px_rgba(245,158,11,0.75)]'
             }
         ];
     });
@@ -656,7 +656,7 @@ export default function MissoesRecompensasStandalone({
         // Set opening chest popup
         setOpeningChest({
             name: reward.rewardName,
-            color: track === 'gold' ? 'from-amber-400 via-orange-500 to-amber-700' : 'from-indigo-600 to-purple-800',
+            color: track === 'gold' ? 'from-amber-400 via-orange-500 to-amber-700' : 'from-[var(--primary)] to-purple-800',
             image: reward.rewardType === 'chest' ? reward.image : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBEleKpzjcs79tHlpUlyz8zFtNvoJUAdf3eaa8TAlfAiDfhHmYJ45DuX4fk5nm3YHEq75TeCaLKMouuJJ7xjJrto9uj_uPUd-PHM1sMQ8pviBFxV190UK4QnOeRggbySANWT1Q6kBGq5mpPZXdiTgVFYenMJUk1QgJ943FLMx4pjPeay8v0T3prZ8tc6hhBSi32dZGU9TiShS5q9fdiVpeoDGVu4aItmFDnIsWiIJ4963jMoWOYlZhB3tOPTHiuPVRzskzoK0VSnsk',
             xp: xpAdd,
             gold: goldAdd,
@@ -693,7 +693,7 @@ export default function MissoesRecompensasStandalone({
 
         setOpeningChest({
             name: 'Baú Lendário Mensal',
-            color: 'from-amber-400 via-rose-500 to-indigo-600 border-yellow-300 shadow-[0_0_25px_rgba(245,158,11,0.75)]',
+            color: 'from-amber-400 via-rose-500 to-[var(--primary)] border-yellow-300 shadow-[0_0_25px_rgba(245,158,11,0.75)]',
             image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCE0GENrPbQakwsSnuGsmyPsXZmykwkMYgnVqAEmf_9yqs7axhPx0VV4a8qVBAvr7uZsxIcDXxgx2XgO0y0Ok-glifYaeQZL69ZWiCevQzj17EyibAxjJlBCde4Rfp5QdZAa4ewuC-_VCZELDvIrRDsESgWNCrRbckXyFOsPd4wcRjD58FmZhd6GlDvNg93vkGrRD8FLqkuRlfpOW2iAnptvbME91sk2MXHGpHd2XP0_sid1fAJgx3vu0Yf0JE-9wsCg7AKzIFXmr0',
             xp: 500,
             gold: 1500,
@@ -939,9 +939,9 @@ export default function MissoesRecompensasStandalone({
                                                     <div className="flex items-center gap-2">
                                                         {visibleRewards[m.id] ? (
                                                             <div className="flex items-center gap-1.5 animate-fade-in">
-                                                                <div className="flex items-center gap-0.5 bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-500/15">
-                                                                    <Zap className="w-3 h-3 text-indigo-400" />
-                                                                    <span className="text-[9px] font-black text-indigo-300">+{m.xpReward} XP</span>
+                                                                <div className="flex items-center gap-0.5 bg-slate-950/40 px-1.5 py-0.5 rounded border border-[var(--primary)]/15">
+                                                                    <Zap className="w-3 h-3 text-[var(--primary-light)]" />
+                                                                    <span className="text-[9px] font-black text-[var(--primary-light)]">+{m.xpReward} XP</span>
                                                                 </div>
                                                                 <div className="flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-500/15">
                                                                     <Coins className="w-3 h-3 text-amber-400" />
@@ -1163,7 +1163,7 @@ export default function MissoesRecompensasStandalone({
                                                         <div className="flex items-center gap-3">
                                                             <div className="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-purple-500/10 p-[1px]">
                                                                 <div
-                                                                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-300"
+                                                                    className="h-full bg-gradient-to-r from-purple-500 to-[var(--primary)] rounded-full transition-all duration-300"
                                                                     style={{ width: `${pct}%` }}
                                                                 />
                                                             </div>
@@ -1179,9 +1179,9 @@ export default function MissoesRecompensasStandalone({
                                                     <div className="flex items-center gap-1.5">
                                                         {visibleRewards[m.id] ? (
                                                             <div className="flex items-center gap-1.5 animate-fade-in">
-                                                                <div className="flex items-center gap-0.5 bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-500/15">
-                                                                    <Zap className="w-3 h-3 text-indigo-400" />
-                                                                    <span className="text-[9px] font-black text-indigo-300">+{m.xpReward} XP</span>
+                                                                <div className="flex items-center gap-0.5 bg-slate-950/40 px-1.5 py-0.5 rounded border border-[var(--primary)]/15">
+                                                                    <Zap className="w-3 h-3 text-[var(--primary-light)]" />
+                                                                    <span className="text-[9px] font-black text-[var(--primary-light)]">+{m.xpReward} XP</span>
                                                                 </div>
                                                                 <div className="flex items-center gap-0.5 bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-500/15">
                                                                     <Coins className="w-3 h-3 text-amber-400" />
@@ -1638,13 +1638,13 @@ export default function MissoesRecompensasStandalone({
 
                                 {/* Reward: XP */}
                                 <div className="bg-slate-900/80 border border-purple-500/20 rounded-2xl p-2.5 flex flex-col items-center gap-1 shadow-inner">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center">
-                                        <Zap className="w-4 h-4 text-indigo-400 fill-indigo-400/20" />
+                                    <div className="w-8 h-8 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/25 flex items-center justify-center">
+                                        <Zap className="w-4 h-4 text-[var(--primary-light)] fill-[var(--primary-light)]/20" />
                                     </div>
-                                    <span className="text-[13px] font-black text-indigo-300 font-serif leading-none mt-1">
+                                    <span className="text-[13px] font-black text-[var(--primary-light)] font-serif leading-none mt-1">
                                         +{openingChest.xp}
                                     </span>
-                                    <span className="text-[7.5px] font-black text-indigo-400 uppercase tracking-widest leading-none">XP</span>
+                                    <span className="text-[7.5px] font-black text-[var(--primary-light)] uppercase tracking-widest leading-none">XP</span>
                                 </div>
 
                                 {/* Reward: Ouro */}
