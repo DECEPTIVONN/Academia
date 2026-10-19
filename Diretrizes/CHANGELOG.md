@@ -22,6 +22,17 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.38.1] - 2026-10-18
+
+**Detalhes do exercício — V1/V2 com alternância** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). A interface atual de detalhes foi mantida como **V1** (`CRDetailsModal`), e a interface exata de `DetalhesPecaStandalone.tsx` foi adicionada como **V2** (portada para `src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`, sem as adaptações/resalvas anteriores — design original do standalone, com portal para `document.body`). Ao clicar em detalhes, um botão simples fixo (canto superior direito) permite alternar entre V1 e V2. O estado `crDetailsVersion` ('v1'/'v2', default 'v1') controla qual é exibido.
+
+### Added
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — port do `Referências/DetalhesPecaStandalone.tsx` (V2), com portal.
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — estado `crDetailsVersion`, renderização condicional V1/V2, botão de alternância (portaled).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.38.0] - 2026-10-18
 
 **Detalhes do exercício (CRDetailsModal) — estilo geral alinhado ao `DetalhesPecaStandalone.tsx`** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Prévia do exercício centralizada na parte superior, independente da sub-aba (seção `cr-preview-top`), com a miniatura removida do `cr-top-main`. (2) Header reorganizado para layout centralizado (nome, nível, músculo=raridade, tipo, ícone de medalha → maestria) como no standalone. (3) Glow/outline aplicados via CSS (`cr-card-details::before` borderBreathe + `::after` corner accents). (4) Botão "melodia de nível" = editar exercício no footer. (5) Emojis 🏋️/🏆 → SVGs stroke (fora dos padrões). (6) Abas reordenadas: [prévia, stats, descrição].

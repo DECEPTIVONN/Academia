@@ -9,6 +9,7 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { flushSync } from 'react-dom';
 import type { AerobicConfig, Exercise } from '@/core/db/schema';
 import { useLocalData } from '@/hooks/useLocalData';
@@ -21,6 +22,7 @@ import { TreinosCollectionCard, TreinosGridCard } from './cards';
 import { CustomizacaoSubTabs } from './CustomizacaoTabs';
 import { MontarTab } from './MontarTab';
 import { ExercicioFormModal } from './ExercicioFormModal';
+import DetalhesPecaModal from './DetalhesPecaModal';
 import { AerobicoModal, ConfirmModal, CRDetailsModal, ImageModal, MaestriaGeralModal } from './TreinosModals';
 
 /* ── Ícones (treinos.html L7–40) ── */
@@ -210,6 +212,7 @@ export const TreinosFeature: React.FC = () => {
   const [confirmEx, setConfirmEx] = useState<Exercise | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crEx, setCrEx] = useState<Exercise | null>(null);
+  const [crDetailsVersion, setCrDetailsVersion] = useState<'v1' | 'v2'>('v1');
   const [mgOpen, setMgOpen] = useState(false);
   const [aeOpen, setAeOpen] = useState(false);
 
@@ -544,15 +547,48 @@ export const TreinosFeature: React.FC = () => {
         onNo={() => setConfirmEx(null)}
       />
       <ImageModal open={imageSrc !== null} src={imageSrc ?? ''} onClose={() => setImageSrc(null)} />
-      <CRDetailsModal
-        key="cr-details"
-        open={crEx !== null}
-        ex={crEx}
-        legacy={data.legacy}
-        onClose={() => setCrEx(null)}
-        onEdit={openEdit}
-        onMaestria={(id) => useMaestriaUi.getState().openMaestriaEx(id)}
-      />
+      {crDetailsVersion === 'v1' ? (
+        <CRDetailsModal
+          key="cr-details"
+          open={crEx !== null}
+          ex={crEx}
+          legacy={data.legacy}
+          onClose={() => setCrEx(null)}
+          onEdit={openEdit}
+          onMaestria={(id) => useMaestriaUi.getState().openMaestriaEx(id)}
+        />
+      ) : (
+        createPortal(
+          <DetalhesPecaModal isOpen={crEx !== null} onClose={() => setCrEx(null)} />,
+          document.body
+        )
+      )}
+
+      {/* Botão simples (fora do modal) para alternar V1/V2 */}
+      {crEx !== null &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => setCrDetailsVersion((v) => (v === 'v1' ? 'v2' : 'v1'))}
+            style={{
+              position: 'fixed',
+              top: 12,
+              right: 12,
+              zIndex: 10001,
+              padding: '6px 12px',
+              borderRadius: 8,
+              border: '1px solid rgba(139,92,246,0.4)',
+              background: 'rgba(10,5,20,0.9)',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            {crDetailsVersion === 'v1' ? 'Ver V2' : 'Ver V1'}
+          </button>,
+          document.body
+        )}
       <MaestriaGeralModal
         open={mgOpen}
         exercises={data.exercises}
