@@ -22,6 +22,16 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.38.0] - 2026-10-18
+
+**Detalhes do exercício (CRDetailsModal) — estilo geral alinhado ao `DetalhesPecaStandalone.tsx`** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Prévia do exercício centralizada na parte superior, independente da sub-aba (seção `cr-preview-top`), com a miniatura removida do `cr-top-main`. (2) Header reorganizado para layout centralizado (nome, nível, músculo=raridade, tipo, ícone de medalha → maestria) como no standalone. (3) Glow/outline aplicados via CSS (`cr-card-details::before` borderBreathe + `::after` corner accents). (4) Botão "melodia de nível" = editar exercício no footer. (5) Emojis 🏋️/🏆 → SVGs stroke (fora dos padrões). (6) Abas reordenadas: [prévia, stats, descrição].
+
+### Changed
+- **`src-app/src/features/workout/treinos/TreinosModals.tsx`** — CRDetailsModal: prévia centralizada no topo, header centralizado, miniatura removida do `cr-top-main`, medalha 🏋️/🏆 → SVGs, abas reordenadas.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.37.9] - 2026-10-18
 
 **Detalhes do exercício (CRDetailsModal) — estilo geral ajustado ao `DetalhesPecaStandalone.tsx`** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Prévia do exercício centralizada na parte superior, independente da sub-aba (nova seção `cr-preview-top` com a miniatura centralizada; removida a miniatura duplicada do `cr-top-main`). (2) Glow/outline já aplicados via CSS (`cr-card-details::before` borderBreathe + `::after` corner accents) — mantidos. (3) Abas permanecem reordenadas: [prévia, stats, descrição]. Raridade=músculo e tipo=tipo já exibidos no header; ícone de medalha → maestria; botão "melodia de nível" = editar (footer).

@@ -335,8 +335,8 @@ export const CRDetailsModal: React.FC<{
 
         {/* Header Section */}
         <div className="cr-card-header">
-          <div className="cr-top-main">
-            <div className="cr-header-info" style={{ width: '100%' }}>
+          <div className="cr-top-main" style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 8 }}>
+            <div className="cr-header-info" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <h2 id="crExName">{ex.name}</h2>
               <div className="cr-ex-level-text">
                 Nível <span id="crExLevelLabel">{level}</span>
