@@ -22,6 +22,16 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.38.3] - 2026-10-18
+
+**Detalhes V2 — correção de exibição e alternância em tempo real** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). A V2 não aparecia porque o modal V1 (z-index 1000) ficava sobreposto à V2 (z-index padrão), mesmo com opacity 0. Corrigido: wrapper da V2 com `position: fixed; inset: 0; z-index: 1001; overflow: auto`, garantindo que a V2 fique acima do V1 quando visível e não bloqueie interações quando oculta (pointer-events none). A alternância V1/V2 agora é em tempo real via opacity/visibility.
+
+### Changed
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — wrapper da V2 com z-index 1001 + fixed inset + overflow auto.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.38.2] - 2026-10-18
 
 **Detalhes do exercício — V1/V2 alternância em tempo real** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). A V2 não aparecia e a alternância não era em tempo real porque a V1 era desmontada/remontada (key change) e a V2 não era mantida montada. Corrigido: ambas V1 e V2 ficam **montadas** enquanto o modal está aberto, e a visibilidade é alternada via opacity/visibility (transição 0.2s) — clique no botão "Ver V1/V2" alterna instantaneamente, sem desmontar. V1 controla visibilidade pelo próprio `open` (baseado em versão); V2 via wrapper portaled.

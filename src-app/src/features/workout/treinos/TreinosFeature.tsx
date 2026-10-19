@@ -564,10 +564,14 @@ export const TreinosFeature: React.FC = () => {
           {createPortal(
             <div
               style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 1001,
                 opacity: crDetailsVersion === 'v2' ? 1 : 0,
                 visibility: crDetailsVersion === 'v2' ? 'visible' : 'hidden',
                 pointerEvents: crDetailsVersion === 'v2' ? 'auto' : 'none',
                 transition: 'opacity 0.2s ease, visibility 0.2s ease',
+                overflow: 'auto',
               }}
             >
               <DetalhesPecaModal isOpen={true} onClose={() => setCrEx(null)} />
