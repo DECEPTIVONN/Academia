@@ -22,6 +22,18 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.37.6] - 2026-10-18
+
+**Correções — ícone EVO FIT removido, menu da Minha Ficha posicionado abaixo do botão, fundo do menu do deck opaco** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Removido o ícone (SVG dumbbell) antes do texto "EVO FIT" no badge do hero da Ficha (`FichaFeature.tsx`), deixando apenas o texto. (2) O menu popup da Minha Ficha (`MontarMenuModal`) agora aparece **abaixo** do botão Menu (top = `rect.bottom + 10`, com clamp para não sair da tela) e com largura reduzida (`min(60vw, 240px)`). (3) O fundo do menu de ações do deck (`.deck-card-menu`, que aparecia transparente) passou a `rgba(10, 5, 20, 0.95)` (opaco, mesmo tom de preto do restante da aba) nas duas regras (normal e royale-view override), em `cards.css` (React legacy-style + Legacy + www).
+
+### Changed
+- **`src-app/src/features/workout/FichaFeature.tsx`** — removido SVG antes de "EVO FIT".
+- **`src-app/src/features/workout/treinos/MontarMenuModal.tsx`** — âncora abaixo do botão Menu + largura reduzida.
+- **`src-app/src/legacy-style/treino/secoes/cards.css`**, **`Legacy/style/treino/secoes/cards.css`**, **`www/style/treino/secoes/cards.css`** — `.deck-card-menu` background `var(--card-bg)` → `rgba(10, 5, 20, 0.95)`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.37.5] - 2026-10-18
 
 **Ficha de treino — autoscroll suave + ícone padrão antes de "EVO FIT"** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O autoscroll ao abrir a Ficha usava `behavior: 'auto'` (brusco); passou a `behavior: 'smooth'` para transição suave. (2) O emoji 🏋️ antes de "EVO FIT" (fora dos padrões de ícones do projeto) foi substituído por um SVG stroke (dumbbell) com `currentColor`, conforme `Diretrizes/Ícones.md`.

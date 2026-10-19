@@ -722,16 +722,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
         <div className="treino-hero-content">
           {/* v4.34.0 — "ACADEMIA" virou "EVO FIT" (mesmo nome da marca usado
               no lock screen e no Fit ID). */}
-          <div className="treino-badge-label">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={14} height={14} style={{ marginRight: 4, verticalAlign: 'middle' }}>
-              <path d="M6.5 6.5h11" />
-              <path d="M6.5 17.5h11" />
-              <path d="M12 6.5v11" />
-              <circle cx="4" cy="12" r="1.5" />
-              <circle cx="20" cy="12" r="1.5" />
-            </svg>
-            EVO FIT
-          </div>
+          <div className="treino-badge-label">EVO FIT</div>
           <h1 className="treino-hero-title">
             Fichas de <span className="gradient-text">Treino</span>
           </h1>
