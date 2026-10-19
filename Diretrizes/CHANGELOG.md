@@ -22,6 +22,16 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.37.1] - 2026-10-18
+
+**Aba Personalizar — ícones das sub-abas atualizados** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). Ícones do `SUB_NAV` em `TreinosFeature.tsx` substituídos para corresponder melhor ao conteúdo: **Exercícios/Coleção** → halteres (mesmo ícone da aba Treinos), **Cartões** → cartão de visitas (calling card), **Estilo de barras de progresso** (Emotes) → gráfico de barras (progresso), **Skin dos cards** (Torres) → ícone de card, **Estandartes** → mantido (bandeira), **Emblema** (Maestrias) → escudo.
+
+### Changed
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — ícones do `SUB_NAV` (exercicios-lista, itens-magicos, emotes, torres, maestrias).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.37.0] - 2026-10-18
 
 **Aba Minha Ficha — menu popup do botão Menu com opções de ficha** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). Novo componente `MontarMenuModal` (mesmo estilo do `InicioMenuModal`: portal + painel ancorado no `#btnDeckMenu`, grupos separados por hairline). Opções: **Adicionar Ficha** (desbloqueia a próxima letra A→J; inicialmente apenas A e B visíveis, persistido em `localStorage` `academia_unlocked_sheets`), **Excluir Ficha** (ícone de lixeira vermelho, com `ConfirmModal`), **Copiar Ficha**, **Colar Ficha**, **Mostrar na Guilda** (placeholder) e **Link** (copia URL com `?ficha=X`). Os botões ficam desabilitados quando não aplicável (limite atingido, sem ficha copiada, etc.).
