@@ -242,7 +242,13 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
     <div
       className="modal-overlay"
       id="modalFocus"
-      style={{ display: open ? 'flex' : 'none' }}
+      style={{
+        display: 'flex',
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+      }}
       role="dialog"
       aria-modal={open}
       aria-hidden={!open}

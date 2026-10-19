@@ -33,12 +33,17 @@ export const ConfirmModal: React.FC<{
   onYes: () => void;
   onNo: () => void;
 }> = ({ open, title, msg, onYes, onNo }) => {
-  if (!open) return null;
   return toBody(
     <div
       className="modal-overlay"
       id="modalConfirm"
-      style={{ display: 'flex' }}
+      style={{
+        display: 'flex',
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+      }}
       role="dialog"
       aria-modal="true"
       onClick={(e) => {
@@ -69,12 +74,17 @@ export const ImageModal: React.FC<{ open: boolean; src: string; onClose: () => v
   src,
   onClose,
 }) => {
-  if (!open) return null;
   return toBody(
     <div
       className="modal-overlay"
       id="modalImage"
-      style={{ display: 'flex' }}
+      style={{
+        display: 'flex',
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+      }}
       role="dialog"
       aria-modal="true"
       onClick={(e) => {
@@ -119,13 +129,17 @@ export const AerobicoModal: React.FC<{
   const [vel, setVel] = useState(() => aerobic?.vel || DEFAULT_AEROBIC.vel);
   const [tempo, setTempo] = useState(() => aerobic?.tempo || DEFAULT_AEROBIC.tempo);
 
-  if (!open) return null;
-
   return toBody(
     <div
       className="modal-overlay"
       id="modalAerobico"
-      style={{ display: 'flex' }}
+      style={{
+        display: 'flex',
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+      }}
       role="dialog"
       aria-modal="true"
       onClick={(e) => {
@@ -254,12 +268,20 @@ export const CRDetailsModal: React.FC<{
   onClose: () => void;
   onEdit: (ex: Exercise) => void;
   onMaestria: (exId: string) => void;
-}> = ({ open, ex, legacy, onClose, onEdit, onMaestria }) => {
-  /* goToTab(0) a cada abertura (openCRDetails L1251) — remontagem via `key` */
+}> = ({ open, ex: exProp, legacy, onClose, onEdit, onMaestria }) => {
+  /* goToTab(0) a cada abertura (openCRDetails L1251) — reset via effect. */
   const [tabIdx, setTabIdx] = useState(0);
   const touchStartX = useRef(0);
+  const lastExRef = useRef(exProp);
+  if (exProp) lastExRef.current = exProp;
+  const ex = lastExRef.current;
 
-  if (!open || !ex) return null;
+  /* Reset tabIdx ao abrir ou trocar de exercício. */
+  React.useEffect(() => {
+    if (open) setTabIdx(0);
+  }, [open, exProp?.id]);
+
+  if (!ex) return null;
 
   const state: MaestriaState = getMaestriaState(legacy, ex.id);
   const level = Math.floor(state.totalSessoes / 5) + 1;
@@ -287,7 +309,13 @@ export const CRDetailsModal: React.FC<{
     <div
       className="modal-overlay"
       id="modalCRDetails"
-      style={{ display: 'flex' }}
+      style={{
+        display: 'flex',
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+      }}
       role="dialog"
       aria-modal="true"
       onClick={(e) => {
@@ -456,15 +484,19 @@ export const MaestriaGeralModal: React.FC<{
   onClose: () => void;
   onOpenEx: (exId: string) => void;
 }> = ({ open, exercises, legacy, onClose, onOpenEx }) => {
-  if (!open) return null;
-
   const { totalXP, rank, pct } = computeMasteryTotals(exercises, legacy);
 
   return toBody(
     <div
       className="modal-overlay"
       id="modalMaestriaGeral"
-      style={{ display: 'flex' }}
+      style={{
+        display: 'flex',
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+      }}
       role="dialog"
       aria-modal="true"
       onClick={(e) => {

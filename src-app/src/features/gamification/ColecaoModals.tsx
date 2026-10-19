@@ -9,7 +9,7 @@
  * treinos.html:263), cujo footer ainda não existe no SheetsFeature (Fase 4).
  */
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
 import {
   MAESTRIA_CHALLENGES,
@@ -102,15 +102,38 @@ export function ColecaoModals() {
     ? exercises.filter((ex) => ex.name.toLowerCase().includes(term))
     : exercises;
 
-  const ex = maestriaExId ? exercises.find((e) => e.id === maestriaExId) : undefined;
-  const state = maestriaExId ? getMaestriaState(legacy, maestriaExId) : null;
+  /* Mantém o último id/ex/state para permitir transição de saída suave. */
+  const lastIdRef = useRef(maestriaExId);
+  if (maestriaExId) lastIdRef.current = maestriaExId;
+  const displayId = maestriaExId ?? lastIdRef.current;
+
+  const exRaw = displayId ? exercises.find((e) => e.id === displayId) : undefined;
+  const stateRaw = displayId ? getMaestriaState(legacy, displayId) : null;
+
+  const lastExRef = useRef(exRaw);
+  const lastStateRef = useRef(stateRaw);
+  if (exRaw) lastExRef.current = exRaw;
+  if (stateRaw) lastStateRef.current = stateRaw;
+  const ex = (exRaw ?? lastExRef.current)!;
+  const state = (stateRaw ?? lastStateRef.current)!;
+
+  const isOpen = maestriaExId !== null;
   const tiers = ['none', 'bronze', 'prata', 'ouro'] as const;
 
   return (
     <>
       {/* ===== MODAL: COLEÇÃO DE EXERCÍCIOS (modais.html L791–827) ===== */}
-      {colecaoOpen && (
-        <div className="modal-overlay" id="modalColecaoExercicios" style={{ display: 'flex' }}>
+      <div
+        className="modal-overlay"
+        id="modalColecaoExercicios"
+        style={{
+          display: 'flex',
+          opacity: colecaoOpen ? 1 : 0,
+          visibility: colecaoOpen ? 'visible' : 'hidden',
+          pointerEvents: colecaoOpen ? 'auto' : 'none',
+          transition: 'opacity 0.2s ease, visibility 0.2s ease',
+        }}
+      >
           <div className="colecao-full-container">
             <div className="colecao-header-main">
               <div className="colecao-title-side">
@@ -207,11 +230,20 @@ export function ColecaoModals() {
             </div>
           </div>
         </div>
-      )}
 
       {/* ===== MODAL: MAESTRIA INDIVIDUAL (modais.html L857–911) ===== */}
-      {maestriaExId && ex && state && (
-        <div className="modal-overlay" id="modalMaestriaEx" style={{ display: 'flex' }}>
+      {displayId && ex && state && (
+        <div
+          className="modal-overlay"
+          id="modalMaestriaEx"
+          style={{
+            display: 'flex',
+            opacity: isOpen ? 1 : 0,
+            visibility: isOpen ? 'visible' : 'hidden',
+            pointerEvents: isOpen ? 'auto' : 'none',
+            transition: 'opacity 0.2s ease, visibility 0.2s ease',
+          }}
+        >
           <div className="maestria-ex-container">
             {/* Decoração superior (Ícone Elite Premium) */}
             <div className="maestria-ex-top-decor">

@@ -22,6 +22,48 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.36.8] - 2026-10-18
+
+**Saída suave — CRDetailsModal (detalhes do exercício) e modal de maestria individual** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) `CRDetailsModal`: mantém o último exercício em um ref (`lastExRef`) para renderizar durante a transição de saída (antes, `ex` era limpo no mesmo render do fechamento, causando saída instantânea); adicionado `useEffect` para resetar `tabIdx` ao abrir/trocar de exercício; trocado o guard `!open || !ex` por `!ex` (mantém renderizado com opacity 0 ao fechar); root com transição de opacidade/visibilidade. O `key` no `TreinosFeature` passou a ser estável (`"cr-details"`) para que o componente não remonte no fechamento (preservando o ref). (2) `ColecaoModals` (maestria-ex): mantém o último `id`/`ex`/`state` em refs; render condicional passou a usar `displayId`; root com transição de opacidade/visibilidade.
+
+### Changed
+- **`src-app/src/features/workout/treinos/TreinosModals.tsx`** — CRDetailsModal: ref `lastExRef`, useEffect reset tabIdx, guard `!ex`, root com opacity transition.
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — CRDetailsModal key estável `"cr-details"`.
+- **`src-app/src/features/gamification/ColecaoModals.tsx`** — maestria-ex: refs `lastIdRef`/`lastExRef`/`lastStateRef`, conditional com `displayId`, root com opacity transition.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes — react/refs e react/set-state-in-effect) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.36.7] - 2026-10-18
+
+**Saídas suaves — modais restantes (ExercicioFormModal, AerobicoModal, ConfirmModal, ImageModal, MaestriaGeralModal, ColecaoModals-coleção, ConclusaoModal, FocusModal, MusicOverlay)** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). Mesma técnica aplicada em todos: remoção do `if (!open) return null` (quando havia) + transição de opacidade/visibilidade/pointer-events (`opacity 0.2s ease, visibility 0.2s ease`) no root, mantendo as animações de entrada (slideUp/fadeIn/muFadeIn). Modais que dependem de um objeto (ex.: `CRDetailsModal` que exige `ex`) mantiveram o guard `!ex` (saída instantânea nesse caso), pois a limpeza ocorre no mesmo render do fechamento.
+
+### Changed
+- **`src-app/src/features/workout/treinos/ExercicioFormModal.tsx`**, **`TreinosModals.tsx`** (ConfirmModal, ImageModal, AerobicoModal, MaestriaGeralModal), **`ColecaoModals.tsx`** (coleção), **`ConclusaoModal.tsx`**, **`FocusModal.tsx`**, **`MusicOverlay.tsx`** — root com opacity/visibility/pointer-events + transição.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.36.6] - 2026-10-18
+
+**Saída suave — ExercicioFormModal (novo/editar exercício)** (a pedido do usuário). O modal usava `if (!open) return null` (saída instantânea). Substituído por renderização contínua com transição de opacidade/visibilidade (`opacity`/`visibility`/`pointer-events` + `transition: opacity 0.2s ease, visibility 0.2s ease`), mantendo a animação de entrada (`slideUp` no `.modal-form`). A remontagem via `key` (estado resetado ao abrir) continua funcionando. Primeiro dos modais listados a receber saída suave.
+
+### Changed
+- **`src-app/src/features/workout/treinos/ExercicioFormModal.tsx`** — removido `if (!open) return null`; root `.modal-overlay` com opacity/visibility/pointer-events + transição.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.36.5] - 2026-10-18
+
+**FIT ID — fundo principal corrigido para o tom de preto da aba Minha Ficha** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). A interface de FIT ID (SupercellIdModal) ainda usava fundo claro `bg-[#f4f6f8]` (branco) com textos escuros. Substituído o fundo principal por glassmorphism escuro (`bg-[rgba(10,5,20,0.92)]`) e os textos/elementos claros (`text-slate-800/900`, `bg-slate-100/200`, `border-slate-100/200`) pelos equivalentes claros sobre fundo escuro (`text-white`, `bg-white/10/20`, `border-white/10/20`), alinhando à paleta do site. Animação de entrada/saída adicionada aos wrappers de Missões e FIT ID na rodada anterior (v4.36.4).
+
+### Changed
+- **`src-app/src/features/dashboard/SupercellIdModal.tsx`** — fundo `#f4f6f8` → `rgba(10,5,20,0.92)`; textos/elementos claros → equivalentes para fundo escuro.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.36.4] - 2026-10-18
 
 **Missões e FIT ID — paleta adaptada + animações de entrada/saída** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) **Missões**: paleta `indigo-*` → tokens do site (`var(--primary)`/`var(--primary-dark)`/`var(--primary-light)` e `slate-*`/`white/*`), alinhando ao estilo roxo do app. (2) **Missões e FIT ID**: animação de entrada/saída via `AnimatePresence` + `motion.div` (fade 0.25s) nos wrappers `MissionsOverlay` e `FitIdOverlay`, mantendo o portal para `document.body` e o lock de scroll do body. FIT ID já tinha paleta adaptada e imagem do usuário na rodada anterior.

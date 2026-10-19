@@ -317,15 +317,19 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
     coverTargetRef.current = null;
   };
 
-  if (!open) return null;
-
   return (
     <div
       className="mu-overlay"
       role="dialog"
       aria-modal="true"
       aria-label="Músicas e Playlists"
-      style={{ ['--mu-kb' as string]: `${kbInset}px` }}
+      style={{
+        ['--mu-kb' as string]: `${kbInset}px`,
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.25s ease, visibility 0.25s ease',
+      }}
     >
       <header className="mu-header">
         <button type="button" className="mu-icon-btn" onClick={onClose} aria-label="Fechar">

@@ -142,7 +142,13 @@ export function ConclusaoModal({ open, onClose, onShare }: ConclusaoModalProps) 
     <div
       className="modal-overlay"
       id="modalConclusao"
-      style={{ display: open ? 'flex' : 'none' }}
+      style={{
+        display: 'flex',
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+      }}
       role="dialog"
       aria-modal="true"
       aria-hidden={!open}

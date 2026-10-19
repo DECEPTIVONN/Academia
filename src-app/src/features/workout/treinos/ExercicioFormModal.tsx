@@ -249,8 +249,6 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
     onSaved();
   };
 
-  if (!open) return null;
-
   const hist = editEx?.historicoCargas ?? [];
   const showChart = Boolean(editEx) && hist.length > 0;
   const maxValor = hist.length ? Math.max(...hist.map((h) => h.valor)) : 0;
@@ -259,7 +257,13 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
     <div
       className="modal-overlay"
       id="modalExercicio"
-      style={{ display: 'flex' }}
+      style={{
+        display: 'flex',
+        opacity: open ? 1 : 0,
+        visibility: open ? 'visible' : 'hidden',
+        pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+      }}
       role="dialog"
       aria-modal="true"
       onClick={(e) => {

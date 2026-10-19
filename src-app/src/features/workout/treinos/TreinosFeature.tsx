@@ -540,7 +540,7 @@ export const TreinosFeature: React.FC = () => {
       />
       <ImageModal open={imageSrc !== null} src={imageSrc ?? ''} onClose={() => setImageSrc(null)} />
       <CRDetailsModal
-        key={crEx ? `cr-${crEx.id}` : 'cr-closed'}
+        key="cr-details"
         open={crEx !== null}
         ex={crEx}
         legacy={data.legacy}
