@@ -64,12 +64,8 @@ const SUB_NAV: SubNavDef[] = [
     key: 'exercicios-lista',
     title: 'Exercícios',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={20} height={20}>
-        <path d="M6.5 6.5h11" />
-        <path d="M6.5 17.5h11" />
-        <path d="M12 6.5v11" />
-        <circle cx="4" cy="12" r="1.5" />
-        <circle cx="20" cy="12" r="1.5" />
+      <svg viewBox="0 0 640 512" fill="currentColor" stroke="none" strokeWidth={0} width={20} height={20}>
+        <path d="M96 64c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32l0 160 0 64 0 160c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-64-32 0c-17.7 0-32-14.3-32-32l0-64c-17.7 0-32-14.3-32-32s14.3-32 32-32l0-64c0-17.7 14.3-32 32-32l32 0 0-64zm448 0l0 64 32 0c17.7 0 32 14.3 32 32l0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l0 64c0 17.7-14.3 32-32 32l-32 0 0 64c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-160 0-64 0-160c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32zM416 224l0 64-192 0 0-64 192 0z" />
       </svg>
     ),
   },

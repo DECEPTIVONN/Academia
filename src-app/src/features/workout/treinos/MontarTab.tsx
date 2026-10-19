@@ -305,7 +305,16 @@ export const MontarTab: React.FC<MontarTabProps> = ({
   /* ── Menu da ficha ── */
   const canAddSheet = unlockedSheets.length < SHEET_ORDER.length;
   const canDeleteSheet = unlockedSheets.length > 2 && unlockedSheets.includes(deckLetter);
-  const hasClipboard = clipboardSheet !== null;
+  const hasClipboard =
+    clipboardSheet !== null ||
+    (() => {
+      try {
+        const raw = localStorage.getItem('academia_clipboard_sheet');
+        return !!raw && JSON.parse(raw).length > 0;
+      } catch {
+        return false;
+      }
+    })();
 
   const onAddSheet = () => {
     const next = SHEET_ORDER.find((k) => !unlockedSheets.includes(k));
@@ -337,20 +346,48 @@ export const MontarTab: React.FC<MontarTabProps> = ({
     showToast('Ficha copiada!', 'success');
   };
   const onPasteSheet = async () => {
-    if (!clipboardSheet) {
+    let data = clipboardSheet;
+    if (!data) {
+      try {
+        const raw = localStorage.getItem('academia_clipboard_sheet');
+        if (raw) data = JSON.parse(raw) as string[];
+      } catch {
+        data = null;
+      }
+    }
+    if (!data || data.length === 0) {
       showToast('Nenhuma ficha copiada.', 'info');
       return;
     }
-    await mutateSheetIds(deckLetter, () => [...clipboardSheet]);
+    await mutateSheetIds(deckLetter, () => [...data!]);
     showToast('Ficha colada!', 'success');
   };
   const onShowInGuild = () => {
-    showToast('Enviar para a guilda — em breve.', 'info');
+    try {
+      const shared = {
+        id: `shared-${Date.now()}`,
+        sheetKey: deckLetter,
+        exerciseIds: [...ids],
+        author: 'Você',
+        timestamp: Date.now(),
+      };
+      const raw = localStorage.getItem('academia_guild_shared');
+      const list = raw ? (JSON.parse(raw) as unknown[]) : [];
+      list.unshift(shared);
+      localStorage.setItem('academia_guild_shared', JSON.stringify(list.slice(0, 20)));
+      window.dispatchEvent(new CustomEvent('academia:guild-shared-updated'));
+      showToast('Ficha enviada para a guilda!', 'success');
+    } catch {
+      showToast('Não foi possível enviar para a guilda.', 'error');
+    }
   };
   const onLink = () => {
     try {
-      const url = `${window.location.origin}?ficha=${deckLetter}`;
-      navigator.clipboard?.writeText(url);
+      const payload = btoa(JSON.stringify({ k: deckLetter, ids: [...ids] }));
+      const url = `${window.location.origin}/?share=${payload}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url);
+      }
       showToast('Link copiado!', 'success');
     } catch {
       showToast('Não foi possível copiar o link.', 'error');
@@ -638,14 +675,14 @@ export const MontarTab: React.FC<MontarTabProps> = ({
                   );
                 })}
               </div>
+            </div>
+
+            <div className="header-right">
               <div className="treino-selector-actions">
                 <button type="button" className="sel-btn-switch" id="btnSwitchDeckPage" title="Alternar Páginas" onClick={onSwitchPage}>
                   {SWITCH_PAGE_ICON}
                 </button>
               </div>
-            </div>
-
-            <div className="header-right">
               <span className="switch-label" />
               <div className="view-selector">
                 <button

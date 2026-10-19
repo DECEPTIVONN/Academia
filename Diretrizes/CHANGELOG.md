@@ -22,6 +22,49 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.37.5] - 2026-10-18
+
+**Ficha de treino — autoscroll suave + ícone padrão antes de "EVO FIT"** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O autoscroll ao abrir a Ficha usava `behavior: 'auto'` (brusco); passou a `behavior: 'smooth'` para transição suave. (2) O emoji 🏋️ antes de "EVO FIT" (fora dos padrões de ícones do projeto) foi substituído por um SVG stroke (dumbbell) com `currentColor`, conforme `Diretrizes/Ícones.md`.
+
+### Changed
+- **`src-app/src/features/workout/FichaFeature.tsx`** — `scroller.scrollTo({ ..., behavior: 'smooth' })`; emoji 🏋️ → SVG dumbbell stroke.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.37.4] - 2026-10-18
+
+**Correções — ícone da sub-aba Coleção + botão de alternar ficha fixo à direita** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O ícone da sub-aba "Coleção" (exercicios-lista) passou a usar o mesmo ícone da aba Treinos (Font Awesome solid/dumbbell, silhueta preenchida). (2) O botão "Alternar Páginas" (alternar ficha) estava dentro do `header-center`, sendo empurrado para a direita conforme mais fichas eram adicionadas. Movido para o `header-right`, ficando em posição fixa à direita independente da quantidade de fichas.
+
+### Changed
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — ícone da sub-aba exercicios-lista → dumbbell Font Awesome (mesmo da aba Treinos).
+- **`src-app/src/features/workout/treinos/MontarTab.tsx`** — botão `#btnSwitchDeckPage` movido de `header-center` para `header-right`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.37.3] - 2026-10-18
+
+**Correções — ícone da sub-aba Coleção + menu da Minha Ficha fora da tela** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) O ícone da sub-aba "Coleção" (exercicios-lista) passou a usar o mesmo ícone da aba Treinos (Font Awesome solid/dumbbell, silhueta preenchida). (2) O menu popup da Minha Ficha (`MontarMenuModal`) aparecia fora da área da tela porque ancorava ao `#btnDeckMenu`, cuja posição depende do scroll da aba. Corrigido para âncora fixa no canto superior direito (top 72px / right 14px), igual ao `InicioMenuModal`, com max-height recalculado.
+
+### Changed
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — ícone da sub-aba exercicios-lista → dumbbell Font Awesome (mesmo da aba Treinos).
+- **`src-app/src/features/workout/treinos/MontarMenuModal.tsx`** — âncora fixa no canto superior direito (top 72px / right 14px).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.37.2] - 2026-10-18
+
+**Integração real de "Mostrar na Guilda" e "Link" (menu da Minha Ficha)** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) **Mostrar na Guilda**: envia uma prévia da ficha selecionada para a guilda (armazenada em `localStorage` `academia_guild_shared`, com evento `academia:guild-shared-updated`); a aba Social (Guilda) agora exibe uma seção "Fichas Compartilhadas no Clã" listando as fichas enviadas, com botão **Copiar Ficha** que grava a ficha na área de transferência (`academia_clipboard_sheet`) para colagem na aba Minha Ficha. (2) **Link**: gera um link compartilhável com os dados da ficha (base64 em `?share=...`) e copia para o clipboard. (3) **Colar Ficha** passou a ler também da área de transferência compartilhada (para colar fichas recebidas da guilda).
+
+### Added
+- **`src-app/src/features/workout/treinos/MontarTab.tsx`** — `onShowInGuild` (armazena prévia + evento), `onLink` (link base64 + clipboard), `onPasteSheet`/`hasClipboard` estendidos para `academia_clipboard_sheet`.
+- **`src-app/src/features/social/LigasFeature.tsx`** — estado `sharedSheets` (lê `academia_guild_shared` + listener), seção "Fichas Compartilhadas no Clã" na sub-aba Guilda com botão "Copiar Ficha"; import de `showToast`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.37.1] - 2026-10-18
 
 **Aba Personalizar — ícones das sub-abas atualizados** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). Ícones do `SUB_NAV` em `TreinosFeature.tsx` substituídos para corresponder melhor ao conteúdo: **Exercícios/Coleção** → halteres (mesmo ícone da aba Treinos), **Cartões** → cartão de visitas (calling card), **Estilo de barras de progresso** (Emotes) → gráfico de barras (progresso), **Skin dos cards** (Torres) → ícone de card, **Estandartes** → mantido (bandeira), **Emblema** (Maestrias) → escudo.

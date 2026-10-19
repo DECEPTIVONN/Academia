@@ -43,6 +43,7 @@ import {
 } from './ligas-icons';
 /* v4.14.0 — folha de compartilhamento nativa do SO (Web Share API) */
 import { shareNative } from '@/lib/native-share';
+import { showToast } from '@/lib/toast';
 import {
   addPlayerLeagueXp,
   addPlayerMonthlyLeagueXp,
@@ -983,6 +984,22 @@ export function LigasFeature({
   const [friends, setFriends] = useState<FriendItem[]>(INITIAL_FRIENDS);
   const [members] = useState<FriendItem[]>(INITIAL_MEMBERS);
   const [internalMessages, setInternalMessages] = useState<ClanMessage[]>(INITIAL_CLAN_MESSAGES);
+
+  /* Fichas compartilhadas na guilda (enviadas pela aba Minha Ficha). */
+  const readShared = () => {
+    try {
+      const raw = localStorage.getItem('academia_guild_shared');
+      return raw ? (JSON.parse(raw) as { id: string; sheetKey: string; exerciseIds: string[]; author: string; timestamp: number }[]) : [];
+    } catch {
+      return [];
+    }
+  };
+  const [sharedSheets, setSharedSheets] = useState(readShared);
+  useEffect(() => {
+    const onUpdate = () => setSharedSheets(readShared());
+    window.addEventListener('academia:guild-shared-updated', onUpdate);
+    return () => window.removeEventListener('academia:guild-shared-updated', onUpdate);
+  }, []);
   const messages = externalMessages !== undefined ? externalMessages : internalMessages;
   const [typedMessage, setTypedMessage] = useState('');
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
@@ -1410,6 +1427,37 @@ export function LigasFeature({
 
   const batePapoContent = (
     <div className="flex flex-col gap-4">
+      {sharedSheets.length > 0 && (
+        <div className="bg-[rgba(24,20,40,0.65)] backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.18)] rounded-2xl p-4 space-y-2">
+          <h3 className="text-sm font-black text-white uppercase tracking-tight">Fichas Compartilhadas no Clã</h3>
+          <div className="space-y-2">
+            {sharedSheets.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-[rgba(var(--primary-rgb,139,92,246),0.2)] bg-slate-950/40"
+              >
+                <div>
+                  <span className="text-xs font-black text-white">Ficha {s.sheetKey}</span>
+                  <span className="text-[9px] text-slate-500 ml-2">{s.exerciseIds.length} ex.</span>
+                </div>
+                <button
+                  onClick={() => {
+                    try {
+                      localStorage.setItem('academia_clipboard_sheet', JSON.stringify(s.exerciseIds));
+                      showToast('Ficha copiada! Cole na aba Minha Ficha.', 'success');
+                    } catch {
+                      showToast('Erro ao copiar ficha.', 'error');
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-[var(--primary)] hover:bg-[var(--primary-light)] text-white font-black text-[10px] uppercase rounded-xl transition-all active:scale-95 cursor-pointer"
+                >
+                  Copiar Ficha
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div
         ref={chatScrollerRef}
         className="h-[calc(100vh-420px)] sm:h-[calc(100vh-400px)] min-h-[320px] overflow-y-auto space-y-4 px-1 pb-28 scroll-smooth"

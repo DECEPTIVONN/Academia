@@ -116,13 +116,11 @@ export const MontarMenuModal: React.FC<MontarMenuModalProps> = ({
     const place = () => {
       const panel = panelRef.current;
       if (!panel) return;
-      const btn = document.getElementById('btnDeckMenu');
-      const rect = btn?.getBoundingClientRect();
-      const right = rect ? Math.max(12, window.innerWidth - rect.right) : 14;
-      const top = rect ? rect.bottom + 10 : 72;
-      panel.style.top = `${Math.round(top)}px`;
-      panel.style.right = `${Math.round(right)}px`;
-      panel.style.maxHeight = `${Math.max(180, Math.round(window.innerHeight - top - 16))}px`;
+      // Âncora fixa no canto superior direito (a aba Minha Ficha rola e o
+      // botão pode estar fora da viewport), evitando que o painel saia da tela.
+      panel.style.top = '72px';
+      panel.style.right = '14px';
+      panel.style.maxHeight = `${Math.max(180, Math.round(window.innerHeight - 72 - 16))}px`;
     };
     place();
     window.addEventListener('resize', place);
