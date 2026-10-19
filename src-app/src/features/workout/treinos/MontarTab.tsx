@@ -19,6 +19,7 @@ import { fadeIn } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
 import { VolumeKgIcon } from '@/components/VolumeKgIcon';
 import { useTreinosStore, type DeckView } from './treinos-store';
+import { SHEET_ORDER } from '@/core/db/queries';
 import {
   addFromCollection,
   applyTemplate,
@@ -30,6 +31,8 @@ import {
   swapSlots,
 } from './treinos-helpers';
 import { DeckActiveSlot, DeckEmptySlot, TreinosCollectionCard } from './cards';
+import { MontarMenuModal } from './MontarMenuModal';
+import { ConfirmModal } from './TreinosModals';
 
 const LETTERS: SheetKey[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 const PAGE_1 = ['A', 'B', 'C', 'D', 'E'];
@@ -211,6 +214,27 @@ export const MontarTab: React.FC<MontarTabProps> = ({
 
   /* Estado visual */
   const [dragOver, setDragOver] = useState<number | null>(null);
+
+  /* Fichas desbloqueadas (A/B inicialmente; até J) */
+  const [unlockedSheets, setUnlockedSheets] = useState<SheetKey[]>(() => {
+    try {
+      const raw = localStorage.getItem('academia_unlocked_sheets');
+      return raw ? (JSON.parse(raw) as SheetKey[]) : (['A', 'B'] as SheetKey[]);
+    } catch {
+      return ['A', 'B'] as SheetKey[];
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('academia_unlocked_sheets', JSON.stringify(unlockedSheets));
+    } catch {
+      /* ignore */
+    }
+  }, [unlockedSheets]);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmDeleteSheet, setConfirmDeleteSheet] = useState(false);
+  const [clipboardSheet, setClipboardSheet] = useState<string[] | null>(null);
   /* Menu ativo do card: estado derivado (letra/vista válidas) — substitui o
      effect de reset do legado sem set-state-in-effect */
   const [menu, setMenu] = useState<{ letter: SheetKey; view: DeckView; idx: number } | null>(null);
@@ -276,6 +300,61 @@ export const MontarTab: React.FC<MontarTabProps> = ({
   const onRemoveSlot = async (ex: Exercise) => {
     await mutateSheetIds(deckLetter, (cur) => removeFromDeck(cur, ex.id));
     showToast('Removido do treino!', 'info');
+  };
+
+  /* ── Menu da ficha ── */
+  const canAddSheet = unlockedSheets.length < SHEET_ORDER.length;
+  const canDeleteSheet = unlockedSheets.length > 2 && unlockedSheets.includes(deckLetter);
+  const hasClipboard = clipboardSheet !== null;
+
+  const onAddSheet = () => {
+    const next = SHEET_ORDER.find((k) => !unlockedSheets.includes(k));
+    if (!next) {
+      showToast('Limite de fichas (J) atingido.', 'info');
+      return;
+    }
+    setUnlockedSheets((prev) => [...prev, next]);
+    setDeckLetter(next);
+    showToast(`Ficha ${next} adicionada!`, 'success');
+  };
+  const onDeleteSheet = () => {
+    if (!canDeleteSheet) {
+      showToast('Não é possível excluir esta ficha.', 'info');
+      return;
+    }
+    setConfirmDeleteSheet(true);
+  };
+  const confirmDeleteSheetNow = async () => {
+    setConfirmDeleteSheet(false);
+    await mutateSheetIds(deckLetter, () => []);
+    setUnlockedSheets((prev) => prev.filter((k) => k !== deckLetter));
+    const remaining = unlockedSheets.filter((k) => k !== deckLetter);
+    setDeckLetter(remaining[0] ?? 'A');
+    showToast('Ficha excluída.', 'info');
+  };
+  const onCopySheet = async () => {
+    setClipboardSheet([...ids]);
+    showToast('Ficha copiada!', 'success');
+  };
+  const onPasteSheet = async () => {
+    if (!clipboardSheet) {
+      showToast('Nenhuma ficha copiada.', 'info');
+      return;
+    }
+    await mutateSheetIds(deckLetter, () => [...clipboardSheet]);
+    showToast('Ficha colada!', 'success');
+  };
+  const onShowInGuild = () => {
+    showToast('Enviar para a guilda — em breve.', 'info');
+  };
+  const onLink = () => {
+    try {
+      const url = `${window.location.origin}?ficha=${deckLetter}`;
+      navigator.clipboard?.writeText(url);
+      showToast('Link copiado!', 'success');
+    } catch {
+      showToast('Não foi possível copiar o link.', 'error');
+    }
   };
 
   /* ── Coleção: clique adicionar (L479–504) ── */
@@ -535,14 +614,14 @@ export const MontarTab: React.FC<MontarTabProps> = ({
         <div className="deck-header">
           <div className="deck-header-top">
             <div className="header-left">
-              <button type="button" className="sel-btn" id="btnDeckMenu" title="Menu">
+              <button type="button" className="sel-btn" id="btnDeckMenu" title="Menu" onClick={() => setMenuOpen(true)}>
                 {MENU_ICON}
               </button>
             </div>
 
             <div className="header-center">
               <div className="treino-selector" id="deckLetterTabs">
-                {LETTERS.map((letra) => {
+                {LETTERS.filter((l) => unlockedSheets.includes(l)).map((letra) => {
                   const isPage1 = PAGE_1.includes(letra);
                   const visible = deckPage === 1 ? isPage1 : !isPage1;
                   return (
@@ -738,6 +817,27 @@ export const MontarTab: React.FC<MontarTabProps> = ({
           ))}
         </div>
       </div>
+
+      <MontarMenuModal
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onAddSheet={onAddSheet}
+        onDeleteSheet={onDeleteSheet}
+        onCopySheet={onCopySheet}
+        onPasteSheet={onPasteSheet}
+        onShowInGuild={onShowInGuild}
+        onLink={onLink}
+        canAdd={canAddSheet}
+        canDelete={canDeleteSheet}
+        hasClipboard={hasClipboard}
+      />
+      <ConfirmModal
+        open={confirmDeleteSheet}
+        title="Excluir ficha?"
+        msg={`A ficha ${deckLetter} será limpa e removida da lista.`}
+        onYes={() => void confirmDeleteSheetNow()}
+        onNo={() => setConfirmDeleteSheet(false)}
+      />
     </>
   );
 };

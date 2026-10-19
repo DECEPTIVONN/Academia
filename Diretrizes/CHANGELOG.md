@@ -22,6 +22,30 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.37.0] - 2026-10-18
+
+**Aba Minha Ficha — menu popup do botão Menu com opções de ficha** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). Novo componente `MontarMenuModal` (mesmo estilo do `InicioMenuModal`: portal + painel ancorado no `#btnDeckMenu`, grupos separados por hairline). Opções: **Adicionar Ficha** (desbloqueia a próxima letra A→J; inicialmente apenas A e B visíveis, persistido em `localStorage` `academia_unlocked_sheets`), **Excluir Ficha** (ícone de lixeira vermelho, com `ConfirmModal`), **Copiar Ficha**, **Colar Ficha**, **Mostrar na Guilda** (placeholder) e **Link** (copia URL com `?ficha=X`). Os botões ficam desabilitados quando não aplicável (limite atingido, sem ficha copiada, etc.).
+
+### Added
+- **`src-app/src/features/workout/treinos/MontarMenuModal.tsx`** — novo menu popup.
+- **`src-app/src/features/workout/treinos/MontarTab.tsx`** — estado `unlockedSheets` (A/B inicial, até J), `menuOpen`, `confirmDeleteSheet`, `clipboardSheet`; filtro das abas de letra por fichas desbloqueadas; handlers `onAddSheet`/`onDeleteSheet`/`onCopySheet`/`onPasteSheet`/`onShowInGuild`/`onLink`; renderização do `MontarMenuModal` e `ConfirmModal`.
+
+### Changed
+- **`src-app/src/features/workout/treinos/MontarTab.tsx`** — `btnDeckMenu` agora abre o menu (`onClick`).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.36.9] - 2026-10-18
+
+**FIT ID — correção de partes brancas e adaptação de elementos para fundo preto** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). Após a rodada anterior, ainda havia elementos com fundo claro (cards `bg-white`, hovers `bg-slate-50`, divisores `divide-slate-100`, badges `bg-emerald-50`, textos `text-slate-500/600`) que não contrastavam no fundo escuro. Substituídos por equivalentes translúcidos/escuros (`bg-white/5`, `hover:bg-white/5`, `divide-white/10`, `bg-emerald-500/10`, `text-slate-300/400`), mantendo os acentos do site (roxo). Verificado que não restam `bg-white` sólidos nem `bg-slate-50` no arquivo.
+
+### Changed
+- **`src-app/src/features/dashboard/SupercellIdModal.tsx`** — `hover:bg-slate-50`→`hover:bg-white/5`, `bg-slate-50/50`→`bg-white/5`, `bg-slate-50`→`bg-white/5`, `divide-slate-100`→`divide-white/10`, `bg-emerald-50`→`bg-emerald-500/10`, `border-emerald-100`→`border-emerald-500/30`, `text-slate-600`→`text-slate-300`, `text-slate-500`→`text-slate-400`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.36.8] - 2026-10-18
 
 **Saída suave — CRDetailsModal (detalhes do exercício) e modal de maestria individual** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) `CRDetailsModal`: mantém o último exercício em um ref (`lastExRef`) para renderizar durante a transição de saída (antes, `ex` era limpo no mesmo render do fechamento, causando saída instantânea); adicionado `useEffect` para resetar `tabIdx` ao abrir/trocar de exercício; trocado o guard `!open || !ex` por `!ex` (mantém renderizado com opacity 0 ao fechar); root com transição de opacidade/visibilidade. O `key` no `TreinosFeature` passou a ser estável (`"cr-details"`) para que o componente não remonte no fechamento (preservando o ref). (2) `ColecaoModals` (maestria-ex): mantém o último `id`/`ex`/`state` em refs; render condicional passou a usar `displayId`; root com transição de opacidade/visibilidade.

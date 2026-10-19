@@ -396,12 +396,12 @@ export default function FITIdStandalone({
                 <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[var(--primary)]/10 via-transparent to-transparent pointer-events-none" />
 
                 {/* ================= HEADER AREA ================= */}
-                <div className="p-5 flex items-center justify-between border-b border-white/20 bg-white relative z-10 shrink-0">
+                <div className="p-5 flex items-center justify-between border-b border-white/20 bg-white/5 relative z-10 shrink-0">
                     {/* Left Button (Gear Settings or Back button) */}
                     {isSettingsMode ? (
                         <button
                             onClick={() => { soundManager.playMove(); setIsSettingsMode(false); }}
-                            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-slate-600 flex items-center justify-center transition-all active:scale-90"
+                            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 flex items-center justify-center transition-all active:scale-90"
                             id="sc-settings-back-btn"
                         >
                             <ArrowLeft className="w-5 h-5" />
@@ -409,7 +409,7 @@ export default function FITIdStandalone({
                     ) : (
                         <button
                             onClick={() => { soundManager.playMove(); setIsSettingsMode(true); }}
-                            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-slate-600 flex items-center justify-center transition-all active:scale-90"
+                            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 flex items-center justify-center transition-all active:scale-90"
                             id="sc-settings-gear-btn"
                             title="Configurações do FIT ID"
                         >
@@ -432,7 +432,7 @@ export default function FITIdStandalone({
                                     </div>
                                 </div>
                                 {statusOnline && (
-                                    <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-md animate-pulse" />
+                                    <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500/100 border-2 border-white shadow-md animate-pulse" />
                                 )}
                             </div>
 
@@ -447,7 +447,7 @@ export default function FITIdStandalone({
                             </div>
 
                             {/* Clan Name or Email */}
-                            <span className="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-widest">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">
                                 🏆 {profile.clanName || 'SEM CLÃ'}
                             </span>
                         </div>
@@ -462,7 +462,7 @@ export default function FITIdStandalone({
                     {/* Right Button (Close Modal) */}
                     <button
                         onClick={onClose}
-                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-slate-600 flex items-center justify-center transition-all active:scale-90"
+                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 flex items-center justify-center transition-all active:scale-90"
                         id="sc-modal-close-btn"
                     >
                         <X className="w-5 h-5" />
@@ -476,12 +476,12 @@ export default function FITIdStandalone({
                     {!isSettingsMode ? (
                         <>
                             {/* Three Tab Controls */}
-                            <div className="grid grid-cols-3 gap-1.5 p-1 bg-white border border-white/20 rounded-2xl shadow-sm">
+                            <div className="grid grid-cols-3 gap-1.5 p-1 bg-white/5 border border-white/20 rounded-2xl shadow-sm">
                                 <button
                                     onClick={() => { soundManager.playMove(); setActiveTab('rewards'); }}
                                     className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all ${activeTab === 'rewards'
                                             ? 'bg-white/10 text-[var(--primary-dark)] font-black shadow-inner'
-                                            : 'text-slate-500 hover:text-white font-bold'
+                                            : 'text-slate-400 hover:text-white font-bold'
                                         }`}
                                 >
                                     <Award className="w-5 h-5" />
@@ -492,20 +492,20 @@ export default function FITIdStandalone({
                                     onClick={() => { soundManager.playMove(); setActiveTab('friends'); }}
                                     className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all relative ${activeTab === 'friends'
                                             ? 'bg-white/10 text-[var(--primary-dark)] font-black shadow-inner'
-                                            : 'text-slate-500 hover:text-white font-bold'
+                                            : 'text-slate-400 hover:text-white font-bold'
                                         }`}
                                 >
                                     <Users className="w-5 h-5" />
                                     <span className="text-[9px] uppercase tracking-wider">Amigos</span>
                                     {/* Micro indicator badge for online friends */}
-                                    <span className="absolute top-1 right-4 w-2 h-2 rounded-full bg-emerald-500 border border-white" />
+                                    <span className="absolute top-1 right-4 w-2 h-2 rounded-full bg-emerald-500/100 border border-white" />
                                 </button>
 
                                 <button
                                     onClick={() => { soundManager.playMove(); setActiveTab('games'); }}
                                     className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all ${activeTab === 'games'
                                             ? 'bg-white/10 text-[var(--primary-dark)] font-black shadow-inner'
-                                            : 'text-slate-500 hover:text-white font-bold'
+                                            : 'text-slate-400 hover:text-white font-bold'
                                         }`}
                                 >
                                     <Gamepad2 className="w-5 h-5" />
@@ -525,7 +525,7 @@ export default function FITIdStandalone({
                                         {/* Logo & ID Shield */}
                                         <div className="flex items-center justify-between relative z-10">
                                             <div className="flex items-center gap-1.5">
-                                                <div className="bg-white text-white font-black text-[9px] px-1.5 py-0.5 rounded tracking-tighter leading-none border border-[var(--primary-light)]">
+                                                <div className="bg-white/5 text-white font-black text-[9px] px-1.5 py-0.5 rounded tracking-tighter leading-none border border-[var(--primary-light)]">
                                                     SUPER<br />CELL
                                                 </div>
                                                 <span className="text-xs font-black tracking-widest text-[var(--primary-light)]">ID</span>
@@ -563,7 +563,7 @@ export default function FITIdStandalone({
                                                 window.alert("Promoção Especial: Complete missões no Retro Tetris para ganhar XP e resgatar bônus de moedas e gemas na estrada de Copas!");
                                             }
                                         }}
-                                        className="p-4 bg-white border border-white/20 rounded-2xl shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--primary-light)] transition-all active:scale-98 group"
+                                        className="p-4 bg-white/5 border border-white/20 rounded-2xl shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--primary-light)] transition-all active:scale-98 group"
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-white/5 text-[var(--primary-dark)] flex items-center justify-center text-xl shrink-0">
@@ -571,7 +571,7 @@ export default function FITIdStandalone({
                                             </div>
                                             <div className="text-left">
                                                 <h4 className="text-xs font-black text-white uppercase">Junte pontos e ganhe prêmios</h4>
-                                                <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
+                                                <p className="text-[10px] text-slate-400 leading-normal mt-0.5">
                                                     Complete conquistas de Tetris para desbloquear itens exclusivos.
                                                 </p>
                                             </div>
@@ -585,7 +585,7 @@ export default function FITIdStandalone({
                             {activeTab === 'friends' && (
                                 <div className="space-y-3">
                                     {/* Subtitle count */}
-                                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase px-1">
+                                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase px-1">
                                         <span>Lista de Amigos ({friendsList.length})</span>
                                         <span className="text-emerald-500">
                                             ● {friendsList.filter(f => f.online).length} online
@@ -598,7 +598,7 @@ export default function FITIdStandalone({
                                             <div
                                                 key={friend.name}
                                                 onClick={() => { soundManager.playMove(); setSelectedFriend(friend); }}
-                                                className="flex items-center justify-between p-3.5 bg-white hover:bg-slate-50 border border-white/20 rounded-2xl shadow-sm transition-all cursor-pointer group"
+                                                className="flex items-center justify-between p-3.5 bg-white/5 hover:bg-white/5 border border-white/20 rounded-2xl shadow-sm transition-all cursor-pointer group"
                                             >
                                                 <div className="flex items-center gap-3">
                                                     {/* Circular Avatar */}
@@ -607,7 +607,7 @@ export default function FITIdStandalone({
                                                             {friend.emoji}
                                                         </div>
                                                         {friend.online && (
-                                                            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+                                                            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500/100 border-2 border-white" />
                                                         )}
                                                     </div>
 
@@ -615,7 +615,7 @@ export default function FITIdStandalone({
                                                         <h4 className="text-xs font-black text-white tracking-wide uppercase group-hover:text-[var(--primary-dark)] transition-colors">
                                                             {friend.name}
                                                         </h4>
-                                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
                                                             🏆 {friend.clan} | LVL {friend.level}
                                                         </span>
                                                     </div>
@@ -652,14 +652,14 @@ export default function FITIdStandalone({
                             {/* TAB CONTENT: 3. MEUS JOGOS */}
                             {activeTab === 'games' && (
                                 <div className="space-y-3">
-                                    <span className="text-[11px] font-bold text-slate-500 uppercase px-1 block">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase px-1 block">
                                         Conexão de Jogos FIT
                                     </span>
 
                                     {/* List of Mock games */}
                                     <div className="space-y-2.5">
                                         {/* Retro Tetris */}
-                                        <div className="p-4 bg-white border-2 border-[var(--primary)]/40 rounded-2xl shadow-md flex items-center justify-between">
+                                        <div className="p-4 bg-white/5 border-2 border-[var(--primary)]/40 rounded-2xl shadow-md flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 h-12 bg-[var(--primary-dark)] rounded-xl flex items-center justify-center text-2xl text-white shadow">
                                                     👾
@@ -680,7 +680,7 @@ export default function FITIdStandalone({
                                         </div>
 
                                         {/* Clash Royale */}
-                                        <div className="p-4 bg-white border border-white/20 rounded-2xl shadow-sm flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
+                                        <div className="p-4 bg-white/5 border border-white/20 rounded-2xl shadow-sm flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 h-12 bg-rose-600 rounded-xl flex items-center justify-center text-2xl text-white shadow">
                                                     👑
@@ -693,7 +693,7 @@ export default function FITIdStandalone({
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-xs font-black text-slate-600 font-mono tracking-tight block leading-none">
+                                                <span className="text-xs font-black text-slate-300 font-mono tracking-tight block leading-none">
                                                     5.340
                                                 </span>
                                                 <span className="text-[8px] font-bold text-slate-400 uppercase">troféus</span>
@@ -701,7 +701,7 @@ export default function FITIdStandalone({
                                         </div>
 
                                         {/* Brawl Stars */}
-                                        <div className="p-4 bg-white border border-white/20 rounded-2xl shadow-sm flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
+                                        <div className="p-4 bg-white/5 border border-white/20 rounded-2xl shadow-sm flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-2xl text-white shadow">
                                                     ⭐
@@ -714,7 +714,7 @@ export default function FITIdStandalone({
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-xs font-black text-slate-600 font-mono tracking-tight block leading-none">
+                                                <span className="text-xs font-black text-slate-300 font-mono tracking-tight block leading-none">
                                                     24.150
                                                 </span>
                                                 <span className="text-[8px] font-bold text-slate-400 uppercase">troféus</span>
@@ -722,7 +722,7 @@ export default function FITIdStandalone({
                                         </div>
 
                                         {/* Clash of Clans */}
-                                        <div className="p-4 bg-white border border-white/20 rounded-2xl shadow-sm flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
+                                        <div className="p-4 bg-white/5 border border-white/20 rounded-2xl shadow-sm flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 h-12 bg-amber-700 rounded-xl flex items-center justify-center text-2xl text-white shadow">
                                                     🏰
@@ -735,7 +735,7 @@ export default function FITIdStandalone({
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-xs font-black text-slate-600 font-mono tracking-tight block leading-none">
+                                                <span className="text-xs font-black text-slate-300 font-mono tracking-tight block leading-none">
                                                     CV 14
                                                 </span>
                                                 <span className="text-[8px] font-bold text-slate-400 uppercase">centro</span>
@@ -749,18 +749,18 @@ export default function FITIdStandalone({
                         // ========== B. SETTINGS MODE (CONFIGURAÇÕES) ==========
                         <div className="space-y-4 text-left">
                             {/* Toggles Container */}
-                            <div className="bg-white border border-white/20 rounded-2xl shadow-sm p-4 space-y-4">
+                            <div className="bg-white/5 border border-white/20 rounded-2xl shadow-sm p-4 space-y-4">
                                 {/* Mostrar status on-line */}
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h4 className="text-xs font-black text-white uppercase">Mostrar status on-line</h4>
-                                        <p className="text-[9px] text-slate-500">Seus amigos podem ver quando você está ativo.</p>
+                                        <p className="text-[9px] text-slate-400">Seus amigos podem ver quando você está ativo.</p>
                                     </div>
                                     <button
                                         onClick={() => { soundManager.playMove(); setStatusOnline(!statusOnline); }}
-                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${statusOnline ? 'bg-emerald-500 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${statusOnline ? 'bg-emerald-500/100 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
                                     >
-                                        <span className="w-4.5 h-4.5 rounded-full bg-white shadow-md" />
+                                        <span className="w-4.5 h-4.5 rounded-full bg-white/5 shadow-md" />
                                     </button>
                                 </div>
 
@@ -768,23 +768,23 @@ export default function FITIdStandalone({
                                 <div className="flex items-center justify-between border-t border-white/10 pt-4">
                                     <div>
                                         <h4 className="text-xs font-black text-white uppercase">Receber pedidos de amizade</h4>
-                                        <p className="text-[9px] text-slate-500">Permitir que outros jogadores enviem solicitações.</p>
+                                        <p className="text-[9px] text-slate-400">Permitir que outros jogadores enviem solicitações.</p>
                                     </div>
                                     <button
                                         onClick={() => { soundManager.playMove(); setReceiveFriendRequests(!receiveFriendRequests); }}
-                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${receiveFriendRequests ? 'bg-emerald-500 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${receiveFriendRequests ? 'bg-emerald-500/100 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
                                     >
-                                        <span className="w-4.5 h-4.5 rounded-full bg-white shadow-md" />
+                                        <span className="w-4.5 h-4.5 rounded-full bg-white/5 shadow-md" />
                                     </button>
                                 </div>
                             </div>
 
                             {/* Account Box Container (Player ID, Email change, Account Switch, LogOut) */}
-                            <div className="bg-white border border-white/20 rounded-2xl shadow-sm p-4 space-y-4">
+                            <div className="bg-white/5 border border-white/20 rounded-2xl shadow-sm p-4 space-y-4">
                                 {/* ID de jogador */}
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-start gap-2.5">
-                                        <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
+                                        <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-slate-300 shrink-0 mt-0.5">
                                             <User className="w-4 h-4" />
                                         </div>
                                         <div>
@@ -803,7 +803,7 @@ export default function FITIdStandalone({
                                 {/* Email address */}
                                 <div className="flex items-center justify-between border-t border-white/10 pt-4">
                                     <div className="flex items-start gap-2.5">
-                                        <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
+                                        <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-slate-300 shrink-0 mt-0.5">
                                             <Mail className="w-4 h-4" />
                                         </div>
                                         <div className="min-w-0 max-w-[180px]">
@@ -822,7 +822,7 @@ export default function FITIdStandalone({
                                 {/* Alternar conta button */}
                                 <div
                                     onClick={() => { soundManager.playMove(); setEditingField('switch'); }}
-                                    className="flex items-center justify-between border-t border-white/10 pt-4 cursor-pointer hover:bg-slate-50 -mx-4 px-4 py-2 transition-all group"
+                                    className="flex items-center justify-between border-t border-white/10 pt-4 cursor-pointer hover:bg-white/5 -mx-4 px-4 py-2 transition-all group"
                                 >
                                     <div className="flex items-center gap-2.5">
                                         <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-[var(--primary-dark)] shrink-0">
@@ -830,7 +830,7 @@ export default function FITIdStandalone({
                                         </div>
                                         <div>
                                             <h4 className="text-xs font-black text-white uppercase">Alternar conta</h4>
-                                            <p className="text-[9px] text-slate-500">Mudar para outra conta salva do FIT ID.</p>
+                                            <p className="text-[9px] text-slate-400">Mudar para outra conta salva do FIT ID.</p>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-[var(--primary-dark)] transition-colors" />
@@ -852,13 +852,13 @@ export default function FITIdStandalone({
                             </div>
 
                             {/* Protection Banner */}
-                            <div className="p-4 bg-white border border-white/20 rounded-2xl shadow-sm flex items-start gap-3 relative">
+                            <div className="p-4 bg-white/5 border border-white/20 rounded-2xl shadow-sm flex items-start gap-3 relative">
                                 <div className="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-lg text-orange-500 shrink-0">
                                     🛡️
                                 </div>
                                 <div className="flex-1">
                                     <h4 className="text-xs font-black text-white uppercase">Proteção da conta</h4>
-                                    <p className="text-[9.5px] text-slate-500 leading-normal mt-0.5">
+                                    <p className="text-[9.5px] text-slate-400 leading-normal mt-0.5">
                                         Proteja sua conta FIT ID com uma medida extra de segurança por celular ou chaves de segurança.
                                     </p>
                                     <button
@@ -876,20 +876,20 @@ export default function FITIdStandalone({
                             </div>
 
                             {/* Email subscription details */}
-                            <div className="bg-white border border-white/20 rounded-2xl shadow-sm p-4 space-y-4">
+                            <div className="bg-white/5 border border-white/20 rounded-2xl shadow-sm p-4 space-y-4">
                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">ASSINATURAS DO EMAIL</span>
 
                                 {/* Receber notícias e atualizações */}
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h4 className="text-xs font-black text-white uppercase">Notícias e atualizações</h4>
-                                        <p className="text-[9px] text-slate-500">Receba boletins semanais das arenas FIT.</p>
+                                        <p className="text-[9px] text-slate-400">Receba boletins semanais das arenas FIT.</p>
                                     </div>
                                     <button
                                         onClick={() => { soundManager.playMove(); setReceiveNews(!receiveNews); }}
-                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${receiveNews ? 'bg-emerald-500 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${receiveNews ? 'bg-emerald-500/100 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
                                     >
-                                        <span className="w-4.5 h-4.5 rounded-full bg-white shadow-md" />
+                                        <span className="w-4.5 h-4.5 rounded-full bg-white/5 shadow-md" />
                                     </button>
                                 </div>
 
@@ -897,26 +897,26 @@ export default function FITIdStandalone({
                                 <div className="flex items-center justify-between border-t border-white/10 pt-4">
                                     <div>
                                         <h4 className="text-xs font-black text-white uppercase">Lançamentos em beta</h4>
-                                        <p className="text-[9px] text-slate-500">Convites para testar novos recursos em primeira mão.</p>
+                                        <p className="text-[9px] text-slate-400">Convites para testar novos recursos em primeira mão.</p>
                                     </div>
                                     <button
                                         onClick={() => { soundManager.playMove(); setBetaTester(!betaTester); }}
-                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${betaTester ? 'bg-emerald-500 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${betaTester ? 'bg-emerald-500/100 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
                                     >
-                                        <span className="w-4.5 h-4.5 rounded-full bg-white shadow-md" />
+                                        <span className="w-4.5 h-4.5 rounded-full bg-white/5 shadow-md" />
                                     </button>
                                 </div>
                             </div>
 
                             {/* Informações list links */}
-                            <div className="bg-white border border-white/20 rounded-2xl shadow-sm overflow-hidden divide-y divide-slate-100">
-                                <div className="p-3 bg-slate-50/50">
+                            <div className="bg-white/5 border border-white/20 rounded-2xl shadow-sm overflow-hidden divide-y divide-white/10">
+                                <div className="p-3 bg-white/5">
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">INFORMAÇÕES</span>
                                 </div>
 
                                 <div
                                     onClick={() => openFaq('O que é o FIT ID?', 'O FIT ID é uma ferramenta de login segura criada pela FIT para salvar e resgatar o progresso de todos os seus jogos mobile em qualquer dispositivo, protegendo de perdas e facilitando a transição de contas de forma instantânea.')}
-                                    className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-white"
+                                    className="p-3.5 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-all text-xs font-bold text-white"
                                 >
                                     <span>O que é o FIT ID?</span>
                                     <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -924,7 +924,7 @@ export default function FITIdStandalone({
 
                                 <div
                                     onClick={() => openFaq('FAQs de Ajuda', '1. Como mudo meu e-mail?\nBasta clicar no botão ALTERAR ao lado do seu e-mail nas configurações e seguir os passos de autenticação rápida.\n\n2. Como posso salvar minha conta?\nContanto que você tenha associado um e-mail válido, seus recordes de blocos e Copas do Retro Tetris serão salvos automaticamente na nuvem.')}
-                                    className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-white"
+                                    className="p-3.5 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-all text-xs font-bold text-white"
                                 >
                                     <span>FAQs</span>
                                     <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -932,7 +932,7 @@ export default function FITIdStandalone({
 
                                 <div
                                     onClick={() => openFaq('Vídeo de tutorial', 'Tutoriais de vídeo em breve! Nossa equipe está preparando guias interativos para você aproveitar todas as recompensas de clã e arena vinculadas à sua conta de empilhar blocos.')}
-                                    className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-white"
+                                    className="p-3.5 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-all text-xs font-bold text-white"
                                 >
                                     <span>Vídeo de tutorial</span>
                                     <ExternalLink className="w-4 h-4 text-slate-400" />
@@ -940,7 +940,7 @@ export default function FITIdStandalone({
 
                                 <div
                                     onClick={() => openFaq('Termos de Uso', 'Ao criar e conectar um FIT ID, você concorda com nossos termos de licença de usuário final, comprometendo-se com o jogo justo, respeito nas salas de chat de clã, e proteção dos seus dados pessoais.')}
-                                    className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-all text-xs font-bold text-white"
+                                    className="p-3.5 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-all text-xs font-bold text-white"
                                 >
                                     <span>Termos de Uso</span>
                                     <ExternalLink className="w-4 h-4 text-slate-400" />
@@ -957,14 +957,14 @@ export default function FITIdStandalone({
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 30 }}
-                            className="absolute inset-0 bg-white z-50 flex flex-col p-6"
+                            className="absolute inset-0 bg-white/5 z-50 flex flex-col p-6"
                             id="sc-subpanel-drawer"
                         >
                             {/* Drawer Header */}
                             <div className="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
                                 <button
                                     onClick={() => { soundManager.playMove(); setEditingField(null); }}
-                                    className="w-8 h-8 rounded-full bg-white/10 text-slate-500 flex items-center justify-center active:scale-90 transition-all"
+                                    className="w-8 h-8 rounded-full bg-white/10 text-slate-400 flex items-center justify-center active:scale-90 transition-all"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
                                 </button>
@@ -998,7 +998,7 @@ export default function FITIdStandalone({
                                             className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                                         />
 
-                                        <p className="text-[9.5px] text-slate-500 leading-normal">
+                                        <p className="text-[9.5px] text-slate-400 leading-normal">
                                             {editingField === 'username' && 'Seu novo apelido será atualizado imediatamente nos recordes locais, no chat do clã e na estrada competitiva.'}
                                             {editingField === 'email' && 'Enviaremos um código de autenticação rápida de 6 dígitos para o novo e-mail para validar a alteração.'}
                                             {editingField === 'addFriend' && 'O jogador receberá um convite para o clã e aparecerá online na sua lista de amigos.'}
@@ -1016,7 +1016,7 @@ export default function FITIdStandalone({
 
                                 {/* 2. FAQ DISPLAY CONTAINER */}
                                 {editingField === 'faq' && (
-                                    <div className="space-y-4 text-slate-600 text-xs font-semibold leading-relaxed whitespace-pre-line">
+                                    <div className="space-y-4 text-slate-300 text-xs font-semibold leading-relaxed whitespace-pre-line">
                                         {faqText}
                                     </div>
                                 )}
@@ -1036,7 +1036,7 @@ export default function FITIdStandalone({
                                                         onClick={() => !isCurrent && handleSwitchAccount(preset)}
                                                         className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${isCurrent
                                                                 ? 'bg-white/5 border-[var(--primary-light)] pointer-events-none'
-                                                                : 'bg-slate-50 hover:bg-white/10 border-white/20 cursor-pointer active:scale-98'
+                                                                : 'bg-white/5 hover:bg-white/10 border-white/20 cursor-pointer active:scale-98'
                                                             }`}
                                                     >
                                                         <div className="flex items-center gap-3">
@@ -1047,7 +1047,7 @@ export default function FITIdStandalone({
                                                                 <h4 className="text-xs font-black text-white uppercase">
                                                                     {preset.username}
                                                                 </h4>
-                                                                <span className="text-[9px] text-slate-500 font-bold block mt-0.5">
+                                                                <span className="text-[9px] text-slate-400 font-bold block mt-0.5">
                                                                     {preset.email}
                                                                 </span>
                                                             </div>
@@ -1055,7 +1055,7 @@ export default function FITIdStandalone({
 
                                                         <div className="text-right">
                                                             {isCurrent ? (
-                                                                <span className="flex items-center gap-0.5 text-[9px] font-black text-[var(--primary-dark)] uppercase bg-white border border-white/20 px-2.5 py-0.8 rounded-full">
+                                                                <span className="flex items-center gap-0.5 text-[9px] font-black text-[var(--primary-dark)] uppercase bg-white/5 border border-white/20 px-2.5 py-0.8 rounded-full">
                                                                     <Check className="w-3 h-3 text-[var(--primary-dark)] inline" /> ATIVA
                                                                 </span>
                                                             ) : (
@@ -1087,7 +1087,7 @@ export default function FITIdStandalone({
                             initial={{ opacity: 0, y: 40 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 40 }}
-                            className="absolute inset-x-0 bottom-0 bg-white rounded-t-[2.5rem] p-5 shadow-[0_-15px_40px_rgba(0,0,0,0.25)] border-t border-white/20 z-[60] text-center"
+                            className="absolute inset-x-0 bottom-0 bg-white/5 rounded-t-[2.5rem] p-5 shadow-[0_-15px_40px_rgba(0,0,0,0.25)] border-t border-white/20 z-[60] text-center"
                             id="friend-action-drawer"
                         >
                             {/* Close mini line */}
@@ -1100,10 +1100,10 @@ export default function FITIdStandalone({
                                 <h3 className="text-sm font-black text-white uppercase tracking-wide leading-none mt-1">
                                     {selectedFriend.name}
                                 </h3>
-                                <span className="text-[9.5px] text-slate-500 font-bold uppercase tracking-widest">
+                                <span className="text-[9.5px] text-slate-400 font-bold uppercase tracking-widest">
                                     🏆 {selectedFriend.clan} | Nível {selectedFriend.level} | {selectedFriend.trophies} Copas
                                 </span>
-                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${selectedFriend.online ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-400 border border-white/10'}`}>
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${selectedFriend.online ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30' : 'bg-white/5 text-slate-400 border border-white/10'}`}>
                                     {selectedFriend.online ? '● ONLINE AGORA' : '○ OFFLINE'}
                                 </span>
                             </div>
@@ -1133,7 +1133,7 @@ export default function FITIdStandalone({
 
                             <button
                                 onClick={() => setSelectedFriend(null)}
-                                className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-slate-600 font-bold text-xs uppercase rounded-xl transition-all active:scale-95 mt-1 cursor-pointer"
+                                className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-slate-300 font-bold text-xs uppercase rounded-xl transition-all active:scale-95 mt-1 cursor-pointer"
                             >
                                 Voltar
                             </button>
