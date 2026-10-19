@@ -22,6 +22,18 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.38.11] - 2026-10-18
+
+**V2 (DetalhesPeca) — centralização vertical, ícones brancos, botão Editar cinza, carga sugerida e swipe bloqueado** (a pedido do usuário). (1) A interface da V2 passou a ser centralizada verticalmente (`justify-center` no root `min-h-screen`), mantendo o scroll vertical quando o conteúdo excede a tela. (2) Os ícones das estatísticas Séries, Repetições (renomeado de "Reps"), Carga e Grupo passaram a ser brancos (`#fff` / `text-white`). (3) O botão "Editar Exercício" ganhou a classe `v2-edit-gray`, com fundo/cor/borda cinza e hover cinza-claro, substituindo o destaque roxo do `.cr-btn-upgrade`. (4) O campo Carga agora exibe a carga salva formatada (`formatCarga`) ou, quando vazia, a carga sugerida/padrão (`getSuggestedLoad`) — antes mostrava apenas "--". (5) O wrapper da V2 recebeu a classe `.modal-overlay` (com `display:block`, `padding:0`), fazendo o handler de swipe do `App.tsx` ignorar os toques dentro da interface — igual à V1 — e desabilitando a troca horizontal de abas. (6) A prévia da aba 0 ficou responsiva (`width:100%; max-width:312px`) para não estourar em telas estreitas.
+
+### Changed
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — centralização vertical; rótulo "Repetições"; ícones brancos; `cargaLabel` com `formatCarga`/`getSuggestedLoad`; largura responsiva da prévia.
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — wrapper da V2 com `className="modal-overlay"` + `display:block`/`padding:0` para bloquear o swipe.
+- **`src-app/src/styles/shell.css`** — classe `.v2-edit-gray` (botão Editar cinza).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.38.10] - 2026-10-18
 
 **V2 (DetalhesPeca) — fundo preto do V1, desfoque leve, textos removidos, troféu de maestria, pílulas cinzas, ícone de carga do Início e transições suaves** (a pedido do usuário). (1) O card da V2 passou de gradiente roxo para `#0b0b10` (mesmo tom do `.cr-card-details` de V1); a prévia flutuante e a área da aba 0 também foram para tons de cinza/preto. (2) O backdrop da V2 agora é `rgba(0,0,0,0.85)` com `backdrop-filter: blur(8px)` (igual ao `.modal-overlay` de V1), aplicado no wrapper portal em `TreinosFeature`. (3) Removidos os textos "Prévia do Exercício" (cabeçalho da aba 0) e "Prévia do exercício." (parágrafo) — permanece apenas o nome do exercício. (4) O ícone de maestria passou a ser sempre o troféu SVG da V1 (`var(--primary-light)`), sem o escudo com imagem. (5) As pílulas Músculo/Tipo trocaram o gradiente roxo por cinza (`#2a2a33` no cabeçalho e `#0e0e14` no corpo). (6) O ícone da estatística "Carga" agora é o `VolumeKgIcon` (prato de peso) usado no rodapé da prévia do Início. (7) A troca de sub-abas passou de `AnimatePresence mode="wait"` + spring para `mode="popLayout"` + tween de 0,28s com easing, tornando a transição contínua e suave.

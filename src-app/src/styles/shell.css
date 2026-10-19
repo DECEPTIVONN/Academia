@@ -1443,6 +1443,22 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(var(--primary-rgb, 139, 92, 246), 0.35) !important;
 }
 
+/* V2 (DetalhesPeca): botão Editar em cinza (a pedido do usuário) */
+.v2-edit-gray {
+  background: #1f1f28 !important;
+  color: #cbd5e1 !important;
+  border: 2px solid rgba(255, 255, 255, 0.18) !important;
+}
+.v2-edit-gray:hover {
+  background: #2a2a33 !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: none !important;
+}
+.v2-edit-gray::before {
+  display: none;
+}
+
 /* ============================================================
    v4.8.4.1-treinos-polish — aba Exercícios na paleta das Configurações
    ============================================================

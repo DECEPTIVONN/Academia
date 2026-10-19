@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import '@/features/auth/auth-screen.css';
 import type { Exercise } from '@/core/db/schema';
 import type { LegacyRaw } from '@/core/db/queries';
+import { formatCarga } from '@/core/db/queries';
+import { getSuggestedLoad } from '@/lib/suggested-load';
 import { VolumeKgIcon } from '@/components/VolumeKgIcon';
 import {
     X,
@@ -882,6 +884,11 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
     const details = DETAILS_DATA[ex.id] || DETAILS_DATA['I'];
     const pieceColor = TETRA_PIECES[ex.id]?.color || '#06b6d4';
     const currentLvl = ex.level;
+    /* Carga: valor salvo formatado → carga sugerida (padrão) → "--". */
+    const cargaLabel =
+      (exerciseProp ? formatCarga(exerciseProp) : '') ||
+      (exerciseProp ? getSuggestedLoad(exerciseProp) : null) ||
+      '--';
 
     // Toast trigger
     const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -1068,7 +1075,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
     };
 
     return (
-        <div className="min-h-screen bg-transparent flex flex-col items-center justify-start p-4 text-white relative font-sans select-none overflow-x-hidden">
+        <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 text-white relative font-sans select-none overflow-x-hidden">
 
             {/* (Test bar removida — exibição direta da interface de detalhes) */}
 
@@ -1205,7 +1212,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                                         {/* Prévia do exercício (mesmo espaço da peça) */}
                                                         <div
                                                             className="rounded-2xl bg-[#04020a] border border-indigo-950/60 shadow-inner flex items-center justify-center shrink-0 overflow-hidden"
-                                                            style={{ width: '312px', height: '216px' }}
+                                                            style={{ width: '100%', maxWidth: '312px', height: '216px' }}
                                                         >
                                                             <img
                                                                 src={exerciseProp?.imageUrl || '/assets/exerciciosgif/Supino%20Reto.gif'}
@@ -1225,7 +1232,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                             <div className="cr-stats-grid">
                                                 <div className="cr-stat-item">
                                                     <div className="cr-stat-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28 }}>
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: 'var(--primary-light)' }}>
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: '#fff' }}>
                                                             <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11" />
                                                             <circle cx="4" cy="12" r="1.5" />
                                                             <circle cx="20" cy="12" r="1.5" />
@@ -1238,7 +1245,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                                 </div>
                                                 <div className="cr-stat-item">
                                                     <div className="cr-stat-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28 }}>
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: 'var(--primary-light)' }}>
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: '#fff' }}>
                                                             <path d="m17 2 4 4-4 4" />
                                                             <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
                                                             <path d="m7 22-4-4 4-4" />
@@ -1246,22 +1253,22 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                                         </svg>
                                                     </div>
                                                     <div className="cr-stat-info">
-                                                        <span className="cr-stat-label">Reps</span>
+                                                        <span className="cr-stat-label">Repetições</span>
                                                         <span className="cr-stat-val">{exerciseProp?.reps ?? '--'}</span>
                                                     </div>
                                                 </div>
                                                 <div className="cr-stat-item">
                                                     <div className="cr-stat-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28 }}>
-                                                        <VolumeKgIcon size={18} className="text-[var(--primary-light)]" />
+                                                        <VolumeKgIcon size={18} className="text-white" />
                                                     </div>
                                                     <div className="cr-stat-info">
                                                         <span className="cr-stat-label">Carga</span>
-                                                        <span className="cr-stat-val">{exerciseProp?.load || '--'} kg</span>
+                                                        <span className="cr-stat-val">{cargaLabel}</span>
                                                     </div>
                                                 </div>
                                                 <div className="cr-stat-item">
                                                     <div className="cr-stat-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28 }}>
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: 'var(--primary-light)' }}>
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: '#fff' }}>
                                                             <circle cx="12" cy="12" r="10" />
                                                             <circle cx="12" cy="12" r="6" />
                                                             <circle cx="12" cy="12" r="2" />
@@ -1334,7 +1341,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                             {/* Editar Exercício — mesmo estilo do botão de V1 */}
                             <button
                                 type="button"
-                                className="btn btn-secondary cr-btn-upgrade flex-1"
+                                className="btn btn-secondary cr-btn-upgrade v2-edit-gray flex-1"
                                 style={{ fontWeight: 700 }}
                                 onClick={() => {
                                     soundManager.playHold();

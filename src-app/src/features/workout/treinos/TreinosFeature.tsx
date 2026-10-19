@@ -564,10 +564,13 @@ export const TreinosFeature: React.FC = () => {
           {/* V2 — interface de DetalhesPecaStandalone.tsx (sem adaptações) */}
           {createPortal(
             <div
+              className="modal-overlay"
               style={{
                 position: 'fixed',
                 inset: 0,
                 zIndex: 1001,
+                display: 'block',
+                padding: 0,
                 background: 'rgba(0,0,0,0.85)',
                 backdropFilter: 'blur(8px)',
                 WebkitBackdropFilter: 'blur(8px)',
