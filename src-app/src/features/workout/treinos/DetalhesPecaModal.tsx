@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import '@/features/auth/auth-screen.css';
 import type { Exercise } from '@/core/db/schema';
@@ -879,6 +879,9 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
     const [touchStartX, setTouchStartX] = useState<number>(0);
     const [viewportMode, setViewportMode] = useState<'desktop' | 'mobile'>('desktop');
 
+    // Card ref: usado para fechar ao tocar/clicar fora da interface (como V1).
+    const cardRef = useRef<HTMLDivElement>(null);
+
     // Active piece data
     const ex = exercises.find(e => e.id === selectedPieceId) || exercises[0];
     const details = DETAILS_DATA[ex.id] || DETAILS_DATA['I'];
@@ -1074,8 +1077,13 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
         );
     };
 
+    /* Fechar ao tocar/clicar fora do card (mesmo comportamento de V1). */
+    const handleBackdropClick = (e: React.MouseEvent) => {
+        if (cardRef.current && !cardRef.current.contains(e.target as Node)) onClose();
+    };
+
     return (
-        <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 text-white relative font-sans select-none overflow-x-hidden">
+        <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 text-white relative font-sans select-none overflow-x-hidden" onClick={handleBackdropClick}>
 
             {/* (Test bar removida — exibição direta da interface de detalhes) */}
 
@@ -1087,6 +1095,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
 
                     {/* Box container */}
                     <motion.div
+                        ref={cardRef}
                         initial={{ scale: 0.95, y: 15 }}
                         animate={{ scale: 1, y: 0 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 220 }}

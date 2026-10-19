@@ -22,6 +22,18 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.38.12] - 2026-10-18
+
+**V2 (DetalhesPeca) passa a ser a interface definitiva de detalhes; V1 removida; fechar ao tocar fora** (a pedido do usuário). (1) Qualquer toque/clique fora do card fecha a V2: o root do modal ganhou `onClick` que verifica se o alvo está fora do card (`cardRef`) e chama `onClose` — mesmo efeito do `.modal-overlay` da V1. (2) A V1 (`CRDetailsModal`) foi removida: não é mais renderizada pelo `TreinosFeature`, o botão de alternar V1/V2 (e o estado `crDetailsVersion`) foi excluído, e o componente `CRDetailsModal` + a constante `CR_STATS` foram apagados de `TreinosModals.tsx` (imports órfãos `useRef`, `MaestriaState`, `getExerciseDescription` também removidos). A V2 passa a ser a única interface de detalhes.
+
+### Changed
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — `cardRef` + `handleBackdropClick` no root (fechar ao tocar fora).
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — remove V1, botão de alternância e estado `crDetailsVersion`; renderiza apenas a V2.
+- **`src-app/src/features/workout/treinos/TreinosModals.tsx`** — remove `CRDetailsModal` e `CR_STATS`; imports órfãos limpos.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.38.11] - 2026-10-18
 
 **V2 (DetalhesPeca) — centralização vertical, ícones brancos, botão Editar cinza, carga sugerida e swipe bloqueado** (a pedido do usuário). (1) A interface da V2 passou a ser centralizada verticalmente (`justify-center` no root `min-h-screen`), mantendo o scroll vertical quando o conteúdo excede a tela. (2) Os ícones das estatísticas Séries, Repetições (renomeado de "Reps"), Carga e Grupo passaram a ser brancos (`#fff` / `text-white`). (3) O botão "Editar Exercício" ganhou a classe `v2-edit-gray`, com fundo/cor/borda cinza e hover cinza-claro, substituindo o destaque roxo do `.cr-btn-upgrade`. (4) O campo Carga agora exibe a carga salva formatada (`formatCarga`) ou, quando vazia, a carga sugerida/padrão (`getSuggestedLoad`) — antes mostrava apenas "--". (5) O wrapper da V2 recebeu a classe `.modal-overlay` (com `display:block`, `padding:0`), fazendo o handler de swipe do `App.tsx` ignorar os toques dentro da interface — igual à V1 — e desabilitando a troca horizontal de abas. (6) A prévia da aba 0 ficou responsiva (`width:100%; max-width:312px`) para não estourar em telas estreitas.

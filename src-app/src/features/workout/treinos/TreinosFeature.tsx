@@ -24,7 +24,7 @@ import { MontarTab } from './MontarTab';
 import { ExercicioFormModal } from './ExercicioFormModal';
 import DetalhesPecaModal from './DetalhesPecaModal';
 import { getExerciseDescription } from './exercise-descriptions';
-import { AerobicoModal, ConfirmModal, CRDetailsModal, ImageModal, MaestriaGeralModal } from './TreinosModals';
+import { AerobicoModal, ConfirmModal, ImageModal, MaestriaGeralModal } from './TreinosModals';
 
 /* ── Ícones (treinos.html L7–40) ── */
 
@@ -213,7 +213,6 @@ export const TreinosFeature: React.FC = () => {
   const [confirmEx, setConfirmEx] = useState<Exercise | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crEx, setCrEx] = useState<Exercise | null>(null);
-  const [crDetailsVersion, setCrDetailsVersion] = useState<'v1' | 'v2'>('v1');
   const [mgOpen, setMgOpen] = useState(false);
   const [aeOpen, setAeOpen] = useState(false);
 
@@ -548,70 +547,34 @@ export const TreinosFeature: React.FC = () => {
         onNo={() => setConfirmEx(null)}
       />
       <ImageModal open={imageSrc !== null} src={imageSrc ?? ''} onClose={() => setImageSrc(null)} />
-      {crEx !== null && (
-        <>
-          {/* V1 — interface atual de detalhes (portaled internally) */}
-          <CRDetailsModal
-            key="cr-details"
-            open={crEx !== null && crDetailsVersion === 'v1'}
-            ex={crEx}
-            legacy={data.legacy}
-            onClose={() => setCrEx(null)}
-            onEdit={openEdit}
-            onMaestria={(id) => useMaestriaUi.getState().openMaestriaEx(id)}
-          />
-
-          {/* V2 — interface de DetalhesPecaStandalone.tsx (sem adaptações) */}
-          {createPortal(
-            <div
-              className="modal-overlay"
-              style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 1001,
-                display: 'block',
-                padding: 0,
-                background: 'rgba(0,0,0,0.85)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-                opacity: crDetailsVersion === 'v2' ? 1 : 0,
-                visibility: crDetailsVersion === 'v2' ? 'visible' : 'hidden',
-                pointerEvents: crDetailsVersion === 'v2' ? 'auto' : 'none',
-                transition: 'opacity 0.2s ease, visibility 0.2s ease',
-                overflow: 'auto',
-              }}
-            >
-              <DetalhesPecaModal isOpen={true} onClose={() => setCrEx(null)} exercise={crEx} legacy={data.legacy} description={crEx ? (crEx.notes || getExerciseDescription(crEx.name) || `Um exercício focado em fortalecer o ${crEx.muscleGroup}. Mantenha a postura correta para melhores resultados!`) : ''} onMaestria={(id) => useMaestriaUi.getState().openMaestriaEx(id)} onEdit={openEdit} />
-            </div>,
-            document.body
-          )}
-
-          {/* Botão simples (fora do modal) para alternar V1/V2 em tempo real */}
-          {createPortal(
-            <button
-              type="button"
-              onClick={() => setCrDetailsVersion((v) => (v === 'v1' ? 'v2' : 'v1'))}
-              style={{
-                position: 'fixed',
-                top: 12,
-                right: 12,
-                zIndex: 10001,
-                padding: '6px 12px',
-                borderRadius: 8,
-                border: '1px solid rgba(139,92,246,0.4)',
-                background: 'rgba(10,5,20,0.9)',
-                color: '#fff',
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {crDetailsVersion === 'v1' ? 'Ver V2' : 'Ver V1'}
-            </button>,
-            document.body
-          )}
-        </>
-      )}
+      {crEx !== null &&
+        createPortal(
+          <div
+            className="modal-overlay"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 1000,
+              display: 'block',
+              padding: 0,
+              background: 'rgba(0,0,0,0.85)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              overflow: 'auto',
+            }}
+          >
+            <DetalhesPecaModal
+              isOpen={true}
+              onClose={() => setCrEx(null)}
+              exercise={crEx}
+              legacy={data.legacy}
+              description={crEx ? (crEx.notes || getExerciseDescription(crEx.name) || `Um exercício focado em fortalecer o ${crEx.muscleGroup}. Mantenha a postura correta para melhores resultados!`) : ''}
+              onMaestria={(id) => useMaestriaUi.getState().openMaestriaEx(id)}
+              onEdit={openEdit}
+            />
+          </div>,
+          document.body
+        )}
       <MaestriaGeralModal
         open={mgOpen}
         exercises={data.exercises}
