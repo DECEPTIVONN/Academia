@@ -22,6 +22,16 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.38.2] - 2026-10-18
+
+**Detalhes do exercício — V1/V2 alternância em tempo real** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). A V2 não aparecia e a alternância não era em tempo real porque a V1 era desmontada/remontada (key change) e a V2 não era mantida montada. Corrigido: ambas V1 e V2 ficam **montadas** enquanto o modal está aberto, e a visibilidade é alternada via opacity/visibility (transição 0.2s) — clique no botão "Ver V1/V2" alterna instantaneamente, sem desmontar. V1 controla visibilidade pelo próprio `open` (baseado em versão); V2 via wrapper portaled.
+
+### Changed
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — renderiza V1 e V2 simultaneamente (ambas montadas), visibilidade alternada por versão; botão de alternância portaled (já existia).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.38.1] - 2026-10-18
 
 **Detalhes do exercício — V1/V2 com alternância** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). A interface atual de detalhes foi mantida como **V1** (`CRDetailsModal`), e a interface exata de `DetalhesPecaStandalone.tsx` foi adicionada como **V2** (portada para `src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`, sem as adaptações/resalvas anteriores — design original do standalone, com portal para `document.body`). Ao clicar em detalhes, um botão simples fixo (canto superior direito) permite alternar entre V1 e V2. O estado `crDetailsVersion` ('v1'/'v2', default 'v1') controla qual é exibido.
