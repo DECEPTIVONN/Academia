@@ -22,6 +22,80 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.38.10] - 2026-10-18
+
+**V2 (DetalhesPeca) — fundo preto do V1, desfoque leve, textos removidos, troféu de maestria, pílulas cinzas, ícone de carga do Início e transições suaves** (a pedido do usuário). (1) O card da V2 passou de gradiente roxo para `#0b0b10` (mesmo tom do `.cr-card-details` de V1); a prévia flutuante e a área da aba 0 também foram para tons de cinza/preto. (2) O backdrop da V2 agora é `rgba(0,0,0,0.85)` com `backdrop-filter: blur(8px)` (igual ao `.modal-overlay` de V1), aplicado no wrapper portal em `TreinosFeature`. (3) Removidos os textos "Prévia do Exercício" (cabeçalho da aba 0) e "Prévia do exercício." (parágrafo) — permanece apenas o nome do exercício. (4) O ícone de maestria passou a ser sempre o troféu SVG da V1 (`var(--primary-light)`), sem o escudo com imagem. (5) As pílulas Músculo/Tipo trocaram o gradiente roxo por cinza (`#2a2a33` no cabeçalho e `#0e0e14` no corpo). (6) O ícone da estatística "Carga" agora é o `VolumeKgIcon` (prato de peso) usado no rodapé da prévia do Início. (7) A troca de sub-abas passou de `AnimatePresence mode="wait"` + spring para `mode="popLayout"` + tween de 0,28s com easing, tornando a transição contínua e suave.
+
+### Changed
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — fundo `#0b0b10`; textos removidos; troféu de maestria; pílulas cinzas; `VolumeKgIcon` na Carga; transição das abas com `popLayout`/tween.
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — wrapper da V2 com backdrop `rgba(0,0,0,0.85)` + `blur(8px)`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.38.9] - 2026-10-18
+
+**V2 (DetalhesPeca) — botão Editar igual ao V1, outline na cor do usuário, rótulo Músculo e ícone de maestria do V1** (a pedido do usuário). (1) O botão "Editar Exercício" da V2 passou a usar o mesmo markup/classes do V1: `btn btn-secondary cr-btn-upgrade` + ícone de lápis SVG + texto "EDITAR EXERCÍCIO". (2) O outline do card, da prévia flutuante, das pílulas Músculo/Tipo, do botão de visual, dos dots ativos e da overlay de skins passou a usar `var(--primary)` / `rgba(var(--primary-rgb), …)` — ou seja, a cor escolhida pelo usuário — em vez do roxo fixo `#a855f7`. (3) O rótulo "RARIDADE" foi renomeado para "MÚSCULO". (4) O ícone de maestria da V2 passou a ser o mesmo do V1: `cr-maestria-shortcut` com `cr-mastery-mini-shield` (imagem do exercício + tier bronze/prata/ouro) quando há maestria, ou o troféu SVG com `var(--primary-light)` quando não há.
+
+### Changed
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — botão Editar com classes de V1; outline em `var(--primary)`; "RARIDADE" → "MÚSCULO"; ícone de maestria com `cr-maestria-shortcut`/`cr-mastery-mini-shield` + tier real.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.38.8] - 2026-10-18
+
+**V2 (DetalhesPeca) — paridade visual das abas 2/3 com V1 e ações reais** (a pedido do usuário). (1) As sub-abas 2 (Estatísticas) e 3 (Descrição) da V2 passaram a usar exatamente o mesmo markup/classes de V1 (`cr-stats-grid`, `cr-stat-item`, `cr-stat-icon`, `cr-stat-info`, `cr-stat-label`, `cr-stat-val`, `cr-description-box`), com os 4 ícones SVG correspondentes (Séries, Reps, Carga, Grupo). (2) O botão "Editar Exercício" agora fecha a V2 e abre o formulário de edição real do exercício (`onEdit`); antes exibia apenas um toast. (3) O ícone de Maestria agora fecha a V2 e abre a maestria individual real do exercício selecionado (`onMaestria`); antes abria o modal mock do standalone. (4) Prévia do topo, nome, Raridade (músculo) e Tipo passaram a usar os dados reais de `exerciseProp` (com fallback para o exemplo).
+
+### Changed
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — abas 1/2 com markup de V1; props `onEdit`; ações de editar/maestria reais e fechamento da V2; prévia/nome/raridade/tipo reais.
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — passa `onEdit={openEdit}` ao `DetalhesPecaModal`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.38.7] - 2026-10-18
+
+**V2 (DetalhesPeca) — correções de abas e maestria real** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Renomeado "Prévia do exercício selecionado" → "Prévia do exercício" (aba 0). (2) Segunda aba agora exibe os dados da segunda aba de V1 (Séries, Reps, Carga, Grupo). (3) Terceira aba agora exibe a descrição do exercício (passada via prop `description`). (4) O ícone de maestria passou a refletir a maestria real do exercício (via `getMaestriaState` com `legacy` prop).
+
+### Changed
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — aba 1: stats de V1; aba 2: descrição de V1; renomeação; maestria real via `legacy` prop.
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — passa `exercise`, `legacy`, `description` ao `DetalhesPecaModal`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.38.6] - 2026-10-18
+
+**V2 (DetalhesPeca) — adaptação das abas e maestria real** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Renomeado "Prévia do exercício selecionado" → "Prévia do exercício". (2) Segunda aba agora exibe os dados da segunda aba de V1 (Séries, Reps, Carga, Grupo). (3) Terceira aba agora exibe a descrição do exercício (passada via prop `description`). (4) O ícone de maestria passou a refletir a maestria real do exercício (via `getMaestriaState` com `legacy`).
+
+### Changed
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — aba 1: stats de V1; aba 2: descrição de V1; renomeação; maestria real via `legacy` prop; props `exercise`/`legacy`/`description`.
+- **`src-app/src/features/workout/treinos/TreinosFeature.tsx`** — passa `exercise`, `legacy`, `description` ao `DetalhesPecaModal`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.38.5] - 2026-10-18
+
+**V2 (DetalhesPeca) — imagem da peça → imagem do exercício + remoção do botão de fechar** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) A imagem flutuante da peça (tetromino) no topo do card foi substituída por uma imagem de exercício (exemplo: Supino Reto), no mesmo espaço (w-28 h-28). (2) O botão de fechar (✕) do card foi removido (fechamento via backdrop/overlay). (3) A raridade exibida passou a "Peito" (exemplo de músculo), conforme a ressalva "Raridade = músculo". (4) O botão "Melodia de Nível" já foi substituído por "Editar Exercício" na rodada anterior.
+
+### Changed
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — topo: tetromino → imagem de exercício; botão de fechar removido; raridade → "Peito".
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
+## [v4.38.4] - 2026-10-18
+
+**V2 (DetalhesPeca) — imagem da peça → imagem do exercício** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). Na aba 0 (prévia) da V2, a grade de Tetris (peça) foi substituída por uma imagem de exercício (exemplo: Supino Reto) no mesmo espaço (312×216px), com o título "Prévia do Exercício". A "Melodia de Nível" (botão de upgrade com moedas) foi substituída por um botão "Editar Exercício" (roxo, sem custo de moedas). Raridade=músculo e tipo=tipo já são exibidos no header (Músculo/Tipo). (Nota: o ícone de medalha → maestria e o glow/outline já estavam aplicados.)
+
+### Changed
+- **`src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`** — aba 0: grade Tetris → imagem de exercício (exemplo); botão "Melodia de Nível" → "Editar Exercício".
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.38.3] - 2026-10-18
 
 **Detalhes V2 — correção de exibição e alternância em tempo real** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). A V2 não aparecia porque o modal V1 (z-index 1000) ficava sobreposto à V2 (z-index padrão), mesmo com opacity 0. Corrigido: wrapper da V2 com `position: fixed; inset: 0; z-index: 1001; overflow: auto`, garantindo que a V2 fique acima do V1 quando visível e não bloqueie interações quando oculta (pointer-events none). A alternância V1/V2 agora é em tempo real via opacity/visibility.
@@ -2595,207 +2669,4 @@ Ajustes de UX/animação pedidos em revisão da v4.8.3-navbars: Progresso sai da
 
 ---
 
-## [v2.4.2] - 2026-05-19
-*Correção e Aperfeiçoamento do Background Geral Premium em Cinza*
-
-### [Fixed]
-- **`style/treino/5-premium-design.css`:** Corrigida a persistência visual do fundo roxo. Foi aplicada a dessaturação total (`filter: saturate(0) brightness(0.6) contrast(1.1)`) diretamente na camada principal `.cr-bg-layer` do background do Clash Royale (a imagem de fundo `BG-roxo-vertical.jpg`/`BG-roxo-horizontal.jpg`).
-- **`style/treino/5-premium-design.css`:** Alterado o gradiente do `.cr-bg-overlay` de tons roxos (`rgba(10,5,20,...)`) para um gradiente de cinza grafite neutro (`rgba(20,20,22,...)`), assegurando um contraste harmônico e confortável para as páginas do app.
-- **`style/treino/5-premium-design.css`:** Ajustada a iluminação das partículas de Elixir (`.cr-particle`) e da trilha `.cr-p5` de roxo/azul brilhante para prata/branco reluzente, consolidando a identidade de metal e cinza chumbo premium.
-- **`sw.js`:** Incrementada a versão do Service Worker (`CACHE_NAME`) para `'academia-treino-v19'` para limpar o cache local e forçar a exibição do novo design do fundo em cinza grafite.
-
----
-
-## [v2.4.1] - 2026-05-19
-*Atualização estética do background geral para a variação em cinza (Premium Update)*
-
-### [Changed]
-- **`style/main.css`:** Atualizadas as variáveis globais `--background` (de `#000000` para `#121212`) e `--background-alt` (de `#0a0a0a` para `#1f1f1f`), além do fallback de `background-color` do `body` para `#121212` para implementar o novo design com fundo em cinza grafite premium e remover o contraste excessivo do preto puro.
-- **`componentes/thememanager.js`:** Atualizadas as definições de cores de fundo de todos os temas escuros com cores de destaque (`dark`, `blue`, `green`, `red`, `orange`, `pink`, `cyan`) para utilizar a variação em cinza (`background: '#121212'` e `backgroundAlt: '#1f1f1f'`). Atualizados os valores iniciais da injeção de estilos globais `:root` em `injectGlobalStyles()`.
-- **`sw.js`:** Incrementada a versão do Service Worker (`CACHE_NAME`) para `'academia-treino-v18'` para limpar o cache dos navegadores dos clientes e garantir a aplicação imediata do novo design do background em cinza.
-
----
-
-## [v2.4.0] - 2026-05-19
-*Expansão Premium do Sistema de Customização de Perfil (Fase 2)*
-
-### [Added]
-- **Feature 1: Banners Animados (Premium Tier):** Adicionados 5 novos banners com CSS avançado (`conic-gradient`, `@property`, `mix-blend-mode`, `filter: blur`) na `secao-customizacao.js` e `8-customizacao.css`. Banners: Plasma Elétrico, Aurora Viva, Vulcão, Matrix e Nebulosa.
-- **Feature 5: Emblemas Animados (Premium Tier):** Implementadas 3 classes de animação 3D e multicamadas para emblemas (`pulse-glow`, `spin-3d` com `rotateY`, `flicker` com `drop-shadow` dinâmico).
-- **Feature 6: Skins do Cronômetro:** Adicionado catálogo `TIMER_SKINS` na `secao-customizacao.js`. O modal de perfil agora permite trocar a skin do timer de descanso (Radar Tático, Ampulheta, Cyber Relógio, Arcade Bit). Seleção salva no `db.profileCustomization.timerSkin`.
-- **Feature 8: Arquétipo / Classe:** Integrada análise de stats do `renderRadarChart` (em `secao-progresso.js`) para classificar dinamicamente o usuário baseado nos pontos dominantes do Radar Fit (ex: Bárbaro, Ninja, Máquina). A classe é exibida num badge especial ao lado do nome do jogador (`treino.html`).
-- **Animações In-Game para Cronômetro:** Inseridos os SVGs e lógicas complexas para as skins `cyber` (anel neon dinâmico) e `arcade` (barra estilo jogo de luta com mudança de cor) em `secao-ficha.js`.
-
-### [Changed]
-- `8-customizacao.css`: O design dos Banners e Emblemas Animados foi totalmente reescrito, abandonando animações básicas por CSS ultra-complexo e imersivo, garantindo um nível estético "AAA".
-
----
-
-## [v2.3.0] - 2026-05-19
-*Correção crítica do Sistema de Histórico — Fonte Única de Verdade para Stats*
-
-### [Fixed]
-
-#### Bug 1 — Escrita não-atômica do histórico (Raiz de todas as inconsistências)
-- **`JS/treino/secao-ficha.js`:** Em 3 pontos de conclusão de treino (listener de `.check-input`, listener de `.btn-set`, e `focusCheck()`), o campo `concluido: true` era gravado **antes** de `treinos.push(treino)`. Isso criava uma janela de inconsistência: se o app recarregasse nesse instante, `getStreak()` contaria o dia mas `treinos[]` estaria vazio, corrompendo o breakdown do ciclo e a contagem de treinos.
-- **Correção:** Os 3 pontos agora gravam `treinos[]` e `concluido: true` no mesmo `saveDB()` (escrita atômica), sem janelas de estado intermediário.
-
-#### Bug 2 — Dupla contagem no Ciclo de Treino
-- **`JS/treino/secao-ficha.js` → `showConclusao()`:** `db.currentFichaWorkouts++` e `db.currentCycleBreakdown[letra]++` eram incrementados manualmente, mas `renderProgresso()` já os recalculava do histórico real a cada render — causando contagem duplicada (ex: ciclo mostrava 4 quando deveria ser 2).
-- **Correção:** Removidos os incrementos manuais de `showConclusao()`. A verificação de ciclo completo (30 treinos) agora usa contagem recalculada do histórico real diretamente.
-
-#### Bug 3 — Dados de streak divergentes entre seções
-- **`JS/treino/db.js` → `renderHeroStats()`** e **`JS/treino/secao-progresso.js` → `renderProgresso()`** calculavam `streak` de forma independente e atualizavam subconjuntos diferentes de elementos DOM, podendo mostrar valores diferentes simultaneamente.
-- **`#statStreak`** (hero da Ficha) só era atualizado por `renderHeroStats`. **`#progStreakVal`** (seção Progresso) só por `renderProgresso`. **`#profStreak`** (seção Perfil) por ambas. Se uma delas fosse chamada sem a outra, os valores divergiam.
-- **Correção:** `renderProgresso()` agora atualiza os 3 elementos de streak (`statStreak`, `progStreakVal`, `profStreak`) em um único bloco. `renderHeroStats()` foi refatorado para delegar streak/XP via `import()` dinâmico para `renderProgresso`, eliminando a lógica duplicada.
-
-#### Bug 4 — `renderProgresso` sem null-check causava crash
-- Elementos como `progXpFill`, `progTotalTreinos`, `progMesTreinos` eram acessados sem checar existência. Se a seção não estivesse no DOM (ex: durante testes isolados), causava `TypeError: Cannot set properties of null`.
-- **Correção:** Todos os acessos a elementos DOM em `renderProgresso` agora usam guard `el('id') && el('id').x = y` consistentemente.
-
-### [Added]
-
-- **`JS/treino/secao-progresso.js` → `migrarHistoricoLegado(db)`:** Nova função de migração executada silenciosamente a cada `renderProgresso()`. Corrige entradas legadas que possuem `concluido: true` mas `treinos[]` vazio/ausente (gravadas por versões anteriores ao fix atômico), usando `entry.treino` (campo legado) como fallback.
-
-- **`README.md`:** Criado com documentação completa do projeto, incluindo:
-  - Estrutura de módulos e responsabilidades
-  - Schema completo do banco de dados localStorage
-  - **Seção detalhada sobre o Sistema de Histórico** (estrutura de entrada, regra de escrita atômica, pontos de entrada de conclusão, o que `showConclusao` faz)
-  - Documentação de `renderProgresso` como fonte única de verdade
-  - Padrões de CSS, UX e convenções de desenvolvimento
-
-### [Changed]
-
-- **`JS/treino/db.js` → `renderHeroStats()`:** Refatorado para ser um delegador leve. Atualiza apenas `#statTotalEx` (exclusivo do hero) e chama `renderProgresso` via import dinâmico para o restante. Elimina a duplicação de cálculo de streak/XP.
-- **`JS/treino/secao-progresso.js` → `renderProgresso()`:** Agora é a **única fonte de verdade** para todos os stats derivados. O ciclo é sempre recalculado do `db.historico` real. O `currentCycleBreakdown` usa `treinos[] || [treino]` como fallback para compatibilidade com dados legados.
-
----
-
-## [v2.2.1] - 2026-05-19
-
-*Ajustes de UI/UX em Modos de Exibição (Tabela, Grid e Coleção)*
-
-### [Changed]
-- **`JS/treino/templates.js`**:
-  - Modificado `fichaTableRow` para reestruturar as repetições e o ícone de notas em uma grid 2x2 (`.series-grid-table`).
-  - Modificado `fichaGridCard` para posicionar o botão de notas (`.btn-note-toggle`) inline, lado a lado na mesma linha que as séries (repetições) dentro de `.series-wrap-grid`.
-  - Modificado `fichaDeckCard` (Modo Coleção) para posicionar o botão de notas (`.btn-note-toggle-deck`) inline, lado a lado na mesma linha que as séries dentro de `.series-wrap-deck`.
-  - Modificado `treinosCollectionCard` para mover o botão de editar inline ao lado do nível de repetições/séries.
-- **`style/treino/3-foco-badges.css`**:
-  - Adicionado estilo `.series-grid-table` para formatar a grid de repetições 2x2 no Modo Tabela.
-  - Adicionado estilo `.series-wrap-grid` para flexibilizar os botões horizontais no Modo Grid.
-  - Adicionado estilo `.series-wrap-grid .btn-note-toggle` garantindo um ícone de nota quadrado de `30px` perfeitamente alinhado na mesma linha horizontal das séries.
-  - Adicionado estilo `.btn-ex-edit-inline` e seu estado `:hover` para um micro-feedback hático ao editar na Coleção.
-- **`JS/treino/db.js`**:
-  - Modificado o layout inicial padrão de exibição de exercícios no Deck Builder (`currentExView`) de `'colecao'` para `'grid'` por padrão.
-  - Modificado o layout inicial padrão de exibição da Ficha (`currentViewMode`) de `'table'` para `'grid'` por padrão.
-- **`style/treino/5-premium-design.css`**:
-  - Redimensionado `.btn-note-toggle-deck` para `26px` por `26px` (e `border-radius: 6px`) para alinhar de forma simétrica lado a lado na mesma linha das séries.
-  - Alinhados perfeitamente os botões de menu, alternar páginas (primeiros/últimos 5 decks), seletor de letras e modos de visualização no cabeçalho do Deck Builder na mesma linha central horizontal de 24px.
-
-## [v2.2.0] - 2026-05-18
-*Implementação do Sistema de Personalização de Perfil — Inspirado em Call of Duty Black Ops 6/7*
-
-### [Added]
-- **`JS/treino/secao-customizacao.js`:** Novo módulo dedicado à personalização de perfil. Exporta: `BANNERS`, `EMBLEMAS`, `TITULOS`, `AVATAR_SEEDS`, `AVATAR_FRAMES`, `isUnlocked()`, `applyProfileCustomization()`, `openCustomizacaoModal()`, `_renderProfileEmblems()`.
-- **`style/treino/8-customizacao.css`:** Novo módulo CSS (padrão BEM) com todos os estilos do sistema de personalização: `.banner-option`, `.emblem-gallery__item`, `.titulo-option`, `.avatar-option`, `.frame-option`, `.customizacao-modal__*`, `.profile-edit-btn`, `.profile-titulo`, `.profile-name-input`.
-- **8 Banners de Perfil Temáticos:** Roxo Neon (padrão), Aurora, Fogo Eterno, Ouro Elite, Ciberespaço, Shadow Ops, Aço Frio, Dragão de Ouro. Cada banner é um gradiente CSS com `radial-gradient` e efeitos opcionais (scanlines, flicker). Banners premium têm requisito de desbloqueio (`streak`, `treinos`, `maestria`).
-- **12 Emblemas de Perfil:** Sistema de galeria com 3 slots de exibição no cartão do perfil. Emblemas desbloqueáveis via conquistas (streaks, XP, maestria). Bloqueados aparecem com `grayscale` e ícone de cadeado (CoD-style).
-- **8 Títulos de Perfil:** Linha de texto motivacional exibida sob o nome (ex: "Forjado no Ferro", "Atleta de Elite"). Desbloqueados por progressão.
-- **8 Estilos de Avatar:** Grid de seeds pré-definidas do Dicebear para personalização do avatar.
-- **5 Molduras de Avatar:** Anéis coloridos ao redor do avatar (Nenhuma, Bronze, Prata, Ouro, Elite) com `box-shadow` elétrico.
-- **Modal de Personalização CoD-Style:** Modal de tela cheia (bottom-sheet) com todas as opções de personalização agrupadas em seções. Abertura via botão de lápis (`profile-edit-btn`) no canto do cartão de perfil.
-- **Schema DB `profileCustomization`:** Novo campo no `localStorage` com: `{ nome, handle, avatarSeed, banner, titulo, avatarFrame }`. Migração automática para usuários existentes no `loadDB()`.
-- **Botão de Edição de Perfil:** Botão circular no canto do `profile-header` com ícone de lápis (SVG inline, sem emoji).
-
-### [Changed]
-- **`treino.html` — Slide Perfil:** Header do perfil atualizado para suportar `data-banner`, `data-frame` e o slot `.profile-titulo`. Adicionado `id="btnEditarPerfil"`.
-- **`JS/treino/app.js`:** Integração do novo módulo: `import { applyProfileCustomization, openCustomizacaoModal, _renderProfileEmblems }`. Chamada automática no boot para restaurar o estado salvo. Listener do `btnEditarPerfil`.
-- **`style/treino/treino.css`:** Adicionado `@import url('./treino/8-customizacao.css?v=1')`.
-
----
-
-## [v2.1.2] - 2026-05-18
-
-*Implementação do Sistema de Backgrounds Temáticos Dinâmicos (Estilo Clash Royale)*
-
-### [Added]
-- **Backgrounds Multi-Temáticos por Seção:** A interface agora suporta fatiamento de scroll (como na aba de Loja do Clash Royale). Longas abas podem ser divididas em blocos empilhados usando a classe `.theme-section`, onde cada bloco possui sua própria cor/tema de fundo independentemente.
-- **Variações de Tema CSS:** Criadas classes de filtro de cor (`.theme-turquesa`, `.theme-carmesim`, `.theme-verde-selva`, `.theme-azul-pico`, `.theme-ouro`, `.theme-marrom-terra`, `.theme-laranja-lava`, `.theme-cinza-castelo`) no arquivo `5-premium-design.css`. 
-- **Partículas Animadas:** Adicionado sistema de partículas flutuantes (`cr-bg-particles`) para dar vida e dinamismo ao background base, utilizando animações leves de `keyframes`.
-
-### [Changed]
-- **Otimização de Assets (Hue-Rotate):** Ao invés de carregar múltiplas imagens pesadas para diferentes texturas coloridas, o sistema usa apenas a imagem roxa base (`BG-roxo-vertical/horizontal.jpg`) e altera suas propriedades matematicamente (via `filter: hue-rotate()`, `brightness`, `saturate`) no CSS pseudo-layer `.theme-bg`. Isso garante alta performance e zero tempo de carregamento extra.
-- **Aba Perfil Segmentada:** A aba Perfil foi reestruturada no DOM para implementar o novo sistema, possuindo agora blocos independentes para Visão Geral (Roxo), Ofensivas (Turquesa), Medalhas (Ouro), Nível (Azul Pico) e Configurações (Cinza Castelo).
-- **Contraste de Interface:** Variáveis globais do `1-core.css` foram ajustadas. Os cartões (`--card-bg`) agora são mais opacos (`rgba(10,5,20,.6)`) e as sobreposições ganharam um `backdrop-filter: blur()` sutil para garantir que o texto não "concorra" com o padrão de textura dos diamantes de fundo.
-- **Remoção de Fundos Obstrutivos:** Fundos maciços do `html`, `body` e `.treino-page` foram limpos para `transparent !important` para dar total visão do novo motor de background.
-
----
-
-## [v2.0.0] - 2026-05-15
-*Início do versionamento formal do projeto e migração arquitetural para Mobile-First e Modularização.*
-
-### [Added]
-- **Navegação em Deslize (Swipe):** Implementado ouvintes de evento (`touchstart`, `touchend`) para permitir transição entre abas horizontais imitando o layout contínuo do motor da Unity (Clash Royale Style).
-- **Service Worker (v3):** Adicionado `catch` inteligente na requisição `fetch` do `sw.js` para retornar Resposta `404 offline` vazia ao invés de quebrar o PWA durante o download de arquivos estáticos falhos.
-
-### [Changed]
-- **ES Modules (Import/Export):** A arquitetura foi 100% transicionada para `ES Modules`. Todas as funções e variáveis globais foram protegidas em seus respectivos escopos. Variáveis mutáveis (`currentViewMode`, `currentDeckLetter`) agora utilizam *setters* explícitos. O arquivo `treino.html` agora invoca os módulos nativamente via `<script type="module" src="JS/treino/app.js"></script>`, removendo o acoplamento global no objeto `window`.
-- **Componentização de Templates:** Introduzido o arquivo `templates.js` para centralizar a geração de strings HTML (Suggestion 4). Isso remove o "código espaguete" de HTML dentro do JS, facilitando a manutenção de cards, tabelas e slots do Deck Builder.
-- **Migração UI/UX Mobile-First:** Substituído o sistema legado de abas superiores por uma **Bottom Navigation Bar** global com efeito *glassmorphism*.
-- **Unificação Visual (Ícones):** Emojis legados foram substituídos por ícones `SVG inline (stroke)` responsivos, descritos no manifesto `Ícones.md`.
-- **Modularização do JavaScript:** O arquivo monolítico `treino.js` (5.000+ linhas) foi extraído em módulos lógicos (`db.js`, `nav.js`, `secao-ficha.js`, `secao-treinos.js`, `secao-progresso.js`, `secao-perfil.js`, `app.js`).
-- **Modularização do CSS:** O arquivo `treino.css` (5.400+ linhas) foi mapeado, cortado cirurgicamente e fracionado usando `@import` (`1-core.css`, `2-modals.css`, `3-foco-badges.css`, `4-gamificacao.css`, `5-premium-design.css`, `6-maestria.css`, `7-nav-icons.css`).
-- **Animações de Transição:** Substituída animação vertical simples por sistema de posicionamento absoluto e `transform: translateX(100%)` com curva bezier elástica (`cubic-bezier(0.175, 0.885, 0.32, 1.1)`) para pareamento contínuo das telas lado a lado.
-
-### [Removed]
-- Antigas animações `fadeInUp` do container principal em favor do sistema direcional.
-
----
-
-## [v2.1.0] - 2026-05-16
-*Migração arquitetural completa do sistema de transições para o modelo Viewport + Strip, resolvendo definitivamente o bug de pré-carregamento/flash nas trocas de seção.*
-
-### [Added]
-- **Sistema Viewport + Strip:** Introduzidos os elementos estruturais `.section-viewport` (câmera/clip), `.section-strip` (fita horizontal), e `.section-slide` (slides individuais). Todas as 6 seções ficam **sempre renderizadas no DOM** — sem `display:none` — o que elimina o reflow de layout que causava o flash visual.
-- **Rastreamento em Tempo Real do Dedo (Drag/Pan):** O sistema de swipe horizontal foi completamente reescrito para acompanhar o dedo do usuário frame-a-frame (assim como no Clash Royale). Ao arrastar a tela, as seções deslizam juntas perfeitamente mostrando o estado intermediário. Soltando o dedo, a transição finaliza com uma animação de mola nativa.
-- **`transitionTo(targetId)`** em `JS/treino/nav.js`: Nova função central de navegação que substitui `switchSection()`. Anima apenas o `translateX` do strip inteiro, produzindo o efeito Clash Royale onde ambas as seções ficam visíveis simultaneamente durante o slide.
-- **`jumpTo(index)`:** Função auxiliar que posiciona o strip instantaneamente (sem animação CSS) para casos de inicialização ou reset de estado.
-- **`window._transitionTo`:** Exposição da função para uso externo (deep links, chamadas de outros módulos).
-- **Plano de Implementação:** Arquivo `Transição.md` criado com diagnóstico completo do bug, escolha arquitetural justificada, pseudocódigo e tabela de riscos/mitigações.
-
-### [Changed]
-- **`treino.html`:** Reestruturação completa do DOM de conteúdo. O bloco `<section class="treino-content"><div class="treino-container">` foi substituído por `<div class="section-viewport"><div class="section-strip">`. Cada seção ganhou um wrapper `<div class="section-slide">`. O hero `<section class="treino-hero">` foi **movido para dentro do Slide 0 (Ficha)**, eliminando a necessidade de lógica JS para animá-lo separadamente.
-- **`style/treino/7-nav-icons.css`:** Remoção completa do sistema antigo (`@keyframes crStripOutLeft/Right/InFromLeft/Right`, classes `.slide-out-left`, `.slide-in-right`, `.soft-fade`, `.cr-animating`). Substituído pelas regras de `.section-viewport`, `.section-strip` e `.section-slide`.
-- **`style/treino/1-core.css`:** Removido `overflow-x: hidden` do `.treino-page` (agora desnecessário, pois `.section-viewport` gerencia o clipping horizontal).
-- **`JS/treino/nav.js`:** Reescrita total. Removidas toda a lógica de `classList.add/remove` de classes de animação, o `setTimeout` de cleanup, e o controle manual de `style.display` do hero. Swipe gestures atualizados para chamar `transitionTo()`.
-- **Service Worker:** Bumped para `v9` para forçar recarga do cache em todos os clientes e aplicar imediatamente o motor de drag/pan.
-
-### [Fixed]
-- **Sub-abas Sticky Incorretas (Seção Treinos):** O seletor superior (Exercícios / Montar Ficha) na aba Treinos havia perdido sua funcionalidade "sticky" e a proporção de espaçamento devido à refatoração do DOM. O código HTML foi corrigido (removido contêiner duplo) e o CSS atualizado para aplicar `position: sticky; top: 0`, um fundo semitransparente (glassmorphism) e `z-index` de prioridade, mantendo os botões fixos elegantemente no topo durante a rolagem.
-- **Conflito de Swipe nas Microinterações (Drag/Modais):** O rastreamento de polegar em tempo real estava interceptando eventos indesejados. Corrigido adicionando bloqueios no `nav.js` para ignorar `touchstart` em:
-  - Elementos arrastáveis (`[draggable="true"]`) APENAS dentro da interface de Montar Ficha (`#tab-montar`), permitindo a reordenação de cartas sem arrastar a tela, e restaurando o deslize natural na galeria da aba Exercícios.
-  - Modais abertos (`.modal-overlay`) para que interações internas não disparem a transição de seções.
-- **Visual e Posicionamento das Sub-abas (Pílula Flutuante):** Corrigido o erro que fazia as sub-abas ("Exercícios" / "Montar Ficha") flutuarem cobrindo o conteúdo de forma dinâmica (`position: sticky`). Removida a margem negativa herdada de versões anteriores (`margin-top: -40px` no core CSS) e restaurado o layout estático nativo (`position: relative;`). Agora, as abas ocupam a "área segura" superior e deslizam para fora da tela junto com o conteúdo, sem interrupções visuais.
-- **Bug A — Troca Instantânea:** Seções com `display:none` não participavam do layout e não podiam ser animadas. O novo sistema mantém todas renderizadas, eliminando o reflow pré-animação.
-- **Bug E — Pré-carregamento/Redimensionamento:** `renderMontar()` era chamado imediatamente ao clicar, causando atualização do DOM durante a animação. Agora é chamado dentro do callback `transitionend`, após o slide completar.
-- **Área preta abaixo das seções (Corrigido Definitivamente):** O erro era causado pelo scroll global do `body`, que descia revelando espaço vazio embaixo das seções mais curtas. Corrigido bloqueando o scroll no `html` e `body` (`overflow: hidden; height: 100%`) e adicionando `overflow-y: auto` exclusivamente para cada `.section-slide`, como em um app nativo. Adicionado também o reset do scroll (`slide.scrollTop = 0`) durante as transições.
-
-### [Removed]
-- `switchSection()` — substituída por `transitionTo()`.
-- Classes CSS de animação: `.slide-out-left`, `.slide-out-right`, `.slide-in-right`, `.slide-in-left`, `.soft-fade`, `.cr-animating`.
-- `@keyframes`: `crStripOutLeft`, `crStripOutRight`, `crStripInFromRight`, `crStripInFromLeft`, `softFade`.
-- Lógica de show/hide manual do `.treino-hero` via `style.display`.
-
----
-
-## [v2.1.1] - 2026-05-17
-*Correções de bugs no gráfico de volume, padronização de dropdowns e remoção de emojis remanescentes.*
-
-### [Changed]
-- **Padronização de Dropdowns:** O dropdown de filtro de volume (`#filterVolume`) foi atualizado para seguir o estilo escuro premium (fundo `#111`, texto branco, `appearance: none` e seta SVG), servindo de modelo para futuros dropdowns conforme registrado no README.
-- **Remoção de Emojis:** Os emojis de tendência `📈` e `📉` no gráfico de volume foram substituídos por ícones SVG inline (`trending-up` e `trending-down`).
-
-### [Fixed]
-- **`ReferenceError: formatT is not defined`:** Corrigido erro no console ao renderizar o gráfico de linha de volume, definindo a função `formatT` localmente no escopo do gráfico.
-- **Renderização de SVG em texto:** Corrigido bug onde o código SVG da tendência aparecia como texto puro no modal de detalhes de volume (mudança de `textContent` para `innerHTML`).
+<!-- Entradas anteriores a v3.0.0 foram arquivadas para manter o arquivo abaixo de 500 KB (regra doc-lint). Histórico completo disponível no Git. -->

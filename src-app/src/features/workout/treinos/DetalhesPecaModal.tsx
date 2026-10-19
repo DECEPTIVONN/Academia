@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import '@/features/auth/auth-screen.css';
+import type { Exercise } from '@/core/db/schema';
+import type { LegacyRaw } from '@/core/db/queries';
+import { VolumeKgIcon } from '@/components/VolumeKgIcon';
 import {
     X,
     Palette,
@@ -823,6 +826,16 @@ export interface DetalhesPecaStandaloneProps {
     onClose?: () => void;
     gold?: number;
     onUpdateGold?: (amount: number) => void;
+    /** Exercício real (para exibir dados reais nas abas). */
+    exercise?: Exercise | null;
+    /** Dados legados (para maestria real). */
+    legacy?: LegacyRaw | null;
+    /** Descrição do exercício (para a terceira aba). */
+    description?: string;
+    /** Abre a maestria individual do exercício. */
+    onMaestria?: (exId: string) => void;
+    /** Abre o formulário de edição do exercício. */
+    onEdit?: (ex: Exercise) => void;
 }
 
 export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
@@ -830,7 +843,11 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
     isOpen = true,
     onClose = () => { },
     gold: initialGold = 12500,
-    onUpdateGold
+    onUpdateGold,
+    exercise: exerciseProp,
+    description: descriptionProp,
+    onMaestria,
+    onEdit
 }) => {
     // State
     const [selectedPieceId, setSelectedPieceId] = useState<TetrominoType>(initialPieceId);
@@ -865,7 +882,6 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
     const details = DETAILS_DATA[ex.id] || DETAILS_DATA['I'];
     const pieceColor = TETRA_PIECES[ex.id]?.color || '#06b6d4';
     const currentLvl = ex.level;
-    const masteryProgress = cardMasteries[ex.id] || { stars: 0, domains: [] };
 
     // Toast trigger
     const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -1052,82 +1068,9 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-start p-4 text-white relative font-sans select-none overflow-x-hidden">
+        <div className="min-h-screen bg-transparent flex flex-col items-center justify-start p-4 text-white relative font-sans select-none overflow-x-hidden">
 
-            {/* ==================== STANDALONE TEST BAR & CONTROLS ==================== */}
-            <header className="w-full max-w-4xl bg-slate-900/90 border border-violet-500/30 rounded-2xl p-3 mb-6 flex flex-wrap items-center justify-between gap-3 shadow-xl z-20">
-                <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-violet-400 animate-pulse" />
-                    <h1 className="text-xs font-black uppercase tracking-widest text-slate-200">
-                        Referência Standalone: Detalhes da Peça & Maestria (1:1 do Site)
-                    </h1>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    {/* Gold Display */}
-                    <div className="flex items-center gap-1.5 bg-black/60 px-3 py-1 rounded-xl border border-amber-500/30">
-                        <Coins className="w-4 h-4 text-amber-400" />
-                        <span className="text-xs font-mono font-bold text-amber-200">{profileGold.toLocaleString()}</span>
-                    </div>
-
-                    {/* Viewport switch: Desktop / Mobile frame */}
-                    <div className="flex items-center bg-black/50 p-1 rounded-xl border border-white/10">
-                        <button
-                            onClick={() => setViewportMode('desktop')}
-                            className={`p-1.5 rounded-lg flex items-center gap-1 text-[10px] font-bold uppercase transition-all ${viewportMode === 'desktop' ? 'bg-violet-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-                            title="Visão Desktop"
-                        >
-                            <Monitor className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                            onClick={() => setViewportMode('mobile')}
-                            className={`p-1.5 rounded-lg flex items-center gap-1 text-[10px] font-bold uppercase transition-all ${viewportMode === 'mobile' ? 'bg-violet-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-                            title="Visão Mobile"
-                        >
-                            <Smartphone className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
-
-                    {/* General Mastery Overview Trigger */}
-                    <button
-                        onClick={() => {
-                            soundManager.playHold();
-                            setShowGeneralMasteriesModal(true);
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
-                    >
-                        <Trophy className="w-3.5 h-3.5 text-slate-950" />
-                        Maestria Geral
-                    </button>
-                </div>
-
-                {/* Piece Selection Strip */}
-                <div className="w-full flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-800/80 no-scrollbar">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
-                        Selecione a Peça:
-                    </span>
-                    {exercises.map((p) => {
-                        const isSel = p.id === selectedPieceId;
-                        return (
-                            <button
-                                key={p.id}
-                                onClick={() => {
-                                    soundManager.playMove();
-                                    setSelectedPieceId(p.id);
-                                    setDetailSlide(0);
-                                }}
-                                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black uppercase transition-all cursor-pointer shrink-0 border ${isSel
-                                        ? 'bg-violet-600/30 border-violet-500 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]'
-                                        : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
-                                    }`}
-                            >
-                                <span>{p.id}</span>
-                                <span className="text-[9px] text-slate-400 font-normal">({p.rarity})</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            </header>
+            {/* (Test bar removida — exibição direta da interface de detalhes) */}
 
             {/* ============================================================== */}
             {/* 5. CARD DETAILS OVERLAY MODAL (1:1 IMPLEMENTATION FROM SITE) */}
@@ -1142,102 +1085,91 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                         transition={{ type: 'spring', damping: 25, stiffness: 220 }}
                         onTouchStart={handleDetailTouchStart}
                         onTouchEnd={handleDetailTouchEnd}
-                        className="relative max-w-[420px] w-full bg-gradient-to-b from-[#1a1136] via-[#100a26] to-[#080514] border-2 border-[#a855f7]/60 rounded-[2.2rem] p-5 pt-12 shadow-[0_0_40px_rgba(168,85,247,0.3)] flex flex-col justify-between overflow-visible"
+                        className="relative max-w-[420px] w-full bg-[#0b0b10] border-2 rounded-[2.2rem] p-5 pt-12 flex flex-col justify-between overflow-visible"
+                        style={{ borderColor: 'var(--primary)', boxShadow: '0 0 40px rgba(var(--primary-rgb, 139, 92, 246), 0.3)' }}
                     >
-                        {/* Floating 3D Tetromino header pop-out */}
-                        <div className="absolute -top-14 left-1/2 -translate-x-1/2 w-28 h-28 rounded-3xl bg-[#140a24] border-2 border-[#a855f7] shadow-[0_0_30px_rgba(168,85,247,0.5)] flex items-center justify-center z-50 transform hover:scale-105 hover:rotate-3 transition-transform duration-300">
-                            <div className="w-16 h-16 flex items-center justify-center">
-                                {renderTetrominoBlock(ex.id, 'clash')}
-                            </div>
+                        {/* Floating exercise preview pop-out */}
+                        <div className="absolute -top-14 left-1/2 -translate-x-1/2 w-28 h-28 rounded-3xl bg-[#0e0e14] border-2 flex items-center justify-center z-50 transform hover:scale-105 hover:rotate-3 transition-transform duration-300 overflow-hidden" style={{ borderColor: 'var(--primary)', boxShadow: '0 0 30px rgba(var(--primary-rgb, 139, 92, 246), 0.5)' }}>
+                            <img
+                                src={exerciseProp?.imageUrl || '/assets/exerciciosgif/Supino%20Reto.gif'}
+                                alt="Prévia do Exercício"
+                                className="w-full h-full object-cover"
+                            />
                         </div>
-
-                        {/* Close Button at top-right */}
-                        <button
-                            onClick={() => {
-                                soundManager.playHold();
-                                onClose();
-                            }}
-                            className="absolute top-4 right-4 w-7 h-7 bg-black/40 hover:bg-black/60 border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer z-50 active:scale-90"
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
-                                <path d="M18 6L6 18M6 6l12 12" />
-                            </svg>
-                        </button>
 
                         {/* Title & Level Info */}
                         <div className="text-center mt-3">
                             <h3 className="text-[17px] font-black uppercase tracking-widest text-white mt-1 drop-shadow-md">
-                                {ex.nome}
+                                {exerciseProp?.name ?? ex.nome}
                             </h3>
                             <p className="text-[10px] font-mono font-bold text-violet-400 tracking-wider">
                                 NÍVEL {currentLvl}
                             </p>
                         </div>
 
-                        {/* Rarity & Type Tags + Mastery Block */}
+                        {/* Músculo & Tipo + Bloco de Maestria */}
                         <div className="flex items-stretch justify-between w-full mt-4 gap-3 px-1">
-                            {/* RARIDADE Pill */}
-                            <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-[#50358c]/45 shadow-[0_4px_10px_rgba(0,0,0,0.5)] h-12 bg-[#140e2a] select-none">
-                                <div className="h-[16px] bg-gradient-to-r from-fuchsia-500/70 to-purple-500/70 flex items-center justify-center px-1">
-                                    <span className="text-[7.5px] font-black text-white/90 uppercase tracking-widest leading-none">RARIDADE</span>
+                            {/* MÚSCULO Pill */}
+                            <div className="flex-1 flex flex-col rounded-xl overflow-hidden border shadow-[0_4px_10px_rgba(0,0,0,0.5)] h-12 bg-[#0e0e14] select-none" style={{ borderColor: 'rgba(var(--primary-rgb, 139, 92, 246), 0.45)' }}>
+                                <div className="h-[16px] bg-[#2a2a33] flex items-center justify-center px-1">
+                                    <span className="text-[7.5px] font-black text-white/90 uppercase tracking-widest leading-none">MÚSCULO</span>
                                 </div>
-                                <div className="flex-1 flex items-center justify-center bg-[#0d0722] px-1">
+                                <div className="flex-1 flex items-center justify-center bg-[#0e0e14] px-1">
                                     <span className="text-[10.5px] font-black text-white uppercase tracking-wide leading-none">
-                                        {ex.rarity === 'Epico' ? 'Épica' : ex.rarity === 'Lendario' ? 'Lendária' : ex.rarity === 'Comum' ? 'Comum' : 'Rara'}
+                                        {exerciseProp?.muscleGroup ?? 'Peito'}
                                     </span>
                                 </div>
                             </div>
 
                             {/* TIPO Pill */}
-                            <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-[#50358c]/45 shadow-[0_4px_10px_rgba(0,0,0,0.5)] h-12 bg-[#140e2a] select-none">
-                                <div className="h-[16px] bg-gradient-to-r from-fuchsia-500/70 to-purple-500/70 flex items-center justify-center px-1">
+                            <div className="flex-1 flex flex-col rounded-xl overflow-hidden border shadow-[0_4px_10px_rgba(0,0,0,0.5)] h-12 bg-[#0e0e14] select-none" style={{ borderColor: 'rgba(var(--primary-rgb, 139, 92, 246), 0.45)' }}>
+                                <div className="h-[16px] bg-[#2a2a33] flex items-center justify-center px-1">
                                     <span className="text-[7.5px] font-black text-white/90 uppercase tracking-widest leading-none">TIPO</span>
                                 </div>
-                                <div className="flex-1 flex items-center justify-center bg-[#0d0722] px-1">
-                                    <span className="text-[10.5px] font-black text-white uppercase tracking-wide leading-none truncate max-w-[105px] px-1" title={details.type}>
-                                        {details.type ? (details.type.includes(' & ') ? details.type.split(' & ')[0] : details.type) : 'Peça'}
+                                <div className="flex-1 flex items-center justify-center bg-[#0e0e14] px-1">
+                                    <span className="text-[10.5px] font-black text-white uppercase tracking-wide leading-none truncate max-w-[105px] px-1" title={exerciseProp ? ((exerciseProp.tags as string[])?.includes('Aparelho') ? 'Aparelho' : 'Peso Livre') : details.type}>
+                                        {exerciseProp ? ((exerciseProp.tags as string[])?.includes('Aparelho') ? 'Aparelho' : 'Peso Livre') : (details.type ? (details.type.includes(' & ') ? details.type.split(' & ')[0] : details.type) : 'Peça')}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* MAESTRIA Square Icon Button */}
-                            <div
+                            {/* MAESTRIA — mesmo ícone de V1 */}
+                            <button
+                                type="button"
+                                className="cr-maestria-shortcut shrink-0"
+                                title="Ver Maestria"
                                 onClick={() => {
                                     soundManager.playHold();
-                                    setSelectedMasteryCard(ex.id);
+                                    if (onMaestria && exerciseProp) {
+                                        onClose();
+                                        onMaestria(exerciseProp.id);
+                                    } else {
+                                        setSelectedMasteryCard(ex.id);
+                                    }
                                 }}
-                                className="w-12 h-12 rounded-xl bg-gradient-to-b from-[#251749] to-[#0a0518] border-2 border-amber-500/80 p-0.5 shadow-[0_4px_12px_rgba(245,158,11,0.25),_inset_0_1px_3px_rgba(255,255,255,0.15)] flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0 relative group"
-                                title={`Maestria: Nível ${masteryProgress.stars}`}
                             >
-                                {/* Mastery Emblem Icon */}
-                                <Award className="w-7 h-7 text-amber-400 fill-amber-500/10 drop-shadow-[0_2px_6px_rgba(245,158,11,0.35)]" />
-
-                                {/* Floating Tooltip displaying details on hover */}
-                                <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[#0d0920] border-2 border-yellow-500/80 px-2 py-1.5 rounded-lg shadow-2xl text-center min-w-[95px] pointer-events-none z-50">
-                                    <span className="text-[7.5px] font-black text-yellow-400 uppercase tracking-wider">Maestria</span>
-                                    <div className="flex gap-0.5 my-0.5">
-                                        {[1, 2, 3].map((star) => (
-                                            <span key={star} className={`text-[8px] leading-none ${star <= masteryProgress.stars ? 'text-[#ffb703]' : 'text-slate-600'}`}>
-                                                ★
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <span className="text-[6px] font-mono font-bold text-slate-300">Nível {masteryProgress.stars}</span>
-                                </div>
-                            </div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={24} height={24} style={{ color: 'var(--primary-light)' }}>
+                                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                                    <path d="M4 22h16" />
+                                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+                                </svg>
+                            </button>
                         </div>
 
                         {/* Main Body with slide page (Favorable/Unfavorable, Stats, Lore) */}
                         <div
                             className="bg-[#05030e]/95 border border-indigo-950/60 rounded-2.5xl p-3.5 min-h-[305px] flex flex-col justify-between mt-3.5 relative overflow-hidden"
                         >
-                            <AnimatePresence mode="wait" custom={slideDirection}>
+                            <AnimatePresence mode="popLayout" custom={slideDirection}>
                                 <motion.div
                                     key={detailSlide}
                                     custom={slideDirection}
                                     variants={{
                                         enter: (dir: number) => ({
-                                            x: dir > 0 ? 100 : -100,
+                                            x: dir > 0 ? 40 : -40,
                                             opacity: 0
                                         }),
                                         center: {
@@ -1245,7 +1177,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                             opacity: 1
                                         },
                                         exit: (dir: number) => ({
-                                            x: dir < 0 ? 100 : -100,
+                                            x: dir < 0 ? 40 : -40,
                                             opacity: 0
                                         })
                                     }}
@@ -1253,8 +1185,8 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                     animate="center"
                                     exit="exit"
                                     transition={{
-                                        x: { type: 'spring', stiffness: 350, damping: 30 },
-                                        opacity: { duration: 0.15 }
+                                        x: { type: 'tween', duration: 0.28, ease: [0.4, 0, 0.2, 1] },
+                                        opacity: { duration: 0.22, ease: 'easeInOut' }
                                     }}
                                     className="flex-1 flex flex-col justify-between w-full h-full"
                                 >
@@ -1262,95 +1194,25 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                     {detailSlide === 0 && (
                                         <div className="flex-1 flex flex-col justify-center items-center">
                                             {(() => {
-                                                const isFavorable = replayPhase.startsWith('fav');
-                                                const isSpawning = replayPhase.endsWith('spawn');
-                                                const scenario = isFavorable ? details.scenarios.favorable : details.scenarios.unfavorable;
-
-                                                // Dynamically pad the original 7x9 grid to a more spacious 9x13 grid
-                                                const originalGrid = scenario.grid;
-                                                const paddedColsGrid = originalGrid.map(row => [0, 0, ...row, 0, 0]);
-                                                const newRow = Array(13).fill(0);
-                                                const grid = [
-                                                    [...newRow],
-                                                    [...newRow],
-                                                    ...paddedColsGrid
-                                                ];
-
-                                                // Find the minimum row index containing the active piece (cell === 2)
-                                                let minR = 0;
-                                                for (let r = 0; r < grid.length; r++) {
-                                                    if (grid[r].includes(2)) {
-                                                        minR = r;
-                                                        break;
-                                                    }
-                                                }
-
-                                                // Determine the piece's skin-specific color inside the details modal
-                                                let activeColor = pieceColor;
-                                                const activeSkin = pieceSkins[ex.id] || 'neon';
-                                                if (activeSkin === 'gameboy') {
-                                                    activeColor = 'rgb(34, 197, 94)';
-                                                } else if (activeSkin === 'lava') {
-                                                    activeColor = 'rgb(239, 68, 68)';
-                                                } else if (activeSkin === 'holographic') {
-                                                    activeColor = 'rgb(6, 182, 212)';
-                                                }
-
                                                 return (
-                                                    <div
-                                                        className={`w-full flex-1 flex flex-col items-center justify-center rounded-2xl border-2 p-3 transition-all duration-500 ${isFavorable
-                                                                ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.25)] bg-[#070b08]/90'
-                                                                : 'border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.25)] bg-[#0d0707]/90'
-                                                            }`}
-                                                    >
-                                                        <div className="flex justify-between items-center w-full mb-2 px-1">
-                                                            <span className={`text-[8.5px] font-black uppercase tracking-widest ${isFavorable ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                                {scenario.title}
-                                                            </span>
+                                                    <div className="w-full flex-1 flex flex-col items-center justify-center rounded-2xl border-2 p-3 transition-all duration-500 border-[var(--primary)] shadow-[0_0_15px_rgba(var(--primary-rgb,139,92,246),0.25)] bg-[#0e0e14]/90">
+                                                        <div className="flex justify-center items-center w-full mb-2 px-1">
                                                             <span className="text-[7.5px] text-slate-400 font-medium">
-                                                                {isFavorable ? 'Sucesso absoluto' : 'Risco de obstrução'}
+                                                                {exerciseProp?.name ?? 'Supino Reto'}
                                                             </span>
                                                         </div>
 
-                                                        {/* Simulated Arena Grid - Expanded to 13 columns, 9 rows */}
+                                                        {/* Prévia do exercício (mesmo espaço da peça) */}
                                                         <div
-                                                            className="grid gap-[4px] p-2.5 rounded-2xl bg-[#04020a] border border-indigo-950/60 shadow-inner flex items-center justify-center shrink-0"
-                                                            style={{
-                                                                gridTemplateColumns: 'repeat(13, 24px)',
-                                                                gridTemplateRows: 'repeat(9, 24px)'
-                                                            }}
+                                                            className="rounded-2xl bg-[#04020a] border border-indigo-950/60 shadow-inner flex items-center justify-center shrink-0 overflow-hidden"
+                                                            style={{ width: '312px', height: '216px' }}
                                                         >
-                                                            {grid.map((row, rIdx) =>
-                                                                row.map((cell, cIdx) => {
-                                                                    let customStyle: React.CSSProperties = {};
-                                                                    if (cell === 1) {
-                                                                        customStyle = { backgroundColor: '#334155', opacity: 0.8, borderRadius: '4px' };
-                                                                    } else if (cell === 2) {
-                                                                        const spawnTranslate = minR > 0 ? -minR * 28 : -40;
-                                                                        customStyle = {
-                                                                            backgroundColor: activeColor,
-                                                                            boxShadow: `0 0 10px ${activeColor}, inset 0 0 4px rgba(255, 255, 255, 0.8)`,
-                                                                            border: '2px solid rgba(255, 255, 255, 0.6)',
-                                                                            borderRadius: '4px',
-                                                                            transform: isSpawning ? `translateY(${spawnTranslate}px)` : 'translateY(0)',
-                                                                            opacity: isSpawning ? 0.85 : 1,
-                                                                            transition: isSpawning ? 'none' : 'transform 0.9s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease'
-                                                                        };
-                                                                    }
-                                                                    return (
-                                                                        <div
-                                                                            key={`${rIdx}-${cIdx}`}
-                                                                            className={`rounded-[4px] transition-all duration-300 ${cell === 0 ? 'bg-indigo-950/15' : ''}`}
-                                                                            style={{ width: '24px', height: '24px', ...customStyle }}
-                                                                        />
-                                                                    );
-                                                                })
-                                                            )}
+                                                            <img
+                                                                src={exerciseProp?.imageUrl || '/assets/exerciciosgif/Supino%20Reto.gif'}
+                                                                alt={exerciseProp?.name ?? 'Exercício'}
+                                                                className="w-full h-full object-cover"
+                                                            />
                                                         </div>
-
-                                                        <p className="text-[8px] text-slate-300 leading-snug text-center mt-2 pl-1 pr-1 font-medium">
-                                                            {scenario.desc}
-                                                        </p>
                                                     </div>
                                                 );
                                             })()}
@@ -1360,120 +1222,65 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                     {/* Page 1: Statistics / Atributos */}
                                     {detailSlide === 1 && (
                                         <div className="flex-1 flex flex-col justify-center gap-2">
-                                            <h4 className="text-[8.5px] font-black text-violet-400 uppercase tracking-widest pl-0.5">Estatísticas</h4>
-                                            <div className="space-y-1.5">
-                                                {(() => {
-                                                    return details.stats.map((originalStat) => {
-                                                        const stat = { ...originalStat };
-                                                        const labelLower = stat.label.toLowerCase();
-
-                                                        if (labelLower === 'poder de limpeza') {
-                                                            stat.label = 'Quadrados';
-                                                            stat.icon = '⬜';
-                                                            const numSquares = ex.id === 'X' ? 5 : 4;
-                                                            stat.value = numSquares;
-                                                            stat.max = 5;
-                                                            stat.desc = `Esta peça possui exatamente ${numSquares} quadrados conectados em sua estrutura básica.`;
-                                                        } else if (labelLower === 'flexibilidade srs') {
-                                                            let numPositions = 2;
-                                                            if (ex.id === 'L' || ex.id === 'J' || ex.id === 'T') {
-                                                                numPositions = 4;
-                                                            } else if (ex.id === 'O' || ex.id === 'X') {
-                                                                numPositions = 1;
-                                                            }
-
-                                                            if (numPositions === 4) {
-                                                                stat.desc = `Possui 4 possibilidades/posições diferentes ao rotacionar (as peças L, J e T possuem muitas posições diferentes).`;
-                                                            } else if (numPositions === 2) {
-                                                                stat.desc = `Possui apenas 2 posições diferentes ao rotacionar (vertical e horizontal).`;
-                                                            } else {
-                                                                stat.desc = `Possui apenas 1 única posição ao rotacionar (simetria perfeita).`;
-                                                            }
-                                                        } else if (labelLower === 'multiplicador de combo') {
-                                                            stat.label = 'Versatilidade';
-                                                            stat.icon = '🧩';
-                                                            if (ex.id === 'I') {
-                                                                stat.desc = `Extremamente útil para abrir colunas obstruídas e realizar finalizações de até 4 linhas simultâneas.`;
-                                                            } else if (ex.id === 'O') {
-                                                                stat.desc = `Perfeita para preencher depressões de tamanho 2x2 e manter a estabilidade horizontal da Arena.`;
-                                                            } else if (ex.id === 'T') {
-                                                                stat.desc = `Altamente útil para encaixes táticos (T-Spin) em fendas fechadas com bônus incríveis de pontos.`;
-                                                            } else if (ex.id === 'S' || ex.id === 'Z') {
-                                                                stat.desc = `Ideal para transições suaves de altura, conexões diagonais e nivelamento de ladeiras.`;
-                                                            } else if (ex.id === 'J' || ex.id === 'L') {
-                                                                stat.desc = `Excelente para preencher cantos vazios e contornar fendas de relevo irregular nas laterais.`;
-                                                            } else {
-                                                                stat.desc = `A melhor peça de salvamento tático, detonando blocos de lixo cinzas em situações críticas.`;
-                                                            }
-                                                        }
-                                                        return stat;
-                                                    });
-                                                })().map((stat, sIdx) => {
-                                                    let valueDisplay = `${stat.value}/${stat.max}`;
-                                                    if (stat.label === 'Quadrados') {
-                                                        valueDisplay = `${stat.value}`;
-                                                    } else if (stat.label === 'Flexibilidade SRS') {
-                                                        if (stat.value <= 20) valueDisplay = 'Baixa';
-                                                        else if (stat.value <= 65) valueDisplay = 'Média';
-                                                        else if (stat.value <= 85) valueDisplay = 'Alta';
-                                                        else valueDisplay = 'Muito alta';
-                                                    } else if (stat.label === 'Versatilidade') {
-                                                        if (stat.value <= 50) valueDisplay = 'Baixa';
-                                                        else if (stat.value <= 65) valueDisplay = 'Média';
-                                                        else if (stat.value <= 85) valueDisplay = 'Alta';
-                                                        else valueDisplay = 'Muito alta';
-                                                    }
-
-                                                    return (
-                                                        <div key={sIdx} className="space-y-0.5">
-                                                            <div className="flex justify-between items-center text-[8.5px]">
-                                                                <span className="text-slate-300 font-bold flex items-center gap-1">
-                                                                    <span className="text-[10px]">{stat.icon}</span>
-                                                                    <span>{stat.label}</span>
-                                                                </span>
-                                                                <span className="font-mono font-black text-white">{valueDisplay}</span>
-                                                            </div>
-                                                            <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
-                                                                <div
-                                                                    className="h-full rounded-full transition-all duration-500"
-                                                                    style={{
-                                                                        width: `${(stat.value / stat.max) * 100}%`,
-                                                                        backgroundColor: pieceColor,
-                                                                        boxShadow: `0 0 8px ${pieceColor}`
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <span className="block text-[7.5px] text-slate-400 font-medium leading-none pl-1">
-                                                                {stat.desc}
-                                                            </span>
-                                                        </div>
-                                                    );
-                                                })}
+                                            <div className="cr-stats-grid">
+                                                <div className="cr-stat-item">
+                                                    <div className="cr-stat-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28 }}>
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: 'var(--primary-light)' }}>
+                                                            <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11" />
+                                                            <circle cx="4" cy="12" r="1.5" />
+                                                            <circle cx="20" cy="12" r="1.5" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="cr-stat-info">
+                                                        <span className="cr-stat-label">Séries</span>
+                                                        <span className="cr-stat-val">{exerciseProp?.sets ?? '--'}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="cr-stat-item">
+                                                    <div className="cr-stat-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28 }}>
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: 'var(--primary-light)' }}>
+                                                            <path d="m17 2 4 4-4 4" />
+                                                            <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+                                                            <path d="m7 22-4-4 4-4" />
+                                                            <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="cr-stat-info">
+                                                        <span className="cr-stat-label">Reps</span>
+                                                        <span className="cr-stat-val">{exerciseProp?.reps ?? '--'}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="cr-stat-item">
+                                                    <div className="cr-stat-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28 }}>
+                                                        <VolumeKgIcon size={18} className="text-[var(--primary-light)]" />
+                                                    </div>
+                                                    <div className="cr-stat-info">
+                                                        <span className="cr-stat-label">Carga</span>
+                                                        <span className="cr-stat-val">{exerciseProp?.load || '--'} kg</span>
+                                                    </div>
+                                                </div>
+                                                <div className="cr-stat-item">
+                                                    <div className="cr-stat-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28 }}>
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: 'var(--primary-light)' }}>
+                                                            <circle cx="12" cy="12" r="10" />
+                                                            <circle cx="12" cy="12" r="6" />
+                                                            <circle cx="12" cy="12" r="2" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="cr-stat-info">
+                                                        <span className="cr-stat-label">Grupo</span>
+                                                        <span className="cr-stat-val">{exerciseProp?.muscleGroup ?? 'Peito'}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Page 2: Lore / Trivia / Curiosidades */}
+                                    {/* Page 2: Descrição */}
                                     {detailSlide === 2 && (
-                                        <div className="flex-1 flex flex-col justify-between">
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-center gap-1 text-[8.5px] font-black text-[#a855f7] uppercase tracking-widest">
-                                                    <span>🔮</span>
-                                                    <span>Origem & Segredos</span>
-                                                </div>
-                                                <p className="italic text-[9.5px] text-slate-300 leading-normal font-medium bg-[#140a24]/40 p-2 rounded-xl border border-indigo-950">
-                                                    "{details.lore}"
-                                                </p>
-                                            </div>
-
-                                            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-2 mt-2 flex items-start gap-1.5">
-                                                <span className="text-[11px] leading-none shrink-0">💡</span>
-                                                <div className="space-y-0.5">
-                                                    <span className="block text-[7.5px] font-black text-amber-400 uppercase tracking-wider">Você sabia?</span>
-                                                    <p className="text-[8px] text-amber-200/90 leading-tight">
-                                                        {details.fact}
-                                                    </p>
-                                                </div>
+                                        <div className="flex-1 flex flex-col justify-center gap-2">
+                                            <div className="cr-description-box">
+                                                {descriptionProp}
                                             </div>
                                         </div>
                                     )}
@@ -1488,7 +1295,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                     key={idx}
                                     onClick={() => changeSlide(idx)}
                                     className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${detailSlide === idx
-                                            ? 'bg-[#a855f7] scale-130 shadow-[0_0_8px_rgba(168,85,247,0.8)]'
+                                            ? 'bg-[var(--primary)] scale-130 shadow-[0_0_8px_var(--primary)]'
                                             : 'bg-slate-700 hover:bg-slate-600'
                                         }`}
                                     title={`Página ${idx + 1}`}
@@ -1504,7 +1311,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                     setIsPieceSkinSelectorOpen(true);
                                     soundManager.playMove();
                                 }}
-                                className="w-12 h-12 rounded-2xl bg-[#090615]/80 hover:bg-[#140e2a] border-2 border-[#a855f7]/50 hover:border-[#a855f7] flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-[0_3px_0_#4c1d95] shrink-0 relative group"
+                                className="w-12 h-12 rounded-2xl bg-[#090615]/80 hover:bg-[#140e2a] border-2 border-[var(--primary)] flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-[0_3px_0_#4c1d95] shrink-0 relative group"
                                 title="Mudar Visual da Peça"
                             >
                                 <Palette className="w-5.5 h-5.5 text-violet-400 group-hover:text-violet-300 drop-shadow-[0_0_6px_rgba(168,85,247,0.5)]" />
@@ -1524,38 +1331,38 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                 })()}
                             </button>
 
-                            {/* Coins Upgrade Button */}
-                            {(() => {
-                                const upgradeCost = Math.round(50 * Math.pow(1.5, currentLvl));
-                                const canUpgrade = profileGold >= upgradeCost;
-
-                                return (
-                                    <button
-                                        onClick={() => {
-                                            if (canUpgrade) {
-                                                soundManager.playLevelUp();
-                                                onUpgradeCard(ex.id, upgradeCost);
-                                                showToast(`Melhorou a peça ${ex.nome} para o nível ${currentLvl + 1}!`, 'success');
-                                            } else {
-                                                soundManager.playHold();
-                                                showToast('Moedas insuficientes!', 'error');
-                                            }
-                                        }}
-                                        className={`flex-1 flex flex-col justify-center items-center py-2 px-3 rounded-2xl cursor-pointer transition-all active:translate-y-0.5 shadow-md border ${canUpgrade
-                                                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 border-yellow-400 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-[0_3px_0_#b45309]'
-                                                : 'bg-slate-950/40 border-slate-900 text-slate-500 opacity-65 shadow-none cursor-not-allowed'
-                                            }`}
+                            {/* Editar Exercício — mesmo estilo do botão de V1 */}
+                            <button
+                                type="button"
+                                className="btn btn-secondary cr-btn-upgrade flex-1"
+                                style={{ fontWeight: 700 }}
+                                onClick={() => {
+                                    soundManager.playHold();
+                                    if (onEdit && exerciseProp) {
+                                        onClose();
+                                        onEdit(exerciseProp);
+                                    } else {
+                                        showToast('Editar exercício — em breve.', 'success');
+                                    }
+                                }}
+                            >
+                                <span className="cr-btn-text" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        width={14}
+                                        height={14}
                                     >
-                                        <span className="text-[7.5px] font-black uppercase tracking-wider flex items-center gap-1 leading-none">
-                                            <Coins className="w-3 h-3 text-amber-500" /> Melodia de Nível
-                                        </span>
-                                        <div className="flex items-center gap-1 mt-1 font-mono font-black text-xs leading-none">
-                                            <span>{upgradeCost.toLocaleString()}</span>
-                                            <span>🪙</span>
-                                        </div>
-                                    </button>
-                                );
-                            })()}
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                    </svg>
+                                    EDITAR EXERCÍCIO
+                                </span>
+                            </button>
                         </div>
 
                         {/* Interface de Skins Overlay */}
@@ -1565,7 +1372,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                     initial={{ opacity: 0, y: 15 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 15 }}
-                                    className="absolute inset-0 bg-[#0c0822]/98 backdrop-blur-md z-[60] p-5 flex flex-col justify-between border-2 border-[#a855f7]/60 rounded-[2.2rem]"
+                                    className="absolute inset-0 bg-[#0c0822]/98 backdrop-blur-md z-[60] p-5 flex flex-col justify-between border-2 border-[var(--primary)] rounded-[2.2rem]"
                                 >
                                     <div>
                                         {/* Header */}

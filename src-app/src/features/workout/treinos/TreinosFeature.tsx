@@ -23,6 +23,7 @@ import { CustomizacaoSubTabs } from './CustomizacaoTabs';
 import { MontarTab } from './MontarTab';
 import { ExercicioFormModal } from './ExercicioFormModal';
 import DetalhesPecaModal from './DetalhesPecaModal';
+import { getExerciseDescription } from './exercise-descriptions';
 import { AerobicoModal, ConfirmModal, CRDetailsModal, ImageModal, MaestriaGeralModal } from './TreinosModals';
 
 /* ── Ícones (treinos.html L7–40) ── */
@@ -567,6 +568,9 @@ export const TreinosFeature: React.FC = () => {
                 position: 'fixed',
                 inset: 0,
                 zIndex: 1001,
+                background: 'rgba(0,0,0,0.85)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
                 opacity: crDetailsVersion === 'v2' ? 1 : 0,
                 visibility: crDetailsVersion === 'v2' ? 'visible' : 'hidden',
                 pointerEvents: crDetailsVersion === 'v2' ? 'auto' : 'none',
@@ -574,7 +578,7 @@ export const TreinosFeature: React.FC = () => {
                 overflow: 'auto',
               }}
             >
-              <DetalhesPecaModal isOpen={true} onClose={() => setCrEx(null)} />
+              <DetalhesPecaModal isOpen={true} onClose={() => setCrEx(null)} exercise={crEx} legacy={data.legacy} description={crEx ? (crEx.notes || getExerciseDescription(crEx.name) || `Um exercício focado em fortalecer o ${crEx.muscleGroup}. Mantenha a postura correta para melhores resultados!`) : ''} onMaestria={(id) => useMaestriaUi.getState().openMaestriaEx(id)} onEdit={openEdit} />
             </div>,
             document.body
           )}

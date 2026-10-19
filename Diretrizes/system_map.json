@@ -1,11 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "3.5.83",
+  "version": "3.5.86",
   "last_updated": "2026-10-18",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
-
   "entry_points": {
     "description": "Arquivos que iniciam cada aplicação no navegador. A VERSÃO LEGADA (Vanilla JS) foi movida para Legacy/ em 2026-10-15 (v4.23.0) e continua funcionando por caminhos relativos; a VERSÃO ATUAL (React) vive em src-app/.",
     "files": [
@@ -27,75 +26,158 @@
       }
     ]
   },
-
   "system_modules": {
     "section_loader": {
       "description": "Carregador modular de fragmentos HTML [LEGADO — Legacy/JS/treino/loader.js]. Executa fetch() paralelo dos arquivos em componentes/secoes/ e injeta no DOM antes da inicialização do app. Deve ser o primeiro módulo importado por app.js. A partir da v3.1.0: o fragmento `perfil.html` é injetado em `#perfilOverlayScroll` (overlay fullscreen) em vez de `[data-section='perfil']` (slide removido do strip). A partir da v3.2.0: o fragmento `ficha.html` é injetado em `#fichaOverlayScroll` (overlay fullscreen) em vez de `[data-section='ficha']` (slide removido do strip).",
-      "js_files": ["JS/treino/loader.js"],
+      "js_files": [
+        "JS/treino/loader.js"
+      ],
       "css_files": [],
-      "dom_selectors": ["[data-section]", "#modais-container", "#perfilOverlayScroll", "#fichaOverlayScroll"],
+      "dom_selectors": [
+        "[data-section]",
+        "#modais-container",
+        "#perfilOverlayScroll",
+        "#fichaOverlayScroll"
+      ],
       "related_components": []
     },
     "app_init": {
       "description": "Ponto de entrada (Entry point) do aplicativo. Inicializa o banco de dados local, vincula escutas de eventos globais e orquestra a carga inicial das seções. Chama loadAllSections() antes de qualquer init. A partir da v3.3.1: escuta o evento custom `academia:data-imported` (disparado por secao-perfil.js::importData) e executa `reinitAppAfterImport()` para re-renderizar todas as seções dinâmicas e fechar overlays/modais abertos sem precisar de window.location.reload().",
-      "js_files": ["JS/treino/app.js"],
-      "css_files": ["style/treino/1-core.css"],
-      "dom_selectors": ["body"],
-      "related_components": ["componentes/footer.js", "componentes/scroll-animations.js"]
+      "js_files": [
+        "JS/treino/app.js"
+      ],
+      "css_files": [
+        "style/treino/1-core.css"
+      ],
+      "dom_selectors": [
+        "body"
+      ],
+      "related_components": [
+        "componentes/footer.js",
+        "componentes/scroll-animations.js"
+      ]
     },
     "state_db": {
       "description": "Motor de banco de dados e estado reativo local. Gerencia todas as operações de I/O em LocalStorage, define schemas padrão para fichas/exercícios/histórico e exporta utilitários de animação de transição (fadeIn, fadeSwap).",
-      "js_files": ["JS/treino/db.js"],
+      "js_files": [
+        "JS/treino/db.js"
+      ],
       "css_files": [],
       "dom_selectors": [],
       "related_components": []
     },
     "navigation": {
       "description": "Gerencia o motor de deslizamento (Swipe Viewport) e as abas inferiores (Bottom Nav Bar). Controla os swipes por toque, estados ativos e a renderização fluida das rotas via translateX. A partir da v2.5.0: a seção inicial é determinada por db.fichaEmAndamento + db.fichaEmAndamentoDate (lógica migrou para `app.js` em v3.2.0 com a Ficha virando overlay). A partir da v3.1.0: 'perfil' foi removido de sectionsOrder. Histórico da ordem: `['treinos','progresso','dashboard','loja','social']` em v3.2.0; `['treinos','progresso','dashboard','social','loja']` em v3.4.0 (Social vira 4ª, Loja vira 5ª); `['progresso','treinos','dashboard','social','loja']` em v3.5.0 (Progresso vira 1ª, Treinos vira 2ª). A chamada `_transitionTo('perfil')` é interceptada e redirecionada para `window.openPerfilOverlay()`; gestos de swipe são bloqueados quando o alvo é `.perfil-overlay`. A partir da v3.2.0: 'ficha' também foi removida de sectionsOrder; `_transitionTo('ficha')` é interceptada e redirecionada para `window.openFichaOverlay()`; gestos de swipe são bloqueados quando o alvo é `.ficha-overlay`.",
-      "js_files": ["JS/treino/nav.js"],
-      "css_files": ["style/treino/7-nav-icons.css"],
-      "dom_selectors": [".section-viewport", ".section-strip", ".section-slide", "#bottomNav", "#perfil-overlay", ".perfil-overlay", "#ficha-overlay", ".ficha-overlay"],
+      "js_files": [
+        "JS/treino/nav.js"
+      ],
+      "css_files": [
+        "style/treino/7-nav-icons.css"
+      ],
+      "dom_selectors": [
+        ".section-viewport",
+        ".section-strip",
+        ".section-slide",
+        "#bottomNav",
+        "#perfil-overlay",
+        ".perfil-overlay",
+        "#ficha-overlay",
+        ".ficha-overlay"
+      ],
       "related_components": []
     },
     "workout_tracking": {
       "description": "Controla a ficha de treino ativa do dia, marcação de séries, Modo Foco de alta legibilidade, contadores de tempo (Hourglass/Radar Rest Timers) e o fechamento do treino com registro de duração. A partir da v2.5.0: a seção Ficha não é mais a landing section — é acessada exclusivamente via 'PRÓXIMO PASSO' do Dashboard. A partir da v3.2.0: a Ficha também deixou de ser um slide do Swipe Viewport e virou overlay fullscreen (`#ficha-overlay`) com fade-in/scale, sem header fixo (full-bleed imersivo). Trigger único: botão 'PRÓXIMO PASSO' do Dashboard (`#dashBtnIniciar`) via `window.openFichaOverlay()`. Auto-abertura se `db.fichaEmAndamento && db.fichaEmAndamentoDate === today()` (ou `workout_start_time` do dia atual). Fechamento (ESC/programático): se há treino em andamento, abre `modalEncerrarTreino`; senão, volta ao Dashboard. O botão legado 'INICIAR TREINO' (id=btnStartWorkout) é ocultado via CSS (mantido no DOM). Encerrar o cronômetro abre um modal de confirmação (modalEncerrarTreino).",
-      "js_files": ["JS/treino/secao-ficha.js", "JS/treino/ficha-overlay.js"],
+      "js_files": [
+        "JS/treino/secao-ficha.js",
+        "JS/treino/ficha-overlay.js"
+      ],
       "css_files": [
         "style/treino/2-modals.css",
         "style/treino/3-foco-badges.css",
         "style/treino/5-premium-design.css",
         "style/treino/secoes/ficha-overlay.css"
       ],
-      "dom_selectors": ["#ficha-overlay", "#fichaOverlayScroll", "#btnFecharFicha", ".ficha-overlay-close", "#timerDisplay", "#focusModeOverlay", "#modalConclusao", "#modalEncerrarTreino"],
+      "dom_selectors": [
+        "#ficha-overlay",
+        "#fichaOverlayScroll",
+        "#btnFecharFicha",
+        ".ficha-overlay-close",
+        "#timerDisplay",
+        "#focusModeOverlay",
+        "#modalConclusao",
+        "#modalEncerrarTreino"
+      ],
       "related_components": []
     },
     "deck_builder": {
       "description": "Lógica do criador de fichas. Permite arrastar/adicionar exercícios como decks de Clash Royale, pesquisa com autocomplete, filtros por agrupamento muscular e visualização da biblioteca.",
-      "js_files": ["JS/treino/secao-treinos.js"],
+      "js_files": [
+        "JS/treino/secao-treinos.js"
+      ],
       "css_files": [
         "style/treino/3-foco-badges.css",
         "style/treino/5-premium-design.css"
       ],
-      "dom_selectors": ["#section-treinos", "#tab-exercicios", "#tab-montar", "#deckList"],
+      "dom_selectors": [
+        "#section-treinos",
+        "#tab-exercicios",
+        "#tab-montar",
+        "#deckList"
+      ],
       "related_components": []
     },
     "analytics_progress": {
       "description": "Processamento estatístico e analíticos. Calcula estimativas de 1RM por Brzycki, renderiza os gráficos de Radar SVG (Atributos Físicos), exibe históricos e gerencia o Ciclo de 30 Dias. A partir da v3.3.0: a função `renderRadarChart(db, options?)` é generalizada para suportar múltiplos containers (Progresso e Dashboard); os side effects (achievements e tier) são aplicados uma única vez por ciclo de renderização via flag `radarSideEffectsApplied`; o estado `currentRadarMode` (mensal/total) e o tier do radar são compartilhados entre as instâncias de Progresso e Dashboard.",
-      "js_files": ["JS/treino/secao-progresso.js"],
-      "css_files": ["style/treino/4-gamificacao.css"],
-      "dom_selectors": ["#section-progresso", "#radarChartContainer", "#dashRadarChartContainer", "#btnRadarMensal", "#btnRadarTotal", "#btnDashRadarMensal", "#btnDashRadarTotal", ".cycle-xp-fill"],
+      "js_files": [
+        "JS/treino/secao-progresso.js"
+      ],
+      "css_files": [
+        "style/treino/4-gamificacao.css"
+      ],
+      "dom_selectors": [
+        "#section-progresso",
+        "#radarChartContainer",
+        "#dashRadarChartContainer",
+        "#btnRadarMensal",
+        "#btnRadarTotal",
+        "#btnDashRadarMensal",
+        "#btnDashRadarTotal",
+        ".cycle-xp-fill"
+      ],
       "related_components": []
     },
     "dashboard_home": {
       "description": "Tela inicial gamificada do módulo de treino (seção padrão ao abrir o site). Renderiza o Radar Tático de Atributos de Performance (substituiu a imagem da Forja a partir da v3.3.0) no widget central, sugere a ficha do dia, abre o bottom-sheet seletor de fichas e inicia o treino global ao clicar em 'PRÓXIMO PASSO' (seta db.fichaEmAndamento=true, db.fichaEmAndamentoDate=today() e abre a Ficha via `window.openFichaOverlay()`). O Radar exibido no Dashboard compartilha o estado `currentRadarMode` e o tier (Bronze/Prata/Ouro/Diamante/Ametista) com a versão exibida em Progresso; botões Mensal/Total (`#btnDashRadarMensal`/`#btnDashRadarTotal`) ficam sincronizados com os de Progresso. Diferente do Progresso, o radar do Dashboard NÃO exibe o botão de compartilhar nem a legenda 'Baseado na variedade...'. A partir da v3.1.0: o cartão de visitas (calling card) `#dashProfileCard` no header do Dashboard abre o overlay de Perfil via `window.openPerfilOverlay()` em vez de navegar no strip; o botão hambúrguer `#dashBtnMenu` torna-se decorativo (no-op). A partir da v3.2.0: o `startWorkoutFromDashboard` chama `openFichaOverlay()` em vez de `_transitionTo('ficha')` (a Ficha virou overlay fullscreen).",
-      "js_files": ["JS/treino/secao-dashboard.js", "JS/treino/secao-progresso.js"],
-      "css_files": ["style/treino/secoes/dashboard.css"],
-      "dom_selectors": ["[data-section='dashboard']", "#dashBtnIniciar", "#dashWorkoutCard", "#dashProfileCard", "#dashBtnMenu", "#modalSeletorFichas", "#dashRadarChartContainer", "#btnDashRadarMensal", "#btnDashRadarTotal"],
-      "related_components": ["componentes/secoes/dashboard.html", "componentes/secoes/modais.html"]
+      "js_files": [
+        "JS/treino/secao-dashboard.js",
+        "JS/treino/secao-progresso.js"
+      ],
+      "css_files": [
+        "style/treino/secoes/dashboard.css"
+      ],
+      "dom_selectors": [
+        "[data-section='dashboard']",
+        "#dashBtnIniciar",
+        "#dashWorkoutCard",
+        "#dashProfileCard",
+        "#dashBtnMenu",
+        "#modalSeletorFichas",
+        "#dashRadarChartContainer",
+        "#btnDashRadarMensal",
+        "#btnDashRadarTotal"
+      ],
+      "related_components": [
+        "componentes/secoes/dashboard.html",
+        "componentes/secoes/modais.html"
+      ]
     },
     "user_profile": {
       "description": "Área de perfil gamificada, exibida como overlay fullscreen modal (não mais como slide do Swipe Viewport). Contém badges de classe/arquétipo, vitrine de medalhas e conquistas, lista de ofensivas (amigos) e os botões de ação, exportação e importação de backup. Sub-abas gerenciadas via .perf-tab-content-wrapper. Trigger único: clique no cartão de visitas do Dashboard (`#dashProfileCard`). Fechamento: botão X no header do overlay, tecla ESC ou retorno programático. Em ambos os casos o usuário é sempre levado de volta ao Dashboard/Início. A partir da v3.3.1: os botões de backup (exportar/importar) vivem exclusivamente em perf-tab-prefs → perf-subtab2-config e usam data-action em vez de id (defesa contra IDs duplicados).",
-      "js_files": ["JS/treino/secao-perfil.js", "JS/treino/perfil-overlay.js"],
+      "js_files": [
+        "JS/treino/secao-perfil.js",
+        "JS/treino/perfil-overlay.js"
+      ],
       "css_files": [
         "style/treino/4-gamificacao.css",
         "style/treino/5-premium-design.css",
@@ -117,27 +199,47 @@
     },
     "profile_customization": {
       "description": "Central de customização estética inspirada em Call of Duty / RPGs. Permite aplicar skins de temporizadores (Radar/Hourglass), bordas de avatar animadas, títulos e arquétipos de classe desbloqueados.",
-      "js_files": ["JS/treino/secao-customizacao.js"],
-      "css_files": ["style/treino/8-customizacao.css"],
-      "dom_selectors": ["#modalPersonalizarPerfil", ".avatar-preview", ".skin-option-card"],
+      "js_files": [
+        "JS/treino/secao-customizacao.js"
+      ],
+      "css_files": [
+        "style/treino/8-customizacao.css"
+      ],
+      "dom_selectors": [
+        "#modalPersonalizarPerfil",
+        ".avatar-preview",
+        ".skin-option-card"
+      ],
       "related_components": []
     },
     "ui_templates": {
       "description": "Biblioteca centralizada de strings HTML injetáveis. Renderiza de forma dinâmica as linhas da tabela, os cards do grid e os blocos de cardio com tags stagger de animação.",
-      "js_files": ["JS/treino/templates.js"],
-      "css_files": ["style/treino/5-premium-design.css"],
-      "dom_selectors": [".stagger-item"],
+      "js_files": [
+        "JS/treino/templates.js"
+      ],
+      "css_files": [
+        "style/treino/5-premium-design.css"
+      ],
+      "dom_selectors": [
+        ".stagger-item"
+      ],
       "related_components": []
     },
     "mastery_system": {
       "description": "Sistema de Maestria de exercícios. Controla a acumulação de XP por movimento concluído, promovendo de Tiers (Bronze, Prata, Ouro, Elite) com feedbacks visuais ricos.",
-      "js_files": ["JS/treino/secao-ficha.js"],
-      "css_files": ["style/treino/6-maestria.css"],
-      "dom_selectors": [".mastery-badge-wrap", ".xp-bar-fill"],
+      "js_files": [
+        "JS/treino/secao-ficha.js"
+      ],
+      "css_files": [
+        "style/treino/6-maestria.css"
+      ],
+      "dom_selectors": [
+        ".mastery-badge-wrap",
+        ".xp-bar-fill"
+      ],
       "related_components": []
     }
   },
-
   "html_fragments": {
     "description": "Fragmentos HTML modulares carregados via loader.js em tempo de execução. Cada arquivo contém o conteúdo interno de uma section-slide do treino.html. Antes da modularização, todo este conteúdo vivia monoliticamente no treino.html (~2.178 linhas).",
     "modules": [
@@ -173,7 +275,6 @@
       }
     ]
   },
-
   "components": {
     "description": "Scripts de UI globais reutilizáveis localizados em componentes/. São carregados pelo treino.html e atuam transversalmente às seções.",
     "modules": [
@@ -215,42 +316,118 @@
       }
     ]
   },
-
   "styling_manifest": {
     "description": "Todos os arquivos CSS do módulo de treino da VERSÃO LEGADA (Vanilla JS), hoje em Legacy/ (movidos da raiz em 2026-10-15, v4.23.0), carregados em cascata via Legacy/style/treino.css. A ordem numérica define a especificidade. O CSS da versão ATUAL (React) está em src-app/src/**.css e é listado na seção react_app.",
     "style_treino_css": "Contêiner principal de importação de estilos de treino (Legacy/style/treino.css).",
     "global_css": [
-      { "file": "style/main.css", "purpose": "Reset global e variáveis CSS base aplicadas ao site inteiro (fora do módulo de treino)." },
-      { "file": "style/navbar.css", "purpose": "Estilos completos da Top Nav Bar global (desktop e mobile)." },
-      { "file": "style/navbar-fix.css", "purpose": "Correções pontuais de especificidade e layout da navbar em contextos específicos." },
-      { "file": "style/footer.css", "purpose": "Estilos do rodapé global do site." },
-      { "file": "style/franquia.css", "purpose": "Estilos da página de franquia / landing page." },
-      { "file": "style/scroll-animations.css", "purpose": "Definição de keyframes e classes de animações de scroll globais." }
+      {
+        "file": "style/main.css",
+        "purpose": "Reset global e variáveis CSS base aplicadas ao site inteiro (fora do módulo de treino)."
+      },
+      {
+        "file": "style/navbar.css",
+        "purpose": "Estilos completos da Top Nav Bar global (desktop e mobile)."
+      },
+      {
+        "file": "style/navbar-fix.css",
+        "purpose": "Correções pontuais de especificidade e layout da navbar em contextos específicos."
+      },
+      {
+        "file": "style/footer.css",
+        "purpose": "Estilos do rodapé global do site."
+      },
+      {
+        "file": "style/franquia.css",
+        "purpose": "Estilos da página de franquia / landing page."
+      },
+      {
+        "file": "style/scroll-animations.css",
+        "purpose": "Definição de keyframes e classes de animações de scroll globais."
+      }
     ],
     "modules": [
-      { "file": "style/treino/1-core.css", "purpose": "Design tokens (:root), resets e layout base móvel. PONTO DE EDIÇÃO para variáveis globais do app." },
-      { "file": "style/treino/2-modals.css", "purpose": "Especificações visuais para popups de conclusão, compartilhamento e edição." },
-      { "file": "style/treino/3-foco-badges.css", "purpose": "Look-and-feel das tags de músculos, Modo Foco escuro e badges ativas." },
-      { "file": "style/treino/4-gamificacao.css", "purpose": "Métricas visuais, calendário mensal, planner semanal e XP Bars do Ciclo." },
-      { "file": "style/treino/5-premium-design.css", "purpose": "Índice de importação dos estilos modulares de premium design." },
-      { "file": "style/treino/secoes/bg-dinamico.css", "purpose": "Fundo dinâmico da arena (Clash Royale Style), partículas de elixir e coloração hue-rotate de seções." },
-      { "file": "style/treino/secoes/toolbar-busca.css", "purpose": "Filtros de categoria com checkboxes personalizados e campo de busca expansível." },
-      { "file": "style/treino/secoes/deck-builder.css", "purpose": "Estrutura do Deck Builder, grid do deck ativo, slot vazio e área de coleção de cards." },
-      { "file": "style/treino/secoes/cards.css", "purpose": "Design visual dos cards de exercício, overlay de ações (Clash Royale Style), list view e royale view." },
-      { "file": "style/treino/secoes/maestria.css", "purpose": "Menu e modal de desafios de maestria do exercício, recompensas e emblem badges." },
-      { "file": "style/treino/secoes/modais.css", "purpose": "Design premium e efeitos do modal de detalhes do exercício (Stellar Tactical Elite)." },
-      { "file": "style/treino/secoes/tabs-subnav.css", "purpose": "Navegação por dots e sub-navbar integrada." },
-       { "file": "style/treino/secoes/perfil.css", "purpose": "Estilos do perfil, switch toggles estilo iOS, formulário de segurança e planos de assinatura." },
-        { "file": "style/treino/secoes/perfil-overlay.css", "purpose": "Overlay fullscreen do Perfil (v3.1.0+). Container .perfil-overlay com animação de fade-in/scale, header sticky com glassmorphism e título 'MEU PERFIL', botão de fechar CoD-style (.perfil-overlay-close), área scrollable com scrollbar customizada, regras para sub-abas sticky (top:70px) e fallback de ocultação do botão legado .bnav-btn[data-section='perfil']. Z-index 600 (acima do bottom-nav, abaixo do news-overlay)." },
-        { "file": "style/treino/secoes/ficha-overlay.css", "purpose": "Overlay fullscreen da Ficha (v3.2.0+). Container .ficha-overlay full-bleed (sem header fixo, decisão de imersão) com animação de fade-in/scale (320ms cubic-bezier) e fade-out (240ms), área scrollable com scrollbar customizada roxa e `overscroll-behavior: contain`. Ajustes para o conteúdo da ficha dentro do overlay (.treino-container padding-top:0, .treino-hero margin-top:0). Regra `body.ficha-overlay-open` para travar scroll do body. Z-index 600 (mesmo do Perfil)." },
-        { "file": "style/treino/secoes/dashboard.css", "purpose": "Layout e efeitos visuais do Dashboard: header glassmorphism, arena Forja, barra segmentada de XP e bottom-sheet seletor de fichas." },
-       { "file": "style/treino/secoes/placeholders-animacoes.css", "purpose": "Premium placeholders, animações exPulse/exShimmer/exFloat e fade utilities." },
-      { "file": "style/treino/6-maestria.css", "purpose": "Texturas, cores e brilhos para medalhas de Maestria nos Tiers Bronze/Prata/Ouro/Elite." },
-      { "file": "style/treino/7-nav-icons.css", "purpose": "Transições suaves do Bottom Nav e ocultação inteligente de elementos." },
-      { "file": "style/treino/8-customizacao.css", "purpose": "Estilos premium da vitrine de skins de timer, títulos CoD e molduras de avatar. Inclui arquétipos de classe." }
+      {
+        "file": "style/treino/1-core.css",
+        "purpose": "Design tokens (:root), resets e layout base móvel. PONTO DE EDIÇÃO para variáveis globais do app."
+      },
+      {
+        "file": "style/treino/2-modals.css",
+        "purpose": "Especificações visuais para popups de conclusão, compartilhamento e edição."
+      },
+      {
+        "file": "style/treino/3-foco-badges.css",
+        "purpose": "Look-and-feel das tags de músculos, Modo Foco escuro e badges ativas."
+      },
+      {
+        "file": "style/treino/4-gamificacao.css",
+        "purpose": "Métricas visuais, calendário mensal, planner semanal e XP Bars do Ciclo."
+      },
+      {
+        "file": "style/treino/5-premium-design.css",
+        "purpose": "Índice de importação dos estilos modulares de premium design."
+      },
+      {
+        "file": "style/treino/secoes/bg-dinamico.css",
+        "purpose": "Fundo dinâmico da arena (Clash Royale Style), partículas de elixir e coloração hue-rotate de seções."
+      },
+      {
+        "file": "style/treino/secoes/toolbar-busca.css",
+        "purpose": "Filtros de categoria com checkboxes personalizados e campo de busca expansível."
+      },
+      {
+        "file": "style/treino/secoes/deck-builder.css",
+        "purpose": "Estrutura do Deck Builder, grid do deck ativo, slot vazio e área de coleção de cards."
+      },
+      {
+        "file": "style/treino/secoes/cards.css",
+        "purpose": "Design visual dos cards de exercício, overlay de ações (Clash Royale Style), list view e royale view."
+      },
+      {
+        "file": "style/treino/secoes/maestria.css",
+        "purpose": "Menu e modal de desafios de maestria do exercício, recompensas e emblem badges."
+      },
+      {
+        "file": "style/treino/secoes/modais.css",
+        "purpose": "Design premium e efeitos do modal de detalhes do exercício (Stellar Tactical Elite)."
+      },
+      {
+        "file": "style/treino/secoes/tabs-subnav.css",
+        "purpose": "Navegação por dots e sub-navbar integrada."
+      },
+      {
+        "file": "style/treino/secoes/perfil.css",
+        "purpose": "Estilos do perfil, switch toggles estilo iOS, formulário de segurança e planos de assinatura."
+      },
+      {
+        "file": "style/treino/secoes/perfil-overlay.css",
+        "purpose": "Overlay fullscreen do Perfil (v3.1.0+). Container .perfil-overlay com animação de fade-in/scale, header sticky com glassmorphism e título 'MEU PERFIL', botão de fechar CoD-style (.perfil-overlay-close), área scrollable com scrollbar customizada, regras para sub-abas sticky (top:70px) e fallback de ocultação do botão legado .bnav-btn[data-section='perfil']. Z-index 600 (acima do bottom-nav, abaixo do news-overlay)."
+      },
+      {
+        "file": "style/treino/secoes/ficha-overlay.css",
+        "purpose": "Overlay fullscreen da Ficha (v3.2.0+). Container .ficha-overlay full-bleed (sem header fixo, decisão de imersão) com animação de fade-in/scale (320ms cubic-bezier) e fade-out (240ms), área scrollable com scrollbar customizada roxa e `overscroll-behavior: contain`. Ajustes para o conteúdo da ficha dentro do overlay (.treino-container padding-top:0, .treino-hero margin-top:0). Regra `body.ficha-overlay-open` para travar scroll do body. Z-index 600 (mesmo do Perfil)."
+      },
+      {
+        "file": "style/treino/secoes/dashboard.css",
+        "purpose": "Layout e efeitos visuais do Dashboard: header glassmorphism, arena Forja, barra segmentada de XP e bottom-sheet seletor de fichas."
+      },
+      {
+        "file": "style/treino/secoes/placeholders-animacoes.css",
+        "purpose": "Premium placeholders, animações exPulse/exShimmer/exFloat e fade utilities."
+      },
+      {
+        "file": "style/treino/6-maestria.css",
+        "purpose": "Texturas, cores e brilhos para medalhas de Maestria nos Tiers Bronze/Prata/Ouro/Elite."
+      },
+      {
+        "file": "style/treino/7-nav-icons.css",
+        "purpose": "Transições suaves do Bottom Nav e ocultação inteligente de elementos."
+      },
+      {
+        "file": "style/treino/8-customizacao.css",
+        "purpose": "Estilos premium da vitrine de skins de timer, títulos CoD e molduras de avatar. Inclui arquétipos de classe."
+      }
     ]
   },
-
   "assets": {
     "description": "Recursos estáticos servidos diretamente. Gerenciados pelo Service Worker para cache offline.",
     "directories": [
@@ -288,7 +465,6 @@
       }
     ]
   },
-
   "documentation": {
     "description": "Todos os arquivos de documentação e diretrizes do projeto. Leitura obrigatória para agentes de IA antes de editar o código.",
     "files": [
@@ -326,7 +502,6 @@
       }
     ]
   },
-
   "plans": {
     "description": "Documentação de planejamento futuro e progressão de features. Referência para roadmap.",
     "files": [
@@ -364,7 +539,6 @@
       }
     ]
   },
-
   "tooling": {
     "description": "Scripts de apoio do repositório (fora do app React).",
     "files": [
@@ -374,7 +548,6 @@
       }
     ]
   },
-
   "react_app": {
     "description": "Nova versão React v4 (offline-first: IndexedDB/Dexie local + fila de sync Supabase) em src-app/. Objetivo: PARIDADE total de design e funcionalidades com a versão offline v3.5.7 (JS/treino/ + www/). Estratégia aprovada: o JSX emite exatamente o DOM/classes legados, reaproveitando o CSS já importado (src-app/src/legacy-style/). Fases: 0 fundação (CONCLUÍDA em 2026-10-05) → 1 visual (CONCLUÍDA em 2026-10-05: Dashboard, Ficha e Progresso 1:1) → 2 Perfil/temas (CONCLUÍDA em 2026-10-05) → 3 gamificação (CONCLUÍDA em 2026-10-05: Radar Fit + badge de arquétipo + modal-guia, showConclusao/confete + modalEncerrarTreino, maestria, share card, openVolumeDetails, coleção de exercícios + maestria individual, Modo Foco, overlay de missões e fadeSwap/fadeIn) → 4 seção Treinos + swipe + limpeza (CONCLUÍDA em 2026-10-05: port 1:1 de treinos.html/secao-treinos.js/templates.js/montar.js/secao-customizacao.js em 8 arquivos, swipe horizontal com exclusões do nav.js, remoção de SheetsFeature/HistoryFeature/WorkoutProgressChart e oxlint 0 warnings) → 5 pendências de paridade (CONCLUÍDA em 2026-10-06: cronômetro global #globalWorkoutTimer + #modalEncerrarTreino acionáveis pelo #dashBtnIniciar, overlay de Notícias NewsOverlay.tsx, placeholders Social/Loja com DOM .section-coming-soon e BottomNav.tsx 1:1 com 7-nav-icons.css — ActiveWorkoutModal fora do fluxo).",
     "build": {
@@ -385,65 +558,226 @@
       "deploy": "ATENÇÃO: existem dois vercel.json — o da RAIZ declara builds/distDir '../dist' (aponta para Academia/dist/, que está desatualizado desde 2026-10-01) e o de src-app/tem apenas rewrites/headers. O deploy atual só funciona se o Root Directory do projeto Vercel estiver em 'src-app' (aí o artefato é src-app/dist). Verificar essa config antes de qualquer deploy."
     },
     "entry_points": [
-      { "file": "src-app/index.html", "purpose": "Splash screen #splashScreen (imagem mbc_loading_*), #root, pré-carregamento de fontes (Material Symbols, Rajdhani, Font Awesome), meta PWA, script de boot Vite." },
-      { "file": "src-app/src/main.tsx", "purpose": "Importa CSS na ordem legacy → globals → design-tokens → shell.css (último, v4.6.0 — vence empates com CSS legado), dispara bootstrap() e renderiza <App/> em StrictMode. v4.4.0: initPwaInstall() + initAutoFullscreen() são chamados antes do render (captura do beforeinstallprompt e tela cheia automática no primeiro gesto); v4.18.0-music: initBackgroundMusic() também é chamado antes do render (música de fundo MAIN.mp3 — aplica prefs e arma autoplay no primeiro gesto); v4.19.0-music: initAudioEngine() roda ANTES de initBackgroundMusic() e chama claimMusicPlayback() (o motor multi-contexto assume a reprodução; o módulo v4.18 fica só com prefs — sem áudio duplicado). v4.16.0-boot-resilience: apos o createRoot, markReady() (via window.__academiaBoot) quando o root tem filhos e, se houver erro de render na montagem, BootErrorBoundary captura e exibe o overlay de boot do shell com o diagnostic (antes: #root vazio = tela preta)." },
-      { "file": "src-app/src/App.tsx", "purpose": "Casca do app: rotas, providers (Auth, Sync, Theme), overlays globais (Notícias, Missões, Fit ID, Social), swipe detector, portal root, interceptação de transitionTo, boot sequence. Importa ordem CSS: legacy.css → globals.css → design-tokens.css → shell.css (por último)." },
-      { "file": "src-app/src/features/gamification/", "purpose": "Pasta da Fase 3: radar.ts (computeRadarStats/getArchetypeBadge/buildRadarSvgHtml/side effects r_*), useRadarFit.ts (store useRadarMode), RadarChart.tsx (container #dashRadarChartContainer/#radarChartContainer), maestria.ts (MAESTRIA_CHALLENGES/getMaestriaState/trackMaestriaSessoes/computeMasteryTotals), share-store.ts + share-quotes.ts + ShareModal.tsx (#modalShare: cards treino/conquista/radar + Web Share/download com html2canvas; v4.22.0: canvas PRÉ-RENDERIZADO ao abrir o modal p/ share dentro do gesto, fluxo shareNative com files → share com texto → clipboard PNG → download, AbortError sem fallback, cards renomeados EVO FIT e stats do treino em grid 2 colunas EXERCÍCIOS/KG TOTAIS/OFENSIVA/DURAÇÃO sem VOL. MÉDIO), maestria-ui.ts (store useMaestriaUi: coleção/maestriaEx/busca) e ColecaoModals.tsx (#modalColecaoExercicios + #modalMaestriaEx + showRoyaleTooltip)." },
-      { "file": "src-app/src/features/workout/ConclusaoModal.tsx", "purpose": "Port de showConclusao (secao-ficha.js L421–495) + modais.html L1–37: #modalConclusao com confete, stats, marcos (Semana Perfeita), ordem legada de gravação/limpeza; botão COMPARTILHAR TREINO abre o share card (Fase 3)." },
-      { "file": "src-app/src/features/workout/FocusModal.tsx", "purpose": "Modo Foco fullscreen #modalFocus (modais.html L410–462 + secao-ficha.js L754–923): snapshot da ficha, navegação por exercício, botões de série, descanso 60s sincronizado em #focusTimerVal, auto-avanço 1.5s e conclusão atômica do dia (duracaoFoco → focusMin) fechando + showConclusao; iniciado pelo FAB #btnStartFocus da FichaFeature (Fase 3; v4.22.0: o FAB foi removido — o acionador agora é #viewBtnFocus, botão FOCO no seletor de visualização que substituiu o modo Coleção). v4.31.0 — mostra 'Peso inicial sugerido: X' (lib/suggested-load.ts) abaixo de SÉRIES/REPS/CARGA quando o exercício ainda não tem carga definida." },
-
-      { "file": "src-app/src/features/workout/FichaFeature.tsx", "purpose": "Tela da ficha/treino (Fase 3): cronômetro global #globalWorkoutTimer, tabela/grid de exercícios com checks (prefix chk-/chk-grid-), cardio, conclusão (isDone → onWorkoutCompleted com 400ms, suprimido no Modo Foco) e share via useShareStore.openTreino(). v4.22.0: ViewMode perde 'deck' ('table'|'grid' — valor salvo 'deck' migra para 'grid'), view #workoutDeck/deckViewRef/showDeck e o FAB .fab-focus removidos; o 3º slot do .view-selector virou #viewBtnFocus (.view-btn--focus, destaque vermelho) que abre o FocusModal — seletor com exatamente 3 slots (tabela, grid, foco). v4.30.1 — viewAnimKey deixou de incluir `checks`: marcar/desmarcar um exercício não reaplica mais o ui-fade-in (era o 'refresh' visível da página na Ficha); o fade segue na troca de visualização (tabela/grid) e de ficha. v4.31.0 — `hasAe`/`ae` passam por effectiveAerobic: toda ficha COM exercícios exibe a linha de cardio (valores configurados ou o padrão de 10 min de esteira a 3 km/h) e ela entra na contagem de conclusão; e cada exercício sem carga ganha a dica de peso inicial sugerido na tabela (`.vol-text`) e no grid (`.deck-card-sugerida`, linha própria abaixo dos botões). v4.34.0 - hero, a pedido do usuario: o selo do topo troca ACADEMIA por EVO FIT; a contagem de EXERCICIOS deixa de ser `exercises.length` (o TOTAL do banco - 66) e passa a ser o `total` ja calculado na tela (exercicios da ficha aberta + a linha de cardio), a MESMA conta do `totalItems` do botao seletor da previa do Inicio; e o icone de Dias Seguidos deixa o FIRE_SVG (chama desenhada em traco laranja, que so aparecia com sequencia > 0) e passa ao MESMO Material Symbol `local_fire_department` do botao #dashBtnOfensiva da aba Inicio, sempre visivel e CINZA quando a sequencia esta zerada (classe `h-stat-fire--off`, CSS no legacy-style/treino/1-core.css)." },
-      { "file": "src-app/src/features/dashboard/MissionsOverlay.tsx", "purpose": "Overlay de missões #missions-overlay (treino.html L903–1314, <style> inline extraído para missions-overlay.css): 3 abas daily/weekly/guides, openMissionsOverlay/closeMissionsOverlay com lock de body.overflow; mockup estático fiel ao legado; aberto pela pílula #dashBtnMissoes do Dashboard (Fase 3). v4.8.1: renderizado via createPortal(document.body) — o .section-strip (will-change: transform) era o containing block do position:fixed e o overlay ficava fora da viewport; mesmo fix aplicado ao NewsOverlay. v4.8.4-color-standard: cores padronizadas com features/settings/settings.css — fundo #07070b, header/cards #0b0b10 + hairline rgba(255,255,255,0.08), aba ativa var(--primary) com texto near-black, dim #8a8a9c/#5d5d70, trilhos #14141b, fills de progresso (rosa/verde/âmbar) → var(--primary) via const FILL_STYLE, glows sombras divisores via --primary-rgb/hairlines, botão fechar vira classe .ms-close-btn estilo .set-icon-btn (handlers inline vermelhos removidos); classe progress-fill removida das barras (body[data-bar-skin] .progress-fill !important das skins quebrava a padronização); missions-overlay.css acompanha (tabs/hover/arena-bg); geometria/animações intactas." },
-      { "file": "src-app/src/features/dashboard/FichaDeck.tsx", "purpose": "v4.30.0 — corpo do deck Royale de uma ficha, extraído do SheetSelectorModal para ser reutilizado pelo modal e pela PRÉVIA DA FICHA DO DIA no Início (mesmo desenho). Exporta `DeckCard` (cartão do exercício: grupo muscular + imagem/premium-placeholder + nome + Séries: s × r) e `FichaDeck` (grid `.dash-mini-deck__grid` de 4 colunas + linha de aeróbico `.dash-mini-deck__cardio-row` + rodapé `.dash-mini-deck__footer` com VOLUME MÉDIO DE CARGA / MAESTRIA / CARDIO CONFIGURADO). Props: `sheet`, `exercises` (já resolvidos), `legacy`, `showMaestria` (false esconde o widget MAESTRIA/EMBLEMAS — usado na prévia do Início), `emptyMessage`. Os ids de gradiente do SVG (elixir) usam `useId()` porque o componente pode estar montado 2× na mesma página (modal + prévia) — ids duplicados seriam HTML inválido. Volume médio e maestria mantêm as fórmulas do legado (carga×séries×reps/1000 e nível de maestria ≥ 3). v4.31.0 — o cardio vem de effectiveAerobic (padrão 10 min de esteira a 3 km/h) e `hasCardio` = ficha com exercícios OU aeróbico configurado (ficha vazia segue no estado vazio); a linha de aeróbico detalha 'Esteira · 3 km/h · 10 min' e o rodapé mostra ESTEIRA / '3 km/h · 10 min'. v4.31.1 — novo prop `bodyRow?: 'cardio' | 'sheet'` (padrão 'cardio', preserva o modal): com 'sheet' a linha abaixo do grid vira a IDENTIFICAÇÃO da ficha (escudo + 'TREINO {letra}' + etiqueta FICHA DO DIA, no acento do tema) no lugar da linha verde de cardio; o prop `firstStat`/`lastStat` do rodapé foi REMOVIDO e o rodapé voltou a ser volume médio de carga + (maestria) + cardio nas DUAS telas. v4.32.0 — o VOLUME MÉDIO DE CARGA passa a ser `averageLoadKg(exercises)` (média das cargas EFETIVAS: a salva em `load` ou, se vazia, a SUGERIDA por nome/grupo — helpers novos de suggested-load.ts) no lugar de `Σ(carga×séries×reps)/n/1000`, que só lia o campo `load` (sempre vazio no seed → 0.0) e usava uma métrica diferente da do 'Minha Ficha' com o MESMO rótulo; o ícone do widget vira o <VolumeKgIcon className=\"dash-mini-deck__stat-icon kg\"/> (o elixir rosa com gradiente saiu, e com ele o useId/elixirId); e com `bodyRow='sheet'` a linha de identificação da ficha sobe para ANTES do grid (classe `--head`), abrindo a prévia com 'TREINO X · FICHA DO DIA'. v4.33.0 - o ícone de cardio do rodapé deixa o #a855f7 fixo e passa a currentColor + `.dash-mini-deck__stat-icon.pulse { color: var(--primary-light) }`, a MESMA fonte de cor do cardio do 'Minha Ficha' (.cardio-icon svg), então o widget acompanha o tema escolhido." },
-      { "file": "src-app/src/features/dashboard/DashboardFeature.tsx", "purpose": "Seção Início (dashboard): DOM legado do calling-card, dash-missions-pill, arena card com radar, card sugerido e ciclo. #dashBtnNoticias abre <NewsOverlay/>, #dashBtnMissoes abre <MissionsOverlay/> (ambos via createPortal desde v4.8.1). v4.8.3-navbars: props novas overlay/onOverlayChange (estado local missionsOpen/newsOpen removido); botões do header/pílula chamam onOverlayChange('news'|'missions'); montagem dos overlays com open={overlay === '...'} e onClose={() => onOverlayChange(null)} — o estado vive no App.tsx para a MobileDrawer poder abrir os overlays de qualquer seção. v4.29.0 — topo em 2 colunas (`.dash-top-row` = `.dash-top-left` 60% com banner+`.dash-identity` | `.dash-top-right` ~40% com botões+MISSÕES, bases alinhadas). v4.30.0 — o RADAR saiu do Início (segue só na Progresso) e o card central virou a PRÉVIA DA FICHA DO DIA (<FichaDeck showMaestria={false}/>, largura total) com a barra de progresso do CICLO em 30 divisões (`.dash-cycle-segments`, `cycle.done` divisões `.filled`) logo abaixo, mantendo a coroa #dashBtnSeletorCrown; o botão Social virou OFENSIVA (#dashBtnOfensiva = chama + #dashStreakValue = getStreak(history)); #dashBtnNoticias usa o ícone `newspaper`; o rótulo 'Missões' saiu da pílula; e a linha de boas-vindas virou texto CONTEXTUAL (#dashGreeting): 'Treino de hoje concluído ✓' se concluído hoje, 'Bem vindo de volta,' só no 1º acesso do dia ao site (localStorage academia_dash_greeting_date) e 'Treino de hoje: FICHA X' ao voltar ao Início (evento sectionchange). Em tela cheia (html.app-fullscreen / display-mode standalone) o .dash-container abre mais espaço vertical via gap — ver shell.css. v4.30.1 — a linha 'SEM CLÃ' saiu do markup (usuário sem clã não exibe nada). v4.31.1 — a prévia usa <FichaDeck showMaestria={false} bodyRow=\"sheet\"/> (a linha do corpo mostra 'TREINO B · FICHA DO DIA' e o rodapé volta a ser VOLUME MÉDIO DE CARGA + CARDIO CONFIGURADO); #dashBtnMenu (que não fazia nada) abre o <InicioMenuModal/> via novo estado menuOpen, e a opção Fit ID abre o <FitIdOverlay/> (fitIdOpen) com nome/avatar/título/XP/ofensiva/fichas/histórico do usuário; novo prop `onOpenSettings` (recebe o openProfileSettings do App.tsx) usado por Configurações no menu e pela engrenagem do Fit ID; o botão de ofensiva recebe a classe `dash-streak-btn--off` quando getStreak(history) === 0 (chama cinza). v4.34.0 - no botao SELETOR DE FICHA da barra inferior, a letra do treino (A/B) sai do selo roxo sobre a miniatura (.dash-workout-letter-badge, removido do JSX) e passa a ser exibida na MESMA linha do \"N ex\", em cinza: `#dashWorkoutLetter` virou um <span class=\"dash-workout-ex-letter\"> DENTRO do <span class=\"dash-workout-ex-count\" id=\"dashWkDetail\"> (ids mantidos - o legado e as sondas os procuram). Resultado: \"TREINO\" / \"A 5 ex\"." },
-      { "file": "src-app/src/features/dashboard/InicioMenuModal.tsx", "purpose": "v4.31.1 — menu popup do botão MENU do Início (#dashBtnMenu), no desenho do menu do Clash Royale adaptado à paleta do site: portal para document.body (mesma causa-raiz dos demais overlays — o .section-strip com will-change/transform seria o containing block do position:fixed), fecha no Esc e no clique do backdrop e trava o scroll do body. 4 grupos separados por hairlines, na ordem: Registro de Treinos e Rankings (placeholders → showToast('… em breve.', 'info') + fecha, com a pílula 'Em breve'), Mensagens (→ onOpenMessages = aba Social, onde vive o bate-papo), Configurações (→ onOpenSettings = hub de configurações do Perfil), Ajuda (placeholder) e Fit ID (→ onOpenFitId). Cada item leva data-menu-item (usado pelos probes). v4.33.0 - novo item TELA CHEIA (entrar/sair) entre Ajuda e Fit ID: 7 itens em 5 grupos; usa o hook useCrossBrowserFullscreen do shell (mesma instância/estado do Drawer e da Sidebar HUD), com ícone próprio (maximizar/minimizar, 17px como os demais) e rótulo dinâmico ('Tela cheia'/'Sair da tela cheia'); a ação é toggleFullscreen + fecha o menu (o estado reage ao evento fullscreenchange)." },
-      { "file": "src-app/src/features/dashboard/FitIdOverlay.tsx", "purpose": "v4.31.1 — tela de identidade 'Fit ID' inspirada no Supercell ID (portal + tela cheia; o X e o Esc fecham). Header com engrenagem (→ onOpenSettings), avatar (imagem do emblema quando existe, senão dicebear), chip FIT ID, nome e subtítulo ('TÍTULO · OFENSIVA N DIAS'). 3 abas, voltando para a 1ª a cada abertura: RECOMPENSAS DE IDENTIFICAÇÃO (cartão destaque EVO FIT + nome + CONECTADO + PONTUAÇÃO TOTAL = XP, 3 mini-stats treinos/ofensiva/nível e o cartão 'Junte pontos e ganha prêmios'), AMIGOS (reusa FRIENDS de features/social/social-data.ts: status online/em treino/offline, troféus e CTA 'Adicionar amigo') e MEUS DADOS (adaptação de 'Jogos Meus': linha em destaque do app + as fichas do usuário com o nº de exercícios e os treinos concluídos de cada letra, lidos de history.completedKeys/sheetKey). Recompensas e CTAs são placeholders com toast info — nada é gravado." },
-      { "file": "src-app/src/features/dashboard/inicio-menu.css", "purpose": "v4.31.1 — estilos do menu popup (.inicio-menu: painel #0e0d1a→#07060d, botões 'chunky' com gradiente do acento --primary-rgb + bisel interno + sombra inferior, separadores, pílula 'Em breve', animação de entrada) e do Fit ID (.fitid-*: header com radial do acento, cartões #0b0b10 + hairline rgba(255,255,255,0.08), abas com a ativa em var(--primary), pílulas de status, linha em destaque e CTAs). Usa os tokens do tema (--primary/--primary-rgb/--primary-light com fallback) e traz a regra de desktop (min-width:1024px) com a janela centralizada, no mesmo racional de MissionsOverlay/Notícias. v4.32.0 — menu REFEITO sobre a imagem de referência anexada pelo usuário: .inicio-menu vira painel ANCORADO (position:fixed, top/right/max-height escritos em runtime a partir do rect de #dashBtnMenu pelo useLayoutEffect do componente, com fallback 72px/14px no 1º paint), estreito (width min(74vw,320px), antes 400px centralizados), SEM .inicio-menu__head/__title/__close e com seta ::before apontando para o botão; os itens deixam o botão 'chunky' (gradiente do acento + bisel) e passam a usar a linguagem do próprio app — .inicio-menu__item (hairline + fundo rgba(255,255,255,0.03), hover no acento) com .inicio-menu__icon (quadrado 30px raio 9 com o ícone SVG do app) e .inicio-menu__label —, separados por .inicio-menu__sep; a pílula .inicio-menu__soon foi REMOVIDA (o 'em breve' agora só aparece por toast ao tocar no placeholder) e a animação de entrada passa a vir do canto superior direito (scale(0.94) translate(6px,-8px))." },
-      { "file": "src-app/src/features/news/", "purpose": "Overlay de Notícias da Fase 5: NewsOverlay.tsx + news-overlay.css (novos) portam #news-overlay (treino.html L303–427 DOM/CSS extraído para o CSS, L429–599 comportamento) — 3 abas noticias/atualizacoes/guias com .tab-content/.active, 4 cartões de notícia + 7 de atualização, botões MOSTRAR MAIS (remoção de .hidden-news/.hidden-updates), detail views #news-detail-view/#update-detail-view com hidden-view/active (slide 300 ms), paginação btn-prev/btn-next com fade 200 ms (índice avança no clique, DOM só após o timeout), conteúdo via dangerouslySetInnerHTML, FOOTER_HTML do componentes/footer.js injetado nos 3 containers (lista + 2 detalhes) e lock de body.overflow; bloco v4.0.10-news-parity no CSS (revert-layer escopado + pins de cor/lh de ícone) fecha a cascata Tailwind v4 vs vendor legado e a view de detalhe foi medida sem diffs visuais (2026-10-07); aberto pela pílula #dashBtnNoticias do Dashboard; v4.8.1: createPortal(document.body) (mesma causa de containing block do MissionsOverlay — fixed dentro do .section-strip)." },
-      { "file": "src-app/src/features/social/", "purpose": "Aba SOCIAL (v4.0.14-social-placeholder): SocialFeature.tsx + social.css + social-data.ts + social-icons.tsx — port do conteúdo de Ligas.html (3 sub-abas Liga/Amigos/Guilda, banner de temporada, Caminho das Ligas com resgates, ranking filtrável, grid de amigos, guilda com chat local/membros/doações/guerra e 3 modais) montado em App.tsx no branch social via .section-slide (o placeholder .section-coming-soon da Loja foi separado e segue 1:1 com treino.html L197–207); tipografia/tokens do app, superfícies glass translúcidas (fundo dinâmico da arena visível) e ícones SVG stroke no lugar dos emojis; PLACEHOLDER em estado React local, sem persistência. v4.14.0: 'Compartilhar Recompensa' usa shareNative() (lib/native-share.ts) — folha nativa do SO em HTTPS com texto + link do app; sem suporte/cancelada → clipboard + toast 'Copiado' como antes." },
-      { "file": "src-app/src/features/settings/", "purpose": "Shell de hubs reutilizável (HubShell.tsx, SettingsFeature.tsx) — 5 tiles de config espalhados na raiz do hub do Perfil (conta, segurança, notificações, cores, exibição); theme-colors.ts (12 presets + custom) + ColorPickerModal.tsx; settings.css (BEM .set-*) + player-prefs (música: modo flex/fixo, 6 posições, visibilidade)." },
-      { "file": "src-app/src/features/profile/ProfileFeature.tsx", "purpose": "Overlay do Perfil como hub fullscreen (v4.3.0-profile-hub; v4.5.1: sem tile Configurações): raiz com 8 tiles — 3 grupos (Perfil/Progressão/Personalizar) + 5 tiles de config promovidos (Sua Conta/Segurança/Notificações/Cores/Exibição-PWA) + hubExtra (linha Sair da Conta) — via features/settings/HubShell com navStack controlado — as 4 sub-abas #perfTabNav e o localStorage.academia_perfil_tab foram REMOVIDOS; cada grupo abre seus filhos (Perfil: Cartão/Ofensivas/Medalhas; Progressão: dev row como head + Visão Geral/Nível e XP/Conquistas; Personalizar: #btnSalvarCustomizacaoTab herdado pelo grupo + Identidade/Frase/Em Destaque/Título); os 5 tiles de config vêm de useSettingsGroup (tile conta ganha keywords recursivas via screenKeywords); busca só na raiz com keywords dos leaves; #btnEditarPerfil navega p/ personalizar/identidade via setNavStack; shell do overlay (header + #perfilOverlayClose) permanece no App.tsx." },
-      { "file": "src-app/src/features/profile/profile-data.ts", "purpose": "Estado e persistência do Perfil: tiles dinâmicos (hubShell), avatares/molduras/banners (Fit ID), cores do tema, preferências de lock/biometria, wallpapers de lock, export/import de conta." },
-      { "file": "src-app/src/features/profile/useProfileState.ts", "purpose": "Hook useProfileState(): leitura/upsert do registro profileState (IndexedDB v3) com listeners 'academia:db-ready' e 'academia:profile-updated'." },
-      { "file": "src-app/src/features/workout/treinos/", "purpose": "Pasta da Fase 4: TreinosFeature.tsx (raiz #section-treinos — header/busca, abas .t-tab-btn e sub-abas .sub-nav-btn com fadeSwap+flushSync+fadeIn, eventos delegados de imagem e ESC fecha todos os overlays), treinos-store.ts (store da seção com defaults de db.js L43–47), treinos-helpers.ts (sheets/deck DECK_MAX=8/templates/ciclo novo), cards.tsx (grid/coleção/deck com DnD e menus), ExercicioFormModal.tsx, TreinosModals.tsx (Confirm/Image/Aerobico/CRDetails/MaestriaGeral — todos via createPortal(document.body) porque o .section-strip tem will-change:transform e viraria o containing block do position:fixed do .modal-overlay) e CustomizacaoTabs.tsx (personalização: banners/identidade/itens mágicos/emotes/emblemas com toasts literais). v4.31.0 — treinos-helpers.ts: computeDeckStats usa effectiveAerobic (o rodapé do Minha Ficha mostra o cardio padrão 10min / Esteira • 3km/h) e defaultSheet() SEGUE com aerobic null (gravar o padrão faria fichas vazias passarem por prontas em getAvailableWorkouts/determineNextTreino); TreinosModals.tsx: o AerobicoModal abre pré-preenchido com o padrão (campo a campo); cards.tsx: TreinosGridCard mostra a dica de peso inicial sugerido; ExercicioFormModal.tsx: o placeholder do campo Carga vira 'Sugerido: X' conforme o nome digitado. v4.31.1 — ExercicioFormModal.tsx: o peso sugerido passa a PREENCHER o campo Carga (acompanha nome/grupo/tags enquanto o usuário não digita — `cargaTouchedRef` — e nunca sobrescreve o valor digitado), com o placeholder 'Sugerido: X' mantido como dica quando o campo é apagado. v4.32.0 — treinos-helpers.ts: computeDeckStats usa effectiveLoadKg (carga salva ou, se vazia, a sugerida) no lugar do parseFloat cru, então o rodapé do 'Minha Ficha' deixa de mostrar 0.0; MontarTab.tsx troca o <div className=\"volume-drop\"/> pelo <VolumeKgIcon className=\"volume-kg-icon\" size={24}/>. v4.33.0 - TreinosFeature.tsx: TAB_ICON_EX (sub-aba PERSONALIZAR) deixa o ícone improvisado de halteres e passa aos 3 SLIDERS da imagem de referência do usuário (linhas em y=5.5/12/18.5 com knob em anel r=1.9/traço 2.2 - geometria calibrada para 16px, knobs maiores se sobrepõem entre as linhas)." },
-      { "file": "src-app/src/core/auth/use-auth.ts", "purpose": "Hook useAuth extraído de auth-context.tsx na Fase 4 (fast-refresh: provider e hook em arquivos separados; AuthContext/AuthContextValue exportados do módulo do provider)." },
-      { "file": "src-app/src/core/auth/auth-context.tsx", "purpose": "AuthProvider (v4.9.0-sync): sessão Supabase real via getSession/onAuthStateChange + signIn/signUp/signInWithGoogle (signInWithOAuth redirect)/signOut/resetPassword, com guard isSupabaseConfigured (Modo Offline gracioso; clearLocalDB no signOut). v4.15.0-auth: Google OAuth com prompt='select_account' (seletor de contas amigável; access_type='offline' mantido p/ refresh token) + efeito do 'Manter conectado' — com mbc_remember_me='false' as chaves de sessão sb-*-auth-token são removidas no pagehide (a sessão não persiste além da aba; recarregar também encerra)." },
-      { "file": "src-app/src/core/db/queries.ts", "purpose": "Contrato de dados da Fase 1: loadLocalData(), helpers de derivação do legado (getTodayTreino/determineNextTreino, getStreak, getXp, getCycleStats (contagem POR FICHA do getCycleProgress do dashboard — soma das completedKeys desde currentCycleStartDate com fallback currentFichaWorkouts, independente da flag transitória completed; a Progresso segue por-dia como no legado), todayLabel) e mutações puras de hoje (toggleCheckEntry/toggleSetEntry/selectSheetEntry/applyFichaCompletion)." },
-      { "file": "src-app/src/core/db/bootstrap.ts", "purpose": "Ordem offline-first idempotente: ensureSeed() → backfillExerciseImages() (restaura imageUrl de exercícios com GIF novo, v4.0.11-lombar-gif) → migrateLegacyData() → ensureProfileState() → flushQueue() → dispara o evento 'academia:db-ready' (a UI que lê IDB refaz a carga)." },
-      { "file": "src-app/src/lib/auto-fullscreen.ts", "purpose": "Hook useCrossBrowserFullscreen: wrapper unificado document.fullscreenElement / webkit / moz / ms; reage a fullscreenchange; usado por Sidebar, Drawer, InicioMenuModal (TELA CHEIA)." },
-      { "file": "src-app/src/lib/native-share.ts", "purpose": "Compartilhamento nativo do SO via Web Share API (v4.14.0): shareNative(data) → 'shared'|'cancelled'|'unsupported'|'error' com guarda canShare (files recusado no desktop → fallback clipboard/download pelo chamador) e canNativeShare(). Criado porque em HTTP local (legacy) a API não existia fora de contexto seguro; em HTTPS (Vercel) a folha nativa Android/Windows/iOS passa a ser usada. Consumidores: LigasFeature (Compartilhar Recompensa — texto + window.location.origin); ShareModal.tsx e backup.ts já usavam navigator.share com files nativamente." },
-      { "file": "src-app/src/lib/pwa-install.ts", "purpose": "Instalação do app como PWA (v4.4.0): captura o beforeinstallprompt em initPwaInstall() (chamado no main.tsx), expõe getInstallState() ('available'|'installed'|'unavailable'), promptInstall() e os eventos 'academia:pwa-install-available'/'academia:pwa-installed' consumidos pelo botão Instalar App das Configurações. O app já era PWA (vite-plugin-pwa: manifest + SW)." },
-      { "file": "src-app/src/lib/background-music.ts", "purpose": "Música de fundo do app (v4.18.0-music): singleton HTMLAudioElement tocando /assets/sounds/MAIN.mp3 em loop. initBackgroundMusic() (chamado no main.tsx) aplica as prefs salvas (academia_pref_music_enabled ausente = ligada; academia_pref_music_volume ausente = 70, faixa 0–100) e tenta play() — bloqueado pela política de autoplay dos navegadores, o play é adiado até o primeiro gesto (pointerdown/keydown capture, re-armado a cada gesto até dar certo). setMusicEnabled()/setMusicVolume() persistem e disparam 'academia:music-changed' (detail {enabled, volume}); volume 0 = mudo sem desligar; no iOS Safari audio.volume é read-only (degradação graciosa — o switch continua funcional). Consumido pelo card 'Música de Fundo' em SettingsFeature (tela exibicao). v4.19.0-music: ganhou claimMusicPlayback() + flag playbackClaimed — quando o audio-engine assume a reprodução (initAudioEngine chama claim no boot), playMusicNow/pauseMusicNow/initBackgroundMusic viram no-op e este módulo fica só com prefs + evento academia:music-changed (evita dois players de MAIN.mp3)." },
-      { "file": "src-app/src/features/music/audio-engine.ts", "purpose": "Motor de áudio multi-contexto (v4.19.0-music): assume a reprodução global (claimMusicPlayback no boot) e gere contextos main(MAIN.mp3 loop)/workout(Black Panther loop)/result(RESULT.mp3 1x → volta main no ended)/missions(Revenger Phoenix loop)/workout-user(playlist do usuário). Escuta eventos disparados pelo App.tsx: academia:workout-started (playlist ativa com itens vence; senão faixa do site se academia_pref_workout_music ligado; senão silêncio), academia:workout-completed (stopUserQueue + RESULT), academia:workout-closed|cancelled (volta MAIN), academia:missions-open|close (pausa o atual, toca Revenger, ao fechar retoma anterior). Volume/master reagem a academia:music-changed em tempo real. Hidrata a useLibraryStore no boot (hydrate()) p/ a playlist de treino valer sem abrir a interface antes. Fila do usuário avança em loop (upload via blob URL + YouTube via IFrame API carregada sob demanda, player oculto 1x1, avança na ENDED); itens Spotify são pulados no treino (embed não força autoplay). Autoplay adiado ao 1º gesto. playSiteTrackFromUi/playPlaylistFromUi/togglePlayback/getMusicState são a API para a interface de Músicas. v4.20.0: nextTrack()/prevTrack() para o miniplayer flutuante — na fila workout-user percorrem a playlist em loop, nos contextos do site percorrem SITE_ORDER [main, workout, missions, result]. v4.21.0: Media Session API — updateMediaSession() seta navigator.mediaSession.metadata (título/artista/álbum 'Academia Evo Fit' + arte 192/512px) a cada emitState e setupMediaSessionHandlers() (no initAudioEngine) liga play/pause/previoustrack/nexttrack/seekbackward/seekforward — a notificação do Android ganha nome, barra de progresso e avançar/retroceder para uploads e faixas do site; updatePositionState() (loadedmetadata/timeupdate dos dois audio) alimenta a progress bar + seekBy(±10s). Fila aceita itens kind 'site' (isPlayableItem): playQueueIndex toca o siteAudio sem loop para o ended avançar a fila; togglePlayback/seekBy escolhem o elemento de áudio ativo correto; stopUserQueue pausa a faixa do site da fila. v4.22.0: Media Session SELETIVO — currentSiteId + MS_HIDDEN_SITES {'main','missions','result'}: updateMediaSession() zera o metadata e updatePositionState() não publica posição nessas 3 faixas (notificação do Android fica livre para uploads/Black Panther); playSite()/playQueueIndex() atualizam currentSiteId e playQueueIndex chama registerPlay() dos uploads (contagem de toques)." },
-      { "file": "src-app/src/features/music/media-store.ts", "purpose": "Biblioteca de música do usuário (v4.19.0-music), duas camadas: blobs de áudio (uploads) em IndexedDB academia_media_db/store audio_blobs (localStorage não aguenta arquivos grandes) + metadados (tracks/playlists/playlist ativa) em localStorage academia_music_library_v1. useLibraryStore (zustand): addUpload/removeTrack/createPlaylist/deletePlaylist/addUploadToPlaylist/addExternalToPlaylist/removeItem/setActivePlaylist/hydrate. Tipos UploadTrack(kind 'upload')/PlaylistItem(upload|youtube|spotify)/Playlist. Helpers parseYouTubeRef (watch?v=/youtu.be/playlist?list=/shorts → {kind,id}) e parseSpotifyRef (open.spotify.com/playlist/<id> ou ID cru). Itens Spotify em playlist de treino são pulados pelo motor. v4.20.0: Playlist ganhou cover (data URL de imagem reduzida ~320px/JPEG) + renamePlaylist(id, name) e setPlaylistCover(id, cover). v4.21.0: PlaylistItem ganhou kind 'site' ({id,kind,siteId,title}) + SiteTrackId; MusicLibrary ganhou pinnedQuick: string[] (chaves pl:/trk:/site:) e seeded: boolean; helpers pinPlaylistKey/pinTrackKey/pinSiteKey. Migração única seedLibrary() no hydrate(): cria a playlist 'Evo Fit' (pl-evo-fit) com as 4 faixas do site e 'Suas músicas' (pl-suas-musicas) recebendo todos os uploads existentes — flag seeded impede recriação após exclusão. addUpload() adiciona o item novo em 'Suas músicas'; removeTrack()/deletePlaylist() limpam a fixação em pinnedQuick; novo togglePin(key). v4.22.0: UploadTrack ganhou durationSec? (sondada no envio via probeAudioDuration(file)) e playCount?; novo action registerPlay(trackId) incrementa/persiste as reproduções (chamado pelo audio-engine)." },
-      { "file": "src-app/src/features/music/MusicOverlay.tsx", "purpose": "Overlay de músicas/playlists (abas Biblioteca/Playlists/Recentes), player flexível (painel arrastável) / fixo (pastilha contador), persistência via player-prefs, academia:player-prefs-changed." },
-      { "file": "src-app/src/features/music/music.css", "purpose": "Estilos do MusicOverlay, FloatingMiniPlayer, WorkoutNowPlayingBar: .mu-*, .fmp*, .wnp*; player flex/fixo, 6 posições, slider segundos, badge estado." },
-      { "file": "src-app/src/features/music/FloatingMiniPlayer.tsx", "purpose": "Miniplayer flutuante global (v4.20.0-music): widget fixed com z-index 660 montado no App.tsx — arte + título + retroceder/pausar/avançar (nextTrack/prevTrack/togglePlayback do audio-engine), arrastável pela área .fmp__top (pointer capture com try/catch) e redimensionável pela alça .fmp__grip (230–520 × 116–300 px, escala visual derivada da altura); posição/tamanho persistidos em academia_floating_player_rect_v1 e sempre encaixados na viewport pelo helper fit() (arrasto, resize, janela e load — impede o painel de sair da tela ao crescer); renderiza só quando há faixa (title/playing), o '×' oculta até a próxima faixa e ele volta a aparecer; escuta academia:music-state e importa music.css. v4.22.0: DOIS MODOS via features/music/player-prefs.ts — 'flex' (painel acima, inalterado) e 'fixed' (pastilha .fmp-pill no estilo do contador de duração do treino, âncora entre 6 posições, border-left accent, label 'Tocando agora' + mini controles); visibilidade 'always' ou 'timed' (some N segundos, default 7, após a ÚLTIMA troca de música — reset só em eventos de faixa/prefs, nunca síncrono no effect); reage a academia:player-prefs-changed." },
-
-      { "file": "src-app/src/features/music/player-prefs.ts", "purpose": "Preferências do miniplayer (v4.22.0): PlayerMode 'flex'|'fixed', PlayerPos (6 âncoras tl/tc/tr/bl/bc/br), PlayerPersist 'always'|'timed' e segundos (3–60, default 7 — getPlayerHideSecs trata raw ausente para não virar 0 via Number(null)). Chaves academia_pref_player_mode/pos/persist/secs em localStorage; setters despacham o evento window 'academia:player-prefs-changed' (SettingsFeature escreve, FloatingMiniPlayer relê). PLAYER_POSITIONS alimenta o grid de posições das Configurações." },
-
-      { "file": "src-app/src/features/music/useKeyboardInset.ts", "purpose": "Hook useKeyboardInset() (v4.21.0-music) — mede a altura real do teclado Android (window.innerHeight − visualViewport.height − offsetTop) e devolve em px via state, com listeners em visualViewport resize/scroll + window resize. Resolve o bottom-sheet coberto pelo teclado em PWA fullscreen/standalone, onde o interactive-widget=resizes-content do index.html é ignorado; quando o navegador já redimensiona o layout a diferença é ~0 e nada muda (sem empurrão duplo). Usado pelos modais do MusicOverlay (padding-bottom var(--mu-kb) no .mu-modal)." },
-
-      { "file": "src-app/src/features/music/WorkoutNowPlayingBar.tsx", "purpose": "Barra de música no rodapé da Ficha (v4.21.0-music): montada como último filho de .ficha-overlay no App.tsx — arte (Music2) + título/artista lidos do estado academia:music-state + controles retroceder/pausar/avançar (prevTrack/togglePlayback/nextTrack do audio-engine). Visível quando a música no treino está configurada (pref academia_pref_workout_music ligada OU playlist de treino escolhida — activePlaylistId da useLibraryStore), reagindo a academia:music-changed para refletir troca de pref durante o treino. Importa music.css (.wnp*)." },
-      { "file": "src-app/src/lib/fullscreen.ts", "purpose": "Wrapper nativo requestFullscreen/exitFullscreen com fallback vendor prefixes; retorna {enter, exit, toggle, isFullscreen}; base para useCrossBrowserFullscreen." },
-      { "file": "src-app/src/lib/suggested-load.ts", "purpose": "Calcula carga sugerida por exercício/músculo (progressão linear + fadiga); usado em MontarTab e FichaFeature para preencher séries/reps/peso iniciais." },
-      { "file": "src-app/src/lib/animations.ts", "purpose": "Presets de motion (fadeIn, fadeSwap, slideUp, scaleIn, stagger) + hooks useMotion; durações/ezings centralizadas para consistência cross-component." },
-      { "file": "src-app/src/lib/motion-presets.ts", "purpose": "Springs compartilhados do Motion v12 (SPRING_SETTLE/SPRING_EXIT/SPRING_SOFT) usados por animations.ts, MobileDrawer e demais animações. v4.8.3.1: recalibrados pelo transitionguide.md — SETTLE 260/28/1 (periodo ~390ms, zeta ~0.87, overshoot <1px), EXIT 340/32/1, SOFT 220/24/0.9 — fluidez premium com interrupção natural preservada. v4.8.3.2: novo SPRING_SLIDE { stiffness: 380, damping: 38, mass: 1 } usado pelo slideSwap lateral da fita pré-montada." },
-      { "file": "src-app/src/components/VolumeKgIcon.tsx", "purpose": "v4.32.0 — ícone do widget VOLUME MÉDIO DE CARGA: prato de peso (anilha) com alça e o texto KG vazado, recriado a partir da imagem de referência do usuário (o elixir rosa saiu). SVG 512×512 com <mask> — o prato é preenchido com currentColor e as letras (paths em traço 38, nunca <text>, para não depender de fonte carregada) viram furos, revelando o fundo do widget: mesma silhueta do original (prato escuro/letras claras), invertida para o tema escuro do app. Exceção consciente ao Diretrizes/Ícones.md (silhueta preenchida, não stroke — documentada na §8). `size` (default 22, rodapé do deck) e useId() no id da mask (o ícone monta 2× na página). Consumidores: FichaDeck (.dash-mini-deck__stat-icon.kg) e MontarTab (.volume-kg-icon, no lugar do triângulo .volume-drop). v4.33.0 - as letras 'KG' foram REFEITAS: em 22px o desenho antigo (traço 38, G de raio 44) virava um borrão. Agora usam traço 42 e corpo 135 (y 290-425), com o G em desenho geométrico clássico (anel de raio 52 - 146 de diâmetro e contra-forma de 62 - aberto no alto à direita, arco 'A 52 52' de 46° a -6°, + barra horizontal do anel até o centro, como o G do logo do Google) e o K com haste em x=145 e braços simétricos; folga de 26 entre as letras e conjunto centralizado no eixo do prato (centro 256). v4.34.0 - as letras KG foram REMOVIDAS a pedido do usuario (o prato ficou): o componente perdeu o <mask>, o useId() e os paths das letras - agora e UMA silhueta preenchida (um unico <path fill=\"currentColor\"> = prato trapezoidal + alca). PLATE_PATH/HANDLE_PATH seguem no arquivo e os consumidores nao mudaram (.dash-mini-deck__stat-icon.kg no FichaDeck e .volume-kg-icon no MontarTab)." },
-      { "file": "src-app/src/components/MobileTopBar.tsx [REMOVIDO v4.32.0]", "purpose": "Top Bar mobile (v4.6.0–v4.31.1) — avatar com o emblema do perfil, busca geral e alternador de tela cheia, fixa/transparente com offset de 56px no .section-slide (v4.13.0). REMOVIDA a pedido do usuário (\"para aproveitar melhor o espaço da tela\"): o componente foi apagado, o <MobileTopBar/> saiu do App.tsx e as regras .top-bar* (e as molduras [data-frame] do avatar) saíram do shell.css. Os recursos seguem no Drawer da Bottom Nav (MobileDrawer: Busca Geral + Tela cheia + avatar/Perfil) e no banner do Início (#dash-profile-avatar)." },
-      { "file": "src-app/src/components/DesktopSidebar.tsx", "purpose": "Sidebar HUD desktop (colapsável, z-index 1100): navegação por seções, ProfileEmblem, badges de notificação, animação slide-in/out, integração useCrossBrowserFullscreen." },
-      { "file": "src-app/src/components/BottomNav.tsx", "purpose": "Navbar inferior mobile. Fase 5: DOM 1:1 com treino.html L1046–1077 (classes legadas .bottom-nav/.bnav-btn/.bnav-icon/.bnav-label/.bnav-active-dot, data-section, ids bnavProgresso…). v4.5.x: lógica de scroll flexível (bnav-hidden, threshold 8px, evento academia:navbar-mode-changed). v4.8.3-navbars: novo prop onOpenMenu; 1º botão = Menu (#bnavMenu, .bnav-btn--menu, hamburger SVG, data-section=\"menu\") em ambos os formatos antes das 5 seções; estado shape lido de academia_pref_navbar_shape com listener de academia:navbar-shape-changed alterna .bnav-oval no <nav> (modo oval: labels ocultos fora do ativo + Menu sempre visível; modo reto: todos os labels — paridade legada). v4.8.3.1: item Progresso REMOVIDO da barra inferior (barra = Menu + Treinos + Início + Social + Loja); Progresso segue na sidebar desktop e na drawer mobile; SECTIONS_ORDER/swipe intactos. v4.14.0 (bug 'navbar só aparecia após toque'): no modo Flexível o handler de scroll IGNORA slides INATIVOS (activeSectionRef) — o Chrome Android restaura o scroll de todos os 5 slides ao reabrir o app e um slide inativo restaurado escondia a barra no boot sem gesto algum; a ref de scroll é semeada com o scrollTop real do slide na troca de seção. v4.33.0 - o ícone da seção Treinos deixa o desenho improvisado (barra + 2 círculos) e passa aos HALTERES da imagem de referência do usuário: 4 anilhas em <rect> (as de fora mais baixas, as de dentro mais altas) + barra central, no mesmo viewBox 24/currentColor/traço 2 dos demais. v4.34.0 - o halteres da secao Treinos foi refeito no desenho da imagem de referencia do usuario: e o MESMO glifo solido do Font Awesome que o app ja usa nos placeholders (`fas fa-dumbbell`; path oficial svgs/solid/dumbbell, viewBox 640x512, credito CC BY 4.0 no comentario do componente), com barra central + 2 anilhas por lado em degrau (as de fora mais baixas) + pino externo. Silhueta PREENCHIDA (fill=currentColor, stroke=none, strokeWidth=0 - o traco dos vizinhos nao se aplica) e a classe .bnav-icon--fill (7-nav-icons.css) da a cor e os estados: normal rgba(255,255,255,.35), ativo var(--primary-light), hover 70%. O desenho anterior (4 <rect>) tinha defeito real: as anilhas se sobrepunham e viravam um bloco so em 22px." },
-      { "file": "src-app/src/components/MobileDrawer.tsx", "purpose": "Drawer lateral mobile <1024px (v4.8.3-navbars), portada do MobileDrawer do reference: head com eyebrow Navegação + fechar, cartão de perfil (ProfileEmblem + nome + Nível/XP/ofensiva, abre o Perfil), nav com Busca Geral/Progresso (atalho da seção ativa)/Notícias/Missões/Configurações e rodapé Tela cheia/Sair da tela cheia. Animação springs SPRING_SETTLE (Motion v12); body-lock + ESC; estilos .mdw__* em shell.css (z-index 950 — acima da nav, abaixo do LockScreen 1200). Notícias/Missões/Configurações acionáveis de qualquer seção (via App.tsx openDashOverlay/openProfileSettings). v4.21.0: item 'Músicas' (SvgMusic, desc 'Playlists e trilhas do treino') na nav entre Missões e Configurações, via prop onOpenMusic ligada a openMusic() no App.tsx — fecha a drawer e abre o overlay de Músicas e Playlists." },
-      { "file": "src-app/src/components/ProfileEmblem.tsx", "purpose": "ProfileEmblem (v4.7.2-evofit-splash-nav): emblema de identidade do avatar partilhado — port de applyProfileCustomization (secao-customizacao.js L371–396), wrapper .profile-avatar__emblem-wrapper com mix-blend screen (+ animate-pulse quando mainEmblemPulse !== false), sprite 300% com offset % ou imagem direta; sem perfil carregado cai no emblema padrão prestigio-1. Usado pela DesktopSidebar e pela MobileDrawer (a Top Bar mobile foi removida na v4.32.0)." },
-      { "file": "src-app/src/components/nav-items.tsx", "purpose": "Ícones SVG stroke da shell (v4.6.0 — viewBox 24, fill none, currentColor, sw 2, round — Diretrizes/Ícones.md): SvgSearch/SvgMaximize/SvgMinimize/SvgLock/SvgPin/SvgFlame. Split de nav-section-items.tsx para o oxlint react/only-export-components." },
-      { "file": "src-app/src/components/nav-section-items.tsx", "purpose": "NavSectionItems (v4.6.0): lista das 5 seções com ícone/nome/label/keywords, usada pela DesktopSidebar. v4.8.2-desktop-nav-grid: ordem reordenada para dashboard(Início)→social→treinos→progresso→loja (só afeta a sidebar — a ordem de SWIPE continua SECTIONS_ORDER em App.tsx). v4.33.0 - o ícone da seção Treinos acompanha a BottomNav (mesmos halteres: 4 anilhas + barra central), mantendo a paridade visual entre a barra inferior e a Sidebar do desktop. v4.34.0 - acompanha a BottomNav (paridade visual): mesmo halteres do Font Awesome (solid/dumbbell, viewBox 640x512) em silhueta preenchida, com a classe .side-hud-icon--fill (styles/shell.css) dando a cor via fill: currentColor." },
-      { "file": "src-app/src/features/search/", "purpose": "Busca Geral Unificada (v4.6.0): search-index.ts (SECTIONS/CONFIGS estáticos, buildDynamicIndex de exercícios + fichas A–J, deaccent normalize NFD para busca insensível a acentos, rank com score e best por item, queryIndex com grupos ordered pelo melhor match, flattenGroups); GlobalSearchOverlay.tsx (grupos ordenados, <mark> nos matches, navegação ↑/↓/Enter/ESC, query vazia não navega, mount condicional em App para estado fresco); search.css (glass + tokens). Atalho Ctrl/Cmd+K; pick de seção navega, pick de exercício/ficha abre Perfil→Treinos via useTreinosStore.getState(), pick de config abre Perfil no hub de configurações; ESC da busca tem guarda para não fechar o Perfil. v4.8.3-navbars: keywords/desc de cfg:exibicao atualizadas com \"formato\", \"oval\", \"reta\" (Formato da Barra). v4.13.0: keywords de cfg:seguranca + \"automatica\", \"auto\", \"botao\" (Solicitação da Digital). v4.19.0-music: novo item cfg:musicas \"Músicas e Playlists\" com action:'open-music' (o App abre o MusicOverlay direto da Busca); keywords de cfg:exibicao expandidas (playlist/youtube/spotify/upload/treino/faixa); SearchItem ganhou campo action. v4.20.0: novo item cfg:audio 'Áudio e Música' (stack:['audio'] abre a nova seção de áudio) e cfg:exibicao reduzido a exibição/PWA/dev — keywords de música removidas (saíram para a seção de áudio)." },
-      { "file": "src-app/src/features/lock/", "purpose": "Sistema de Bloqueio (v4.6.0): lock-store.ts (PIN_STORAGE_KEY academia_lock_pin, hashPin djb2 hex+len — nunca cru, getPinLength, verifyPin, isLockUsable, getLockTimeoutSec, lockPrefsChanged, useLockStore nasce travado se utilizável, lockApp); useAppLock.ts (timeout por inatividade + re-arme em academia:lock-prefs-changed); lock-wallpapers.ts (WALL_PRESETS neon/grafite/violeta/magenta — fonte única movida de SettingsFeature — e resolveWallpaper por orientação); LockScreen.tsx (relógio/data, wallpaper, keypad 4–6 dígitos com auto-submit, shake/erro, biometria fake 1s, teclado físico, PIN limpo no sucesso); lock.css. App monta <LockScreen/> no fim do JSX (acima de tudo quando travado). v4.9.0-sync: paleta roxa → laranja #f97316, card rgba(9,9,11,0.78) e fundo personalizado mbc_lock_desktop/mobile (orientation-aware com fallback cruzado, filter brightness(0.78), reativo a academia:lock-prefs-changed). v4.9.1-lock-password: credencial vira SENHA alfanumérica 4-32 (antes PIN 4-6 — o replace(/\\D/g, '') descartava letras e a senha nao salvava); getPinLength aceita 4..32 e o formato djb2:<hex>:<len> permanece compativel; LockScreen redesenhado fiel a imagem 1 do reference Life Organizer (relógio/keypad removidos, pill DESBLOQUEIO • ACADEMIA, avatar ProfileEmblem com glow + badge de cadeado, nome + subtítulo condicional a biometria, card DESBLOQUEAR COM DIGITAL, campo de senha com olho + botao Desbloquear via form/Enter, erro shake 1,4 s, ESQUECEU A SENHA? com aviso de recuperacao local e nota de dados); lock.css com acento em var(--primary)/rgba(var(--primary-rgb,...)). v4.13.0: pref solicitação da biometria (academia_pref_app_lock_bio_auto, ausente = 'true') — auto-trigger WebAuthn só com locked && autoBio (flag do efeito marcada DENTRO do setTimeout p/ sobreviver ao cleanup do StrictMode em dev); modo \"Só no Botão\" renderiza cartão da digital + formulário de senha JUNTOS (hint \"Escolha como desbloquear…\"), botão Tentar Novamente exige bioFailedAttempts >= 3 e o erro da via senha é suprimido enquanto o cartão da digital aparece; modo automático idêntico ao anterior (exclusivo até 3 falhas). v4.22.0: EXCEÇÃO DO TREINO — isWorkoutActive() (lê workout_start_time) faz o boot nascer destravado (locked: isLockUsable() && !isWorkoutActive()) e useAppLock não arma o timer de inatividade com treino ativo, re-arming em academia:workout-started/cancelled/closed/completed; encerrado o treino o lock volta a valer normalmente." },
-      { "file": "src-app/src/core/sync/", "purpose": "Motor de sincronização multi-dispositivo (v4.9.0-sync): supabase-client.ts (credenciais do painel em localStorage mbc_supabase_url/mbc_supabase_anon_key com fallback .env VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY — .env tem prioridade; cache por sessão, isSyncConfigured, testSupabaseConnection, chaves mbc_sync_key default ACADEMIA_SYNC, mbc_device_id, mbc_last_sync_at, mbc_sync_revoked, setLastSyncedAt/lastSyncedAt), device.ts (getPersistentDeviceId, detectCurrentDevice, buildCurrentDeviceRecord, formatRelativeActiveTime, registro em user_sync.devices), offline-queue.ts (fila IndexedDB academia_offline_resilience_db/mutation_queue com auto-flush no evento online) e sync-manager.ts (snapshot JSONB dos dados essenciais — exercícios, fichas, histórico, maestrias, perfil/customização e estado legado — na tabela user_sync, push/pull com LWW por updatedAt, BroadcastChannel academia_multi_device_sync_channel, canal Realtime sync_room_${key}, heartbeat 25s, registry com rename/kick/revogação, useDevicesStore, syncNow, restartSyncEngine, reconnectAfterRevocation, auto-push com debounce de 1500ms no evento academia:db-ready)." },
-      { "file": "src-app/src/features/sync/", "purpose": "UI de nuvem/telas (v4.9.0-sync): sync.css (BEM .sy-* com variáveis próprias, paleta zinc #09090b + acento var(--primary) na cor do usuario (fallback #f97316), blocos modal/QR/sy-btn--google, z-index modal 1150 e toast 1180), SyncSettingsPanel.tsx (status da sincronização, chave ativa com copiar, Sincronizar agora, credenciais Supabase com teste de conexão), ConnectedDevices.tsx (registry da nuvem — dispositivo atual, renomear, desconectar, revogar — renderizado na tela seguranca das Configurações), ScreensCustomizationPanel.tsx (4 slots: mbc_lock_desktop/mobile e mbc_loading_vertical/horizontal, v4.9.2-telas-lock-preview: prévia Testar Bloqueio reescrita com createPortal(body) reusando as classes reais do LockScreen (lock/lock__*, pill/avatar/bio/senha com olho, ESC e Fechar prévia, wallpaper orientation-aware via resolveWallpaper) e o bloco .sy-lock-preview removido do sync.css; Testar Splash usa AppLoadingScreen (.sy-loading)), AppLoadingScreen.tsx (overlay de carregamento com imagem custom + barra) e RemoteSyncToast.tsx (aviso de dados remotos vindos de outro dispositivo ou sessão revogada)." },
-      { "file": "src-app/src/features/auth/", "purpose": "Login/conta nuvem (v4.15.0-auth — substituiu o AuthModal modal da v4.9.0-sync): AuthScreen.tsx (novo — tela standalone full-screen portada do LoginAuthStandalone.tsx com guia das 7 imagens de referência: fundo CurvedPerspectiveBackground SVG, marca 'Evo Fit'/'Cuidando da sua Saúde', welcome com 3 pílulas Google/e-mail/criar conta + atalhos 'Entrar por QR Code • Vincular Chave' (gaveta colapsável que aplica setSyncKey como namespace de sync) + rodapé legal com modais Termos/Privacidade; login com validação de e-mail real (regex — Supabase Auth não autentica por @usuário e um banner amigável orienta), cadastro com display_name=@usuário (3-20, a-z0-9_) e senha mín. 6, recuperação real via resetPasswordForEmail, QR REAL com a lib qrcode (payload origin/?qr=PLN-XXXXXX&exp, contagem 5 min, overlay expirado + Renovar, chip Código de Pareamento); auth real via useAuth, auto-fecha quando a sessão chega, ESC/X fecham, z-index 1150 abaixo do LockScreen 1200; auth-screen.css com .no-scrollbar) + AuthModal.tsx (wrapper fino que monta AuthScreen quando o store abre — ponto de montagem estável p/ App.tsx/Configurações) + auth-modal-store.ts (zustand, inalterado). Abre pelo rootExtra Entrar das Configurações; dependências novas qrcode + @types/qrcode." },
-      { "file": "src-app/src/styles/shell.css", "purpose": "Cascata global (importada por último em main.tsx): variáveis de layout, .section-strip (containing block fixed), .side-hud (Sidebar/Drawer), .bnav-* (barra inferior), utilitários de portal/z-index, overrides Tailwind v4." },
-      { "file": "src-app/vite.config.ts", "purpose": "React + Tailwind v4 + vite-plugin-pwa (ícones PWA /assets/icons/icon-192.png e icon-512.png — ícone unificado branco+Decepticon gerado de D.jpg, v4.7.4-pwa-icon-unificado; casam com os mipmaps do launcher Android). v4.18.0-music: includeAssets ganhou o glob negativo '!assets/sounds/**' — o MAIN.mp3 (7,2 MB) fica FORA do precache do SW e é cacheado sob demanda pelo runtimeCaching StaleWhileRevalidate de /assets/." }
+      {
+        "file": "src-app/index.html",
+        "purpose": "Splash screen #splashScreen (imagem mbc_loading_*), #root, pré-carregamento de fontes (Material Symbols, Rajdhani, Font Awesome), meta PWA, script de boot Vite."
+      },
+      {
+        "file": "src-app/src/main.tsx",
+        "purpose": "Importa CSS na ordem legacy → globals → design-tokens → shell.css (último, v4.6.0 — vence empates com CSS legado), dispara bootstrap() e renderiza <App/> em StrictMode. v4.4.0: initPwaInstall() + initAutoFullscreen() são chamados antes do render (captura do beforeinstallprompt e tela cheia automática no primeiro gesto); v4.18.0-music: initBackgroundMusic() também é chamado antes do render (música de fundo MAIN.mp3 — aplica prefs e arma autoplay no primeiro gesto); v4.19.0-music: initAudioEngine() roda ANTES de initBackgroundMusic() e chama claimMusicPlayback() (o motor multi-contexto assume a reprodução; o módulo v4.18 fica só com prefs — sem áudio duplicado). v4.16.0-boot-resilience: apos o createRoot, markReady() (via window.__academiaBoot) quando o root tem filhos e, se houver erro de render na montagem, BootErrorBoundary captura e exibe o overlay de boot do shell com o diagnostic (antes: #root vazio = tela preta)."
+      },
+      {
+        "file": "src-app/src/App.tsx",
+        "purpose": "Casca do app: rotas, providers (Auth, Sync, Theme), overlays globais (Notícias, Missões, Fit ID, Social), swipe detector, portal root, interceptação de transitionTo, boot sequence. Importa ordem CSS: legacy.css → globals.css → design-tokens.css → shell.css (por último)."
+      },
+      {
+        "file": "src-app/src/features/gamification/",
+        "purpose": "Pasta da Fase 3: radar.ts (computeRadarStats/getArchetypeBadge/buildRadarSvgHtml/side effects r_*), useRadarFit.ts (store useRadarMode), RadarChart.tsx (container #dashRadarChartContainer/#radarChartContainer), maestria.ts (MAESTRIA_CHALLENGES/getMaestriaState/trackMaestriaSessoes/computeMasteryTotals), share-store.ts + share-quotes.ts + ShareModal.tsx (#modalShare: cards treino/conquista/radar + Web Share/download com html2canvas; v4.22.0: canvas PRÉ-RENDERIZADO ao abrir o modal p/ share dentro do gesto, fluxo shareNative com files → share com texto → clipboard PNG → download, AbortError sem fallback, cards renomeados EVO FIT e stats do treino em grid 2 colunas EXERCÍCIOS/KG TOTAIS/OFENSIVA/DURAÇÃO sem VOL. MÉDIO), maestria-ui.ts (store useMaestriaUi: coleção/maestriaEx/busca) e ColecaoModals.tsx (#modalColecaoExercicios + #modalMaestriaEx + showRoyaleTooltip)."
+      },
+      {
+        "file": "src-app/src/features/workout/ConclusaoModal.tsx",
+        "purpose": "Port de showConclusao (secao-ficha.js L421–495) + modais.html L1–37: #modalConclusao com confete, stats, marcos (Semana Perfeita), ordem legada de gravação/limpeza; botão COMPARTILHAR TREINO abre o share card (Fase 3)."
+      },
+      {
+        "file": "src-app/src/features/workout/FocusModal.tsx",
+        "purpose": "Modo Foco fullscreen #modalFocus (modais.html L410–462 + secao-ficha.js L754–923): snapshot da ficha, navegação por exercício, botões de série, descanso 60s sincronizado em #focusTimerVal, auto-avanço 1.5s e conclusão atômica do dia (duracaoFoco → focusMin) fechando + showConclusao; iniciado pelo FAB #btnStartFocus da FichaFeature (Fase 3; v4.22.0: o FAB foi removido — o acionador agora é #viewBtnFocus, botão FOCO no seletor de visualização que substituiu o modo Coleção). v4.31.0 — mostra 'Peso inicial sugerido: X' (lib/suggested-load.ts) abaixo de SÉRIES/REPS/CARGA quando o exercício ainda não tem carga definida."
+      },
+      {
+        "file": "src-app/src/features/workout/FichaFeature.tsx",
+        "purpose": "Tela da ficha/treino (Fase 3): cronômetro global #globalWorkoutTimer, tabela/grid de exercícios com checks (prefix chk-/chk-grid-), cardio, conclusão (isDone → onWorkoutCompleted com 400ms, suprimido no Modo Foco) e share via useShareStore.openTreino(). v4.22.0: ViewMode perde 'deck' ('table'|'grid' — valor salvo 'deck' migra para 'grid'), view #workoutDeck/deckViewRef/showDeck e o FAB .fab-focus removidos; o 3º slot do .view-selector virou #viewBtnFocus (.view-btn--focus, destaque vermelho) que abre o FocusModal — seletor com exatamente 3 slots (tabela, grid, foco). v4.30.1 — viewAnimKey deixou de incluir `checks`: marcar/desmarcar um exercício não reaplica mais o ui-fade-in (era o 'refresh' visível da página na Ficha); o fade segue na troca de visualização (tabela/grid) e de ficha. v4.31.0 — `hasAe`/`ae` passam por effectiveAerobic: toda ficha COM exercícios exibe a linha de cardio (valores configurados ou o padrão de 10 min de esteira a 3 km/h) e ela entra na contagem de conclusão; e cada exercício sem carga ganha a dica de peso inicial sugerido na tabela (`.vol-text`) e no grid (`.deck-card-sugerida`, linha própria abaixo dos botões). v4.34.0 - hero, a pedido do usuario: o selo do topo troca ACADEMIA por EVO FIT; a contagem de EXERCICIOS deixa de ser `exercises.length` (o TOTAL do banco - 66) e passa a ser o `total` ja calculado na tela (exercicios da ficha aberta + a linha de cardio), a MESMA conta do `totalItems` do botao seletor da previa do Inicio; e o icone de Dias Seguidos deixa o FIRE_SVG (chama desenhada em traco laranja, que so aparecia com sequencia > 0) e passa ao MESMO Material Symbol `local_fire_department` do botao #dashBtnOfensiva da aba Inicio, sempre visivel e CINZA quando a sequencia esta zerada (classe `h-stat-fire--off`, CSS no legacy-style/treino/1-core.css)."
+      },
+      {
+        "file": "src-app/src/features/dashboard/MissionsOverlay.tsx",
+        "purpose": "Overlay de missões #missions-overlay (treino.html L903–1314, <style> inline extraído para missions-overlay.css): 3 abas daily/weekly/guides, openMissionsOverlay/closeMissionsOverlay com lock de body.overflow; mockup estático fiel ao legado; aberto pela pílula #dashBtnMissoes do Dashboard (Fase 3). v4.8.1: renderizado via createPortal(document.body) — o .section-strip (will-change: transform) era o containing block do position:fixed e o overlay ficava fora da viewport; mesmo fix aplicado ao NewsOverlay. v4.8.4-color-standard: cores padronizadas com features/settings/settings.css — fundo #07070b, header/cards #0b0b10 + hairline rgba(255,255,255,0.08), aba ativa var(--primary) com texto near-black, dim #8a8a9c/#5d5d70, trilhos #14141b, fills de progresso (rosa/verde/âmbar) → var(--primary) via const FILL_STYLE, glows sombras divisores via --primary-rgb/hairlines, botão fechar vira classe .ms-close-btn estilo .set-icon-btn (handlers inline vermelhos removidos); classe progress-fill removida das barras (body[data-bar-skin] .progress-fill !important das skins quebrava a padronização); missions-overlay.css acompanha (tabs/hover/arena-bg); geometria/animações intactas."
+      },
+      {
+        "file": "src-app/src/features/dashboard/FichaDeck.tsx",
+        "purpose": "v4.30.0 — corpo do deck Royale de uma ficha, extraído do SheetSelectorModal para ser reutilizado pelo modal e pela PRÉVIA DA FICHA DO DIA no Início (mesmo desenho). Exporta `DeckCard` (cartão do exercício: grupo muscular + imagem/premium-placeholder + nome + Séries: s × r) e `FichaDeck` (grid `.dash-mini-deck__grid` de 4 colunas + linha de aeróbico `.dash-mini-deck__cardio-row` + rodapé `.dash-mini-deck__footer` com VOLUME MÉDIO DE CARGA / MAESTRIA / CARDIO CONFIGURADO). Props: `sheet`, `exercises` (já resolvidos), `legacy`, `showMaestria` (false esconde o widget MAESTRIA/EMBLEMAS — usado na prévia do Início), `emptyMessage`. Os ids de gradiente do SVG (elixir) usam `useId()` porque o componente pode estar montado 2× na mesma página (modal + prévia) — ids duplicados seriam HTML inválido. Volume médio e maestria mantêm as fórmulas do legado (carga×séries×reps/1000 e nível de maestria ≥ 3). v4.31.0 — o cardio vem de effectiveAerobic (padrão 10 min de esteira a 3 km/h) e `hasCardio` = ficha com exercícios OU aeróbico configurado (ficha vazia segue no estado vazio); a linha de aeróbico detalha 'Esteira · 3 km/h · 10 min' e o rodapé mostra ESTEIRA / '3 km/h · 10 min'. v4.31.1 — novo prop `bodyRow?: 'cardio' | 'sheet'` (padrão 'cardio', preserva o modal): com 'sheet' a linha abaixo do grid vira a IDENTIFICAÇÃO da ficha (escudo + 'TREINO {letra}' + etiqueta FICHA DO DIA, no acento do tema) no lugar da linha verde de cardio; o prop `firstStat`/`lastStat` do rodapé foi REMOVIDO e o rodapé voltou a ser volume médio de carga + (maestria) + cardio nas DUAS telas. v4.32.0 — o VOLUME MÉDIO DE CARGA passa a ser `averageLoadKg(exercises)` (média das cargas EFETIVAS: a salva em `load` ou, se vazia, a SUGERIDA por nome/grupo — helpers novos de suggested-load.ts) no lugar de `Σ(carga×séries×reps)/n/1000`, que só lia o campo `load` (sempre vazio no seed → 0.0) e usava uma métrica diferente da do 'Minha Ficha' com o MESMO rótulo; o ícone do widget vira o <VolumeKgIcon className=\"dash-mini-deck__stat-icon kg\"/> (o elixir rosa com gradiente saiu, e com ele o useId/elixirId); e com `bodyRow='sheet'` a linha de identificação da ficha sobe para ANTES do grid (classe `--head`), abrindo a prévia com 'TREINO X · FICHA DO DIA'. v4.33.0 - o ícone de cardio do rodapé deixa o #a855f7 fixo e passa a currentColor + `.dash-mini-deck__stat-icon.pulse { color: var(--primary-light) }`, a MESMA fonte de cor do cardio do 'Minha Ficha' (.cardio-icon svg), então o widget acompanha o tema escolhido."
+      },
+      {
+        "file": "src-app/src/features/dashboard/DashboardFeature.tsx",
+        "purpose": "Seção Início (dashboard): DOM legado do calling-card, dash-missions-pill, arena card com radar, card sugerido e ciclo. #dashBtnNoticias abre <NewsOverlay/>, #dashBtnMissoes abre <MissionsOverlay/> (ambos via createPortal desde v4.8.1). v4.8.3-navbars: props novas overlay/onOverlayChange (estado local missionsOpen/newsOpen removido); botões do header/pílula chamam onOverlayChange('news'|'missions'); montagem dos overlays com open={overlay === '...'} e onClose={() => onOverlayChange(null)} — o estado vive no App.tsx para a MobileDrawer poder abrir os overlays de qualquer seção. v4.29.0 — topo em 2 colunas (`.dash-top-row` = `.dash-top-left` 60% com banner+`.dash-identity` | `.dash-top-right` ~40% com botões+MISSÕES, bases alinhadas). v4.30.0 — o RADAR saiu do Início (segue só na Progresso) e o card central virou a PRÉVIA DA FICHA DO DIA (<FichaDeck showMaestria={false}/>, largura total) com a barra de progresso do CICLO em 30 divisões (`.dash-cycle-segments`, `cycle.done` divisões `.filled`) logo abaixo, mantendo a coroa #dashBtnSeletorCrown; o botão Social virou OFENSIVA (#dashBtnOfensiva = chama + #dashStreakValue = getStreak(history)); #dashBtnNoticias usa o ícone `newspaper`; o rótulo 'Missões' saiu da pílula; e a linha de boas-vindas virou texto CONTEXTUAL (#dashGreeting): 'Treino de hoje concluído ✓' se concluído hoje, 'Bem vindo de volta,' só no 1º acesso do dia ao site (localStorage academia_dash_greeting_date) e 'Treino de hoje: FICHA X' ao voltar ao Início (evento sectionchange). Em tela cheia (html.app-fullscreen / display-mode standalone) o .dash-container abre mais espaço vertical via gap — ver shell.css. v4.30.1 — a linha 'SEM CLÃ' saiu do markup (usuário sem clã não exibe nada). v4.31.1 — a prévia usa <FichaDeck showMaestria={false} bodyRow=\"sheet\"/> (a linha do corpo mostra 'TREINO B · FICHA DO DIA' e o rodapé volta a ser VOLUME MÉDIO DE CARGA + CARDIO CONFIGURADO); #dashBtnMenu (que não fazia nada) abre o <InicioMenuModal/> via novo estado menuOpen, e a opção Fit ID abre o <FitIdOverlay/> (fitIdOpen) com nome/avatar/título/XP/ofensiva/fichas/histórico do usuário; novo prop `onOpenSettings` (recebe o openProfileSettings do App.tsx) usado por Configurações no menu e pela engrenagem do Fit ID; o botão de ofensiva recebe a classe `dash-streak-btn--off` quando getStreak(history) === 0 (chama cinza). v4.34.0 - no botao SELETOR DE FICHA da barra inferior, a letra do treino (A/B) sai do selo roxo sobre a miniatura (.dash-workout-letter-badge, removido do JSX) e passa a ser exibida na MESMA linha do \"N ex\", em cinza: `#dashWorkoutLetter` virou um <span class=\"dash-workout-ex-letter\"> DENTRO do <span class=\"dash-workout-ex-count\" id=\"dashWkDetail\"> (ids mantidos - o legado e as sondas os procuram). Resultado: \"TREINO\" / \"A 5 ex\"."
+      },
+      {
+        "file": "src-app/src/features/dashboard/InicioMenuModal.tsx",
+        "purpose": "v4.31.1 — menu popup do botão MENU do Início (#dashBtnMenu), no desenho do menu do Clash Royale adaptado à paleta do site: portal para document.body (mesma causa-raiz dos demais overlays — o .section-strip com will-change/transform seria o containing block do position:fixed), fecha no Esc e no clique do backdrop e trava o scroll do body. 4 grupos separados por hairlines, na ordem: Registro de Treinos e Rankings (placeholders → showToast('… em breve.', 'info') + fecha, com a pílula 'Em breve'), Mensagens (→ onOpenMessages = aba Social, onde vive o bate-papo), Configurações (→ onOpenSettings = hub de configurações do Perfil), Ajuda (placeholder) e Fit ID (→ onOpenFitId). Cada item leva data-menu-item (usado pelos probes). v4.33.0 - novo item TELA CHEIA (entrar/sair) entre Ajuda e Fit ID: 7 itens em 5 grupos; usa o hook useCrossBrowserFullscreen do shell (mesma instância/estado do Drawer e da Sidebar HUD), com ícone próprio (maximizar/minimizar, 17px como os demais) e rótulo dinâmico ('Tela cheia'/'Sair da tela cheia'); a ação é toggleFullscreen + fecha o menu (o estado reage ao evento fullscreenchange)."
+      },
+      {
+        "file": "src-app/src/features/dashboard/FitIdOverlay.tsx",
+        "purpose": "v4.31.1 — tela de identidade 'Fit ID' inspirada no Supercell ID (portal + tela cheia; o X e o Esc fecham). Header com engrenagem (→ onOpenSettings), avatar (imagem do emblema quando existe, senão dicebear), chip FIT ID, nome e subtítulo ('TÍTULO · OFENSIVA N DIAS'). 3 abas, voltando para a 1ª a cada abertura: RECOMPENSAS DE IDENTIFICAÇÃO (cartão destaque EVO FIT + nome + CONECTADO + PONTUAÇÃO TOTAL = XP, 3 mini-stats treinos/ofensiva/nível e o cartão 'Junte pontos e ganha prêmios'), AMIGOS (reusa FRIENDS de features/social/social-data.ts: status online/em treino/offline, troféus e CTA 'Adicionar amigo') e MEUS DADOS (adaptação de 'Jogos Meus': linha em destaque do app + as fichas do usuário com o nº de exercícios e os treinos concluídos de cada letra, lidos de history.completedKeys/sheetKey). Recompensas e CTAs são placeholders com toast info — nada é gravado."
+      },
+      {
+        "file": "src-app/src/features/dashboard/inicio-menu.css",
+        "purpose": "v4.31.1 — estilos do menu popup (.inicio-menu: painel #0e0d1a→#07060d, botões 'chunky' com gradiente do acento --primary-rgb + bisel interno + sombra inferior, separadores, pílula 'Em breve', animação de entrada) e do Fit ID (.fitid-*: header com radial do acento, cartões #0b0b10 + hairline rgba(255,255,255,0.08), abas com a ativa em var(--primary), pílulas de status, linha em destaque e CTAs). Usa os tokens do tema (--primary/--primary-rgb/--primary-light com fallback) e traz a regra de desktop (min-width:1024px) com a janela centralizada, no mesmo racional de MissionsOverlay/Notícias. v4.32.0 — menu REFEITO sobre a imagem de referência anexada pelo usuário: .inicio-menu vira painel ANCORADO (position:fixed, top/right/max-height escritos em runtime a partir do rect de #dashBtnMenu pelo useLayoutEffect do componente, com fallback 72px/14px no 1º paint), estreito (width min(74vw,320px), antes 400px centralizados), SEM .inicio-menu__head/__title/__close e com seta ::before apontando para o botão; os itens deixam o botão 'chunky' (gradiente do acento + bisel) e passam a usar a linguagem do próprio app — .inicio-menu__item (hairline + fundo rgba(255,255,255,0.03), hover no acento) com .inicio-menu__icon (quadrado 30px raio 9 com o ícone SVG do app) e .inicio-menu__label —, separados por .inicio-menu__sep; a pílula .inicio-menu__soon foi REMOVIDA (o 'em breve' agora só aparece por toast ao tocar no placeholder) e a animação de entrada passa a vir do canto superior direito (scale(0.94) translate(6px,-8px))."
+      },
+      {
+        "file": "src-app/src/features/news/",
+        "purpose": "Overlay de Notícias da Fase 5: NewsOverlay.tsx + news-overlay.css (novos) portam #news-overlay (treino.html L303–427 DOM/CSS extraído para o CSS, L429–599 comportamento) — 3 abas noticias/atualizacoes/guias com .tab-content/.active, 4 cartões de notícia + 7 de atualização, botões MOSTRAR MAIS (remoção de .hidden-news/.hidden-updates), detail views #news-detail-view/#update-detail-view com hidden-view/active (slide 300 ms), paginação btn-prev/btn-next com fade 200 ms (índice avança no clique, DOM só após o timeout), conteúdo via dangerouslySetInnerHTML, FOOTER_HTML do componentes/footer.js injetado nos 3 containers (lista + 2 detalhes) e lock de body.overflow; bloco v4.0.10-news-parity no CSS (revert-layer escopado + pins de cor/lh de ícone) fecha a cascata Tailwind v4 vs vendor legado e a view de detalhe foi medida sem diffs visuais (2026-10-07); aberto pela pílula #dashBtnNoticias do Dashboard; v4.8.1: createPortal(document.body) (mesma causa de containing block do MissionsOverlay — fixed dentro do .section-strip)."
+      },
+      {
+        "file": "src-app/src/features/social/",
+        "purpose": "Aba SOCIAL (v4.0.14-social-placeholder): SocialFeature.tsx + social.css + social-data.ts + social-icons.tsx — port do conteúdo de Ligas.html (3 sub-abas Liga/Amigos/Guilda, banner de temporada, Caminho das Ligas com resgates, ranking filtrável, grid de amigos, guilda com chat local/membros/doações/guerra e 3 modais) montado em App.tsx no branch social via .section-slide (o placeholder .section-coming-soon da Loja foi separado e segue 1:1 com treino.html L197–207); tipografia/tokens do app, superfícies glass translúcidas (fundo dinâmico da arena visível) e ícones SVG stroke no lugar dos emojis; PLACEHOLDER em estado React local, sem persistência. v4.14.0: 'Compartilhar Recompensa' usa shareNative() (lib/native-share.ts) — folha nativa do SO em HTTPS com texto + link do app; sem suporte/cancelada → clipboard + toast 'Copiado' como antes."
+      },
+      {
+        "file": "src-app/src/features/settings/",
+        "purpose": "Shell de hubs reutilizável (HubShell.tsx, SettingsFeature.tsx) — 5 tiles de config espalhados na raiz do hub do Perfil (conta, segurança, notificações, cores, exibição); theme-colors.ts (12 presets + custom) + ColorPickerModal.tsx; settings.css (BEM .set-*) + player-prefs (música: modo flex/fixo, 6 posições, visibilidade)."
+      },
+      {
+        "file": "src-app/src/features/profile/ProfileFeature.tsx",
+        "purpose": "Overlay do Perfil como hub fullscreen (v4.3.0-profile-hub; v4.5.1: sem tile Configurações): raiz com 8 tiles — 3 grupos (Perfil/Progressão/Personalizar) + 5 tiles de config promovidos (Sua Conta/Segurança/Notificações/Cores/Exibição-PWA) + hubExtra (linha Sair da Conta) — via features/settings/HubShell com navStack controlado — as 4 sub-abas #perfTabNav e o localStorage.academia_perfil_tab foram REMOVIDOS; cada grupo abre seus filhos (Perfil: Cartão/Ofensivas/Medalhas; Progressão: dev row como head + Visão Geral/Nível e XP/Conquistas; Personalizar: #btnSalvarCustomizacaoTab herdado pelo grupo + Identidade/Frase/Em Destaque/Título); os 5 tiles de config vêm de useSettingsGroup (tile conta ganha keywords recursivas via screenKeywords); busca só na raiz com keywords dos leaves; #btnEditarPerfil navega p/ personalizar/identidade via setNavStack; shell do overlay (header + #perfilOverlayClose) permanece no App.tsx."
+      },
+      {
+        "file": "src-app/src/features/profile/profile-data.ts",
+        "purpose": "Estado e persistência do Perfil: tiles dinâmicos (hubShell), avatares/molduras/banners (Fit ID), cores do tema, preferências de lock/biometria, wallpapers de lock, export/import de conta."
+      },
+      {
+        "file": "src-app/src/features/profile/useProfileState.ts",
+        "purpose": "Hook useProfileState(): leitura/upsert do registro profileState (IndexedDB v3) com listeners 'academia:db-ready' e 'academia:profile-updated'."
+      },
+      {
+        "file": "src-app/src/features/workout/treinos/",
+        "purpose": "Pasta da Fase 4: TreinosFeature.tsx (raiz #section-treinos — header/busca, abas .t-tab-btn e sub-abas .sub-nav-btn com fadeSwap+flushSync+fadeIn, eventos delegados de imagem e ESC fecha todos os overlays), treinos-store.ts (store da seção com defaults de db.js L43–47), treinos-helpers.ts (sheets/deck DECK_MAX=8/templates/ciclo novo), cards.tsx (grid/coleção/deck com DnD e menus), ExercicioFormModal.tsx, TreinosModals.tsx (Confirm/Image/Aerobico/CRDetails/MaestriaGeral — todos via createPortal(document.body) porque o .section-strip tem will-change:transform e viraria o containing block do position:fixed do .modal-overlay) e CustomizacaoTabs.tsx (personalização: banners/identidade/itens mágicos/emotes/emblemas com toasts literais). v4.31.0 — treinos-helpers.ts: computeDeckStats usa effectiveAerobic (o rodapé do Minha Ficha mostra o cardio padrão 10min / Esteira • 3km/h) e defaultSheet() SEGUE com aerobic null (gravar o padrão faria fichas vazias passarem por prontas em getAvailableWorkouts/determineNextTreino); TreinosModals.tsx: o AerobicoModal abre pré-preenchido com o padrão (campo a campo); cards.tsx: TreinosGridCard mostra a dica de peso inicial sugerido; ExercicioFormModal.tsx: o placeholder do campo Carga vira 'Sugerido: X' conforme o nome digitado. v4.31.1 — ExercicioFormModal.tsx: o peso sugerido passa a PREENCHER o campo Carga (acompanha nome/grupo/tags enquanto o usuário não digita — `cargaTouchedRef` — e nunca sobrescreve o valor digitado), com o placeholder 'Sugerido: X' mantido como dica quando o campo é apagado. v4.32.0 — treinos-helpers.ts: computeDeckStats usa effectiveLoadKg (carga salva ou, se vazia, a sugerida) no lugar do parseFloat cru, então o rodapé do 'Minha Ficha' deixa de mostrar 0.0; MontarTab.tsx troca o <div className=\"volume-drop\"/> pelo <VolumeKgIcon className=\"volume-kg-icon\" size={24}/>. v4.33.0 - TreinosFeature.tsx: TAB_ICON_EX (sub-aba PERSONALIZAR) deixa o ícone improvisado de halteres e passa aos 3 SLIDERS da imagem de referência do usuário (linhas em y=5.5/12/18.5 com knob em anel r=1.9/traço 2.2 - geometria calibrada para 16px, knobs maiores se sobrepõem entre as linhas)."
+      },
+      {
+        "file": "src-app/src/core/auth/use-auth.ts",
+        "purpose": "Hook useAuth extraído de auth-context.tsx na Fase 4 (fast-refresh: provider e hook em arquivos separados; AuthContext/AuthContextValue exportados do módulo do provider)."
+      },
+      {
+        "file": "src-app/src/core/auth/auth-context.tsx",
+        "purpose": "AuthProvider (v4.9.0-sync): sessão Supabase real via getSession/onAuthStateChange + signIn/signUp/signInWithGoogle (signInWithOAuth redirect)/signOut/resetPassword, com guard isSupabaseConfigured (Modo Offline gracioso; clearLocalDB no signOut). v4.15.0-auth: Google OAuth com prompt='select_account' (seletor de contas amigável; access_type='offline' mantido p/ refresh token) + efeito do 'Manter conectado' — com mbc_remember_me='false' as chaves de sessão sb-*-auth-token são removidas no pagehide (a sessão não persiste além da aba; recarregar também encerra)."
+      },
+      {
+        "file": "src-app/src/core/db/queries.ts",
+        "purpose": "Contrato de dados da Fase 1: loadLocalData(), helpers de derivação do legado (getTodayTreino/determineNextTreino, getStreak, getXp, getCycleStats (contagem POR FICHA do getCycleProgress do dashboard — soma das completedKeys desde currentCycleStartDate com fallback currentFichaWorkouts, independente da flag transitória completed; a Progresso segue por-dia como no legado), todayLabel) e mutações puras de hoje (toggleCheckEntry/toggleSetEntry/selectSheetEntry/applyFichaCompletion)."
+      },
+      {
+        "file": "src-app/src/core/db/bootstrap.ts",
+        "purpose": "Ordem offline-first idempotente: ensureSeed() → backfillExerciseImages() (restaura imageUrl de exercícios com GIF novo, v4.0.11-lombar-gif) → migrateLegacyData() → ensureProfileState() → flushQueue() → dispara o evento 'academia:db-ready' (a UI que lê IDB refaz a carga)."
+      },
+      {
+        "file": "src-app/src/lib/auto-fullscreen.ts",
+        "purpose": "Hook useCrossBrowserFullscreen: wrapper unificado document.fullscreenElement / webkit / moz / ms; reage a fullscreenchange; usado por Sidebar, Drawer, InicioMenuModal (TELA CHEIA)."
+      },
+      {
+        "file": "src-app/src/lib/native-share.ts",
+        "purpose": "Compartilhamento nativo do SO via Web Share API (v4.14.0): shareNative(data) → 'shared'|'cancelled'|'unsupported'|'error' com guarda canShare (files recusado no desktop → fallback clipboard/download pelo chamador) e canNativeShare(). Criado porque em HTTP local (legacy) a API não existia fora de contexto seguro; em HTTPS (Vercel) a folha nativa Android/Windows/iOS passa a ser usada. Consumidores: LigasFeature (Compartilhar Recompensa — texto + window.location.origin); ShareModal.tsx e backup.ts já usavam navigator.share com files nativamente."
+      },
+      {
+        "file": "src-app/src/lib/pwa-install.ts",
+        "purpose": "Instalação do app como PWA (v4.4.0): captura o beforeinstallprompt em initPwaInstall() (chamado no main.tsx), expõe getInstallState() ('available'|'installed'|'unavailable'), promptInstall() e os eventos 'academia:pwa-install-available'/'academia:pwa-installed' consumidos pelo botão Instalar App das Configurações. O app já era PWA (vite-plugin-pwa: manifest + SW)."
+      },
+      {
+        "file": "src-app/src/lib/background-music.ts",
+        "purpose": "Música de fundo do app (v4.18.0-music): singleton HTMLAudioElement tocando /assets/sounds/MAIN.mp3 em loop. initBackgroundMusic() (chamado no main.tsx) aplica as prefs salvas (academia_pref_music_enabled ausente = ligada; academia_pref_music_volume ausente = 70, faixa 0–100) e tenta play() — bloqueado pela política de autoplay dos navegadores, o play é adiado até o primeiro gesto (pointerdown/keydown capture, re-armado a cada gesto até dar certo). setMusicEnabled()/setMusicVolume() persistem e disparam 'academia:music-changed' (detail {enabled, volume}); volume 0 = mudo sem desligar; no iOS Safari audio.volume é read-only (degradação graciosa — o switch continua funcional). Consumido pelo card 'Música de Fundo' em SettingsFeature (tela exibicao). v4.19.0-music: ganhou claimMusicPlayback() + flag playbackClaimed — quando o audio-engine assume a reprodução (initAudioEngine chama claim no boot), playMusicNow/pauseMusicNow/initBackgroundMusic viram no-op e este módulo fica só com prefs + evento academia:music-changed (evita dois players de MAIN.mp3)."
+      },
+      {
+        "file": "src-app/src/features/music/audio-engine.ts",
+        "purpose": "Motor de áudio multi-contexto (v4.19.0-music): assume a reprodução global (claimMusicPlayback no boot) e gere contextos main(MAIN.mp3 loop)/workout(Black Panther loop)/result(RESULT.mp3 1x → volta main no ended)/missions(Revenger Phoenix loop)/workout-user(playlist do usuário). Escuta eventos disparados pelo App.tsx: academia:workout-started (playlist ativa com itens vence; senão faixa do site se academia_pref_workout_music ligado; senão silêncio), academia:workout-completed (stopUserQueue + RESULT), academia:workout-closed|cancelled (volta MAIN), academia:missions-open|close (pausa o atual, toca Revenger, ao fechar retoma anterior). Volume/master reagem a academia:music-changed em tempo real. Hidrata a useLibraryStore no boot (hydrate()) p/ a playlist de treino valer sem abrir a interface antes. Fila do usuário avança em loop (upload via blob URL + YouTube via IFrame API carregada sob demanda, player oculto 1x1, avança na ENDED); itens Spotify são pulados no treino (embed não força autoplay). Autoplay adiado ao 1º gesto. playSiteTrackFromUi/playPlaylistFromUi/togglePlayback/getMusicState são a API para a interface de Músicas. v4.20.0: nextTrack()/prevTrack() para o miniplayer flutuante — na fila workout-user percorrem a playlist em loop, nos contextos do site percorrem SITE_ORDER [main, workout, missions, result]. v4.21.0: Media Session API — updateMediaSession() seta navigator.mediaSession.metadata (título/artista/álbum 'Academia Evo Fit' + arte 192/512px) a cada emitState e setupMediaSessionHandlers() (no initAudioEngine) liga play/pause/previoustrack/nexttrack/seekbackward/seekforward — a notificação do Android ganha nome, barra de progresso e avançar/retroceder para uploads e faixas do site; updatePositionState() (loadedmetadata/timeupdate dos dois audio) alimenta a progress bar + seekBy(±10s). Fila aceita itens kind 'site' (isPlayableItem): playQueueIndex toca o siteAudio sem loop para o ended avançar a fila; togglePlayback/seekBy escolhem o elemento de áudio ativo correto; stopUserQueue pausa a faixa do site da fila. v4.22.0: Media Session SELETIVO — currentSiteId + MS_HIDDEN_SITES {'main','missions','result'}: updateMediaSession() zera o metadata e updatePositionState() não publica posição nessas 3 faixas (notificação do Android fica livre para uploads/Black Panther); playSite()/playQueueIndex() atualizam currentSiteId e playQueueIndex chama registerPlay() dos uploads (contagem de toques)."
+      },
+      {
+        "file": "src-app/src/features/music/media-store.ts",
+        "purpose": "Biblioteca de música do usuário (v4.19.0-music), duas camadas: blobs de áudio (uploads) em IndexedDB academia_media_db/store audio_blobs (localStorage não aguenta arquivos grandes) + metadados (tracks/playlists/playlist ativa) em localStorage academia_music_library_v1. useLibraryStore (zustand): addUpload/removeTrack/createPlaylist/deletePlaylist/addUploadToPlaylist/addExternalToPlaylist/removeItem/setActivePlaylist/hydrate. Tipos UploadTrack(kind 'upload')/PlaylistItem(upload|youtube|spotify)/Playlist. Helpers parseYouTubeRef (watch?v=/youtu.be/playlist?list=/shorts → {kind,id}) e parseSpotifyRef (open.spotify.com/playlist/<id> ou ID cru). Itens Spotify em playlist de treino são pulados pelo motor. v4.20.0: Playlist ganhou cover (data URL de imagem reduzida ~320px/JPEG) + renamePlaylist(id, name) e setPlaylistCover(id, cover). v4.21.0: PlaylistItem ganhou kind 'site' ({id,kind,siteId,title}) + SiteTrackId; MusicLibrary ganhou pinnedQuick: string[] (chaves pl:/trk:/site:) e seeded: boolean; helpers pinPlaylistKey/pinTrackKey/pinSiteKey. Migração única seedLibrary() no hydrate(): cria a playlist 'Evo Fit' (pl-evo-fit) com as 4 faixas do site e 'Suas músicas' (pl-suas-musicas) recebendo todos os uploads existentes — flag seeded impede recriação após exclusão. addUpload() adiciona o item novo em 'Suas músicas'; removeTrack()/deletePlaylist() limpam a fixação em pinnedQuick; novo togglePin(key). v4.22.0: UploadTrack ganhou durationSec? (sondada no envio via probeAudioDuration(file)) e playCount?; novo action registerPlay(trackId) incrementa/persiste as reproduções (chamado pelo audio-engine)."
+      },
+      {
+        "file": "src-app/src/features/music/MusicOverlay.tsx",
+        "purpose": "Overlay de músicas/playlists (abas Biblioteca/Playlists/Recentes), player flexível (painel arrastável) / fixo (pastilha contador), persistência via player-prefs, academia:player-prefs-changed."
+      },
+      {
+        "file": "src-app/src/features/music/music.css",
+        "purpose": "Estilos do MusicOverlay, FloatingMiniPlayer, WorkoutNowPlayingBar: .mu-*, .fmp*, .wnp*; player flex/fixo, 6 posições, slider segundos, badge estado."
+      },
+      {
+        "file": "src-app/src/features/music/FloatingMiniPlayer.tsx",
+        "purpose": "Miniplayer flutuante global (v4.20.0-music): widget fixed com z-index 660 montado no App.tsx — arte + título + retroceder/pausar/avançar (nextTrack/prevTrack/togglePlayback do audio-engine), arrastável pela área .fmp__top (pointer capture com try/catch) e redimensionável pela alça .fmp__grip (230–520 × 116–300 px, escala visual derivada da altura); posição/tamanho persistidos em academia_floating_player_rect_v1 e sempre encaixados na viewport pelo helper fit() (arrasto, resize, janela e load — impede o painel de sair da tela ao crescer); renderiza só quando há faixa (title/playing), o '×' oculta até a próxima faixa e ele volta a aparecer; escuta academia:music-state e importa music.css. v4.22.0: DOIS MODOS via features/music/player-prefs.ts — 'flex' (painel acima, inalterado) e 'fixed' (pastilha .fmp-pill no estilo do contador de duração do treino, âncora entre 6 posições, border-left accent, label 'Tocando agora' + mini controles); visibilidade 'always' ou 'timed' (some N segundos, default 7, após a ÚLTIMA troca de música — reset só em eventos de faixa/prefs, nunca síncrono no effect); reage a academia:player-prefs-changed."
+      },
+      {
+        "file": "src-app/src/features/music/player-prefs.ts",
+        "purpose": "Preferências do miniplayer (v4.22.0): PlayerMode 'flex'|'fixed', PlayerPos (6 âncoras tl/tc/tr/bl/bc/br), PlayerPersist 'always'|'timed' e segundos (3–60, default 7 — getPlayerHideSecs trata raw ausente para não virar 0 via Number(null)). Chaves academia_pref_player_mode/pos/persist/secs em localStorage; setters despacham o evento window 'academia:player-prefs-changed' (SettingsFeature escreve, FloatingMiniPlayer relê). PLAYER_POSITIONS alimenta o grid de posições das Configurações."
+      },
+      {
+        "file": "src-app/src/features/music/useKeyboardInset.ts",
+        "purpose": "Hook useKeyboardInset() (v4.21.0-music) — mede a altura real do teclado Android (window.innerHeight − visualViewport.height − offsetTop) e devolve em px via state, com listeners em visualViewport resize/scroll + window resize. Resolve o bottom-sheet coberto pelo teclado em PWA fullscreen/standalone, onde o interactive-widget=resizes-content do index.html é ignorado; quando o navegador já redimensiona o layout a diferença é ~0 e nada muda (sem empurrão duplo). Usado pelos modais do MusicOverlay (padding-bottom var(--mu-kb) no .mu-modal)."
+      },
+      {
+        "file": "src-app/src/features/music/WorkoutNowPlayingBar.tsx",
+        "purpose": "Barra de música no rodapé da Ficha (v4.21.0-music): montada como último filho de .ficha-overlay no App.tsx — arte (Music2) + título/artista lidos do estado academia:music-state + controles retroceder/pausar/avançar (prevTrack/togglePlayback/nextTrack do audio-engine). Visível quando a música no treino está configurada (pref academia_pref_workout_music ligada OU playlist de treino escolhida — activePlaylistId da useLibraryStore), reagindo a academia:music-changed para refletir troca de pref durante o treino. Importa music.css (.wnp*)."
+      },
+      {
+        "file": "src-app/src/lib/fullscreen.ts",
+        "purpose": "Wrapper nativo requestFullscreen/exitFullscreen com fallback vendor prefixes; retorna {enter, exit, toggle, isFullscreen}; base para useCrossBrowserFullscreen."
+      },
+      {
+        "file": "src-app/src/lib/suggested-load.ts",
+        "purpose": "Calcula carga sugerida por exercício/músculo (progressão linear + fadiga); usado em MontarTab e FichaFeature para preencher séries/reps/peso iniciais."
+      },
+      {
+        "file": "src-app/src/lib/animations.ts",
+        "purpose": "Presets de motion (fadeIn, fadeSwap, slideUp, scaleIn, stagger) + hooks useMotion; durações/ezings centralizadas para consistência cross-component."
+      },
+      {
+        "file": "src-app/src/lib/motion-presets.ts",
+        "purpose": "Springs compartilhados do Motion v12 (SPRING_SETTLE/SPRING_EXIT/SPRING_SOFT) usados por animations.ts, MobileDrawer e demais animações. v4.8.3.1: recalibrados pelo transitionguide.md — SETTLE 260/28/1 (periodo ~390ms, zeta ~0.87, overshoot <1px), EXIT 340/32/1, SOFT 220/24/0.9 — fluidez premium com interrupção natural preservada. v4.8.3.2: novo SPRING_SLIDE { stiffness: 380, damping: 38, mass: 1 } usado pelo slideSwap lateral da fita pré-montada."
+      },
+      {
+        "file": "src-app/src/components/VolumeKgIcon.tsx",
+        "purpose": "v4.32.0 — ícone do widget VOLUME MÉDIO DE CARGA: prato de peso (anilha) com alça e o texto KG vazado, recriado a partir da imagem de referência do usuário (o elixir rosa saiu). SVG 512×512 com <mask> — o prato é preenchido com currentColor e as letras (paths em traço 38, nunca <text>, para não depender de fonte carregada) viram furos, revelando o fundo do widget: mesma silhueta do original (prato escuro/letras claras), invertida para o tema escuro do app. Exceção consciente ao Diretrizes/Ícones.md (silhueta preenchida, não stroke — documentada na §8). `size` (default 22, rodapé do deck) e useId() no id da mask (o ícone monta 2× na página). Consumidores: FichaDeck (.dash-mini-deck__stat-icon.kg) e MontarTab (.volume-kg-icon, no lugar do triângulo .volume-drop). v4.33.0 - as letras 'KG' foram REFEITAS: em 22px o desenho antigo (traço 38, G de raio 44) virava um borrão. Agora usam traço 42 e corpo 135 (y 290-425), com o G em desenho geométrico clássico (anel de raio 52 - 146 de diâmetro e contra-forma de 62 - aberto no alto à direita, arco 'A 52 52' de 46° a -6°, + barra horizontal do anel até o centro, como o G do logo do Google) e o K com haste em x=145 e braços simétricos; folga de 26 entre as letras e conjunto centralizado no eixo do prato (centro 256). v4.34.0 - as letras KG foram REMOVIDAS a pedido do usuario (o prato ficou): o componente perdeu o <mask>, o useId() e os paths das letras - agora e UMA silhueta preenchida (um unico <path fill=\"currentColor\"> = prato trapezoidal + alca). PLATE_PATH/HANDLE_PATH seguem no arquivo e os consumidores nao mudaram (.dash-mini-deck__stat-icon.kg no FichaDeck e .volume-kg-icon no MontarTab)."
+      },
+      {
+        "file": "src-app/src/components/MobileTopBar.tsx [REMOVIDO v4.32.0]",
+        "purpose": "Top Bar mobile (v4.6.0–v4.31.1) — avatar com o emblema do perfil, busca geral e alternador de tela cheia, fixa/transparente com offset de 56px no .section-slide (v4.13.0). REMOVIDA a pedido do usuário (\"para aproveitar melhor o espaço da tela\"): o componente foi apagado, o <MobileTopBar/> saiu do App.tsx e as regras .top-bar* (e as molduras [data-frame] do avatar) saíram do shell.css. Os recursos seguem no Drawer da Bottom Nav (MobileDrawer: Busca Geral + Tela cheia + avatar/Perfil) e no banner do Início (#dash-profile-avatar)."
+      },
+      {
+        "file": "src-app/src/components/DesktopSidebar.tsx",
+        "purpose": "Sidebar HUD desktop (colapsável, z-index 1100): navegação por seções, ProfileEmblem, badges de notificação, animação slide-in/out, integração useCrossBrowserFullscreen."
+      },
+      {
+        "file": "src-app/src/components/BottomNav.tsx",
+        "purpose": "Navbar inferior mobile. Fase 5: DOM 1:1 com treino.html L1046–1077 (classes legadas .bottom-nav/.bnav-btn/.bnav-icon/.bnav-label/.bnav-active-dot, data-section, ids bnavProgresso…). v4.5.x: lógica de scroll flexível (bnav-hidden, threshold 8px, evento academia:navbar-mode-changed). v4.8.3-navbars: novo prop onOpenMenu; 1º botão = Menu (#bnavMenu, .bnav-btn--menu, hamburger SVG, data-section=\"menu\") em ambos os formatos antes das 5 seções; estado shape lido de academia_pref_navbar_shape com listener de academia:navbar-shape-changed alterna .bnav-oval no <nav> (modo oval: labels ocultos fora do ativo + Menu sempre visível; modo reto: todos os labels — paridade legada). v4.8.3.1: item Progresso REMOVIDO da barra inferior (barra = Menu + Treinos + Início + Social + Loja); Progresso segue na sidebar desktop e na drawer mobile; SECTIONS_ORDER/swipe intactos. v4.14.0 (bug 'navbar só aparecia após toque'): no modo Flexível o handler de scroll IGNORA slides INATIVOS (activeSectionRef) — o Chrome Android restaura o scroll de todos os 5 slides ao reabrir o app e um slide inativo restaurado escondia a barra no boot sem gesto algum; a ref de scroll é semeada com o scrollTop real do slide na troca de seção. v4.33.0 - o ícone da seção Treinos deixa o desenho improvisado (barra + 2 círculos) e passa aos HALTERES da imagem de referência do usuário: 4 anilhas em <rect> (as de fora mais baixas, as de dentro mais altas) + barra central, no mesmo viewBox 24/currentColor/traço 2 dos demais. v4.34.0 - o halteres da secao Treinos foi refeito no desenho da imagem de referencia do usuario: e o MESMO glifo solido do Font Awesome que o app ja usa nos placeholders (`fas fa-dumbbell`; path oficial svgs/solid/dumbbell, viewBox 640x512, credito CC BY 4.0 no comentario do componente), com barra central + 2 anilhas por lado em degrau (as de fora mais baixas) + pino externo. Silhueta PREENCHIDA (fill=currentColor, stroke=none, strokeWidth=0 - o traco dos vizinhos nao se aplica) e a classe .bnav-icon--fill (7-nav-icons.css) da a cor e os estados: normal rgba(255,255,255,.35), ativo var(--primary-light), hover 70%. O desenho anterior (4 <rect>) tinha defeito real: as anilhas se sobrepunham e viravam um bloco so em 22px."
+      },
+      {
+        "file": "src-app/src/components/MobileDrawer.tsx",
+        "purpose": "Drawer lateral mobile <1024px (v4.8.3-navbars), portada do MobileDrawer do reference: head com eyebrow Navegação + fechar, cartão de perfil (ProfileEmblem + nome + Nível/XP/ofensiva, abre o Perfil), nav com Busca Geral/Progresso (atalho da seção ativa)/Notícias/Missões/Configurações e rodapé Tela cheia/Sair da tela cheia. Animação springs SPRING_SETTLE (Motion v12); body-lock + ESC; estilos .mdw__* em shell.css (z-index 950 — acima da nav, abaixo do LockScreen 1200). Notícias/Missões/Configurações acionáveis de qualquer seção (via App.tsx openDashOverlay/openProfileSettings). v4.21.0: item 'Músicas' (SvgMusic, desc 'Playlists e trilhas do treino') na nav entre Missões e Configurações, via prop onOpenMusic ligada a openMusic() no App.tsx — fecha a drawer e abre o overlay de Músicas e Playlists."
+      },
+      {
+        "file": "src-app/src/components/ProfileEmblem.tsx",
+        "purpose": "ProfileEmblem (v4.7.2-evofit-splash-nav): emblema de identidade do avatar partilhado — port de applyProfileCustomization (secao-customizacao.js L371–396), wrapper .profile-avatar__emblem-wrapper com mix-blend screen (+ animate-pulse quando mainEmblemPulse !== false), sprite 300% com offset % ou imagem direta; sem perfil carregado cai no emblema padrão prestigio-1. Usado pela DesktopSidebar e pela MobileDrawer (a Top Bar mobile foi removida na v4.32.0)."
+      },
+      {
+        "file": "src-app/src/components/nav-items.tsx",
+        "purpose": "Ícones SVG stroke da shell (v4.6.0 — viewBox 24, fill none, currentColor, sw 2, round — Diretrizes/Ícones.md): SvgSearch/SvgMaximize/SvgMinimize/SvgLock/SvgPin/SvgFlame. Split de nav-section-items.tsx para o oxlint react/only-export-components."
+      },
+      {
+        "file": "src-app/src/components/nav-section-items.tsx",
+        "purpose": "NavSectionItems (v4.6.0): lista das 5 seções com ícone/nome/label/keywords, usada pela DesktopSidebar. v4.8.2-desktop-nav-grid: ordem reordenada para dashboard(Início)→social→treinos→progresso→loja (só afeta a sidebar — a ordem de SWIPE continua SECTIONS_ORDER em App.tsx). v4.33.0 - o ícone da seção Treinos acompanha a BottomNav (mesmos halteres: 4 anilhas + barra central), mantendo a paridade visual entre a barra inferior e a Sidebar do desktop. v4.34.0 - acompanha a BottomNav (paridade visual): mesmo halteres do Font Awesome (solid/dumbbell, viewBox 640x512) em silhueta preenchida, com a classe .side-hud-icon--fill (styles/shell.css) dando a cor via fill: currentColor."
+      },
+      {
+        "file": "src-app/src/features/search/",
+        "purpose": "Busca Geral Unificada (v4.6.0): search-index.ts (SECTIONS/CONFIGS estáticos, buildDynamicIndex de exercícios + fichas A–J, deaccent normalize NFD para busca insensível a acentos, rank com score e best por item, queryIndex com grupos ordered pelo melhor match, flattenGroups); GlobalSearchOverlay.tsx (grupos ordenados, <mark> nos matches, navegação ↑/↓/Enter/ESC, query vazia não navega, mount condicional em App para estado fresco); search.css (glass + tokens). Atalho Ctrl/Cmd+K; pick de seção navega, pick de exercício/ficha abre Perfil→Treinos via useTreinosStore.getState(), pick de config abre Perfil no hub de configurações; ESC da busca tem guarda para não fechar o Perfil. v4.8.3-navbars: keywords/desc de cfg:exibicao atualizadas com \"formato\", \"oval\", \"reta\" (Formato da Barra). v4.13.0: keywords de cfg:seguranca + \"automatica\", \"auto\", \"botao\" (Solicitação da Digital). v4.19.0-music: novo item cfg:musicas \"Músicas e Playlists\" com action:'open-music' (o App abre o MusicOverlay direto da Busca); keywords de cfg:exibicao expandidas (playlist/youtube/spotify/upload/treino/faixa); SearchItem ganhou campo action. v4.20.0: novo item cfg:audio 'Áudio e Música' (stack:['audio'] abre a nova seção de áudio) e cfg:exibicao reduzido a exibição/PWA/dev — keywords de música removidas (saíram para a seção de áudio)."
+      },
+      {
+        "file": "src-app/src/features/lock/",
+        "purpose": "Sistema de Bloqueio (v4.6.0): lock-store.ts (PIN_STORAGE_KEY academia_lock_pin, hashPin djb2 hex+len — nunca cru, getPinLength, verifyPin, isLockUsable, getLockTimeoutSec, lockPrefsChanged, useLockStore nasce travado se utilizável, lockApp); useAppLock.ts (timeout por inatividade + re-arme em academia:lock-prefs-changed); lock-wallpapers.ts (WALL_PRESETS neon/grafite/violeta/magenta — fonte única movida de SettingsFeature — e resolveWallpaper por orientação); LockScreen.tsx (relógio/data, wallpaper, keypad 4–6 dígitos com auto-submit, shake/erro, biometria fake 1s, teclado físico, PIN limpo no sucesso); lock.css. App monta <LockScreen/> no fim do JSX (acima de tudo quando travado). v4.9.0-sync: paleta roxa → laranja #f97316, card rgba(9,9,11,0.78) e fundo personalizado mbc_lock_desktop/mobile (orientation-aware com fallback cruzado, filter brightness(0.78), reativo a academia:lock-prefs-changed). v4.9.1-lock-password: credencial vira SENHA alfanumérica 4-32 (antes PIN 4-6 — o replace(/\\D/g, '') descartava letras e a senha nao salvava); getPinLength aceita 4..32 e o formato djb2:<hex>:<len> permanece compativel; LockScreen redesenhado fiel a imagem 1 do reference Life Organizer (relógio/keypad removidos, pill DESBLOQUEIO • ACADEMIA, avatar ProfileEmblem com glow + badge de cadeado, nome + subtítulo condicional a biometria, card DESBLOQUEAR COM DIGITAL, campo de senha com olho + botao Desbloquear via form/Enter, erro shake 1,4 s, ESQUECEU A SENHA? com aviso de recuperacao local e nota de dados); lock.css com acento em var(--primary)/rgba(var(--primary-rgb,...)). v4.13.0: pref solicitação da biometria (academia_pref_app_lock_bio_auto, ausente = 'true') — auto-trigger WebAuthn só com locked && autoBio (flag do efeito marcada DENTRO do setTimeout p/ sobreviver ao cleanup do StrictMode em dev); modo \"Só no Botão\" renderiza cartão da digital + formulário de senha JUNTOS (hint \"Escolha como desbloquear…\"), botão Tentar Novamente exige bioFailedAttempts >= 3 e o erro da via senha é suprimido enquanto o cartão da digital aparece; modo automático idêntico ao anterior (exclusivo até 3 falhas). v4.22.0: EXCEÇÃO DO TREINO — isWorkoutActive() (lê workout_start_time) faz o boot nascer destravado (locked: isLockUsable() && !isWorkoutActive()) e useAppLock não arma o timer de inatividade com treino ativo, re-arming em academia:workout-started/cancelled/closed/completed; encerrado o treino o lock volta a valer normalmente."
+      },
+      {
+        "file": "src-app/src/core/sync/",
+        "purpose": "Motor de sincronização multi-dispositivo (v4.9.0-sync): supabase-client.ts (credenciais do painel em localStorage mbc_supabase_url/mbc_supabase_anon_key com fallback .env VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY — .env tem prioridade; cache por sessão, isSyncConfigured, testSupabaseConnection, chaves mbc_sync_key default ACADEMIA_SYNC, mbc_device_id, mbc_last_sync_at, mbc_sync_revoked, setLastSyncedAt/lastSyncedAt), device.ts (getPersistentDeviceId, detectCurrentDevice, buildCurrentDeviceRecord, formatRelativeActiveTime, registro em user_sync.devices), offline-queue.ts (fila IndexedDB academia_offline_resilience_db/mutation_queue com auto-flush no evento online) e sync-manager.ts (snapshot JSONB dos dados essenciais — exercícios, fichas, histórico, maestrias, perfil/customização e estado legado — na tabela user_sync, push/pull com LWW por updatedAt, BroadcastChannel academia_multi_device_sync_channel, canal Realtime sync_room_${key}, heartbeat 25s, registry com rename/kick/revogação, useDevicesStore, syncNow, restartSyncEngine, reconnectAfterRevocation, auto-push com debounce de 1500ms no evento academia:db-ready)."
+      },
+      {
+        "file": "src-app/src/features/sync/",
+        "purpose": "UI de nuvem/telas (v4.9.0-sync): sync.css (BEM .sy-* com variáveis próprias, paleta zinc #09090b + acento var(--primary) na cor do usuario (fallback #f97316), blocos modal/QR/sy-btn--google, z-index modal 1150 e toast 1180), SyncSettingsPanel.tsx (status da sincronização, chave ativa com copiar, Sincronizar agora, credenciais Supabase com teste de conexão), ConnectedDevices.tsx (registry da nuvem — dispositivo atual, renomear, desconectar, revogar — renderizado na tela seguranca das Configurações), ScreensCustomizationPanel.tsx (4 slots: mbc_lock_desktop/mobile e mbc_loading_vertical/horizontal, v4.9.2-telas-lock-preview: prévia Testar Bloqueio reescrita com createPortal(body) reusando as classes reais do LockScreen (lock/lock__*, pill/avatar/bio/senha com olho, ESC e Fechar prévia, wallpaper orientation-aware via resolveWallpaper) e o bloco .sy-lock-preview removido do sync.css; Testar Splash usa AppLoadingScreen (.sy-loading)), AppLoadingScreen.tsx (overlay de carregamento com imagem custom + barra) e RemoteSyncToast.tsx (aviso de dados remotos vindos de outro dispositivo ou sessão revogada)."
+      },
+      {
+        "file": "src-app/src/features/auth/",
+        "purpose": "Login/conta nuvem (v4.15.0-auth — substituiu o AuthModal modal da v4.9.0-sync): AuthScreen.tsx (novo — tela standalone full-screen portada do LoginAuthStandalone.tsx com guia das 7 imagens de referência: fundo CurvedPerspectiveBackground SVG, marca 'Evo Fit'/'Cuidando da sua Saúde', welcome com 3 pílulas Google/e-mail/criar conta + atalhos 'Entrar por QR Code • Vincular Chave' (gaveta colapsável que aplica setSyncKey como namespace de sync) + rodapé legal com modais Termos/Privacidade; login com validação de e-mail real (regex — Supabase Auth não autentica por @usuário e um banner amigável orienta), cadastro com display_name=@usuário (3-20, a-z0-9_) e senha mín. 6, recuperação real via resetPasswordForEmail, QR REAL com a lib qrcode (payload origin/?qr=PLN-XXXXXX&exp, contagem 5 min, overlay expirado + Renovar, chip Código de Pareamento); auth real via useAuth, auto-fecha quando a sessão chega, ESC/X fecham, z-index 1150 abaixo do LockScreen 1200; auth-screen.css com .no-scrollbar) + AuthModal.tsx (wrapper fino que monta AuthScreen quando o store abre — ponto de montagem estável p/ App.tsx/Configurações) + auth-modal-store.ts (zustand, inalterado). Abre pelo rootExtra Entrar das Configurações; dependências novas qrcode + @types/qrcode."
+      },
+      {
+        "file": "src-app/src/styles/shell.css",
+        "purpose": "Cascata global (importada por último em main.tsx): variáveis de layout, .section-strip (containing block fixed), .side-hud (Sidebar/Drawer), .bnav-* (barra inferior), utilitários de portal/z-index, overrides Tailwind v4."
+      },
+      {
+        "file": "src-app/vite.config.ts",
+        "purpose": "React + Tailwind v4 + vite-plugin-pwa (ícones PWA /assets/icons/icon-192.png e icon-512.png — ícone unificado branco+Decepticon gerado de D.jpg, v4.7.4-pwa-icon-unificado; casam com os mipmaps do launcher Android). v4.18.0-music: includeAssets ganhou o glob negativo '!assets/sounds/**' — o MAIN.mp3 (7,2 MB) fica FORA do precache do SW e é cacheado sob demanda pelo runtimeCaching StaleWhileRevalidate de /assets/."
+      }
     ],
     "core_db": [
       "src-app/src/core/db/schema.ts: Dexie schema v4 (exercícios, fichas, histórico, maestria, sync-queue, preferências, Fit ID, lock, wallpapers, música).",
@@ -468,7 +802,6 @@
     "desktop_layout_v4_23": "Adaptação DESKTOP das abas Músicas, Missões e Notícias (v4.23.0, 2026-10-15): em @media (min-width:1024px) os overlays viram JANELA CENTRALIZADA com grades multi-coluna; abaixo de 1024px o mobile permanece 100% intacto (todo o código vive dentro da media query, com !important só para vencer estilos inline/utilities). Músicas: features/music/music.css bloco v4.23.0-desktop — .mu-overlay vira janela min(1180px,100vw−96px)×min(880px,100vh−56px) via position:fixed+inset:0+margin:auto (anel box-shadow 100vmax escurece o fundo sem tocar no JS), .mu-quick-grid/.mu-pl-grid em repeat(auto-fill,minmax()), .mu-nav vira abas centralizadas, .mu-fab absolute. Missões: features/dashboard/missions-overlay.css — .ms-shell 1140×844, #ms-content-daily/#ms-content-weekly em grid 3 colunas (cabeçalho :first-child/:last-child em 1/-1), GUIAS mantém flex/card único; único hook TSX novo = className 'ms-shell' no container do MissionsOverlay.tsx. Notícias: features/news/news-overlay.css — #news-main-view vira janela 1180×844 via position:fixed!important+inset:0+margin:auto (vence a classe utility 'relative' e o display:block preso pelo style inline do JSX; height!important por causa da regra base height:auto), header sticky, .tab-content.active#noticias em grid 3 col (hero 1/-1), #atualizacoes em grid 2 col, .detail-view como janela 1180×844 com header sticky. Verificado por CDP probe 32/32 PASS (desktop 1440×900 + mobile 430×932 sem regressão).",
     "known_gaps": "Fase 0–5 concluídas (Fase 5 em 2026-10-06): cronômetro global do treino + modalEncerrarTreino acionáveis pelo #dashBtnIniciar (handleOpenFicha espelha startWorkoutFromDashboard L276–304), overlay de Notícias NewsOverlay, placeholders Social/Loja com DOM .section-coming-soon e BottomNav 1:1 com 7-nav-icons.css; antes disto o timer nunca era iniciado (botão oculto .btn-start-workout) e o modalEncerrarTreino era inalcançável pela Ficha, e as utilities Tailwind do BottomNav venciam o CSS legado não camadeado sobrepondo os labels. Fases 0–4: 0 fundação, 1 visual (Dashboard/Ficha/Progresso), 2 Perfil/temas, 3 gamificação (Radar Fit, conclusão/encerrar, maestria, share card, openVolumeDetails, coleção + maestria individual, Modo Foco, overlay de missões, fadeSwap/fadeIn) e 4 seção Treinos (TreinosFeature + 7 arquivos de suporte, CustomizacaoTabs, swipe horizontal com exclusões do nav.js, SheetsFeature/HistoryFeature/WorkoutProgressChart removidos, oxlint 0 warnings). Divergências conscientes: deck com exerciseIds string[] compacto (sem nulls, splice perde a posição), swipe sem arrasto contínuo da fita (só intenção + troca no fim), modalPicker (morto no legado) não portado, modalLevelUp omitido; Fase 5 — closeNewsOverlay não faz _transitionTo('dashboard') (o overlay só abre do Dashboard, mesmo racional do MissionsOverlay), rodapé do news-overlay portado em 2026-10-07 (FOOTER_HTML nos 3 containers; lista = 6 diffs e detalhe = 15 diffs, todas não-visuais: serialização oklab/rgba com valores exatos, border-color de elementos com border-width 0 e margens do space-y v3 margin-top no irmão seguinte vs v4 margin-end no anterior — gaps e xywh idênticos), swip com o overlay aberto desmonta o Dashboard e o overlay some (idêntico no nav.js), micro-divergência de 150 ms na transition-opacity da aba ativa do news-overlay; bloco revert-layer requer Chrome/WebView 111+ (degradação graciosa abaixo disso). Lacunas menores: componentes scaffold órfãos nunca montados e mantidos (HeaderHUD, TabBar, ExerciseCard, ui/DynamicBg, ActiveWorkoutModal — este fora do fluxo desde a Fase 5); modais do Progresso (#modalDayHist/#modalVolumeDetails/#modalRadarGuide) portados em 2026-10-11 via createPortal(document.body) com lock de body.overflow (v4.7.3-progresso-dayhist; o will-change:transform de .section-strip quebrava o position:fixed deles dentro da fita), rest timer só no Modo Foco aberto; overlay de missões é estático por desenho legado (sem lógica de missões no Vanilla). Correções v4.0.8 (2026-10-06): #gtTime sincroniza now ao iniciar (sem exibir tempo negativo por ~1 s, paridade com initGlobalTimer), #dashAvatar renderiza o emblema de identidade selecionado (applyProfileCustomization L371–396: wrapper profile-avatar__emblem-wrapper + sprite/URL + pulse + data-frame, antes só tinha o ícone estático shield_person) e o ciclo conta por ficha. Paridade medida v4.0.13-typography (2026-10-07): progresso 6239 → 65 diffs e dashboard 1717 após o repairSectionRaster (65 = célula de GIF r3c5); treinos limitado pela nondeterminismo dos GIFs <img> (não pausáveis por getAnimations — R-vs-R entre duas sessões idênticas = 36000 diffs, mesma ordem de grandeza do L-vs-R); state@R_treinos devolve null para 'Sua Semana' porque o React desmonta as seções (o legado mantém todas no DOM, x=-341) — estrutural, não visual; font-family do <html> difere (preflight TW3 ui-sans-serif vs TW4 -apple-system...) sem efeito visual (body herda Rajdhani) e os contadores do measure_fonts seguem 0/0."
   },
-
   "ia_quick_reference": {
     "description": "Referência rápida do tipo 'onde editar → quais arquivos'. PRIMEIRA consulta antes de qualquer busca no código. REGRA: 1 linha por entrada, apenas a localização — o histórico/narrativa de cada mudança pertence ao Diretrizes/CHANGELOG.md (dono único do histórico por versão). NÃO acumule cadeias de 'vX.Y: …' aqui nem nas strings 'purpose' deste arquivo.",
     "legenda": {
