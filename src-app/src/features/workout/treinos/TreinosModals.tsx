@@ -323,16 +323,20 @@ export const CRDetailsModal: React.FC<{
       }}
     >
       <div className="cr-card-details">
+        {/* Prévia do exercício centralizada (independente da sub-aba) */}
+        <div className="cr-preview-top" style={{ display: 'flex', justifyContent: 'center', padding: '20px 20px 0' }}>
+          <div className="cr-card-miniature" style={{ transform: 'none', margin: '0 auto' }}>
+            <div className="cr-card-level-badge">
+              Lvl <span>{level}</span>
+            </div>
+            <img src={ex.imageUrl ?? ''} alt="Prévia do Exercício" style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 18 }} />
+          </div>
+        </div>
+
         {/* Header Section */}
         <div className="cr-card-header">
           <div className="cr-top-main">
-            <div className="cr-card-miniature">
-              <div className="cr-card-level-badge">
-                Lvl <span id="crExLevel">{level}</span>
-              </div>
-              <img id="crExCardImg" src={ex.imageUrl ?? ''} alt="Imagem do Exercício" />
-            </div>
-            <div className="cr-header-info">
+            <div className="cr-header-info" style={{ width: '100%' }}>
               <h2 id="crExName">{ex.name}</h2>
               <div className="cr-ex-level-text">
                 Nível <span id="crExLevelLabel">{level}</span>

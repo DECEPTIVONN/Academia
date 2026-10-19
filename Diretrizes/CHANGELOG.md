@@ -22,6 +22,16 @@
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
 <<<<<<< HEAD
+## [v4.37.9] - 2026-10-18
+
+**Detalhes do exercício (CRDetailsModal) — estilo geral ajustado ao `DetalhesPecaStandalone.tsx`** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). (1) Prévia do exercício centralizada na parte superior, independente da sub-aba (nova seção `cr-preview-top` com a miniatura centralizada; removida a miniatura duplicada do `cr-top-main`). (2) Glow/outline já aplicados via CSS (`cr-card-details::before` borderBreathe + `::after` corner accents) — mantidos. (3) Abas permanecem reordenadas: [prévia, stats, descrição]. Raridade=músculo e tipo=tipo já exibidos no header; ícone de medalha → maestria; botão "melodia de nível" = editar (footer).
+
+### Changed
+- **`src-app/src/features/workout/treinos/TreinosModals.tsx`** — CRDetailsModal: prévia centralizada no topo (`cr-preview-top`), miniatura removida do `cr-top-main`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` exit 0 (apenas warnings não bloqueantes) · `npm run build` OK · `npm run lint:docs` exit 0.
+
 ## [v4.37.8] - 2026-10-18
 
 **Detalhes do exercício (CRDetailsModal) — adaptação do layout de `DetalhesPecaStandalone.tsx`** (a pedido do usuário; a imagem anexada não pôde ser lida por este modelo, que não aceita entrada de imagem — a implementação seguiu a descrição textual). Adaptações: (1) removido o botão de fechar (✕). (2) Ícone de medalha (maestria) corrigido (emojis 🏋️/🏆 → SVGs stroke). (3) Abas reordenadas: [prévia do exercício, stats (segunda aba inalterada), descrição (terceira aba = antiga primeira)]. A prévia do exercício (imagem) ficou na primeira aba; a raridade (músculo) e o tipo (Peso livre) já são exibidos no header; o ícone de medalha direciona para a maestria específica; o botão de editar exercício (equivalente à "melodia de nível") permanece no footer.
