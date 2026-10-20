@@ -125,6 +125,8 @@ export interface Playlist {
   createdAt: number;
   /** v4.20.0 — capa customizável (data URL de imagem enviada pelo usuário). */
   cover?: string;
+  /** v4.41.x — tipo da playlist: música ou podcast. */
+  type?: 'music' | 'podcast';
 }
 
 export interface MusicLibrary {
@@ -194,11 +196,14 @@ function readLibrary(): MusicLibrary {
   }
 }
 
-function writeLibrary(lib: MusicLibrary): void {
+function writeLibrary(lib: MusicLibrary, options?: { silent?: boolean }): void {
   try {
     localStorage.setItem(LIB_KEY, JSON.stringify(lib));
   } catch {
     /* storage cheio/indisponível — estado segue em memória */
+  }
+  if (!options?.silent && typeof document !== 'undefined') {
+    document.dispatchEvent(new CustomEvent('academia:music-changed'));
   }
 }
 
@@ -295,7 +300,7 @@ interface LibraryState extends MusicLibrary {
   removeTrack: (trackId: string) => Promise<void>;
   /** v4.22.0 — conta um início de reprodução (ordenar "Mais tocado"). */
   registerPlay: (trackId: string) => void;
-  createPlaylist: (name: string) => Playlist;
+  createPlaylist: (name: string, type?: 'music' | 'podcast') => Playlist;
   deletePlaylist: (playlistId: string) => void;
   addUploadToPlaylist: (playlistId: string, trackId: string) => void;
   addExternalToPlaylist: (
@@ -401,7 +406,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
 
   hydrate: () => {
     const seeded = seedLibrary(readLibrary());
-    writeLibrary(seeded);
+    writeLibrary(seeded, { silent: true });
     set(seeded);
   },
 
@@ -475,13 +480,14 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     set(lib);
   },
 
-  createPlaylist: (name) => {
+  createPlaylist: (name, type = 'music') => {
     const cur = readLibrary();
     const pl: Playlist = {
       id: newId('pl'),
       name: name.trim() || 'Nova playlist',
       items: [],
       createdAt: Date.now(),
+      type,
     };
     const lib = { ...cur, playlists: [...cur.playlists, pl] };
     writeLibrary(lib);

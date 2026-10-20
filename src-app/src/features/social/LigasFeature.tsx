@@ -932,7 +932,16 @@ export function LigasFeature({
   const [communityTab, setCommunityTab] = useState<'amigos' | 'membros'>('amigos');
   const [sortBy, setSortBy] = useState<'posicao' | 'trofeus' | 'nome'>('posicao');
   const [showFilters, setShowFilters] = useState(false);
-  const [friends, setFriends] = useState<FriendItem[]>(() => mergeFriends(loadAddedFriends(), INITIAL_FRIENDS));
+  const [friends, setFriends] = useState<FriendItem[]>(() => loadAddedFriends());
+  useEffect(() => {
+    const reload = () => setFriends(loadAddedFriends());
+    document.addEventListener('academia:db-ready', reload);
+    document.addEventListener('academia:friends-updated', reload);
+    return () => {
+      document.removeEventListener('academia:db-ready', reload);
+      document.removeEventListener('academia:friends-updated', reload);
+    };
+  }, []);
   const [members] = useState<FriendItem[]>(INITIAL_MEMBERS);
   const [internalMessages, setInternalMessages] = useState<ClanMessage[]>(INITIAL_CLAN_MESSAGES);
 

@@ -86,14 +86,12 @@ import './music.css';
 /* ───────────────────────── Faixas fixas do site ───────────────────────── */
 
 const SITE_TRACKS_UI = [
-  { id: 'main' as const, title: 'MAIN', artist: 'Trilha Evo Fit', tint: '#8b5cf6' },
   {
     id: 'workout' as const,
     title: 'Black Panther: War For Wakanda',
     artist: "Marvel's Avengers Game",
     tint: '#b45309',
   },
-  { id: 'result' as const, title: 'RESULT', artist: 'Trilha Evo Fit', tint: '#22c55e' },
   { id: 'missions' as const, title: 'Revenger Phoenix', artist: 'Trilha Evo Fit', tint: '#e11d48' },
 ];
 
@@ -828,14 +826,16 @@ function PlaylistsView({
   const { playlists, createPlaylist, setActivePlaylist, activePlaylistId } = useLibraryStore();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
+  const [playlistType, setPlaylistType] = useState<'music' | 'podcast'>('music');
   const kbInset = useKeyboardInset();
 
   const handleCreate = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    const pl = createPlaylist(trimmed);
+    const pl = createPlaylist(trimmed, playlistType);
     setCreating(false);
     setName('');
+    setPlaylistType('music');
     onOpenPlaylist(pl.id);
   };
 
@@ -897,6 +897,22 @@ function PlaylistsView({
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
               autoFocus
             />
+            <div className="mu-seg" role="group" aria-label="Tipo da playlist">
+              <button
+                type="button"
+                className={`mu-seg__btn ${playlistType === 'music' ? 'mu-seg__btn--active' : ''}`}
+                onClick={() => setPlaylistType('music')}
+              >
+                Música
+              </button>
+              <button
+                type="button"
+                className={`mu-seg__btn ${playlistType === 'podcast' ? 'mu-seg__btn--active' : ''}`}
+                onClick={() => setPlaylistType('podcast')}
+              >
+                Podcast
+              </button>
+            </div>
             <div className="mu-modal__actions">
               <button type="button" className="mu-btn mu-btn--ghost" onClick={() => setCreating(false)}>
                 Cancelar
@@ -1130,7 +1146,7 @@ function PlaylistDetail({
           <div className="mu-pl-hero__meta">
             <h3 className="mu-pl-hero__name">{playlist.name}</h3>
             <span className="mu-pl-hero__count">
-              {playlist.items.length} itens{isWorkout ? ' • usada no treino' : ''}
+              {playlist.items.length} itens{isWorkout ? ' • usada no treino' : ''}{playlist.type === 'podcast' ? ' • podcast' : ''}
             </span>
           </div>
           <button

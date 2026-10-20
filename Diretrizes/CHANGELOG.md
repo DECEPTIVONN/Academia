@@ -48,6 +48,7 @@
 - Fila automática do treino ignora Spotify, porque o embed não pode ser reproduzido programaticamente; a UI abre um modal com o embed oficial.
 - Reprodução de YouTube respeita `refType` explícito, evitando tratar faixa individual como playlist.
 - `startUserQueue()` agora expande containers de playlist/álbum do YouTube/Spotify antes de montar a fila do treino, para que as faixas individuais apareçam; se a API falhar, o container segue válido.
+- Sincronização na nuvem agora inclui a biblioteca de músicas (playlists/metadados, sem áudio enviado) e a lista de amigos; `applySnapshot` grava no `localStorage` e a UI recarrega automaticamente.
 - Deploy/PWA: `vercel.json` da raiz agora usa `distDir: "dist"` (em vez de `../dist`), evitando servir o `dist` antigo da raiz e assets com hash inexistente; Workbox ganhou `skipWaiting`, `clientsClaim` e `cleanupOutdatedCaches`; o service worker passou a ser `selfDestroying` para remover caches/SW antigos em mobile e evitar travamento em assets desatualizados.
 
 ### Compatibilidade

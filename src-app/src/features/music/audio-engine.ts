@@ -894,6 +894,9 @@ export function initAudioEngine(): void {
   // Hidrata a biblioteca (tracks/playlists/ativa) para que a playlist de
   // treino valha mesmo sem o usuário abrir a interface de Músicas antes.
   useLibraryStore.getState().hydrate();
+  document.addEventListener('academia:db-ready', () => {
+    useLibraryStore.getState().hydrate();
+  });
 
   // Estado inicial: ambiente main (pausa imediata se master off).
   context = 'main';

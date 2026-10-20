@@ -160,21 +160,6 @@ export function FriendQrModal({ inviteUrl, name, onClose, onScan }: FriendQrModa
         </div>
 
         <div className="friend-qr__footer">
-          <svg
-            className="friend-qr__zigzag"
-            viewBox="0 0 320 14"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <polyline
-              points="0,11 16,3 32,11 48,3 64,11 80,3 96,11 112,3 128,11 144,3 160,11 176,3 192,11 208,3 224,11 240,3 256,11 272,3 288,11 304,3 320,11"
-              fill="none"
-              stroke="var(--primary, #8b5cf6)"
-              strokeWidth="5"
-              strokeLinecap="square"
-            />
-          </svg>
-
           <div className="friend-qr__actions">
             <button
               type="button"

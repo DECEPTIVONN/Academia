@@ -53,6 +53,10 @@ export interface AppSnapshot {
   mastery: ExerciseMastery[];
   profileState?: ProfileState;
   legacy?: Record<string, unknown>;
+  /** Biblioteca de músicas (playlists/metadados), sem blobs de áudio. */
+  musicLibrary?: unknown;
+  /** Amigos adicionados (lista local-first), sincronizada com a nuvem. */
+  friends?: unknown;
   updatedAt: string;
   originDeviceId: string;
 }
@@ -134,6 +138,21 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
       idb.legacyState.get('academia_treino'),
     ]);
 
+  let musicLibrary: unknown;
+  let friends: unknown;
+  try {
+    const rawMusic = localStorage.getItem('academia_music_library_v1');
+    if (rawMusic) musicLibrary = JSON.parse(rawMusic);
+  } catch {
+    musicLibrary = undefined;
+  }
+  try {
+    const rawFriends = localStorage.getItem('academia_added_friends_v1');
+    if (rawFriends) friends = JSON.parse(rawFriends);
+  } catch {
+    friends = undefined;
+  }
+
   return {
     v: 1,
     exercises,
@@ -142,6 +161,8 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     mastery,
     profileState,
     legacy: (legacyRow?.value as Record<string, unknown>) ?? undefined,
+    musicLibrary,
+    friends,
     updatedAt: new Date().toISOString(),
     originDeviceId: getPersistentDeviceId(),
   };
@@ -184,6 +205,24 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
         }
       }
     );
+
+    /* Sincroniza biblioteca de músicas (metadados/playlists), sem blobs de áudio. */
+    if (snapshot.musicLibrary && typeof snapshot.musicLibrary === 'object') {
+      try {
+        localStorage.setItem('academia_music_library_v1', JSON.stringify(snapshot.musicLibrary));
+      } catch {
+        /* best-effort */
+      }
+    }
+    /* Sincroniza lista de amigos (local-first). */
+    if (Array.isArray(snapshot.friends)) {
+      try {
+        localStorage.setItem('academia_added_friends_v1', JSON.stringify(snapshot.friends));
+        document.dispatchEvent(new CustomEvent('academia:friends-updated'));
+      } catch {
+        /* best-effort */
+      }
+    }
 
     /* Se a entrada de hoje não existir no snapshot, o today-entry-store
        recarrega sozinho no db-ready; se existir, o merge é automático. */
@@ -593,6 +632,8 @@ export function startSyncEngine(): void {
 
   /* Auto-push das mudanças locais (debounce) */
   document.addEventListener('academia:db-ready', onLocalDataChanged);
+  document.addEventListener('academia:music-changed', onLocalDataChanged);
+  document.addEventListener('academia:friends-changed', onLocalDataChanged);
 
   /* Flush da fila offline ao voltar a conexão */
   window.addEventListener('online', onOnline);
@@ -633,6 +674,8 @@ export function stopSyncEngine(): void {
     pushDebounce = null;
   }
   document.removeEventListener('academia:db-ready', onLocalDataChanged);
+  document.removeEventListener('academia:music-changed', onLocalDataChanged);
+  document.removeEventListener('academia:friends-changed', onLocalDataChanged);
   document.removeEventListener('visibilitychange', onVisibilityChange);
   window.removeEventListener('focus', onWindowFocus);
   window.removeEventListener('online', onOnline);

@@ -39,12 +39,12 @@ export function AppLoadingScreen({ verticalImage, horizontalImage, onComplete }:
       setProgress((prev) => {
         if (prev >= 100) {
           window.clearInterval(t);
-          window.setTimeout(onComplete, 300);
+          window.setTimeout(onComplete, 150);
           return 100;
         }
-        return prev + 5;
+        return prev + 10;
       });
-    }, 40);
+    }, 20);
     return () => window.clearInterval(t);
   }, [onComplete]);
 

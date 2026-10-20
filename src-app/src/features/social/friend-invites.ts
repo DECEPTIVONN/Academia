@@ -275,7 +275,11 @@ export function loadAddedFriends(): FriendItem[] {
 }
 
 function saveAddedFriends(friends: FriendItem[]): boolean {
-  return writeStorage(ADDED_FRIENDS_KEY, JSON.stringify(friends.slice(0, MAX_STORED_FRIENDS)));
+  const ok = writeStorage(ADDED_FRIENDS_KEY, JSON.stringify(friends.slice(0, MAX_STORED_FRIENDS)));
+  if (ok && typeof document !== 'undefined') {
+    document.dispatchEvent(new CustomEvent('academia:friends-changed'));
+  }
+  return ok;
 }
 
 /** Junta os amigos adicionados (primeiro) com a lista base, sem duplicar IDs. */

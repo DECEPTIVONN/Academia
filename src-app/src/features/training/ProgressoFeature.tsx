@@ -617,7 +617,7 @@ export const ProgressoFeature: React.FC = () => {
                   <div className="ws-day-item" key={d.dateStr}>
                     <span className="ws-day-label">{d.label}</span>
                     <div className={`ws-day-circle ${d.done ? 'completed' : ''}`}>
-                      <span className="check">V</span>
+                      <span className="check">✓</span>
                     </div>
                   </div>
                 ))}

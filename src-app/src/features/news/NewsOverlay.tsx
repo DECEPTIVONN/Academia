@@ -432,6 +432,10 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
     if (!open) {
       setDetail(null);
       setFading(false);
+    } else {
+      setShowAllNews(false);
+      setShowAllUpdates(false);
+      setTab('noticias');
     }
   }
 
@@ -602,15 +606,11 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
         <main className="pt-24 relative arena-bg">
           <div className="max-w-lg mx-auto w-full px-4">
             {/* Noticias Section */}
-            <section className={`tab-content mb-4 space-y-6${tab === 'noticias' ? ' active' : ''}`} id="noticias">
-              <NewsCard index={0} isFirst onOpen={() => openDetail('news', 0)} />
-              {showAllNews && (
-                <>
-                  <NewsCard index={1} isFirst={false} onOpen={() => openDetail('news', 1)} />
-                  <NewsCard index={2} isFirst={false} onOpen={() => openDetail('news', 2)} />
-                  <NewsCard index={3} isFirst={false} onOpen={() => openDetail('news', 3)} />
-                </>
-              )}
+                        <section className={`tab-content space-y-6${tab === 'noticias' ? ' active' : ''}`} id="noticias">
+              {newsCards.map((c, i) => {
+                if (i > 2 && !showAllNews) return null;
+                return <NewsCard key={i} index={i} isFirst={i === 0} onOpen={() => openDetail('news', i)} />;
+              })}
               {!showAllNews && (
                 <div className="flex justify-center mt-6">
                   <button
@@ -627,7 +627,7 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
             {/* Atualizacoes Section */}
             <section className={`tab-content space-y-6${tab === 'atualizacoes' ? ' active' : ''}`} id="atualizacoes">
               {updateCards.map((c, i) => {
-                if (i > 3 && !showAllUpdates) return null;
+                if (i > 4 && !showAllUpdates) return null;
                 return <UpdateCard key={c.title} index={i} onOpen={() => openDetail('update', i)} />;
               })}
               {!showAllUpdates && (
