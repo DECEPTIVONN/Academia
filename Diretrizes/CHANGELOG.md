@@ -21,6 +21,27 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.39.5] - 2026-10-20
+
+**Ícones dos botões de player (retroceder/pausar/avançar) viram outline** (a pedido do usuário). Os botões de player (retroceder, pausar, tocar/avançar) em `WorkoutNowPlayingBar`, `FloatingMiniPlayer` e `MusicOverlay` usavam `fill="currentColor"` (SVGs sólidos). Removido o `fill`, voltando ao padrão stroke (linhas finas) do Lucide.
+
+### Changed
+- **`src-app/src/features/music/WorkoutNowPlayingBar.tsx`**, **`FloatingMiniPlayer.tsx`**, **`MusicOverlay.tsx`** — removido `fill="currentColor"` dos ícones `SkipBack`/`Pause`/`Play`/`SkipForward`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npm run build` OK.
+
+## [v4.39.4] - 2026-10-20
+
+**Player do rodapé da Ficha some quando "Músicas do App no Treino" está desativada** (a pedido do usuário). A barra `WorkoutNowPlayingBar` já era condicionada a `prefOn || activePlaylistId`, mas o toggle `toggleWorkoutMusic` não notificava os consumidores em tempo real, então a barra permanecia visível ao desativar a opção durante a sessão. Agora o toggle dispara `academia:music-changed` (que o componente já escuta), atualizando `prefOn` e ocultando a barra imediatamente quando não há playlist de treino ativa. O `audio-engine` também silencia a trilha de treino do site ao desativar a opção (sem playlist ativa), mantendo áudio e UI consistentes.
+
+### Changed
+- **`src-app/src/features/settings/SettingsFeature.tsx`** — `toggleWorkoutMusic` dispara `academia:music-changed` após persistir a pref.
+- **`src-app/src/features/music/audio-engine.ts`** — listener de `academia:music-changed` agora também silencia o contexto de treino quando a opção está desativada e não há playlist ativa.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` sem erros (apenas warnings preexistentes) · `npm run build` OK · `npm run lint:docs` OK.
+
 ## [v4.39.3] - 2026-10-20
 
 **Nome do PWA renomeado para "EVO FIT"** (a pedido do usuário). O `<title>` de `src-app/index.html` e o `name`/`short_name` do manifest gerado pelo `vite-plugin-pwa` (em `vite.config.ts`) deixaram "Fichas de Treino — EVO FIT"/"EVO FIT Workout Tracker" e passaram a "EVO FIT", refletindo no topo da página e na instalação do PWA.

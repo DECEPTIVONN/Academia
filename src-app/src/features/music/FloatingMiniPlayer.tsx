@@ -107,7 +107,7 @@ function Pill({
       <div className="fmp__controls">
         {canPrev && (
           <button type="button" className="fmp__btn" onClick={onPrev ?? prevTrack} aria-label="Retroceder">
-            <SkipBack size={13} fill="currentColor" />
+            <SkipBack size={13} />
           </button>
         )}
         <button
@@ -116,10 +116,10 @@ function Pill({
           onClick={togglePlayback}
           aria-label={state.playing ? 'Pausar' : 'Tocar'}
         >
-          {state.playing ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
+          {state.playing ? <Pause size={13} /> : <Play size={13} />}
         </button>
         <button type="button" className="fmp__btn" onClick={nextTrack} aria-label="Avançar">
-          <SkipForward size={13} fill="currentColor" />
+          <SkipForward size={13} />
         </button>
         {onClose && (
           <button type="button" className="fmp__close" onClick={onClose} aria-label="Ocultar reprodutor">

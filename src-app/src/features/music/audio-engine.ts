@@ -853,9 +853,21 @@ export function initAudioEngine(): void {
       stopUserQueue();
       playing = false;
       emitState();
-    } else if (!playing) {
-      // Master religado → retoma o contexto atual (main/treino/etc).
-      resumeCurrent();
+    } else {
+      const lib = useLibraryStore.getState();
+      const hasPlaylist =
+        !!lib.activePlaylistId &&
+        lib.playlists.some((p) => p.id === lib.activePlaylistId && p.items.length > 0);
+      const workoutDisabled = !workoutMusicEnabled() && !hasPlaylist;
+      if (workoutDisabled && (context === 'workout' || context === 'workout-user')) {
+        pauseSite();
+        stopUserQueue();
+        playing = false;
+        emitState();
+      } else if (!playing) {
+        // Master religado → retoma o contexto atual (main/treino/etc).
+        resumeCurrent();
+      }
     }
   });
 

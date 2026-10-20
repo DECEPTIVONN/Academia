@@ -560,6 +560,9 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const toggleWorkoutMusic = (checked: boolean) => {
     setWorkoutMusicState(checked);
     writeLS(PREF_KEYS.workoutMusic, String(checked));
+    // Notifica (em tempo real) os consumidores — ex.: WorkoutNowPlayingBar no
+    // rodapé da Ficha — para sumir/aparecer conforme a opção.
+    window.dispatchEvent(new CustomEvent('academia:music-changed'));
   };
 
   /* v4.22.0 — handlers do miniplayer (prefs + re-render em sessão) */

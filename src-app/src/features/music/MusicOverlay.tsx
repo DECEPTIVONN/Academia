@@ -389,7 +389,7 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
           onClick={togglePlayback}
           aria-label={state.playing ? 'Pausar' : 'Tocar'}
         >
-          {state.playing ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
+          {state.playing ? <Pause size={20} /> : <Play size={20} />}
         </button>
       </div>
 
@@ -1042,7 +1042,7 @@ function PlaylistDetail({
             disabled={playlist.items.length === 0}
             onClick={() => void playPlaylistFromUi(playlist.items)}
           >
-            <Play size={16} fill="currentColor" /> Tocar
+            <Play size={16} /> Tocar
           </button>
           <button
             type="button"

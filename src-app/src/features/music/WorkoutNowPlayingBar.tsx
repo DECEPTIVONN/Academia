@@ -54,7 +54,7 @@ export function WorkoutNowPlayingBar() {
       <div className="wnp__controls">
         {state.canPrev && (
           <button type="button" className="wnp__btn" onClick={prevTrack} aria-label="Retroceder">
-            <SkipBack size={17} fill="currentColor" />
+            <SkipBack size={17} />
           </button>
         )}
         <button
@@ -64,13 +64,13 @@ export function WorkoutNowPlayingBar() {
           aria-label={state.playing ? 'Pausar' : 'Tocar'}
         >
           {state.playing ? (
-            <Pause size={17} fill="currentColor" />
+            <Pause size={17} />
           ) : (
-            <Play size={17} fill="currentColor" />
+            <Play size={17} />
           )}
         </button>
         <button type="button" className="wnp__btn" onClick={nextTrack} aria-label="Avançar">
-          <SkipForward size={17} fill="currentColor" />
+          <SkipForward size={17} />
         </button>
       </div>
     </div>
