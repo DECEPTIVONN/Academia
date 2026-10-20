@@ -61,6 +61,13 @@ interface DevicesPayload {
   devices: DeviceRecord[];
 }
 
+/* ── Verificação automática de novidades (egress baixo) ──
+   Consulta apenas updated_at; o snapshot completo só é baixado se mudou.
+   O Realtime continua sendo o caminho rápido; isto é o fallback para
+   app em background, broadcast perdido ou reconexão. */
+const REMOTE_CHECK_PERIOD_MS = 60_000;
+const REMOTE_CHECK_MIN_INTERVAL_MS = 10_000;
+
 /* ── BroadcastChannel entre abas do mesmo navegador ── */
 
 const CROSS_TAB_CHANNEL = 'academia_multi_device_sync_channel';
@@ -94,6 +101,9 @@ export const useDevicesStore = create<DevicesUiState>((set) => ({
 let engineRunning = false;
 let realtimeChannel: RealtimeChannel | null = null;
 let heartbeatTimer: number | null = null;
+let remoteCheckTimer: number | null = null;
+let lastRemoteCheckAt = 0;
+let remoteCheckInFlight = false;
 let applyingRemote = false;
 let pushDebounce: number | null = null;
 
@@ -137,7 +147,7 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
   };
 }
 
-async function applySnapshot(snapshot: AppSnapshot): Promise<void> {
+async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): Promise<void> {
   applyingRemote = true;
   try {
     await idb.transaction(
@@ -177,7 +187,7 @@ async function applySnapshot(snapshot: AppSnapshot): Promise<void> {
 
     /* Se a entrada de hoje não existir no snapshot, o today-entry-store
        recarrega sozinho no db-ready; se existir, o merge é automático. */
-    setLastSyncedAt(Date.parse(snapshot.updatedAt));
+    setLastSyncedAt(Date.parse(remoteUpdatedAt || snapshot.updatedAt));
     emitDbReady();
     document.dispatchEvent(new CustomEvent('academia:profile-updated'));
   } finally {
@@ -257,8 +267,51 @@ export async function pullSnapshot(force = false): Promise<boolean> {
   const remoteAt = Date.parse(data.updated_at || (data.data as AppSnapshot).updatedAt || '');
   if (!force && Number.isFinite(remoteAt) && remoteAt <= lastSyncedAt()) return false;
 
-  await applySnapshot(data.data as AppSnapshot);
+  await applySnapshot(data.data as AppSnapshot, data.updated_at);
   return true;
+}
+
+/**
+ * Verificação barata de atualização remota.
+ *
+ * Faz apenas `select updated_at` (uma linha pequena). O snapshot completo
+ * só é baixado quando o updated_at remoto é mais novo que o último sync.
+ * É usada no fallback periódico e ao voltar o foco/visibilidade/online.
+ */
+export async function checkRemoteUpdate(
+  minIntervalMs = REMOTE_CHECK_MIN_INTERVAL_MS
+): Promise<boolean> {
+  if (!isSyncConfigured() || isSyncRevoked() || applyingRemote) return false;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
+
+  const now = Date.now();
+  if (now - lastRemoteCheckAt < minIntervalMs) return false;
+  if (remoteCheckInFlight) return false;
+
+  remoteCheckInFlight = true;
+  lastRemoteCheckAt = now;
+  try {
+    const client = getSyncSupabaseClient();
+    if (!client) return false;
+
+    const { data, error } = await client
+      .from('user_sync')
+      .select('updated_at')
+      .eq('sync_key', dataSyncKey())
+      .maybeSingle();
+
+    if (error || !data?.updated_at) return false;
+    const remoteAt = Date.parse(data.updated_at);
+    if (!Number.isFinite(remoteAt) || remoteAt <= lastSyncedAt()) return false;
+
+    /* Só aqui baixamos o snapshot inteiro. */
+    return await pullSnapshot();
+  } catch (e) {
+    console.warn('[sync] check remoto:', e);
+    return false;
+  } finally {
+    remoteCheckInFlight = false;
+  }
 }
 
 /* ── Broadcast em tempo real (Supabase Realtime) ── */
@@ -475,15 +528,22 @@ function onCrossTabMessage(ev: MessageEvent): void {
   const remoteAt = Date.parse(msg.updatedAt || msg.data.updatedAt || '');
   if (Number.isFinite(remoteAt) && remoteAt <= lastSyncedAt()) return;
 
-  void applySnapshot(msg.data).then(() => {
+  void applySnapshot(msg.data, msg.updatedAt).then(() => {
     emitRemoteUpdate('outra aba');
   });
 }
 
 function onRemoteBroadcast(payload: {
   originDeviceId?: string;
+  updatedAt?: string;
 }): void {
   if (payload.originDeviceId === getPersistentDeviceId()) return;
+  if (applyingRemote) return;
+
+  /* Broadcast repetido/atrasado não justifica baixar o snapshot inteiro. */
+  const broadcastAt = Date.parse(payload.updatedAt || '');
+  if (Number.isFinite(broadcastAt) && broadcastAt <= lastSyncedAt()) return;
+
   const origin = useDevicesStore
     .getState()
     .devices.find((d) => d.id === payload.originDeviceId);
@@ -492,7 +552,6 @@ function onRemoteBroadcast(payload: {
   void pullSnapshot().then((applied) => {
     if (applied) emitRemoteUpdate(name);
   });
-  void heartbeatDevices();
 }
 
 /* ── Start / Stop do motor ── */
@@ -512,7 +571,7 @@ export function startSyncEngine(): void {
         config: { broadcast: { ack: false, self: false } },
       });
       channel.on('broadcast', { event: 'REMOTE_STATE_UPDATED' }, ({ payload }) =>
-        onRemoteBroadcast(payload as { originDeviceId?: string })
+        onRemoteBroadcast(payload as { originDeviceId?: string; updatedAt?: string })
       );
       channel.on('broadcast', { event: 'DEVICE_KICKED' }, ({ payload }) => {
         if ((payload as { deviceId?: string }).deviceId === getPersistentDeviceId()) {
@@ -526,10 +585,11 @@ export function startSyncEngine(): void {
     }
   }
 
-  /* Heartbeat de dispositivos a cada 25 s */
+  /* Heartbeat de presença a cada 5 min (egress baixo). O painel de
+     dispositivos atualiza na hora ao abrir; o sync de dados não depende disto. */
   heartbeatTimer = window.setInterval(() => {
     void heartbeatDevices();
-  }, 25000);
+  }, 5 * 60_000);
 
   /* Auto-push das mudanças locais (debounce) */
   document.addEventListener('academia:db-ready', onLocalDataChanged);
@@ -537,10 +597,22 @@ export function startSyncEngine(): void {
   /* Flush da fila offline ao voltar a conexão */
   window.addEventListener('online', onOnline);
 
-  /* Pull inicial + registro no registry */
+  /* Fallback automático: checagem barata de updated_at a cada 60 s,
+     só com a aba visível. O Realtime continua sendo o caminho instantâneo. */
+  remoteCheckTimer = window.setInterval(() => {
+    if (document.visibilityState === 'visible') void checkRemoteUpdate(0);
+  }, REMOTE_CHECK_PERIOD_MS);
+
+  /* Ao voltar para o app/foco, busca novidades imediatamente. */
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('focus', onWindowFocus);
+
+  /* Pull inicial + registro no registry.
+     Usa a checagem barata: se o dispositivo já está em dia, não baixa o
+     snapshot inteiro; só a linha de updated_at. */
   void (async () => {
     await flushOfflineQueue();
-    await pullSnapshot();
+    await checkRemoteUpdate(0);
     await heartbeatDevices();
     emitStatus();
   })();
@@ -552,11 +624,17 @@ export function stopSyncEngine(): void {
     window.clearInterval(heartbeatTimer);
     heartbeatTimer = null;
   }
+  if (remoteCheckTimer) {
+    window.clearInterval(remoteCheckTimer);
+    remoteCheckTimer = null;
+  }
   if (pushDebounce) {
     window.clearTimeout(pushDebounce);
     pushDebounce = null;
   }
   document.removeEventListener('academia:db-ready', onLocalDataChanged);
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  window.removeEventListener('focus', onWindowFocus);
   window.removeEventListener('online', onOnline);
   if (realtimeChannel) {
     void realtimeChannel.unsubscribe().catch(() => undefined);
@@ -570,9 +648,20 @@ function onLocalDataChanged(): void {
   schedulePush();
 }
 
+function onVisibilityChange(): void {
+  if (document.visibilityState !== 'visible') return;
+  void checkRemoteUpdate(5_000);
+  void heartbeatDevices();
+}
+
+function onWindowFocus(): void {
+  void checkRemoteUpdate(5_000);
+}
+
 function onOnline(): void {
   void flushOfflineQueue().then((n) => {
     if (n > 0) schedulePush(500);
+    void checkRemoteUpdate(0);
   });
 }
 

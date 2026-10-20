@@ -21,6 +21,28 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.40.0] - 2026-10-20
+
+**Sincronização automática com fallback de baixo egress** (a pedido do usuário). O Realtime continua sendo o caminho instantâneo; foi adicionado um fallback que consulta apenas `updated_at` a cada 60 s com a aba visível, além de checagem imediata ao voltar o foco/visibilidade/online. O snapshot completo só é baixado quando o `updated_at` remoto é mais novo que o último sync. Broadcasts repetidos/atrasados são ignorados antes de qualquer download. O heartbeat de presença passou de 25 s para 5 min; o painel de dispositivos atualiza na hora ao abrir.
+
+### Added
+- **`src-app/src/core/sync/sync-manager.ts`** — `checkRemoteUpdate()`: consulta `select updated_at` (uma linha; ~48 bytes de resposta) e só chama `pullSnapshot()` se houver novidade.
+- Fallback periódico de 60 s, somente com `document.visibilityState === 'visible'`.
+- Checagem imediata em `visibilitychange`, `focus` e `online`.
+
+### Changed
+- **`onRemoteBroadcast`** compara `payload.updatedAt` com `lastSyncedAt()` e ignora broadcast duplicado/atrasado; não faz mais heartbeat a cada broadcast.
+- **Heartbeat de presença** — intervalo de 25 s para 5 min (o painel de dispositivos atualiza na hora ao abrir).
+- **`applySnapshot(snapshot, remoteUpdatedAt?)`** usa o `updated_at` da linha para o cutoff LWW, evitando pulls repetidos quando o timestamp do JSON difere do timestamp da linha.
+- **`stopSyncEngine`** limpa o timer e os listeners novos.
+- **`src-app/src/features/sync/SyncSettingsPanel.tsx`** — "Última sincronização" e fila offline agora se atualizam sozinhas ao receber `academia:db-ready`, `academia:sync-status-changed` ou `academia:sync-remote-update` (sem precisar reabrir o painel).
+- **Pull inicial do motor** agora usa `checkRemoteUpdate(0)`: em um app já atualizado, o boot faz só a consulta de `updated_at` (~48 bytes) em vez de baixar o snapshot inteiro.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npm run build` OK.
+- Query de metadados no Supabase: **48 bytes** de resposta.
+- `ACADEMIA_SYNC:DATA` segue com 66 exercícios, 10 fichas e 3 históricos (origem Edge/Windows).
+
 ## [v4.39.9] - 2026-10-20
 
 **Correção do sync entre dispositivos: reset do cutoff LWW e download forçado da nuvem** (a pedido do usuário). A nuvem já tinha o snapshot correto (`ACADEMIA_SYNC:DATA`, 66 exercícios, 10 fichas, 3 históricos, originado no Edge/Windows) e os dois dispositivos estavam registrados em `ACADEMIA_SYNC:DEVICES`; o Realtime também foi testado com sucesso. O problema era o corte de last-write-wins: `mbc_last_sync_at` continuava valendo depois de trocar a chave de sync ou as credenciais do Supabase, então um dispositivo com timestamp antigo/adiantado podia ignorar o snapshot remoto. Além disso, o botão "Sincronizar agora" só enviava os dados locais, sem opção de baixar a nuvem.

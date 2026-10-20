@@ -92,7 +92,19 @@ export function SyncSettingsPanel() {
   const [lastSync, setLastSync] = useState(() => lastSyncedAt());
 
   useEffect(() => {
-    void getPendingOfflineCount().then(setPending);
+    const refresh = () => {
+      setLastSync(lastSyncedAt());
+      void getPendingOfflineCount().then(setPending);
+    };
+    refresh();
+    document.addEventListener('academia:db-ready', refresh);
+    document.addEventListener('academia:sync-status-changed', refresh);
+    document.addEventListener('academia:sync-remote-update', refresh);
+    return () => {
+      document.removeEventListener('academia:db-ready', refresh);
+      document.removeEventListener('academia:sync-status-changed', refresh);
+      document.removeEventListener('academia:sync-remote-update', refresh);
+    };
   }, []);
 
   const configured = isSyncConfigured();
