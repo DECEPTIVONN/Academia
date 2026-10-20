@@ -62,6 +62,8 @@ export interface MusicState {
   playing: boolean;
   title: string;
   artist: string;
+  /** v4.41.0 — capa da faixa externa (YouTube/Spotify), quando existir. */
+  artwork?: string;
   /** v4.24.0 — posição atual na fila (só quando há fila do usuário; -1 = sem fila). */
   queueIndex: number;
   /** v4.24.0 — total de faixas na fila (0 = sem fila / faixa do site). */
@@ -107,6 +109,7 @@ let context: MusicContext = 'main';
 let playing = false;
 let title = '';
 let artist = '';
+let artwork: string | undefined;
 
 /* v4.22.0 — faixa do site tocando agora (ambiente ou dentro da fila).
    MAIN, RESULT e Revenger Phoenix NÃO aparecem no player de notificação.
@@ -369,6 +372,7 @@ function emitState(): void {
         playing,
         title,
         artist,
+        artwork,
         queueIndex: qIdx,
         queueLength: qLen,
         canPrev,
@@ -410,7 +414,9 @@ function updateMediaSession(): void {
       title,
       artist: artist || 'Evo Fit',
       album: 'Evo Fit',
-      artwork: MS_ARTWORK,
+      artwork: artwork
+        ? [{ src: artwork, sizes: '512x512' }]
+        : MS_ARTWORK,
     });
   } catch {
     /* MediaMetadata indisponível */
@@ -553,6 +559,7 @@ async function playSite(next: Exclude<MusicContext, 'workout-user'>): Promise<vo
   context = next;
   title = conf.title;
   artist = conf.artist;
+  artwork = undefined;
   currentSiteId = next; // v4.22.0 — identifica a faixa p/ notificação
 
   if (!isMusicEnabled()) {
@@ -617,6 +624,7 @@ function startWorkoutContext(): void {
     playing = false;
     title = '';
     artist = '';
+    artwork = undefined;
     emitState();
   }
 }
@@ -644,7 +652,20 @@ async function playQueueIndex(index: number): Promise<void> {
   if (!item) return;
   context = 'workout-user';
   title = item.title;
-  artist = item.kind === 'upload' ? 'Sua playlist' : item.kind === 'site' ? 'Trilha do app' : 'YouTube';
+  const upload = item.kind === 'upload'
+    ? useLibraryStore.getState().tracks.find((t) => t.id === item.trackId)
+    : undefined;
+  artist =
+    item.artist ||
+    upload?.artist ||
+    (item.kind === 'upload'
+      ? 'Sua playlist'
+      : item.kind === 'site'
+        ? 'Trilha do app'
+        : item.kind === 'spotify'
+          ? 'Spotify'
+          : 'YouTube');
+  artwork = item.thumbnail;
   /* v4.22.0 — uploads/YouTube aparecem na notificação; a faixa do site só
      se não for MAIN/RESULT/Revenger Phoenix. */
   currentSiteId = item.kind === 'site' ? item.siteId : null;
@@ -713,9 +734,18 @@ async function playQueueIndex(index: number): Promise<void> {
     return;
   }
 
-  // YouTube
+  // YouTube: itens novos têm refType explícito (video/playlist). Itens antigos
+  // sem refType usam o prefixo do ID como heurística de compatibilidade.
   getUserAudio().pause();
-  await playYouTube(item.refId, item.refId.startsWith('PL') || item.refId.startsWith('UL'));
+  const isPlaylist =
+    item.refType === 'playlist' ||
+    (!item.refType &&
+      (item.refId.startsWith('PL') ||
+        item.refId.startsWith('UL') ||
+        item.refId.startsWith('UU') ||
+        item.refId.startsWith('OL') ||
+        item.refId.startsWith('RD')));
+  await playYouTube(item.refId, isPlaylist);
 }
 
 function advanceUserQueue(): void {
@@ -963,19 +993,43 @@ export function getMusicState(): MusicState {
     playing,
     title,
     artist,
+    artwork,
     queueIndex: inUserQueue ? queueIndex : -1,
     queueLength: inUserQueue ? queue.length : 0,
     canPrev: inUserQueue && queue.length > 1 && queueIndex > 0,
   };
 }
 
+/** v4.41.0 — fila atual (somente itens reproduzíveis) para as listas da UI. */
+export function getMusicQueue(): PlaylistItem[] {
+  return [...queue];
+}
+
+/** v4.41.0 — toca diretamente um índice da fila (clique na lista). */
+export function playQueueAt(index: number): void {
+  if (!queue[index]) return;
+  queueIndex = index;
+  void playQueueIndex(index);
+}
+
 /** Toca uma playlist específica na interface (não mexe no contexto do treino). */
-export async function playPlaylistFromUi(items: PlaylistItem[]): Promise<void> {
-  const playable = items.filter(isPlayableItem);
-  if (playable.length === 0) return;
-  queue = playable;
-  queueIndex = 0;
-  await playQueueIndex(0);
+export async function playPlaylistFromUi(
+  items: PlaylistItem[],
+  startIndex = 0,
+): Promise<boolean> {
+  const playable = items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => isPlayableItem(item));
+  if (playable.length === 0) return false;
+
+  const target = Math.max(
+    0,
+    playable.findIndex(({ index }) => index >= Math.max(0, startIndex)),
+  );
+  queue = playable.map(({ item }) => item);
+  queueIndex = target;
+  await playQueueIndex(queueIndex);
+  return true;
 }
 
 /** Toca uma faixa do site pela interface de Músicas (mini-player/home). */

@@ -17,6 +17,11 @@
  */
 
 import { create } from 'zustand';
+import {
+  fetchExternalList,
+  type ExternalListResult,
+  type ExternalRefKind,
+} from './external-music';
 
 /* ────────────────────────── IndexedDB (blobs) ────────────────────────── */
 
@@ -88,13 +93,30 @@ export interface UploadTrack {
 
 export type SiteTrackId = 'main' | 'workout' | 'result' | 'missions';
 
+/** Metadados opcionais de faixas externas (v4.41.0). Itens antigos seguem válidos. */
+export interface PlaylistItemMeta {
+  thumbnail?: string;
+  durationSec?: number;
+  artist?: string;
+  /** playlist/album = container expansível; video/track = faixa individual. */
+  refType?: ExternalRefKind;
+  /** Playlist/álbum de origem, para agrupar e expandir depois. */
+  sourceId?: string;
+  sourceTitle?: string;
+}
+
+type PlaylistItemBase = PlaylistItemMeta & {
+  id: string;
+  title: string;
+};
+
 export type PlaylistItem =
-  | { id: string; kind: 'upload'; trackId: string; title: string }
-  | { id: string; kind: 'youtube'; refId: string; title: string } // refId = videoId ou listId
-  | { id: string; kind: 'spotify'; refId: string; title: string } // refId = playlistId
-  /* v4.21.0 — faixa fixa do site (MAIN/RESULT/Revenger Phoenix/Black Panther)
+  | (PlaylistItemBase & { kind: 'upload'; trackId: string })
+  | (PlaylistItemBase & { kind: 'youtube'; refId: string }) // refId = videoId ou listId
+  | (PlaylistItemBase & { kind: 'spotify'; refId: string }) // refId = playlistId/albumId/trackId
+  /* v4.21.0 - faixa fixa do site (MAIN/RESULT/Revenger Phoenix/Black Panther)
      vivendo DENTRO de uma playlist (a "Evo Fit" criada por padrão). */
-  | { id: string; kind: 'site'; siteId: SiteTrackId; title: string };
+  | (PlaylistItemBase & { kind: 'site'; siteId: SiteTrackId });
 
 export interface Playlist {
   id: string;
@@ -258,6 +280,15 @@ function probeAudioDuration(file: File): Promise<number | undefined> {
   });
 }
 
+export interface ExternalLinkAddResult {
+  added: number;
+  /** true = não foi possível listar as faixas e o link virou um container. */
+  container: boolean;
+  sourceTitle?: string;
+  truncated?: boolean;
+  error?: string;
+}
+
 interface LibraryState extends MusicLibrary {
   hydrate: () => void;
   addUpload: (file: File) => Promise<UploadTrack>;
@@ -273,6 +304,22 @@ interface LibraryState extends MusicLibrary {
     refId: string,
     title: string,
   ) => void;
+  /**
+   * v4.41.0 — resolve um link externo e persiste as faixas individuais.
+   * Se a API/embed falhar, mantém o comportamento antigo: adiciona um
+   * container (playlist/vídeo) que pode ser expandido depois.
+   */
+  addExternalLinkToPlaylist: (
+    playlistId: string,
+    kind: 'youtube' | 'spotify',
+    ref: { kind: ExternalRefKind; id: string },
+    title: string,
+  ) => Promise<ExternalLinkAddResult>;
+  /** Converte um container antigo (YouTube playlist/Spotify playlist) em faixas. */
+  expandExternalItem: (
+    playlistId: string,
+    itemId: string,
+  ) => Promise<ExternalLinkAddResult>;
   removeItem: (playlistId: string, itemId: string) => void;
   setActivePlaylist: (playlistId: string | null) => void;
   /** v4.20.0 */
@@ -280,6 +327,73 @@ interface LibraryState extends MusicLibrary {
   setPlaylistCover: (playlistId: string, cover: string | undefined) => void;
   /** v4.21.0 — fixar/desafixar álbum/música nas Escolhas rápidas */
   togglePin: (key: string) => void;
+}
+
+function externalItemKey(item: PlaylistItem): string {
+  if (item.kind === 'youtube' || item.kind === 'spotify') {
+    return `${item.kind}:${item.refType || (item.kind === 'spotify' ? 'playlist' : 'video')}:${item.refId}`;
+  }
+  if (item.kind === 'upload') return `upload:${item.trackId}`;
+  return `site:${item.siteId}`;
+}
+
+function makeExternalItems(kind: 'youtube' | 'spotify', source: ExternalListResult): PlaylistItem[] {
+  return source.tracks.map(
+    (track) =>
+      ({
+        id: newId('it'),
+        kind,
+        refId: track.refId,
+        refType: track.refType,
+        title: track.title,
+        artist: track.artist,
+        thumbnail: track.thumbnail || source.cover,
+        durationSec: track.durationSec,
+        sourceId: source.sourceId,
+        sourceTitle: source.title,
+      }) as PlaylistItem,
+  );
+}
+
+function makeExternalContainer(
+  kind: 'youtube' | 'spotify',
+  ref: { kind: ExternalRefKind; id: string },
+  title: string,
+): PlaylistItem {
+  return {
+    id: newId('it'),
+    kind,
+    refId: ref.id,
+    refType: ref.kind,
+    title: title.trim() || (kind === 'spotify' ? 'Playlist do Spotify' : 'Playlist do YouTube'),
+    sourceId: ref.id,
+    sourceTitle: title.trim() || undefined,
+  } as PlaylistItem;
+}
+
+/** Container externo que ainda pode ser expandido em faixas individuais. */
+export function isExternalPlaylistItem(item: PlaylistItem): boolean {
+  if (item.kind === 'youtube') {
+    if (item.refType === 'playlist') return true;
+    if (item.refType === 'video') return false;
+    return /^(PL|UU|OL|RD|FL)/.test(item.refId);
+  }
+  if (item.kind === 'spotify') return item.refType !== 'track';
+  return false;
+}
+
+function externalItemSourceKind(item: PlaylistItem): ExternalRefKind | null {
+  if (item.kind === 'youtube') {
+    if (item.refType === 'playlist') return 'playlist';
+    if (item.refType === 'video') return 'video';
+    return /^(PL|UU|OL|RD|FL)/.test(item.refId) ? 'playlist' : 'video';
+  }
+  if (item.kind === 'spotify') {
+    if (item.refType === 'track') return 'track';
+    if (item.refType === 'album') return 'album';
+    return 'playlist';
+  }
+  return null;
 }
 
 export const useLibraryStore = create<LibraryState>((set) => ({
@@ -306,7 +420,14 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       durationSec: await probeAudioDuration(file), // v4.22.0
     };
     const cur = seedLibrary(readLibrary());
-    const item: PlaylistItem = { id: newId('it'), kind: 'upload', trackId: id, title: track.name };
+    const item: PlaylistItem = {
+      id: newId('it'),
+      kind: 'upload',
+      trackId: id,
+      title: track.name,
+      artist: track.artist,
+      durationSec: track.durationSec,
+    };
     const lib: MusicLibrary = {
       ...cur,
       tracks: [...cur.tracks, track],
@@ -392,7 +513,14 @@ export const useLibraryStore = create<LibraryState>((set) => ({
               ...p,
               items: [
                 ...p.items,
-                { id: newId('it'), kind: 'upload', trackId, title: track.name } as PlaylistItem,
+                {
+                  id: newId('it'),
+                  kind: 'upload',
+                  trackId,
+                  title: track.name,
+                  artist: track.artist,
+                  durationSec: track.durationSec,
+                } as PlaylistItem,
               ],
             }
           : p,
@@ -420,6 +548,105 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     };
     writeLibrary(lib);
     set(lib);
+  },
+
+  /* v4.41.0 — link externo: tenta expandir em faixas; se falhar, container. */
+  addExternalLinkToPlaylist: async (playlistId, kind, ref, title) => {
+    let source: ExternalListResult | null = null;
+    let error = '';
+    try {
+      source = await fetchExternalList(kind, ref.kind, ref.id);
+    } catch (e) {
+      error = e instanceof Error ? e.message : 'Não foi possível buscar as faixas.';
+    }
+
+    const cur = readLibrary();
+    const playlist = cur.playlists.find((p) => p.id === playlistId);
+    if (!playlist) {
+      return { added: 0, container: false, error: 'Playlist não encontrada.' };
+    }
+
+    const candidates = source
+      ? makeExternalItems(kind, source)
+      : [makeExternalContainer(kind, ref, title)];
+    const existing = new Set(playlist.items.map(externalItemKey));
+    const fresh = candidates.filter((item) => !existing.has(externalItemKey(item)));
+    const items = [...playlist.items, ...fresh];
+    const lib: MusicLibrary = {
+      ...cur,
+      playlists: cur.playlists.map((p) => (p.id === playlistId ? { ...p, items } : p)),
+    };
+    writeLibrary(lib);
+    set(lib);
+
+    return {
+      added: fresh.length,
+      container: !source,
+      sourceTitle: source?.title,
+      truncated: source?.truncated,
+      error: error || undefined,
+    };
+  },
+
+  /* v4.41.0 — expande um container antigo no lugar, preservando a ordem. */
+  expandExternalItem: async (playlistId, itemId) => {
+    const cur = readLibrary();
+    const playlist = cur.playlists.find((p) => p.id === playlistId);
+    const item = playlist?.items.find((it) => it.id === itemId);
+    if (!playlist || !item || (item.kind !== 'youtube' && item.kind !== 'spotify')) {
+      return { added: 0, container: true, error: 'Item externo não encontrado.' };
+    }
+
+    const sourceKind = externalItemSourceKind(item);
+    if (sourceKind !== 'playlist' && sourceKind !== 'album') {
+      return { added: 0, container: true, error: 'Este item já é uma faixa individual.' };
+    }
+
+    let source: ExternalListResult;
+    try {
+      source = await fetchExternalList(item.kind, sourceKind, item.refId);
+    } catch (e) {
+      return {
+        added: 0,
+        container: true,
+        error: e instanceof Error ? e.message : 'Não foi possível expandir este item.',
+      };
+    }
+
+    const candidates = makeExternalItems(item.kind, source);
+    const existing = new Set(
+      playlist.items.filter((it) => it.id !== itemId).map(externalItemKey),
+    );
+    const fresh = candidates.filter((it) => !existing.has(externalItemKey(it)));
+    if (fresh.length === 0) {
+      return {
+        added: 0,
+        container: true,
+        sourceTitle: source.title,
+        truncated: source.truncated,
+        error: 'As faixas desse item já estão na playlist.',
+      };
+    }
+
+    const idx = playlist.items.findIndex((it) => it.id === itemId);
+    const items = [
+      ...playlist.items.slice(0, idx),
+      ...fresh,
+      ...playlist.items.slice(idx + 1),
+    ];
+    const lib: MusicLibrary = {
+      ...cur,
+      playlists: cur.playlists.map((p) => (p.id === playlistId ? { ...p, items } : p)),
+    };
+    writeLibrary(lib);
+    set(lib);
+
+    return {
+      added: fresh.length,
+      container: false,
+      sourceTitle: source.title,
+      truncated: source.truncated,
+    };
   },
 
   removeItem: (playlistId, itemId) => {
@@ -493,8 +720,10 @@ export function parseYouTubeRef(url: string): { kind: 'video' | 'list'; id: stri
       if (v) return { kind: 'video', id: v };
       const list = u.searchParams.get('list');
       if (list) return { kind: 'list', id: list };
-      const m = u.pathname.match(/^\/(?:playlist|shorts|embed)\/(.+)$/);
-      if (m) return { kind: 'video', id: m[1] };
+      const playlist = u.pathname.match(/^\/playlist\/([^/?#]+)/);
+      if (playlist) return { kind: 'list', id: playlist[1] };
+      const video = u.pathname.match(/^\/(?:shorts|embed|live|v)\/([^/?#]+)/);
+      if (video) return { kind: 'video', id: video[1] };
     }
     return null;
   } catch {
@@ -502,17 +731,28 @@ export function parseYouTubeRef(url: string): { kind: 'video' | 'list'; id: stri
   }
 }
 
-/** Extrai playlistId de URLs do Spotify (open.spotify.com/playlist/<id>). */
-export function parseSpotifyRef(url: string): string | null {
+export type SpotifyRef = { kind: 'playlist' | 'album' | 'track'; id: string };
+
+/** Aceita open.spotify.com/(playlist|album|track)/<id>, URI spotify:... e ID colado. */
+export function parseSpotifyLink(url: string): SpotifyRef | null {
+  const raw = url.trim();
+  const uri = raw.match(/^spotify:(playlist|album|track):([A-Za-z0-9]+)$/i);
+  if (uri) {
+    return { kind: uri[1].toLowerCase() as SpotifyRef['kind'], id: uri[2] };
+  }
   try {
-    const u = new URL(url.trim());
+    const u = new URL(raw);
     const host = u.hostname.replace(/^www\./, '');
     if (host !== 'open.spotify.com') return null;
-    const m = u.pathname.match(/\/playlist\/([A-Za-z0-9]+)/);
-    return m ? m[1] : null;
+    const m = u.pathname.match(/\/(playlist|album|track)\/([A-Za-z0-9]+)/);
+    return m ? { kind: m[1] as SpotifyRef['kind'], id: m[2] } : null;
   } catch {
     // Aceita também só o ID colado (22 chars alfanuméricos do Spotify)
-    const raw = url.trim();
-    return /^[A-Za-z0-9]{16,30}$/.test(raw) ? raw : null;
+    return /^[A-Za-z0-9]{16,30}$/.test(raw) ? { kind: 'playlist', id: raw } : null;
   }
+}
+
+/** Compatibilidade com chamadas antigas (retorna só o ID). */
+export function parseSpotifyRef(url: string): string | null {
+  return parseSpotifyLink(url)?.id ?? null;
 }

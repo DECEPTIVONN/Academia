@@ -12,14 +12,22 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Music2, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
-import { getMusicState, nextTrack, prevTrack, togglePlayback, type MusicState } from './audio-engine';
+import { ListMusic, Music2, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
+import {
+  getMusicState,
+  nextTrack,
+  prevTrack,
+  togglePlayback,
+  type MusicState,
+} from './audio-engine';
+import { QueueList } from './QueueList';
 import { useLibraryStore } from './media-store';
 import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import './music.css';
 
 export function WorkoutNowPlayingBar() {
   const [state, setState] = useState<MusicState>(() => getMusicState());
+  const [queueOpen, setQueueOpen] = useState(false);
   const activePlaylistId = useLibraryStore((s) => s.activePlaylistId);
   const [prefOn, setPrefOn] = useState(() => readLS(PREF_KEYS.workoutMusic) !== 'false');
 
@@ -40,40 +48,68 @@ export function WorkoutNowPlayingBar() {
   /* Visível: música configurada para o treino (faixa do app OU playlist) */
   if (!prefOn && !activePlaylistId) return null;
 
+  const hasQueue = state.queueLength > 0;
+
   return (
-    <div className="wnp" role="region" aria-label="Música do treino">
-      <div className="wnp__art" aria-hidden="true">
-        <Music2 size={18} />
-      </div>
-      <div className="wnp__meta">
-        <span className="wnp__title">{state.title || 'Nada tocando'}</span>
-        <span className="wnp__artist">
-          {state.artist || (activePlaylistId ? 'Sua playlist' : 'Música do app')}
-        </span>
-      </div>
-      <div className="wnp__controls">
-        {state.canPrev && (
-          <button type="button" className="wnp__btn" onClick={prevTrack} aria-label="Retroceder">
-            <SkipBack size={17} />
+    <>
+      {queueOpen && hasQueue && (
+        <div className="wnp-queue" role="region" aria-label="Fila do treino">
+          <div className="wnp-queue__head">
+            <span>
+              <ListMusic size={15} /> Fila do treino
+            </span>
+            <button
+              type="button"
+              className="wnp-queue__close"
+              onClick={() => setQueueOpen(false)}
+              aria-label="Fechar fila"
+            >
+              <X size={15} />
+            </button>
+          </div>
+          <QueueList state={state} />
+        </div>
+      )}
+      <div className="wnp" role="region" aria-label="Música do treino">
+        <div className={`wnp__art${state.artwork ? ' wnp__art--image' : ''}`} aria-hidden="true">
+          {state.artwork ? <img src={state.artwork} alt="" loading="lazy" /> : <Music2 size={18} />}
+        </div>
+        <div className="wnp__meta">
+          <span className="wnp__title">{state.title || 'Nada tocando'}</span>
+          <span className="wnp__artist">
+            {state.artist || (activePlaylistId ? 'Sua playlist' : 'Música do app')}
+          </span>
+        </div>
+        <div className="wnp__controls">
+          <button
+            type="button"
+            className={`wnp__btn${queueOpen ? ' wnp__btn--active' : ''}`}
+            onClick={() => setQueueOpen((open) => !open)}
+            disabled={!hasQueue}
+            aria-label="Mostrar fila"
+            aria-expanded={queueOpen}
+          >
+            <ListMusic size={17} />
           </button>
-        )}
-        <button
-          type="button"
-          className="wnp__btn wnp__btn--play"
-          onClick={togglePlayback}
-          aria-label={state.playing ? 'Pausar' : 'Tocar'}
-        >
-          {state.playing ? (
-            <Pause size={17} />
-          ) : (
-            <Play size={17} />
+          {state.canPrev && (
+            <button type="button" className="wnp__btn" onClick={prevTrack} aria-label="Retroceder">
+              <SkipBack size={17} />
+            </button>
           )}
-        </button>
-        <button type="button" className="wnp__btn" onClick={nextTrack} aria-label="Avançar">
-          <SkipForward size={17} />
-        </button>
+          <button
+            type="button"
+            className="wnp__btn wnp__btn--play"
+            onClick={togglePlayback}
+            aria-label={state.playing ? 'Pausar' : 'Tocar'}
+          >
+            {state.playing ? <Pause size={17} /> : <Play size={17} />}
+          </button>
+          <button type="button" className="wnp__btn" onClick={nextTrack} aria-label="Avançar">
+            <SkipForward size={17} />
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

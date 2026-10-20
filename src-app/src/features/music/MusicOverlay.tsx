@@ -42,6 +42,7 @@ import {
   Image as ImageIcon,
   ListMusic,
   Library,
+  Loader2,
   MoreVertical,
   Music2,
   Pause,
@@ -49,6 +50,7 @@ import {
   Pin,
   Play,
   Plus,
+  RefreshCw,
   Shuffle,
   Upload,
   Youtube,
@@ -56,9 +58,11 @@ import {
   Trash2,
   Check,
   Dumbbell,
+  X,
 } from 'lucide-react';
 import {
-  parseSpotifyRef,
+  isExternalPlaylistItem,
+  parseSpotifyLink,
   parseYouTubeRef,
   pinPlaylistKey,
   pinSiteKey,
@@ -68,6 +72,7 @@ import {
   type PlaylistItem,
   type UploadTrack,
 } from './media-store';
+import { spotifyEmbedUrl } from './external-music';
 import {
   getMusicState,
   playPlaylistFromUi,
@@ -375,8 +380,8 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
       {/* Mini-player fixo (controle rápido dentro da interface) */}
       <div className="mu-mini">
         <div className="mu-mini__body">
-          <div className="mu-mini__art">
-            <Music2 size={18} />
+          <div className={`mu-mini__art${state.artwork ? ' mu-mini__art--image' : ''}`}>
+            {state.artwork ? <img src={state.artwork} alt="" loading="lazy" /> : <Music2 size={18} />}
           </div>
           <div className="mu-mini__meta">
             <span className="mu-mini__title">{state.title || 'Nada tocando'}</span>
@@ -969,39 +974,142 @@ function PlaylistDetail({
   onSetWorkout: (on: boolean) => void;
   onOpenMenu: () => void;
 }) {
-  const { tracks, removeItem, addUploadToPlaylist, addExternalToPlaylist } = useLibraryStore();
+  const {
+    tracks,
+    removeItem,
+    addUploadToPlaylist,
+    addExternalLinkToPlaylist,
+    expandExternalItem,
+  } = useLibraryStore();
   const [adding, setAdding] = useState(false);
   const [link, setLink] = useState('');
   const [linkName, setLinkName] = useState('');
   const [linkKind, setLinkKind] = useState<'youtube' | 'spotify'>('youtube');
   const [linkErr, setLinkErr] = useState('');
+  const [linkMsg, setLinkMsg] = useState('');
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [expandingId, setExpandingId] = useState<string | null>(null);
+  const [embedItem, setEmbedItem] = useState<PlaylistItem | null>(null);
   const kbInset = useKeyboardInset();
 
-  const addLink = () => {
+  const finishLink = (result: {
+    added: number;
+    container: boolean;
+    truncated?: boolean;
+    error?: string;
+  }) => {
+    if (result.added > 0) {
+      setLink('');
+      setLinkName('');
+      setLinkMsg(
+        result.container
+          ? 'Link adicionado como playlist. Não foi possível listar as faixas agora.'
+          : `${result.added} ${result.added === 1 ? 'faixa adicionada' : 'faixas adicionadas'}${
+              result.truncated ? ' (lista parcial)' : ''
+            }.`,
+      );
+      setLinkErr(result.error || '');
+      return;
+    }
+    if (result.error) {
+      setLinkErr(result.error);
+      return;
+    }
+    setLinkMsg(
+      result.container
+        ? 'Esse link já está na playlist.'
+        : 'Essas faixas já estão na playlist.',
+    );
+    setLink('');
+    setLinkName('');
+  };
+
+  const addLink = async () => {
     setLinkErr('');
+    setLinkMsg('');
     if (linkKind === 'youtube') {
       const parsed = parseYouTubeRef(link);
       if (!parsed) {
         setLinkErr('Link do YouTube inválido.');
         return;
       }
-      addExternalToPlaylist(
+      setLinkBusy(true);
+      const result = await addExternalLinkToPlaylist(
         playlist.id,
         'youtube',
-        parsed.id,
+        { kind: parsed.kind === 'list' ? 'playlist' : 'video', id: parsed.id },
         linkName.trim() || (parsed.kind === 'list' ? 'Playlist do YouTube' : 'Vídeo do YouTube'),
       );
-    } else {
-      const id = parseSpotifyRef(link);
-      if (!id) {
-        setLinkErr('Link do Spotify inválido.');
-        return;
-      }
-      addExternalToPlaylist(playlist.id, 'spotify', id, linkName.trim() || 'Playlist do Spotify');
+      setLinkBusy(false);
+      finishLink(result);
+      return;
     }
-    setLink('');
-    setLinkName('');
+
+    const parsed = parseSpotifyLink(link);
+    if (!parsed) {
+      setLinkErr('Link do Spotify inválido.');
+      return;
+    }
+    setLinkBusy(true);
+    const result = await addExternalLinkToPlaylist(
+      playlist.id,
+      'spotify',
+      { kind: parsed.kind, id: parsed.id },
+      linkName.trim() ||
+        (parsed.kind === 'track'
+          ? 'Faixa do Spotify'
+          : parsed.kind === 'album'
+            ? 'Álbum do Spotify'
+            : 'Playlist do Spotify'),
+    );
+    setLinkBusy(false);
+    finishLink(result);
   };
+
+  const expand = async (item: PlaylistItem) => {
+    setLinkErr('');
+    setLinkMsg('');
+    setExpandingId(item.id);
+    const result = await expandExternalItem(playlist.id, item.id);
+    setExpandingId(null);
+    if (result.added > 0) {
+      setLinkMsg(
+        `${result.added} ${result.added === 1 ? 'faixa adicionada' : 'faixas adicionadas'}${
+          result.truncated ? ' (lista parcial)' : ''
+        }.`,
+      );
+    }
+    if (result.error) setLinkErr(result.error);
+  };
+
+  const playItem = (item: PlaylistItem, index: number) => {
+    if (item.kind === 'spotify') {
+      setEmbedItem(item);
+      return;
+    }
+    void playPlaylistFromUi(playlist.items, index);
+  };
+
+  const hasPlayable = playlist.items.some((it) => it.kind !== 'spotify');
+  const firstSpotify = playlist.items.find((it) => it.kind === 'spotify');
+  const playAll = () => {
+    if (hasPlayable) void playPlaylistFromUi(playlist.items);
+    else if (firstSpotify) setEmbedItem(firstSpotify);
+  };
+  const shuffleAll = () => {
+    const shuffled = [...playlist.items].sort(() => Math.random() - 0.5);
+    if (hasPlayable) void playPlaylistFromUi(shuffled);
+    else if (firstSpotify) setEmbedItem(firstSpotify);
+  };
+
+  const embedKind =
+    embedItem?.kind === 'spotify'
+      ? embedItem.refType === 'track'
+        ? 'track'
+        : embedItem.refType === 'album'
+          ? 'album'
+          : 'playlist'
+      : 'playlist';
 
   const notInPlaylist = useMemo(
     () => tracks.filter((t) => !playlist.items.some((it) => it.kind === 'upload' && it.trackId === t.id)),
@@ -1040,7 +1148,7 @@ function PlaylistDetail({
             type="button"
             className="mu-btn"
             disabled={playlist.items.length === 0}
-            onClick={() => void playPlaylistFromUi(playlist.items)}
+            onClick={playAll}
           >
             <Play size={16} /> Tocar
           </button>
@@ -1048,7 +1156,7 @@ function PlaylistDetail({
             type="button"
             className="mu-btn mu-btn--ghost"
             disabled={playlist.items.length === 0}
-            onClick={() => void playPlaylistFromUi([...playlist.items].sort(() => Math.random() - 0.5))}
+            onClick={shuffleAll}
           >
             <Shuffle size={16} /> Aleatório
           </button>
@@ -1063,6 +1171,15 @@ function PlaylistDetail({
           </button>
         </div>
 
+        {linkMsg && !adding && <p className="mu-note mu-note--ok">{linkMsg}</p>}
+        {linkErr && !adding && <p className="mu-err">{linkErr}</p>}
+        {playlist.items.some((it) => it.kind === 'spotify') && (
+          <p className="mu-note">
+            Faixas do Spotify tocam no player embed (toque na faixa). Elas não entram na fila
+            automática do treino.
+          </p>
+        )}
+
         {playlist.items.length === 0 ? (
           <div className="mu-empty">
             <Music2 size={48} className="mu-empty__icon" />
@@ -1070,45 +1187,94 @@ function PlaylistDetail({
           </div>
         ) : (
           <ul className="mu-list">
-            {playlist.items.map((it) => (
-              <li key={it.id} className="mu-row">
-                <button
-                  type="button"
-                  className="mu-row__main"
-                  onClick={() => void playPlaylistFromUi(playlist.items)}
-                >
-                  <div className="mu-row__art mu-row__art--user">
-                    {it.kind === 'youtube' ? (
-                      <Youtube size={16} />
-                    ) : it.kind === 'spotify' ? (
-                      <Radio size={16} />
-                    ) : (
-                      <Music2 size={16} />
-                    )}
-                  </div>
-                  <div className="mu-row__meta">
-                    <span className="mu-row__title">{it.title}</span>
-                    <span className="mu-row__sub">
-                      {it.kind === 'upload'
-                        ? 'Sua música'
-                        : it.kind === 'site'
-                          ? 'Trilha do app'
-                          : it.kind === 'youtube'
-                            ? 'YouTube'
-                            : 'Spotify'}
-                    </span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className="mu-icon-btn mu-icon-btn--sm"
-                  onClick={() => removeItem(playlist.id, it.id)}
-                  aria-label="Remover da playlist"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </li>
-            ))}
+            {playlist.items.map((it, index) => {
+              const expandable = isExternalPlaylistItem(it);
+              const sourceLabel =
+                it.kind === 'upload'
+                  ? 'Sua música'
+                  : it.kind === 'site'
+                    ? 'Trilha do app'
+                    : it.kind === 'youtube'
+                      ? expandable
+                        ? 'Playlist do YouTube'
+                        : 'YouTube'
+                      : expandable
+                        ? it.refType === 'album'
+                          ? 'Álbum do Spotify'
+                          : 'Playlist do Spotify'
+                        : 'Spotify';
+              const sub = [
+                it.artist || sourceLabel,
+                it.durationSec ? formatDur(it.durationSec) : '',
+                it.kind === 'spotify' ? 'embed' : '',
+              ]
+                .filter(Boolean)
+                .join(' • ');
+
+              return (
+                <li key={it.id} className="mu-row">
+                  <button
+                    type="button"
+                    className="mu-row__main"
+                    onClick={() => playItem(it, index)}
+                    title={
+                      it.kind === 'spotify'
+                        ? 'Abrir no player do Spotify'
+                        : 'Tocar a partir desta faixa'
+                    }
+                  >
+                    <div
+                      className={`mu-row__art ${
+                        it.thumbnail ? 'mu-row__art--thumb' : 'mu-row__art--user'
+                      }`}
+                    >
+                      {it.thumbnail ? (
+                        <img src={it.thumbnail} alt="" loading="lazy" />
+                      ) : it.kind === 'youtube' ? (
+                        <Youtube size={16} />
+                      ) : it.kind === 'spotify' ? (
+                        <Radio size={16} />
+                      ) : (
+                        <Music2 size={16} />
+                      )}
+                      {it.kind === 'spotify' && (
+                        <span className="mu-row__embed-badge" aria-hidden="true">
+                          <Play size={9} />
+                        </span>
+                      )}
+                    </div>
+                    <div className="mu-row__meta">
+                      <span className="mu-row__title">{it.title}</span>
+                      <span className="mu-row__sub">{sub}</span>
+                    </div>
+                  </button>
+                  {expandable && (
+                    <button
+                      type="button"
+                      className="mu-icon-btn mu-icon-btn--sm"
+                      onClick={() => void expand(it)}
+                      disabled={expandingId !== null}
+                      aria-label="Expandir em faixas"
+                      title="Expandir em faixas"
+                    >
+                      {expandingId === it.id ? (
+                        <Loader2 size={15} className="mu-spin" />
+                      ) : (
+                        <RefreshCw size={15} />
+                      )}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="mu-icon-btn mu-icon-btn--sm"
+                    onClick={() => removeItem(playlist.id, it.id)}
+                    aria-label="Remover da playlist"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
 
@@ -1150,6 +1316,7 @@ function PlaylistDetail({
                 type="button"
                 className={`mu-seg__btn ${linkKind === 'youtube' ? 'mu-seg__btn--active' : ''}`}
                 onClick={() => setLinkKind('youtube')}
+                disabled={linkBusy}
               >
                 <Youtube size={15} /> YouTube
               </button>
@@ -1157,6 +1324,7 @@ function PlaylistDetail({
                 type="button"
                 className={`mu-seg__btn ${linkKind === 'spotify' ? 'mu-seg__btn--active' : ''}`}
                 onClick={() => setLinkKind('spotify')}
+                disabled={linkBusy}
               >
                 <Radio size={15} /> Spotify
               </button>
@@ -1166,25 +1334,88 @@ function PlaylistDetail({
               placeholder="Nome (opcional)"
               value={linkName}
               onChange={(e) => setLinkName(e.target.value)}
+              disabled={linkBusy}
             />
             <input
               className="mu-input"
               placeholder={
                 linkKind === 'youtube'
                   ? 'https://youtube.com/playlist?list=...'
-                  : 'https://open.spotify.com/playlist/...'
+                  : 'https://open.spotify.com/playlist/... (playlist, álbum ou faixa)'
               }
               value={link}
               onChange={(e) => setLink(e.target.value)}
+              disabled={linkBusy}
             />
+            <p className="mu-note">
+              Playlists são expandidas em faixas com capa e duração quando a API responde.
+            </p>
+            {linkMsg && <p className="mu-note mu-note--ok">{linkMsg}</p>}
             {linkErr && <p className="mu-err">{linkErr}</p>}
 
             <div className="mu-modal__actions">
-              <button type="button" className="mu-btn mu-btn--ghost" onClick={() => setAdding(false)}>
+              <button
+                type="button"
+                className="mu-btn mu-btn--ghost"
+                onClick={() => setAdding(false)}
+                disabled={linkBusy}
+              >
                 Fechar
               </button>
-              <button type="button" className="mu-btn" onClick={addLink}>
-                Adicionar link
+              <button
+                type="button"
+                className="mu-btn"
+                onClick={() => void addLink()}
+                disabled={linkBusy || !link.trim()}
+              >
+                {linkBusy ? (
+                  <Loader2 size={16} className="mu-spin" />
+                ) : (
+                  <Plus size={16} />
+                )}
+                {linkBusy ? 'Buscando faixas…' : 'Adicionar link'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {embedItem && embedItem.kind === 'spotify' && (
+        <div
+          className="mu-modal mu-modal--embed"
+          onClick={() => setEmbedItem(null)}
+          style={{ paddingBottom: kbInset }}
+        >
+          <div
+            className="mu-modal__panel mu-modal__panel--embed"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mu-embed__head">
+              <div>
+                <h4 className="mu-modal__title">{embedItem.title}</h4>
+                <p className="mu-note">Reprodução pelo player oficial do Spotify (embed).</p>
+              </div>
+              <button
+                type="button"
+                className="mu-icon-btn mu-icon-btn--sm"
+                onClick={() => setEmbedItem(null)}
+                aria-label="Fechar player do Spotify"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <iframe
+              title={`Spotify: ${embedItem.title}`}
+              className="mu-embed"
+              src={spotifyEmbedUrl(embedKind, embedItem.refId)}
+              height={embedKind === 'track' ? 152 : 352}
+              frameBorder={0}
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+            />
+            <div className="mu-modal__actions">
+              <button type="button" className="mu-btn" onClick={() => setEmbedItem(null)}>
+                Fechar
               </button>
             </div>
           </div>
@@ -1305,7 +1536,7 @@ function BibliotecaView({
   onOpenPlaylist: (id: string) => void;
   onOpenMenu: (id: string) => void;
 }) {
-  const { tracks, playlists, addUpload, removeTrack, createPlaylist, addExternalToPlaylist, activePlaylistId, pinnedQuick, togglePin } =
+  const { tracks, playlists, addUpload, removeTrack, createPlaylist, addExternalLinkToPlaylist, activePlaylistId, pinnedQuick, togglePin } =
     useLibraryStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -1313,6 +1544,8 @@ function BibliotecaView({
   const [link, setLink] = useState('');
   const [linkName, setLinkName] = useState('');
   const [linkErr, setLinkErr] = useState('');
+  const [linkNotice, setLinkNotice] = useState('');
+  const [linkBusy, setLinkBusy] = useState(false);
   const [linkTarget, setLinkTarget] = useState<string>('');
   const kbInset = useKeyboardInset();
 
@@ -1346,32 +1579,78 @@ function BibliotecaView({
 
   const linkKindIsYoutube = (k: null | 'youtube' | 'spotify') => k !== 'spotify';
 
-  const applyExternal = (kind: 'youtube' | 'spotify', refId: string, title: string) => {
+  const applyExternal = async (
+    kind: 'youtube' | 'spotify',
+    ref: { kind: 'video' | 'playlist' | 'track' | 'album'; id: string },
+    title: string,
+  ) => {
     let target = linkTarget;
     if (!target) {
       const pl = createPlaylist(linkName.trim() || title);
       target = pl.id;
     }
-    addExternalToPlaylist(target, kind, refId, linkName.trim() || title);
+    return addExternalLinkToPlaylist(target, kind, ref, linkName.trim() || title);
   };
 
-  const addExternalLink = () => {
+  const addExternalLink = async () => {
     setLinkErr('');
+    setLinkNotice('');
+    setLinkBusy(true);
+
+    let result: Awaited<ReturnType<typeof applyExternal>>;
     if (linkKindIsYoutube(linkModal)) {
       const parsed = parseYouTubeRef(link);
       if (!parsed) {
         setLinkErr('Link do YouTube inválido.');
+        setLinkBusy(false);
         return;
       }
-      applyExternal('youtube', parsed.id, parsed.kind === 'list' ? 'Playlist do YouTube' : 'Vídeo do YouTube');
+      result = await applyExternal(
+        'youtube',
+        { kind: parsed.kind === 'list' ? 'playlist' : 'video', id: parsed.id },
+        parsed.kind === 'list' ? 'Playlist do YouTube' : 'Vídeo do YouTube',
+      );
     } else {
-      const id = parseSpotifyRef(link);
-      if (!id) {
+      const parsed = parseSpotifyLink(link);
+      if (!parsed) {
         setLinkErr('Link do Spotify inválido.');
+        setLinkBusy(false);
         return;
       }
-      applyExternal('spotify', id, 'Playlist do Spotify');
+      result = await applyExternal(
+        'spotify',
+        { kind: parsed.kind, id: parsed.id },
+        parsed.kind === 'track'
+          ? 'Faixa do Spotify'
+          : parsed.kind === 'album'
+            ? 'Álbum do Spotify'
+            : 'Playlist do Spotify',
+      );
     }
+
+    setLinkBusy(false);
+    if (result.added > 0) {
+      setLinkNotice(
+        result.container
+          ? 'Link adicionado como playlist. Não foi possível listar as faixas agora.'
+          : `${result.added} ${result.added === 1 ? 'faixa adicionada' : 'faixas adicionadas'}${
+              result.truncated ? ' (lista parcial)' : ''
+            }.`,
+      );
+      setLink('');
+      setLinkName('');
+      setLinkModal(null);
+      return;
+    }
+    if (result.error) {
+      setLinkErr(result.error);
+      return;
+    }
+    setLinkNotice(
+      result.container
+        ? 'Esse link já está na playlist.'
+        : 'Essas faixas já estão na playlist.',
+    );
     setLink('');
     setLinkName('');
     setLinkModal(null);
@@ -1415,6 +1694,12 @@ function BibliotecaView({
           </div>
         </div>
 
+        {linkNotice && (
+          <p className="mu-note mu-note--ok" role="status">
+            {linkNotice}
+          </p>
+        )}
+
         {tracks.length === 0 ? (
           <div className="mu-empty">
             <Upload size={48} className="mu-empty__icon" />
@@ -1448,7 +1733,16 @@ function BibliotecaView({
                     type="button"
                     className="mu-row__main"
                     onClick={() =>
-                      void playPlaylistFromUi([{ id: `ui-${t.id}`, kind: 'upload', trackId: t.id, title: t.name }])
+                      void playPlaylistFromUi([
+                        {
+                          id: `ui-${t.id}`,
+                          kind: 'upload',
+                          trackId: t.id,
+                          title: t.name,
+                          artist: t.artist,
+                          durationSec: t.durationSec,
+                        },
+                      ])
                     }
                   >
                     <div className="mu-row__art mu-row__art--user">
@@ -1508,13 +1802,14 @@ function BibliotecaView({
         <div className="mu-modal" onClick={() => setLinkModal(null)} style={{ paddingBottom: kbInset }}>
           <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
             <h4 className="mu-modal__title">
-              {linkKindIsYoutube(linkModal) ? 'Playlist do YouTube' : 'Playlist do Spotify'}
+              {linkKindIsYoutube(linkModal) ? 'Link do YouTube' : 'Link do Spotify'}
             </h4>
             <span className="mu-modal__label">Adicionar em</span>
             <select
               className="mu-input mu-select"
               value={linkTarget}
               onChange={(e) => setLinkTarget(e.target.value)}
+              disabled={linkBusy}
             >
               <option value="">— Criar playlist nova —</option>
               {playlists.map((p) => (
@@ -1528,24 +1823,40 @@ function BibliotecaView({
               placeholder="Nome da playlist (ex.: Treino de Peito)"
               value={linkName}
               onChange={(e) => setLinkName(e.target.value)}
+              disabled={linkBusy}
             />
             <input
               className="mu-input"
               placeholder={
                 linkKindIsYoutube(linkModal)
                   ? 'https://youtube.com/playlist?list=...'
-                  : 'https://open.spotify.com/playlist/...'
+                  : 'https://open.spotify.com/playlist/... (playlist, álbum ou faixa)'
               }
               value={link}
               onChange={(e) => setLink(e.target.value)}
+              disabled={linkBusy}
             />
+            <p className="mu-note">
+              Playlists são expandidas em faixas com capa e duração quando a API responde.
+            </p>
             {linkErr && <p className="mu-err">{linkErr}</p>}
             <div className="mu-modal__actions">
-              <button type="button" className="mu-btn mu-btn--ghost" onClick={() => setLinkModal(null)}>
+              <button
+                type="button"
+                className="mu-btn mu-btn--ghost"
+                onClick={() => setLinkModal(null)}
+                disabled={linkBusy}
+              >
                 Cancelar
               </button>
-              <button type="button" className="mu-btn" onClick={addExternalLink}>
-                Adicionar
+              <button
+                type="button"
+                className="mu-btn"
+                onClick={() => void addExternalLink()}
+                disabled={linkBusy || !link.trim()}
+              >
+                {linkBusy ? <Loader2 size={16} className="mu-spin" /> : <Plus size={16} />}
+                {linkBusy ? 'Buscando faixas…' : 'Adicionar'}
               </button>
             </div>
           </div>

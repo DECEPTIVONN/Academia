@@ -29,8 +29,15 @@
  */
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
-import { getMusicState, nextTrack, prevTrack, togglePlayback, type MusicState } from './audio-engine';
+import { ListMusic, Music2, Pause, Play, SkipBack, SkipForward, X } from 'lucide-react';
+import {
+  getMusicState,
+  nextTrack,
+  prevTrack,
+  togglePlayback,
+  type MusicState,
+} from './audio-engine';
+import { QueueList } from './QueueList';
 import {
   getDrawerThickness,
   getDrawerVpHeight,
@@ -75,8 +82,8 @@ function pillStyleFor(pos: Anchor): Record<string, string> {
 
 interface Pos { x: number; y: number }
 const clampPos = (x: number, y: number): Pos => {
-  const w = 240;
-  const h = 46;
+  const w = Math.min(370, Math.max(200, window.innerWidth - 16));
+  const h = 56;
   return {
     x: Math.min(window.innerWidth - w - 8, Math.max(8, x)),
     y: Math.min(window.innerHeight - h - 8, Math.max(8, y)),
@@ -89,19 +96,29 @@ function Pill({
   onDrag,
   onPrev,
   onClose,
+  onQueue,
+  queueOpen = false,
+  hasQueue = false,
 }: {
   state: MusicState;
   onDrag?: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onPrev?: () => void;
   onClose?: () => void;
+  onQueue?: () => void;
+  queueOpen?: boolean;
+  hasQueue?: boolean;
 }) {
   const canPrev = state.canPrev;
   return (
     <>
       <div className="fmp__drag" onPointerDown={onDrag}>
+        <div className={`fmp__art${state.artwork ? ' fmp__art--image' : ''}`} aria-hidden="true">
+          {state.artwork ? <img src={state.artwork} alt="" loading="lazy" /> : <Music2 size={14} />}
+        </div>
         <div className="fmp__content">
           <span className="fmp__label">Tocando agora</span>
           <span className="fmp__title">{state.title}</span>
+          <span className="fmp__artist">{state.artist || 'Evo Fit'}</span>
         </div>
       </div>
       <div className="fmp__controls">
@@ -121,6 +138,16 @@ function Pill({
         <button type="button" className="fmp__btn" onClick={nextTrack} aria-label="Avançar">
           <SkipForward size={13} />
         </button>
+        <button
+          type="button"
+          className={`fmp__btn fmp__queue-btn${queueOpen ? ' is-active' : ''}`}
+          onClick={onQueue}
+          disabled={!hasQueue}
+          aria-label="Mostrar fila"
+          aria-expanded={queueOpen}
+        >
+          <ListMusic size={13} />
+        </button>
         {onClose && (
           <button type="button" className="fmp__close" onClick={onClose} aria-label="Ocultar reprodutor">
             <X size={13} />
@@ -133,6 +160,8 @@ function Pill({
 
 export function FloatingMiniPlayer() {
   const [state, setState] = useState<MusicState>(() => getMusicState());
+  const [queueOpen, setQueueOpen] = useState(false);
+  const hasQueue = state.queueLength > 0;
 
   /* Prefs (derivadas no render; evento só pulsa re-render) */
   const [, setPrefsTick] = useState(0);
@@ -242,6 +271,19 @@ export function FloatingMiniPlayer() {
     return () => window.removeEventListener('pointerdown', onDown, true);
   }, [drawerOn, drawerOpen]);
 
+  /* v4.41.0 — fecha a lista da fila ao clicar fora dela/botão. */
+  useEffect(() => {
+    if (!queueOpen) return undefined;
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      if (t.closest('.fmp-queue') || t.closest('.fmp__queue-btn')) return;
+      setQueueOpen(false);
+    };
+    window.addEventListener('pointerdown', onDown, true);
+    return () => window.removeEventListener('pointerdown', onDown, true);
+  }, [queueOpen]);
+
   /* Arrasto da BARRA da gaveta (deslizar pra dentro abre).
      Listeners no window (não no el) — o pointer pode sair da barra estreita
      antes do threshold; sem setPointerCapture o el nunca receberia move/up. */
@@ -301,6 +343,24 @@ export function FloatingMiniPlayer() {
   if (!enabled) return null;
   if (!baseVisible) return null;
 
+  const queuePanel =
+    queueOpen && hasQueue ? (
+      <div className="fmp-queue" role="region" aria-label="Fila de reprodução">
+        <div className="fmp-queue__head">
+          <span>Fila</span>
+          <button
+            type="button"
+            className="fmp-queue__close"
+            onClick={() => setQueueOpen(false)}
+            aria-label="Fechar fila"
+          >
+            <X size={13} />
+          </button>
+        </div>
+        <QueueList state={state} />
+      </div>
+    ) : null;
+
   /* ─────────── GAVETA ligada: barra + (opcional) painel expandido ───────────
      A gaveta substitui a pastilha; ela usa a POSIÇÃO (pos) como âncora. */
   if (drawerOn) {
@@ -319,7 +379,7 @@ export function FloatingMiniPlayer() {
     let side: 'left' | 'right';
     let barTop: number;
     if (mode === 'flex' && dragPos) {
-      side = dragPos.x + 120 <= window.innerWidth / 2 ? 'left' : 'right';
+      side = dragPos.x + 185 <= window.innerWidth / 2 ? 'left' : 'right';
       barTop = Math.round(
         Math.min(
           window.innerHeight - barH - inset,
@@ -346,7 +406,7 @@ export function FloatingMiniPlayer() {
 
     const anchored: Pos = drawerPanelPos ?? (side === 'left'
       ? { x: 16, y: barTop }
-      : { x: window.innerWidth - 256, y: barTop });
+      : { x: window.innerWidth - Math.min(370, window.innerWidth - 16), y: barTop });
 
     return (
       <>
@@ -369,7 +429,11 @@ export function FloatingMiniPlayer() {
             <Pill
               state={state}
               onDrag={mode === 'flex' ? startDrag(setDrawerPanelPos, anchored) : undefined}
+              onQueue={() => setQueueOpen((open) => !open)}
+              queueOpen={queueOpen}
+              hasQueue={hasQueue}
             />
+            {queuePanel}
           </div>
         )}
       </>
@@ -381,12 +445,20 @@ export function FloatingMiniPlayer() {
     if (timedOut) return null;
     return (
       <div
-        className="fmp fmp--fixed"
+        className={`fmp fmp--fixed${
+          pos === 'tr' || pos === 'br' || pos === 'bc' ? ' fmp--from-right' : ''
+        }`}
         style={pillStyleFor(pos)}
         role="region"
         aria-label="Reprodutor"
       >
-        <Pill state={state} />
+        <Pill
+          state={state}
+          onQueue={() => setQueueOpen((open) => !open)}
+          queueOpen={queueOpen}
+          hasQueue={hasQueue}
+        />
+        {queuePanel}
       </div>
     );
   }
@@ -394,7 +466,10 @@ export function FloatingMiniPlayer() {
   /* Posição inicial do Flexível quando ainda não foi arrastado: a âncora escolhida */
   const flexStart: Pos = dragPos ?? (() => {
     const anchor = pillStyleFor(pos);
-    const x = anchor.right !== undefined ? window.innerWidth - 256 : 16;
+    const x =
+      anchor.right !== undefined
+        ? window.innerWidth - Math.min(370, window.innerWidth - 16)
+        : 16;
     const y = anchor.top === '50%'
       ? Math.round(window.innerHeight / 2 - 23)
       : anchor.bottom !== undefined
@@ -405,9 +480,23 @@ export function FloatingMiniPlayer() {
 
   /* Flexível (padrão) */
   if (!flexVisible) return null;
+  const flexRight = flexStart.x + 185 > window.innerWidth / 2;
   return (
-    <div className="fmp" style={{ left: flexStart.x, top: flexStart.y }} role="region" aria-label="Reprodutor">
-      <Pill state={state} onDrag={startDrag(setDragPos, flexStart)} onClose={() => setHidden(true)} />
+    <div
+      className={`fmp${flexRight ? ' fmp--from-right' : ''}`}
+      style={{ left: flexStart.x, top: flexStart.y }}
+      role="region"
+      aria-label="Reprodutor"
+    >
+      <Pill
+        state={state}
+        onDrag={startDrag(setDragPos, flexStart)}
+        onClose={() => setHidden(true)}
+        onQueue={() => setQueueOpen((open) => !open)}
+        queueOpen={queueOpen}
+        hasQueue={hasQueue}
+      />
+      {queuePanel}
     </div>
   );
 }

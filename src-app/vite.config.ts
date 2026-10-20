@@ -1,13 +1,54 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath, URL } from 'node:url';
 
+/**
+ * v4.41.0 — em `npm run dev` o Vercel não está servindo `/api/*`.
+ * Este middleware usa a MESMA função ESM publicada em `src-app/api`, para
+ * testar a expansão de playlists do Spotify localmente sem proxy externo.
+ */
+function spotifyDevApi(): Plugin {
+  return {
+    name: 'academia-spotify-dev-api',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/api/spotify-playlist', async (req, res) => {
+        const parsed = new URL(req.url || '', 'http://localhost');
+        const type = parsed.searchParams.get('type') || '';
+        const id = parsed.searchParams.get('id') || '';
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        try {
+          const mod = (await import(
+            new URL('./api/spotify-playlist.js', import.meta.url).href
+          )) as {
+            fetchSpotifyEntity: (kind: string, spotifyId: string) => Promise<unknown>;
+          };
+          const result = await mod.fetchSpotifyEntity(type, id);
+          res.statusCode = 200;
+          res.end(JSON.stringify(result));
+        } catch (err) {
+          res.statusCode = 502;
+          res.end(
+            JSON.stringify({
+              error:
+                err instanceof Error
+                  ? err.message
+                  : 'Não foi possível obter a playlist do Spotify.',
+            }),
+          );
+        }
+      });
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    spotifyDevApi(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',

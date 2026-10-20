@@ -21,6 +21,48 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.41.0] - 2026-10-20
+
+**Expansão de playlists externas em faixas com capa e duração** (a pedido do usuário). Links do YouTube e do Spotify agora são resolvidos em faixas individuais quando a API/embed responde: cada faixa entra na playlist com título, artista, capa e duração, aparece nas listas de fila e pode tocar no treino. Se a resolução falhar, o comportamento antigo é preservado com um item "container" expansível. O Spotify continua tocando apenas pelo embed oficial, sem Web Playback SDK, sem Premium e sem Client Secret no frontend/repo/Vercel.
+
+### Added
+- **`src-app/src/features/music/external-music.ts`** — `fetchYouTubeVideo`, `fetchYouTubePlaylist` (Data API v3, até 200 vídeos, título/thumbnail/duração), `fetchSpotifyExternal` (proxy `/api/spotify-playlist`), `spotifyEmbedUrl` e `fetchExternalList`.
+- **`src-app/api/spotify-playlist.js`** (ESM, publicado com Root Directory `src-app`) e cópia espelhada em **`api/spotify-playlist.js`** (CommonJS, deploy pela raiz) — lê `__NEXT_DATA__` do embed público do Spotify, normaliza playlist/álbum/faixa, usa capa da playlist/álbum em todas as faixas e cacheia por 1 h.
+- **`src-app/src/features/music/QueueList.tsx`** — lista compartilhada da fila com capa, título, artista/origem, duração e item ativo; clique pula para a faixa; exporta `formatDuration`.
+- **`src-app/src/features/music/QueueList`** no player do treino (`WorkoutNowPlayingBar`) com botão e painel recolhível.
+- **`FloatingMiniPlayer`** — capa da faixa, linha de artista, botão e popover da fila.
+- **`MusicOverlay`** — thumbnails e duração nas linhas das playlists, status de busca, aviso de lista parcial, modal de embed do Spotify (iframe oficial), botões "Expandir" para containers antigos e estados de loading/erro/sucesso ao adicionar links.
+- **`src-app/vite.config.ts`** — middleware de desenvolvimento para `/api/spotify-playlist`, usando a mesma função ESM publicada.
+- **`src-app/vercel.json`** — rewrite explícito de `/api/(.*)` antes do fallback SPA.
+
+### Changed
+- **`media-store.ts`** — `PlaylistItemMeta` com `thumbnail`, `durationSec`, `artist`, `refType`, `sourceId`, `sourceTitle`; `addExternalLinkToPlaylist()` e `expandExternalItem()` assíncronos; `makeExternalItems`, `makeExternalContainer`, `externalItemKey`, `isExternalPlaylistItem`, `externalItemSourceKind`; uploads passam a carregar artista/duração; `parseYouTubeRef()` corrigido para `/playlist`, `watch?v=`, `/shorts`, `/embed`, `/live` e preferência de vídeo quando `v=` e `list=` coexistem; `parseSpotifyLink()` para playlist/álbum/faixa, URI e ID bruto, com `parseSpotifyRef()` mantido como compatibilidade.
+- **`audio-engine.ts`** — `MusicState.artwork`; `emitState()`/`getMusicState()` publicam a capa; `playQueueIndex()` popula metadados da faixa/upload; `playSite()` limpa a capa; Media Session usa a capa quando disponível; `getMusicQueue()`, `playQueueAt()` e `playPlaylistFromUi(items, startIndex)` retornando `boolean`; YouTube distingue `refType` video/playlist com fallback por prefixo para itens antigos.
+- **`MusicOverlay`** — fluxos de adicionar link viraram assíncronos; biblioteca e detalhe da playlist usam `addExternalLinkToPlaylist()`; o player do treino e o mini-player flutuante usam a capa da faixa.
+- **`WorkoutNowPlayingBar`** — capa da faixa e painel recolhível da fila.
+- **`vercel.json` (raiz)** — build `api/*.js` com `@vercel/node` e rota `/api/(.*)` para deploy com Root Directory na raiz.
+- **CSS (`music.css`)** — thumbnails, badge de embed do Spotify, spinner, fila compartilhada, painéis de fila do treino/flutuante, estados ativos, embed modal e tamanhos responsivos.
+
+### Fixed
+- Itens antigos de YouTube/Spotify continuam válidos e agora ganham ação de expansão.
+- Fila automática do treino ignora Spotify, porque o embed não pode ser reproduzido programaticamente; a UI abre um modal com o embed oficial.
+- Reprodução de YouTube respeita `refType` explícito, evitando tratar faixa individual como playlist.
+- `startWorkoutContext()` limpa a capa quando a música do treino está desativada.
+
+### Compatibilidade
+- Dados antigos de `localStorage` (`academia_music_library_v1`) continuam válidos; itens sem os novos campos opcionais são detectados como containers.
+- Sincronização automática (`ACADEMIA_SYNC`) e v4.40.0 permanecem inalteradas.
+- O Client Secret do Google nunca vai para frontend, repo ou Vercel; o login Google continua sendo autenticação do app, e o acesso privado ao YouTube exigiria OAuth `youtube.readonly`.
+
+### Verificado
+- `npx tsc -b` exit 0.
+- `npm run build` OK (apenas warnings preexistentes de chunk/PWA).
+- Spotify local: playlist "Today's Top Hits" retornou **50 faixas** com `truncated: true`; track e album retornaram título/artista/duração/capa.
+- Endpoint local `/api/spotify-playlist?type=playlist&id=37i9dQZF1DXcBWIGoYBM5M` retornou **200** e 50 faixas via middleware do Vite.
+- YouTube Data API v3: vídeo de teste retornou título/duração e playlist retornou itens (chave de 39 caracteres).
+- ESM publicado (`src-app/api/spotify-playlist.js`) testado com `node --input-type=module`.
+- Deploy de produção pendente de autenticação da Vercel neste ambiente (`vercel whoami` não autenticado); a função e o rewrite estão prontos para deploy a partir do Root Directory `src-app`.
+
 ## [v4.40.0] - 2026-10-20
 
 **Sincronização automática com fallback de baixo egress** (a pedido do usuário). O Realtime continua sendo o caminho instantâneo; foi adicionado um fallback que consulta apenas `updated_at` a cada 60 s com a aba visível, além de checagem imediata ao voltar o foco/visibilidade/online. O snapshot completo só é baixado quando o `updated_at` remoto é mais novo que o último sync. Broadcasts repetidos/atrasados são ignorados antes de qualquer download. O heartbeat de presença passou de 25 s para 5 min; o painel de dispositivos atualiza na hora ao abrir.

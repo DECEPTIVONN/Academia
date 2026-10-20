@@ -185,6 +185,8 @@
   justify-content: center;
   color: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
 }
 
 .mu-row__art--user { background: linear-gradient(135deg, rgba(var(--primary-rgb, 139, 92, 246), 0.35), #0b0b10); }
@@ -844,7 +846,7 @@
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  max-width: min(360px, calc(100vw - 24px));
+  max-width: min(370px, calc(100vw - 16px));
   animation: fmpPillIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -1129,4 +1131,312 @@
 @keyframes gtPulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+
+/* ═══════════ v4.41.0 — capas, fila e embed do Spotify ═══════════ */
+
+.mu-row__art img,
+.mu-mini__art img,
+.wnp__art img,
+.fmp__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit;
+}
+
+.mu-row__art--thumb {
+  background: #15151d;
+  padding: 0;
+}
+
+.mu-row__embed-badge {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 215, 96, 0.95);
+  color: #07120a;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.mu-mini__art--image {
+  padding: 0;
+  overflow: hidden;
+  background: #15151d;
+}
+
+.mu-note--ok { color: #86efac; }
+
+.mu-spin { animation: muSpin 0.8s linear infinite; }
+
+@keyframes muSpin {
+  to { transform: rotate(360deg); }
+}
+
+.mu-embed__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mu-embed__head .mu-modal__title { margin: 0; }
+.mu-embed__head .mu-note { padding: 4px 0 0; }
+
+.mu-modal__panel--embed {
+  max-width: 560px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.mu-embed {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  display: block;
+  background: #000;
+}
+
+/* Fila compartilhada (player do treino + mini-player flutuante) */
+.music-queue {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.music-queue__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.music-queue__item:hover { background: rgba(255, 255, 255, 0.07); }
+
+.music-queue li.is-current .music-queue__item {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
+  box-shadow: inset 2px 0 0 var(--primary, #8b5cf6);
+}
+
+.music-queue__art {
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #d8d8e4;
+  background: linear-gradient(135deg, rgba(var(--primary-rgb, 139, 92, 246), 0.3), #0b0b10);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.music-queue__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.music-queue__art--youtube { color: #fca5a5; }
+.music-queue__art--site { color: #93c5fd; }
+
+.music-queue__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.music-queue__title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.music-queue__sub {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #8a8a9c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.music-queue__dur {
+  flex-shrink: 0;
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: #8a8a9c;
+  font-variant-numeric: tabular-nums;
+}
+
+.music-queue__empty {
+  margin: 0;
+  padding: 10px 6px;
+  font-size: 0.75rem;
+  color: #8a8a9c;
+}
+
+/* Fila do player do treino */
+.wnp-queue {
+  flex-shrink: 0;
+  z-index: 5;
+  margin: 0 12px 8px;
+  padding: 8px;
+  max-height: min(42vh, 380px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(11, 11, 16, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  animation: muSlideUp 0.2s ease;
+}
+
+.wnp-queue__head,
+.fmp-queue__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px 7px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.wnp-queue__head span,
+.fmp-queue__head span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wnp-queue__close,
+.fmp-queue__close {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.07);
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.wnp-queue__close:hover,
+.fmp-queue__close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.wnp__art--image {
+  padding: 0;
+  overflow: hidden;
+  background: #15151d;
+}
+
+.wnp__btn--active {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.22);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.6);
+  color: #fff;
+}
+
+/* Mini-player flutuante: capa, artista e popover da fila */
+.fmp__art {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(var(--primary-rgb, 139, 92, 246), 0.4), #0b0b10);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fmp__artist {
+  max-width: 170px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #8a8a9c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fmp__queue-btn.is-active {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.6);
+}
+
+.fmp__queue-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.fmp-queue {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: min(330px, calc(100vw - 24px));
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  z-index: 670;
+  background: rgba(10, 10, 10, 0.98);
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+  animation: muSlideUp 0.2s ease;
+  touch-action: pan-y;
+  user-select: auto;
+  -webkit-user-select: auto;
+}
+
+.fmp--from-right .fmp-queue {
+  left: auto;
+  right: 0;
+}
+
+.fmp--fixed,
+.fmp--drawer {
+  overflow: visible;
+}
+
+@media (max-width: 480px) {
+  .fmp__title,
+  .fmp__artist { max-width: 118px; }
+  .fmp { gap: 7px; padding-right: 9px; }
+  .fmp__controls { gap: 3px; }
 }
