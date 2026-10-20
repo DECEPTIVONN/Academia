@@ -21,6 +21,42 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.39.9] - 2026-10-20
+
+**Correção do sync entre dispositivos: reset do cutoff LWW e download forçado da nuvem** (a pedido do usuário). A nuvem já tinha o snapshot correto (`ACADEMIA_SYNC:DATA`, 66 exercícios, 10 fichas, 3 históricos, originado no Edge/Windows) e os dois dispositivos estavam registrados em `ACADEMIA_SYNC:DEVICES`; o Realtime também foi testado com sucesso. O problema era o corte de last-write-wins: `mbc_last_sync_at` continuava valendo depois de trocar a chave de sync ou as credenciais do Supabase, então um dispositivo com timestamp antigo/adiantado podia ignorar o snapshot remoto. Além disso, o botão "Sincronizar agora" só enviava os dados locais, sem opção de baixar a nuvem.
+
+### Fixed
+- **`src-app/src/core/sync/supabase-client.ts`** — `setSyncKey()` agora remove `mbc_last_sync_at` (namespace novo/alterado força o primeiro pull). `saveSupabaseCredentials()` também remove o cutoff ao trocar URL/chave do projeto.
+- **`src-app/src/features/sync/SyncSettingsPanel.tsx`** — novo botão **"Baixar da nuvem"** (`pullSnapshot(true)` + reload), com confirmação porque substitui os dados locais. O botão de envio foi renomeado para **"Enviar dados locais"** e usa estado `pulling` separado para não exibir "Sincronizando…" durante o download.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npm run build` OK.
+- Teste Realtime via `@supabase/supabase-js`: canal `sync_room_ACADEMIA_SYNC` recebeu `REMOTE_STATE_UPDATED` (`BROADCAST_OK`).
+
+## [v4.39.8] - 2026-10-20
+
+**Variáveis de ambiente publicadas na Vercel e novo deploy de produção** (a pedido do usuário). As quatro variáveis `VITE_*` foram cadastradas via CLI no projeto `tronuss/academia`, nos ambientes **Production, Preview e Development**, e um novo deploy de produção foi gerado. As variáveis do Supabase já aparecem no bundle; `VITE_YOUTUBE_API_KEY` e `VITE_GOOGLE_CLIENT_ID` estão cadastradas, mas ainda não são consumidas por nenhum código (feature futura), por isso o Vite não as inclui no bundle.
+
+### Added
+- **Vercel env vars** (tronuss/academia): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_YOUTUBE_API_KEY`, `VITE_GOOGLE_CLIENT_ID` (Production, Preview, Development).
+- **Deploy de produção:** `https://academia-g4tkyaoe9-tronuss.vercel.app` (alias `https://academia-seven-iota.vercel.app`).
+
+### Verificado
+- Os quatro valores na Vercel batem com o `src-app/.env.local` (`vercel env pull` em Development).
+- Bundle de produção contém `ymndekdhjxnsdyddlvkm` (URL Supabase) e `sb_publishable_` (publishable key).
+- `GET /rest/v1/user_sync?select=sync_key&limit=1` → **HTTP 200** com `[]`.
+
+## [v4.39.7] - 2026-10-20
+
+**Credenciais do Supabase adicionadas ao ambiente local** (a pedido do usuário). O `src-app/.env.local` (não versionado) passou a conter `VITE_SUPABASE_URL` (URL base do projeto, sem `/rest/v1/`) e `VITE_SUPABASE_ANON_KEY` com a **publishable key** (`sb_publishable_...`), que substitui a antiga anon key. Nenhuma chave secreta foi gravada no projeto: a `sb_secret_...` não é usada pelo app e o Client Secret do Google continua destinado ao painel do Supabase.
+
+### Verificado
+- Teste REST com a publishable key em `GET /rest/v1/user_sync?select=sync_key&limit=1` → após o SQL de criação executado pelo usuário, **HTTP 200** com `[]`: URL, chave e tabela `public.user_sync` OK (sem registros ainda).
+- CLI da Vercel instalado (59.16.0), mas sem autenticação válida no ambiente; envio das variáveis pendente de `vercel login`/token.
+
+### Added
+- **`src-app/.env.local`** — `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (publishable).
+
 ## [v4.39.6] - 2026-10-20
 
 **Credenciais locais para YouTube/Google preparadas** (a pedido do usuário). Criado `src-app/.env.local` (não versionado — coberto por `src-app/.gitignore` via `*.local` e pelo `.gitignore` da raiz) com `VITE_YOUTUBE_API_KEY` e `VITE_GOOGLE_CLIENT_ID`. O **Client Secret do Google não foi gravado no projeto**: ele deve ser configurado no painel do Supabase (Authentication → Providers → Google) ou como secret de Edge Function. Nenhum código consome essas variáveis ainda; elas ficam prontas para a futura expansão de playlists.

@@ -69,6 +69,9 @@ export function getSyncSupabaseClient(): SupabaseClient | null {
 export function saveSupabaseCredentials(url: string, anonKey: string): void {
   localStorage.setItem(SUPABASE_URL_KEY, url.trim());
   localStorage.setItem(SUPABASE_ANON_KEY, anonKey.trim());
+  /* Projeto/credenciais diferentes = histórico de sync anterior não vale.
+     Sem isso, o LWW poderia ignorar o snapshot do novo projeto. */
+  localStorage.removeItem(LAST_SYNC_AT_KEY);
   cachedClient = null;
   cachedSignature = '';
 }
@@ -102,6 +105,9 @@ export function getSyncKey(): string {
 
 export function setSyncKey(key: string): void {
   localStorage.setItem(SYNC_KEY_STORAGE, key.trim().toUpperCase());
+  /* Namespace novo/alterado = cutoff de LWW antigo não vale.
+     Sem isso, o primeiro pull da chave nova pode ser ignorado. */
+  localStorage.removeItem(LAST_SYNC_AT_KEY);
 }
 
 /** Dispositivo teve a sessão de sync revogada por outro dispositivo? */

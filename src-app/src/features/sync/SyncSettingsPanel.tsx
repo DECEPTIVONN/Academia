@@ -20,7 +20,7 @@ import {
   testSupabaseConnection,
   lastSyncedAt,
 } from '@/core/sync/supabase-client';
-import { syncNow, restartSyncEngine, getPendingOfflineCount } from '@/core/sync/sync-manager';
+import { syncNow, pullSnapshot, restartSyncEngine, getPendingOfflineCount } from '@/core/sync/sync-manager';
 import { formatRelativeActiveTime } from '@/core/sync/device';
 import './sync.css';
 
@@ -87,6 +87,7 @@ export function SyncSettingsPanel() {
 
   /* Sync manual + fila offline */
   const [syncing, setSyncing] = useState(false);
+  const [pulling, setPulling] = useState(false);
   const [pending, setPending] = useState(0);
   const [lastSync, setLastSync] = useState(() => lastSyncedAt());
 
@@ -163,8 +164,25 @@ export function SyncSettingsPanel() {
     setSyncing(false);
     setPending(result.pending);
     setLastSync(lastSyncedAt());
-    if (result.ok) showToast('Sincronização concluída!', 'success');
+    if (result.ok) showToast('Dados locais enviados para a nuvem!', 'success');
     else showToast('Sem conexão — alterações ficaram na fila offline.', 'info');
+  };
+
+  const handlePullNow = async () => {
+    const confirmed = window.confirm(
+      'Baixar os dados da nuvem e substituir os dados locais deste dispositivo?'
+    );
+    if (!confirmed) return;
+    setPulling(true);
+    const applied = await pullSnapshot(true);
+    setPulling(false);
+    setLastSync(lastSyncedAt());
+    if (applied) {
+      showToast('Dados da nuvem baixados! Recarregando…', 'success');
+      window.setTimeout(() => window.location.reload(), 800);
+    } else {
+      showToast('Não há dados na nuvem para baixar.', 'info');
+    }
   };
 
   return (
@@ -207,10 +225,27 @@ export function SyncSettingsPanel() {
             type="button"
             className="sy-btn sy-btn--sm sy-btn--primary"
             onClick={() => void handleSyncNow()}
-            disabled={syncing}
+            disabled={syncing || pulling}
           >
             {SvgSync}
-            {syncing ? 'Sincronizando…' : 'Sincronizar agora'}
+            {syncing ? 'Enviando…' : 'Enviar dados locais'}
+          </button>
+        </div>
+
+        <div className="sy-row">
+          <div>
+            <span className="sy-row__label">Dados da nuvem</span>
+            <span className="sy-row__value">
+              Baixar o snapshot remoto e substituir os dados locais deste dispositivo
+            </span>
+          </div>
+          <button
+            type="button"
+            className="sy-btn sy-btn--sm"
+            onClick={() => void handlePullNow()}
+            disabled={syncing || pulling}
+          >
+            {pulling ? 'Baixando…' : 'Baixar da nuvem'}
           </button>
         </div>
 
