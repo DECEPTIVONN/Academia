@@ -619,12 +619,21 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     );
     const fresh = candidates.filter((it) => !existing.has(externalItemKey(it)));
     if (fresh.length === 0) {
+      // As faixas já existem: remove o container para não deixar uma
+      // "playlist única" duplicada na fila do treino.
+      const items = playlist.items.filter((it) => it.id !== itemId);
+      const lib: MusicLibrary = {
+        ...cur,
+        playlists: cur.playlists.map((p) => (p.id === playlistId ? { ...p, items } : p)),
+      };
+      writeLibrary(lib);
+      set(lib);
       return {
         added: 0,
-        container: true,
+        container: false,
         sourceTitle: source.title,
         truncated: source.truncated,
-        error: 'As faixas desse item já estão na playlist.',
+        error: 'As faixas desse item já estavam na playlist.',
       };
     }
 
@@ -666,6 +675,11 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     const lib = { ...cur, activePlaylistId: playlistId };
     writeLibrary(lib);
     set(lib);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('academia:workout-playlist-changed', { detail: playlistId }),
+      );
+    }
   },
 
   /* v4.20.0 — renomear e trocar a capa da playlist */

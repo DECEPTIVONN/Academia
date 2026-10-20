@@ -658,11 +658,12 @@ async function startUserQueue(items: PlaylistItem[]): Promise<void> {
       const result = await useLibraryStore
         .getState()
         .expandExternalItem(current.id, container.id);
-      if (result.added <= 0) break;
-      changed = true;
       const updated = useLibraryStore.getState().playlists.find((p) => p.id === current.id);
       if (!updated) break;
+      const stillContainer = updated.items.some((it) => it.id === container.id);
+      if (result.added > 0 || !stillContainer) changed = true;
       current = updated;
+      if (stillContainer) break;
     }
     if (changed && current.items.length > 0) resolvedItems = current.items;
   }
@@ -932,6 +933,11 @@ export function initAudioEngine(): void {
     }
   });
 
+  // v4.41.0 — troca de playlist ativa durante o treino recarrega a fila
+  // (e tenta expandir containers de YouTube/Spotify).
+  window.addEventListener('academia:workout-playlist-changed', () => {
+    if (context === 'workout' || context === 'workout-user') void startWorkoutContext();
+  });
   // Início de treino (TREINAR / StartWorkout) → contexto de treino.
   window.addEventListener('academia:workout-started', () => {
     // v4.27 — pré-decodifica RESULT durante o treino (só toca na conclusão).
