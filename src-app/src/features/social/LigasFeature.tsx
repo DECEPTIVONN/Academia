@@ -11,7 +11,7 @@
  *  - Liga semanal/mensal com localStorage + portais de fim de temporada.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -24,7 +24,6 @@ import {
   ArrowUpDown,
   SlidersHorizontal,
   Camera,
-  UserPlus,
   X,
   Swords,
   Calendar,
@@ -34,7 +33,6 @@ import {
   Share2,
   Clock,
   Rocket,
-  Zap,
 } from 'lucide-react';
 import {
   AvatarGlyph,
@@ -70,6 +68,20 @@ import {
   type SubTab,
 } from './ligas-data';
 import { IDENTITY_EMBLEMS } from '@/features/profile/profile-data';
+import { useAuth } from '@/core/auth/use-auth';
+import { useProfileState } from '@/features/profile/useProfileState';
+import { FriendQrModal } from './FriendQrModal';
+import { QrScannerModal } from './QrScannerModal';
+import {
+  acceptFriendInvite,
+  buildFriendInviteUrl,
+  clearFriendInviteFromUrl,
+  getFriendCode,
+  loadAddedFriends,
+  mergeFriends,
+  readFriendInviteFromUrl,
+  type FriendInvite,
+} from './friend-invites';
 import './social.css';
 
 /* Emblema de identificação "Prestígio 1" (mesmo formato do emblema de
@@ -852,67 +864,6 @@ function FriendRow({
   );
 }
 
-/* ── Modal Adicionar Amigo ── */
-
-function AddFriendModal({
-  onClose,
-  onAdd,
-}: {
-  onClose: () => void;
-  onAdd: (name: string) => void;
-}) {
-  const [name, setName] = useState('');
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-    onAdd(name.trim());
-  };
-
-  return createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div className="bg-[rgba(24,20,40,0.92)] backdrop-blur border-2 border-[rgba(var(--primary-rgb,139,92,246),0.4)] rounded-3xl p-6 w-full max-w-sm shadow-[0_0_30px_rgba(var(--primary-rgb,139,92,246),0.3)]">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-            <UserPlus size={16} className="ligas-text-accent" />
-            Adicionar Amigo
-          </h4>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-white transition-all cursor-pointer"
-          >
-            <X size={16} />
-          </button>
-        </div>
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-              Nome do Jogador
-            </label>
-            <input
-              type="text"
-              maxLength={15}
-              required
-              placeholder="Ex: TetrisPro"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="ligas-input w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder:text-slate-600"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full py-2.5 ligas-btn-primary rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer border-b-2 border-[var(--primary-dark)] active:border-b-0 active:translate-y-[1px] flex items-center justify-center gap-1"
-          >
-            <Zap size={14} />
-            Confirmar Envio
-          </button>
-        </form>
-      </div>
-    </div>,
-    document.body
-  );
-}
-
 /* ── Diamantes de navegação (Amigos / Guilda / Liga) ── */
 
 function DiamondNav({ active, onGo }: { active: SubTab; onGo: (t: SubTab) => void }) {
@@ -981,7 +932,7 @@ export function LigasFeature({
   const [communityTab, setCommunityTab] = useState<'amigos' | 'membros'>('amigos');
   const [sortBy, setSortBy] = useState<'posicao' | 'trofeus' | 'nome'>('posicao');
   const [showFilters, setShowFilters] = useState(false);
-  const [friends, setFriends] = useState<FriendItem[]>(INITIAL_FRIENDS);
+  const [friends, setFriends] = useState<FriendItem[]>(() => mergeFriends(loadAddedFriends(), INITIAL_FRIENDS));
   const [members] = useState<FriendItem[]>(INITIAL_MEMBERS);
   const [internalMessages, setInternalMessages] = useState<ClanMessage[]>(INITIAL_CLAN_MESSAGES);
 
@@ -1003,8 +954,23 @@ export function LigasFeature({
   const messages = externalMessages !== undefined ? externalMessages : internalMessages;
   const [typedMessage, setTypedMessage] = useState('');
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
-  const [showCameraFlash, setShowCameraFlash] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [leagueViewType, setLeagueViewType] = useState<'semanal' | 'mensal'>('semanal');
+
+  const { user, loading: authLoading } = useAuth();
+  const { state: profileState } = useProfileState();
+
+  const displayName = useMemo(() => {
+    const name = profileState?.customization?.nome?.trim() || profile.username || 'Atleta';
+    return name.slice(0, 24) || 'Atleta';
+  }, [profileState?.customization?.nome, profile.username]);
+
+  const friendCode = useMemo(() => getFriendCode(user?.id ?? null), [user?.id]);
+  const inviteUrl = useMemo(
+    () => buildFriendInviteUrl(friendCode, displayName),
+    [friendCode, displayName],
+  );
+  const inviteFromUrlHandled = useRef(false);
 
   const chatScrollerRef = useRef<HTMLDivElement>(null);
 
@@ -1147,31 +1113,51 @@ export function LigasFeature({
 
   /* ── Amigos ── */
 
-  const handleAddFriendSubmit = (name: string) => {
-    const glyphs = ['crown', 'star', 'flame', 'bolt', 'skull', 'ghost', 'robot', 'rocket'] as const;
-    const flags = ['BR', 'US', 'MX', 'JP', 'AR', 'CA'] as const;
-    const newFriend: FriendItem = {
-      id: Date.now().toString(),
-      name,
-      trophies: Math.floor(Math.random() * 5000) + 4000,
-      clan: Math.random() > 0.4 ? 'milicas' : null,
-      online: true,
-      avatarColor: 'from-indigo-500 to-purple-700',
-      avatarInitial: name.charAt(0).toUpperCase(),
-      rank: friends.length + 1,
-      avatarGlyph: glyphs[Math.floor(Math.random() * glyphs.length)],
-      flag: flags[Math.floor(Math.random() * flags.length)],
-      level: Math.floor(Math.random() * 12) + 4,
-    };
-    setFriends((prev) => [newFriend, ...prev]);
-    setShowAddFriendModal(false);
-    standaloneSound.playLevelUp();
-  };
+  const applyInvite = useCallback(
+    (invite: FriendInvite) => {
+      const result = acceptFriendInvite(invite, friendCode);
+
+      if (result.friend) {
+        const accepted = result.friend;
+        setFriends((prev) => mergeFriends([accepted], prev));
+      }
+
+      if (result.status === 'added') {
+        standaloneSound.playLevelUp();
+        showToast(`${result.friend?.name ?? 'Amigo'} foi adicionado aos seus amigos!`, 'success');
+      } else if (result.status === 'duplicate') {
+        showToast(`${result.friend?.name ?? 'Esse amigo'} já está na sua lista de amigos.`, 'info');
+      } else if (result.status === 'self') {
+        showToast('Esse é o seu próprio QR Code de amigo.', 'info');
+      } else {
+        showToast('Convite de amizade inválido.', 'error');
+      }
+    },
+    [friendCode],
+  );
+
+  /* Convite vindo de link (?amigo=...): aceita uma única vez, depois limpa a URL. */
+  useEffect(() => {
+    if (authLoading || inviteFromUrlHandled.current) return;
+    inviteFromUrlHandled.current = true;
+
+    const invite = readFriendInviteFromUrl();
+    if (!invite) return;
+
+    // A URL é uma fonte externa: o convite precisa hidratar o estado uma vez.
+    // eslint-disable-next-line react/set-state-in-effect
+    applyInvite(invite);
+    clearFriendInviteFromUrl();
+  }, [authLoading, applyInvite]);
 
   const handleCameraClick = () => {
     standaloneSound.playMove();
-    setShowCameraFlash(true);
-    setTimeout(() => setShowCameraFlash(false), 400);
+    setShowScanner(true);
+  };
+
+  const handleScannedInvite = (invite: FriendInvite) => {
+    applyInvite(invite);
+    setShowScanner(false);
   };
 
   const getSortedList = (list: FriendItem[]) => {
@@ -1391,7 +1377,9 @@ export function LigasFeature({
         <div className="space-y-2.5 max-h-[calc(100vh-420px)] overflow-y-auto pr-1 z-10">
           {sortedList.map((item, index) => {
             const rank = index + 1;
-            const isSelf = item.name === 'GABRIEL GS' || item.name === profile.username;
+            const isSelf = item.friendCode
+              ? item.friendCode === friendCode
+              : item.name === 'GABRIEL GS' || item.name === profile.username;
             return <FriendRow key={item.id} item={item} rank={rank} isSelf={isSelf} />;
           })}
         </div>
@@ -1410,7 +1398,8 @@ export function LigasFeature({
           <button
             onClick={handleCameraClick}
             className="p-3 ligas-btn-primary rounded-2xl flex items-center justify-center transition-all cursor-pointer border-b-4 border-[var(--primary-dark)] active:border-b-0 active:translate-y-[2px]"
-            title="Capturar Arena"
+            title="Escanear QR Code"
+            aria-label="Escanear QR Code de amigo"
           >
             <Camera size={16} />
           </button>
@@ -1418,7 +1407,22 @@ export function LigasFeature({
       </div>
 
       {showAddFriendModal && (
-        <AddFriendModal onClose={() => setShowAddFriendModal(false)} onAdd={handleAddFriendSubmit} />
+        <FriendQrModal
+          inviteUrl={inviteUrl}
+          name={displayName}
+          onClose={() => setShowAddFriendModal(false)}
+          onScan={() => {
+            setShowAddFriendModal(false);
+            setShowScanner(true);
+          }}
+        />
+      )}
+
+      {showScanner && (
+        <QrScannerModal
+          onClose={() => setShowScanner(false)}
+          onInvite={handleScannedInvite}
+        />
       )}
     </div>
   );
@@ -1620,10 +1624,6 @@ export function LigasFeature({
   return (
     <div className="treino-container soc-root">
       <div id="section-social" className="main-section soc ligas-root" role="tabpanel" aria-label="Social">
-        {showCameraFlash && (
-          <div className="fixed inset-0 bg-white z-[99999] pointer-events-none animate-flash-effect" />
-        )}
-
         {bannerOrToggle}
 
         <AnimatePresence mode="wait">

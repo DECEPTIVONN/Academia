@@ -101,6 +101,10 @@ export interface FriendItem {
   avatarGlyph?: AvatarGlyphKey;
   flag?: FlagKey;
   level?: number;
+  /** Código permanente do convite (preenchido nos amigos adicionados por QR/link). */
+  friendCode?: string;
+  /** Timestamp de quando o amigo foi adicionado por QR/link. */
+  addedAt?: number;
 }
 
 export type SubTab = 'amigos' | 'bate-papo' | 'guerra-de-clas';

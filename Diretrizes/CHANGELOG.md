@@ -21,6 +21,27 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.39.0] - 2026-10-19
+
+**Amigos de verdade na aba Social: QR permanente, link fixo e leitor de câmera** (a pedido do usuário). O botão "Adicione Amigos!" deixou de abrir o formulário de nome e passou a abrir o modal verde de convite (QR branco sobre o cartão, dica, faixa amarela e botões "Enviar Link"/"Escanear"). O botão de câmera e o "Escanear" abrem o leitor full-screen (fundo escuro, moldura vermelha arredondada e linha animada). O código do convite é permanente: `user.id` do Supabase quando logado; caso contrário, UUID persistido no `localStorage` (`academia_friend_code_v1`, com fallback em memória). O QR/link usa `?amigo=<código>&nome=<nome>`; ao abrir o link, o app adiciona o dono do código à lista local e limpa os parâmetros da URL. Amizades são local-first/unilaterais (quem escaneia recebe o outro), persistidas em `academia_added_friends_v1` e mescladas antes dos amigos de demonstração; não foi criada tabela de amizades no Supabase.
+
+### Added
+- **`src-app/src/features/social/friend-invites.ts`** — código permanente, montagem/parse do link, leitura/limpeza da URL, persistência/validação dos amigos, deduplicação e bloqueio do próprio código.
+- **`src-app/src/features/social/FriendQrModal.tsx`** — modal de convite com QR gerado por `qrcode` (módulos brancos/transparentes sobre o verde), compartilhamento nativo, fallback de clipboard e exibição manual do link quando a cópia falha.
+- **`src-app/src/features/social/QrScannerModal.tsx`** — câmera traseira via `getUserMedia`, frames em canvas, `jsQR` com `attemptBoth` e segunda passada binarizada para ler o QR branco/verde (baixo contraste); encerra a stream ao fechar/detectar.
+- **`src-app/package.json` / `package-lock.json`** — dependência `jsqr@1.4.0`.
+
+### Changed
+- **`src-app/src/features/social/LigasFeature.tsx`** — removido o `AddFriendModal` de texto; o botão de câmera e o "Escanear" abrem o leitor; amigos adicionados entram no estado e no `localStorage`; link de convite consumido uma vez no boot (após o auth carregar) com toast de adicionado/duplicado/próprio; a câmera não pisca mais a tela.
+- **`src-app/src/features/social/ligas-data.ts`** — `FriendItem` ganhou `friendCode?` e `addedAt?` (metadados dos amigos adicionados por convite).
+- **`src-app/src/features/social/social.css`** — estilos dos dois modais (cartão verde, zigue-zague, botões roxos, QR, scanner preto, moldura vermelha, linha animada e estados de erro/aviso).
+- **`Diretrizes/system_map.json`** → **3.5.91** (purpose da pasta social atualizado com o fluxo de convite/leitor).
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` sem erros (apenas warnings preexistentes) · `npm run build` OK · `npm run lint:docs` OK.
+- Sonda CDP (preview 4173 + Chrome headless 9222): **19/19 PASS** — QR único/fixo após reload, QR decodificado, link compartilhado igual ao QR, fallback de link manual, link adiciona/persiste/sem duplicata, próprio código não é adicionado, câmera lê QR invertido (`canvas.captureStream`) e botão "Escanear" abre o leitor.
+- Sonda extra: QR padrão escuro-sobre-claro também é lido pela câmera.
+
 ## [v4.38.14] - 2026-10-19
 
 **Tela cheia automática passa a funcionar no PWA instalado** (a pedido do usuário). A pref `academia_pref_auto_fullscreen` era desarmada em `display-mode: standalone` porque o código assumia que "app instalado já é tela cheia". Standalone, porém, mantém a barra de status/janela do sistema — e a Fullscreen API é permitida no PWA instalado mediante gesto. Removido o guard `!isStandalone()` de `canUseFullscreen()` em `lib/auto-fullscreen.ts`: com a opção ligada, o primeiro clique/toque no app instalado agora entra em tela cheia (e reativa após sair), no Android e no desktop. Onde a API não existe (iOS Safari fora de `<video>`), nada é armado, como antes.
