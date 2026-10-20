@@ -51,6 +51,7 @@ export default defineConfig({
     spotifyDevApi(),
     VitePWA({
       registerType: 'autoUpdate',
+      selfDestroying: true,
       injectRegister: 'auto',
       // v4.18.0-music — '!assets/sounds/**' exclui o MAIN.mp3 (7,2 MB) do
       // precache: ele é cacheado sob demanda via runtimeCaching StaleWhileRevalidate.

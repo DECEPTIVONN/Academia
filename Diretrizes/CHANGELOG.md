@@ -48,7 +48,7 @@
 - Fila automática do treino ignora Spotify, porque o embed não pode ser reproduzido programaticamente; a UI abre um modal com o embed oficial.
 - Reprodução de YouTube respeita `refType` explícito, evitando tratar faixa individual como playlist.
 - `startWorkoutContext()` limpa a capa quando a música do treino está desativada.
-- Deploy/PWA: `vercel.json` da raiz agora usa `distDir: "dist"` (em vez de `../dist`), evitando servir o `dist` antigo da raiz e assets com hash inexistente; Workbox ganhou `skipWaiting`, `clientsClaim` e `cleanupOutdatedCaches` para ativar o novo service worker e limpar caches antigos.
+- Deploy/PWA: `vercel.json` da raiz agora usa `distDir: "dist"` (em vez de `../dist`), evitando servir o `dist` antigo da raiz e assets com hash inexistente; Workbox ganhou `skipWaiting`, `clientsClaim` e `cleanupOutdatedCaches`; o service worker passou a ser `selfDestroying` para remover caches/SW antigos em mobile e evitar travamento em assets desatualizados.
 
 ### Compatibilidade
 - Dados antigos de `localStorage` (`academia_music_library_v1`) continuam válidos; itens sem os novos campos opcionais são detectados como containers.
