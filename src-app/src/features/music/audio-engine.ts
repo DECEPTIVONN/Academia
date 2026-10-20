@@ -49,6 +49,7 @@
 import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import { isMusicEnabled, getMusicVolume, claimMusicPlayback } from '@/lib/background-music';
 import {
+  isExternalPlaylistItem,
   loadAudioBlob,
   useLibraryStore,
   type PlaylistItem,
@@ -636,7 +637,37 @@ function isPlayableItem(it: PlaylistItem): boolean {
 }
 
 async function startUserQueue(items: PlaylistItem[]): Promise<void> {
-  queue = items.filter(isPlayableItem);
+  // v4.41.0 — expande containers de playlist/álbum (YouTube/Spotify) do
+  // playlist ativa antes de montar a fila, para que as faixas individuais
+  // apareçam no player do treino. Se a API falhar, o container segue válido.
+  let resolvedItems = items;
+  const lib = useLibraryStore.getState();
+  const activeId = lib.activePlaylistId;
+  const playlist = activeId ? lib.playlists.find((p) => p.id === activeId) : undefined;
+  if (
+    playlist &&
+    items.length > 0 &&
+    items.length === playlist.items.length &&
+    items.every((it, i) => it.id === playlist.items[i]?.id)
+  ) {
+    let current = playlist;
+    let changed = false;
+    while (current.items.some(isExternalPlaylistItem)) {
+      const container = current.items.find(isExternalPlaylistItem);
+      if (!container) break;
+      const result = await useLibraryStore
+        .getState()
+        .expandExternalItem(current.id, container.id);
+      if (result.added <= 0) break;
+      changed = true;
+      const updated = useLibraryStore.getState().playlists.find((p) => p.id === current.id);
+      if (!updated) break;
+      current = updated;
+    }
+    if (changed && current.items.length > 0) resolvedItems = current.items;
+  }
+
+  queue = resolvedItems.filter(isPlayableItem);
   if (queue.length === 0) {
     // Playlist só com Spotify (ou vazia) → cai na regra do site.
     if (workoutMusicEnabled()) void playSite('workout');
