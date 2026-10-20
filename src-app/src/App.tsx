@@ -322,6 +322,12 @@ export function App() {
         t.closest('.modal-overlay') ||
         t.closest('.perfil-overlay') ||
         t.closest('.ficha-overlay') ||
+        t.closest('.mu-overlay') ||
+        t.closest('.news-overlay') ||
+        t.closest('.missions-overlay') ||
+        t.closest('.friend-qr-overlay') ||
+        t.closest('.qr-scanner') ||
+        t.closest('.set-root') ||
         t.closest('.mdw') ||
         (t.closest('[draggable="true"]') && t.closest('#tab-montar')) ||
         t.tagName.toLowerCase() === 'input' ||

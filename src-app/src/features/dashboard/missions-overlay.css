@@ -8,6 +8,7 @@
                 z-index: 9999;
                 overflow-y: auto;
                 overflow-x: hidden;
+                overscroll-behavior: contain;
                 color: #e8e8f2;
                 background-color: #07070b;
             }

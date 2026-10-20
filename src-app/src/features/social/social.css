@@ -1431,9 +1431,10 @@
   align-items: center;
   justify-content: center;
   padding: 18px;
-  background: rgba(4, 9, 6, 0.56);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overscroll-behavior: contain;
 }
 
 .friend-qr-card {
@@ -1443,13 +1444,10 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 30px;
-  border: 3px solid rgba(204, 255, 205, 0.48);
-  background: linear-gradient(180deg, #57d46e 0%, #35b552 38%, #218c3d 100%);
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.55),
-    0 0 0 4px rgba(15, 60, 25, 0.45),
-    inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b0b10;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
   color: #fff;
   animation: friend-qr-pop 0.18s ease-out;
 }
@@ -1470,27 +1468,26 @@
   z-index: 2;
   top: 12px;
   right: 12px;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 13px;
-  border: 2px solid #8d0a18;
-  background: linear-gradient(180deg, #ff5a67 0%, #e51f38 55%, #b80d24 100%);
-  color: #fff;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #14141b;
+  color: #8a8a9c;
   cursor: pointer;
-  box-shadow: 0 4px 0 #7a0716, 0 6px 14px rgba(0, 0, 0, 0.35);
-  transition: transform 0.12s, box-shadow 0.12s;
+  transition: all 0.2s ease;
 }
 
 .friend-qr__close:hover {
-  transform: translateY(-1px);
+  color: #fff;
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
 }
 
 .friend-qr__close:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 #7a0716;
+  transform: scale(0.95);
 }
 
 .friend-qr__body {
@@ -1500,6 +1497,7 @@
   padding: 22px 22px 8px;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .friend-qr__title {
@@ -1523,8 +1521,9 @@
   margin: 0 auto;
   display: grid;
   place-items: center;
-  padding: 4px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #ffffff;
   filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.2));
 }
 
@@ -1543,7 +1542,8 @@
   place-items: center;
   padding: 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12);
+  background: #f3f4f6;
+  color: #111111;
   font-size: 12px;
   font-weight: 700;
   text-align: center;
@@ -1552,20 +1552,19 @@
 .friend-qr__hint {
   max-width: 290px;
   margin: 12px auto 0;
-  color: rgba(255, 255, 255, 0.95);
+  color: #8a8a9c;
   font-size: 12px;
   font-weight: 700;
   line-height: 1.35;
   text-align: center;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
 }
 
 .friend-qr__footer {
   position: relative;
   margin-top: 14px;
   padding: 16px 18px 18px;
-  background: linear-gradient(180deg, #2c2f37 0%, #202229 100%);
-  border-top: 2px solid rgba(0, 0, 0, 0.25);
+  background: #0e0e14;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .friend-qr__zigzag {
@@ -1588,20 +1587,16 @@
   flex: 1;
   min-height: 48px;
   padding: 10px 8px;
-  border: 2px solid #3a1e70;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #c7a2ff 0%, #9b6cff 42%, #7b42e8 100%);
+  border: 1px solid var(--primary, #8b5cf6);
+  border-radius: 12px;
+  background: var(--primary, #8b5cf6);
   color: #fff;
   font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.04em;
   line-height: 1.1;
   text-transform: uppercase;
-  text-shadow: 0 2px 0 rgba(38, 10, 80, 0.8);
-  box-shadow:
-    0 5px 0 #4e2794,
-    0 8px 16px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 24px rgba(var(--primary-rgb, 139, 92, 246), 0.35);
   cursor: pointer;
   transition: transform 0.12s, box-shadow 0.12s, filter 0.12s;
 }
@@ -1609,11 +1604,11 @@
 .friend-qr__action:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(var(--primary-rgb, 139, 92, 246), 0.5);
 }
 
 .friend-qr__action:active:not(:disabled) {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #4e2794;
+  transform: translateY(1px);
 }
 
 .friend-qr__action:disabled {
@@ -1832,9 +1827,9 @@
 .friend-qr__manual input {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 9px;
-  background: rgba(0, 0, 0, 0.28);
+  background: #14141b;
   color: #fff;
   font-family: var(--font-mono, monospace);
   font-size: 10px;

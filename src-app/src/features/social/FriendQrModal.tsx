@@ -10,7 +10,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import QRCode from 'qrcode';
-import { Plus, X } from 'lucide-react';
+import { PlusIcon, XIcon } from './social-icons';
 import { shareNative } from '@/lib/native-share';
 import { showToast } from '@/lib/toast';
 import { standaloneSound } from './ligas-data';
@@ -61,7 +61,7 @@ export function FriendQrModal({ inviteUrl, name, onClose, onScan }: FriendQrModa
       width: 560,
       margin: 4,
       errorCorrectionLevel: 'M',
-      color: { dark: '#ffffff', light: '#00000000' },
+      color: { dark: '#111111', light: '#ffffff' },
     })
       .then((url) => {
         if (alive) setQrDataUrl(url);
@@ -135,12 +135,12 @@ export function FriendQrModal({ inviteUrl, name, onClose, onScan }: FriendQrModa
           }}
           aria-label="Fechar"
         >
-          <X size={18} strokeWidth={4} />
+          <XIcon size={18} />
         </button>
 
         <div className="friend-qr__body">
           <h2 id="friend-qr-title" className="friend-qr__title">
-            <Plus size={22} strokeWidth={4} aria-hidden="true" />
+            <PlusIcon size={22} aria-hidden="true" />
             Adicionar
           </h2>
 
@@ -169,7 +169,7 @@ export function FriendQrModal({ inviteUrl, name, onClose, onScan }: FriendQrModa
             <polyline
               points="0,11 16,3 32,11 48,3 64,11 80,3 96,11 112,3 128,11 144,3 160,11 176,3 192,11 208,3 224,11 240,3 256,11 272,3 288,11 304,3 320,11"
               fill="none"
-              stroke="#f2c744"
+              stroke="var(--primary, #8b5cf6)"
               strokeWidth="5"
               strokeLinecap="square"
             />

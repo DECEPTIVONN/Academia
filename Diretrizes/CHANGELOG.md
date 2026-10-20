@@ -21,6 +21,41 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.39.3] - 2026-10-20
+
+**Nome do PWA renomeado para "EVO FIT"** (a pedido do usuário). O `<title>` de `src-app/index.html` e o `name`/`short_name` do manifest gerado pelo `vite-plugin-pwa` (em `vite.config.ts`) deixaram "Fichas de Treino — EVO FIT"/"EVO FIT Workout Tracker" e passaram a "EVO FIT", refletindo no topo da página e na instalação do PWA.
+
+### Changed
+- **`src-app/index.html`** — `<title>` → `EVO FIT`.
+- **`src-app/vite.config.ts`** — manifest `name` e `short_name` → `EVO FIT`.
+
+### Verificado
+- `npm run build` OK.
+
+## [v4.39.2] - 2026-10-20
+
+**Interface de Missões e Recompensas padronizada com as cores do site** (a pedido do usuário). O modal `MissoesRecompensasModal` deixou os tons roxos/âmbar hardcoded (fundo `#181135`→`#090514`, header `#251a4b`, abas `bg-purple-600`, botão de fechar vermelho, bordas `purple-600/500`) e passou a usar a superfície near-black `#0b0b10`, hairlines `rgba(255,255,255,0.08)` e o acento `--primary` nas abas ativas e nos divisores. O botão de fechar virou o padrão cinza/hover-primary (`.set-icon-btn`). Recompensas semânticas (verde para resgatar, âmbar para passes) foram preservadas.
+
+### Changed
+- **`src-app/src/features/dashboard/MissoesRecompensasModal.tsx`** — superfícies roxas → `#0b0b10`; abas ativas `bg-purple-600` → `bg-[var(--primary)]` com texto near-black; header/bordas → hairlines; botão de fechar vermelho → padrão cinza/primary; gradiente do topo/container → `#0b0b10`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npm run build` OK.
+
+## [v4.39.1] - 2026-10-20
+
+**Padronização da interface "Adicionar amigos" (QR) e correção de scroll nas interfaces secundárias** (a pedido do usuário). (1) O modal de convite QR da aba Social deixou o visual Clash Royale (cartão verde, zigue-zague amarelo, botões roxos) e passou ao padrão do site: superfície near-black `#0b0b10` com hairline, acento em `--primary`, botão de fechar no estilo `.set-icon-btn`, QR em módulos escuros sobre fundo branco e ícones SVG stroke (`PlusIcon`/`XIcon` de `social-icons.tsx`) no lugar dos ícones Lucide. (2) Nas interfaces de Treino (Ficha), Música, Configurações (Perfil), Notícias e Missões, o scroll interno deixou de disparar a transição (swipe) entre as abas principais: esses overlays foram adicionados à lista de exclusão do gesto de swipe em `App.tsx` e ganharam `overscroll-behavior: contain` onde faltava (Notícias, Missões e o modal QR).
+
+### Changed
+- **`src-app/src/features/social/FriendQrModal.tsx`** — ícones `PlusIcon`/`XIcon` (social-icons) no lugar de `Plus`/`X` (lucide); QR com módulos escuros sobre fundo branco; zigue-zague em `--primary`.
+- **`src-app/src/features/social/social.css`** — seção `.friend-qr-*` reestilizada para o padrão do site (near-black, hairlines, acento `--primary`, botão de fechar estilo `.set-icon-btn`, QR sobre fundo branco, botões com a cor do tema); `overscroll-behavior: contain` no overlay e no corpo.
+- **`src-app/src/App.tsx`** — swipe handler passa a ignorar toques em `.mu-overlay`, `.news-overlay`, `.missions-overlay`, `.friend-qr-overlay`, `.qr-scanner` e `.set-root` (scroll interno não inicia transição entre abas).
+- **`src-app/src/features/news/news-overlay.css`** — `overscroll-behavior: contain` no `.news-overlay` e no `.detail-view`.
+- **`src-app/src/features/dashboard/missions-overlay.css`** — `overscroll-behavior: contain` no `.missions-overlay`.
+
+### Verificado
+- `npx tsc -b` exit 0 · `npx oxlint src` sem erros (apenas warnings preexistentes) · `npm run build` OK · `npm run lint:docs` OK.
+
 ## [v4.39.0] - 2026-10-19
 
 **Amigos de verdade na aba Social: QR permanente, link fixo e leitor de câmera** (a pedido do usuário). O botão "Adicione Amigos!" deixou de abrir o formulário de nome e passou a abrir o modal verde de convite (QR branco sobre o cartão, dica, faixa amarela e botões "Enviar Link"/"Escanear"). O botão de câmera e o "Escanear" abrem o leitor full-screen (fundo escuro, moldura vermelha arredondada e linha animada). O código do convite é permanente: `user.id` do Supabase quando logado; caso contrário, UUID persistido no `localStorage` (`academia_friend_code_v1`, com fallback em memória). O QR/link usa `?amigo=<código>&nome=<nome>`; ao abrir o link, o app adiciona o dono do código à lista local e limpa os parâmetros da URL. Amizades são local-first/unilaterais (quem escaneia recebe o outro), persistidas em `academia_added_friends_v1` e mescladas antes dos amigos de demonstração; não foi criada tabela de amizades no Supabase.

@@ -751,7 +751,7 @@ export default function MissoesRecompensasStandalone({
                     backgroundRepeat: 'repeat',
                 }}
             />
-            <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#1b0a3c]/35 via-slate-950/90 to-slate-950 pointer-events-none md:rounded-[2rem]" />
+            <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0b0b10]/35 via-[#0b0b10]/90 to-[#0b0b10] pointer-events-none md:rounded-[2rem]" />
 
             {/* Main Constraint Modal Panel styled as an epic Clash Royale-style UI - FULLSCREEN */}
             <motion.div
@@ -759,14 +759,14 @@ export default function MissoesRecompensasStandalone({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="w-full h-full md:max-w-4xl md:h-[85vh] md:rounded-[2rem] md:border-4 md:border-purple-600 bg-gradient-to-b from-[#181135] to-[#090514] overflow-hidden flex flex-col relative z-10 md:shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+                className="w-full h-full md:max-w-4xl md:h-[85vh] md:rounded-[2rem] md:border md:border-[rgba(255,255,255,0.08)] bg-[#0b0b10] overflow-hidden flex flex-col relative z-10 md:shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
             >
 
                 {/* Decorative Golden Top Arc Trim */}
                 <div className="h-1 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 w-full relative z-30" />
 
                 {/* Custom Header with dynamic, visually rich Tabs row */}
-                <header className="relative z-20 flex flex-col pt-4 pb-0 bg-[#251a4b]/80 backdrop-blur-xl border-b border-purple-500/25 shadow-[0_4px_25px_rgba(0,0,0,0.5)] w-full">
+                <header className="relative z-20 flex flex-col pt-4 pb-0 bg-[#0b0b10]/80 backdrop-blur-xl border-b border-[rgba(255,255,255,0.08)] shadow-[0_4px_25px_rgba(0,0,0,0.5)] w-full">
                     <div className="w-full max-w-xl md:max-w-4xl mx-auto px-4 flex flex-col">
 
                         {/* Top Title & Close Button Row */}
@@ -791,7 +791,7 @@ export default function MissoesRecompensasStandalone({
                                     soundManager.playMove();
                                     onClose();
                                 }}
-                                className="w-9 h-9 bg-red-500/15 hover:bg-red-500/30 text-red-400 flex items-center justify-center rounded-xl hover:text-white transition-all backdrop-blur-md border border-red-500/35 active:scale-90 cursor-pointer"
+                                className="w-9 h-9 bg-[#14141b] hover:bg-[#1b1b25] text-[#8a8a9c] hover:text-white flex items-center justify-center rounded-xl transition-all border border-[rgba(255,255,255,0.08)] hover:border-[rgba(var(--primary-rgb,139,92,246),0.5)] active:scale-90 cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -803,7 +803,7 @@ export default function MissoesRecompensasStandalone({
                             <button
                                 onClick={() => handleTabClick('daily')}
                                 className={`flex-1 py-3.5 rounded-t-xl text-[10px] font-black tracking-widest flex flex-col items-center gap-1 transition-all relative ${activeTab === 'daily'
-                                        ? 'bg-purple-600 text-white shadow-[0_-3px_15px_rgba(168,85,247,0.35)]'
+                                        ? 'bg-[var(--primary)] text-[#07070b] shadow-[0_-3px_15px_rgba(var(--primary-rgb,139,92,246),0.35)]'
                                         : 'text-slate-400 hover:text-purple-300 hover:bg-purple-950/20'
                                     }`}
                             >
@@ -818,7 +818,7 @@ export default function MissoesRecompensasStandalone({
                             <button
                                 onClick={() => handleTabClick('weekly')}
                                 className={`flex-1 py-3.5 rounded-t-xl text-[10px] font-black tracking-widest flex flex-col items-center gap-1 transition-all relative ${activeTab === 'weekly'
-                                        ? 'bg-purple-600 text-white shadow-[0_-3px_15px_rgba(168,85,247,0.35)]'
+                                        ? 'bg-[var(--primary)] text-[#07070b] shadow-[0_-3px_15px_rgba(var(--primary-rgb,139,92,246),0.35)]'
                                         : 'text-slate-400 hover:text-purple-300 hover:bg-purple-950/20'
                                     }`}
                             >
@@ -1018,7 +1018,7 @@ export default function MissoesRecompensasStandalone({
                             <div className="flex flex-col md:grid md:grid-cols-12 md:gap-5 animate-fade-in">
 
                                 {/* PERSISTENT MONTHLY MISSION COUNTER CARD */}
-                                <section className="md:col-span-4 bg-gradient-to-r from-[#2c134d] via-[#1f0d36] to-[#120721] border-2 border-amber-500/40 rounded-2xl p-4.5 shadow-[0_8px_30px_rgba(0,0,0,0.6)] relative overflow-hidden group flex flex-col justify-between min-h-[300px]">
+                                <section className="md:col-span-4 bg-[#0b0b10] border-2 border-amber-500/40 rounded-2xl p-4.5 shadow-[0_8px_30px_rgba(0,0,0,0.6)] relative overflow-hidden group flex flex-col justify-between min-h-[300px]">
                                     <div className="absolute top-[-50%] right-[-20%] w-60 h-60 bg-amber-500/10 blur-3xl rounded-full pointer-events-none group-hover:bg-amber-500/15 transition-all duration-700" />
 
                                     <div className="flex justify-between items-start mb-3 relative z-10 flex-col gap-2">
