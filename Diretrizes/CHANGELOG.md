@@ -21,6 +21,16 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v4.39.6] - 2026-10-20
+
+**Credenciais locais para YouTube/Google preparadas** (a pedido do usuário). Criado `src-app/.env.local` (não versionado — coberto por `src-app/.gitignore` via `*.local` e pelo `.gitignore` da raiz) com `VITE_YOUTUBE_API_KEY` e `VITE_GOOGLE_CLIENT_ID`. O **Client Secret do Google não foi gravado no projeto**: ele deve ser configurado no painel do Supabase (Authentication → Providers → Google) ou como secret de Edge Function. Nenhum código consome essas variáveis ainda; elas ficam prontas para a futura expansão de playlists.
+
+### Added
+- **`src-app/.env.local`** (local, ignorado pelo Git) — `VITE_YOUTUBE_API_KEY` e `VITE_GOOGLE_CLIENT_ID`.
+
+### Verificado
+- `git check-ignore -v src-app/.env.local` → ignorado por `src-app/.gitignore` (`*.local`).
+
 ## [v4.39.5] - 2026-10-20
 
 **Ícones dos botões de player (retroceder/pausar/avançar) viram outline** (a pedido do usuário). Os botões de player (retroceder, pausar, tocar/avançar) em `WorkoutNowPlayingBar`, `FloatingMiniPlayer` e `MusicOverlay` usavam `fill="currentColor"` (SVGs sólidos). Removido o `fill`, voltando ao padrão stroke (linhas finas) do Lucide.
