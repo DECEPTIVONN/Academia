@@ -1412,8 +1412,8 @@ function PlaylistDetail({
               className="mu-input"
               placeholder={
                 linkKind === 'youtube'
-                  ? 'https://youtube.com/playlist?list=...'
-                  : 'https://open.spotify.com/playlist/... (playlist, álbum ou faixa)'
+                  ? 'https://youtube.com/watch?v=... (vídeo individual)'
+                  : 'https://open.spotify.com/track/... (faixa)'
               }
               value={link}
               onChange={(e) => setLink(e.target.value)}
@@ -1765,8 +1765,14 @@ function BibliotecaView({
             <button type="button" className="mu-btn mu-btn--ghost" onClick={() => setLinkModal('youtube')}>
               <Youtube size={16} /> Playlist do YouTube
             </button>
+            <button type="button" className="mu-btn mu-btn--ghost" onClick={() => setLinkModal('youtube')}>
+              <Youtube size={16} /> Música do YouTube
+            </button>
             <button type="button" className="mu-btn mu-btn--ghost" onClick={() => setLinkModal('spotify')}>
               <Radio size={16} /> Playlist do Spotify
+            </button>
+            <button type="button" className="mu-btn mu-btn--ghost" onClick={() => setLinkModal('spotify')}>
+              <Radio size={16} /> Música do Spotify
             </button>
           </div>
         </div>

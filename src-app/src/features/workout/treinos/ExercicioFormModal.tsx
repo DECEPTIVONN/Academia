@@ -351,8 +351,7 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
                 setTags(selected);
               }}
               className="mu-select"
-              multiple
-              style={{ height: 'auto', minHeight: 'auto' }}
+              required
             >
               <option value="" disabled>Selecione o tipo de movimento</option>
               {TAG_OPTIONS.map((t) => (
