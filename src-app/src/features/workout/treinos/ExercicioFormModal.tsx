@@ -321,37 +321,46 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
           </div>
 
           <div className="form-group">
-            <label>Grupo Muscular *</label>
-            <input type="hidden" id="inputGrupo" value={grupo} required />
-            <div className="tags-selector" id="inputGrupoChips" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <label htmlFor="inputGrupo">Grupo Muscular *</label>
+            <select
+              id="inputGrupo"
+              value={grupo}
+              onChange={(e) => setGrupo(e.target.value)}
+              className="mu-select"
+              required
+            >
+              <option value="" disabled>Selecione o grupo muscular</option>
               {GRUPO_CHIPS.map((chip) => (
-                <label className="tag-chip" key={chip.value}>
-                  <input
-                    type="radio"
-                    name="grupoMuscularRadio"
-                    value={chip.value}
-                    checked={grupo === chip.value}
-                    onChange={() => setGrupo(chip.value)}
-                  />
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    {chip.icon}
-                    {chip.label}
-                  </span>
-                </label>
+                <option key={chip.value} value={chip.value}>
+                  {chip.label}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           <div className="form-group">
-            <label>Tipo de Movimento / Foco (Tags)</label>
-            <div className="tags-selector" id="inputTags">
+            <label htmlFor="inputTipoMovimento">Tipo de Movimento / Foco</label>
+            <select
+              id="inputTipoMovimento"
+              value={tags.join(' ')}
+              onChange={(e) => {
+                const selected = e.target.value
+                  .split(' ')
+                  .filter((v) => v !== '')
+                  .map((v) => v as ExerciseTag);
+                setTags(selected);
+              }}
+              className="mu-select"
+              multiple
+              style={{ height: 'auto', minHeight: 'auto' }}
+            >
+              <option value="" disabled>Selecione o tipo de movimento</option>
               {TAG_OPTIONS.map((t) => (
-                <label className="tag-chip" key={t.value}>
-                  <input type="checkbox" value={t.value} checked={tags.includes(t.value)} onChange={() => toggleTag(t.value)} />
-                  <span>{t.label}</span>
-                </label>
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           <div className="form-group" style={{ marginTop: 20, marginBottom: 20 }}>
