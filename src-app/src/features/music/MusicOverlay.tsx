@@ -493,7 +493,7 @@ function HomeView({
   onOpenMenu: (id: string) => void;
   activePlaylistId: string | null;
 }) {
-  const { tracks, externalTracks, playlists, pinnedQuick, togglePin } = useLibraryStore();
+  const { tracks, externalTracks, playlists, pinnedQuick, togglePin, removeTrack } = useLibraryStore();
   const [picking, setPicking] = useState(false);
 
   /* v4.22.0 — "playlist oculta" da aba Início: tocar qualquer música daqui
@@ -637,6 +637,7 @@ function HomeView({
               isPinned={pinnedQuick.includes(pinTrackKey(t.id))}
               onTogglePin={() => togglePin(pinTrackKey(t.id))}
               onPlay={() => playFromHome(`ui-${t.id}`)}
+              onRemove={() => removeTrack(t.id)}
             />
           ))}
           {externalTracks.map((t) => {
@@ -823,6 +824,7 @@ function UploadRow({
   onTogglePin?: () => void;
   /** v4.22.0 — na aba Início a fila oculta assume o clique (padrão: faixa isolada). */
   onPlay?: () => void;
+  onRemove?: () => void;
 }) {
   return (
     <li className="mu-row">
@@ -1025,7 +1027,7 @@ function PlaylistDetail({
   onSetWorkout: (on: boolean) => void;
   onOpenMenu: () => void;
 }) {
-  const { tracks, externalTracks, removeItem, addUploadToPlaylist, addExternalLinkToPlaylist, addExternalTrackToPlaylist, expandExternalItem } =
+  const { tracks, externalTracks, removeItem, addUploadToPlaylist, addExternalLinkToPlaylist, addExternalTrackToPlaylist, removeTrack, expandExternalItem } =
     useLibraryStore();
   const [adding, setAdding] = useState(false);
   const [link, setLink] = useState('');
