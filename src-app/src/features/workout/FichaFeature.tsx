@@ -545,6 +545,10 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   const completedCbRef = useRef(onWorkoutCompleted);
   completedCbRef.current = onWorkoutCompleted;
   useEffect(() => {
+    if (entry?.completed) {
+      wasDoneRef.current = true;
+      return undefined;
+    }
     if (isDone && !wasDoneRef.current) {
       wasDoneRef.current = true;
       if (focusOpen) return undefined;

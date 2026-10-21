@@ -1016,6 +1016,7 @@ export function initAudioEngine(): void {
 
   // Autoplay do ambiente: tenta direto (pode ser permitido); senão, gesto.
   if (isMusicEnabled()) {
+    void loadYtApi();
     void playSite('main');
     // v4.28 — arma o gesto JÁ no boot. Um resume() pedido FORA de um gesto
     // pode ficar pendente no Chrome; sem isto a trilha só começava quando
@@ -1084,11 +1085,40 @@ export function playQueueAt(index: number): void {
 }
 
 /** Toca uma playlist específica na interface (não mexe no contexto do treino). */
+export /** Expande containers de playlist/álbum quando a lista pertence a uma playlist salva. */
+async function expandContainersIfNeeded(items: PlaylistItem[]): Promise<PlaylistItem[]> {
+  const lib = useLibraryStore.getState();
+  const playlist = lib.playlists.find(
+    (p) => items.length > 0 && items.every((it) => p.items.some((pi) => pi.id === it.id)),
+  );
+  if (!playlist || items.length !== playlist.items.length) return items;
+
+  const sameOrder = items.every((it, i) => it.id === playlist.items[i]?.id);
+  let current = playlist;
+  let changed = false;
+  while (current.items.some(isExternalPlaylistItem)) {
+    const container = current.items.find(isExternalPlaylistItem);
+    if (!container) break;
+    const result = await useLibraryStore.getState().expandExternalItem(current.id, container.id);
+    const updated = useLibraryStore.getState().playlists.find((p) => p.id === current.id);
+    if (!updated) break;
+    const stillContainer = updated.items.some((it) => it.id === container.id);
+    if (result.added > 0 || !stillContainer) changed = true;
+    current = updated;
+    if (stillContainer) break;
+  }
+  if (!changed || current.items.length === 0) return items;
+  return sameOrder ? current.items : [...current.items].sort(() => Math.random() - 0.5);
+}
+
 export async function playPlaylistFromUi(
   items: PlaylistItem[],
   startIndex = 0,
 ): Promise<boolean> {
-  const playable = items
+  // Expande containers de playlist/álbum quando a lista pertence a uma playlist
+  // salva, para que as faixas individuais entrem na fila.
+  const expandedItems = await expandContainersIfNeeded(items);
+  const playable = expandedItems
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => isPlayableItem(item));
   if (playable.length === 0) return false;
