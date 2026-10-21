@@ -20,6 +20,7 @@ import {
   today,
   todayLabel,
 } from '@/core/db/queries';
+import { averageLoadKg, effectiveLoadKg } from '@/lib/suggested-load';
 import { shareNative } from '@/lib/native-share';
 import { useShareStore } from './share-store';
 import { useRadarMode } from './useRadarFit';
@@ -115,9 +116,7 @@ export function ShareModal() {
     const exercicios = pickExercises(fichaIds, getExerciseMap(exercises));
     const streak = getStreak(history);
 
-    const cargas = exercicios.map((ex) =>
-      parseFloat(String(ex.load).replace(/[^\d.,]/g, '').replace(',', '.')) || 0
-    );
+    const cargas = exercicios.map((ex) => effectiveLoadKg(ex));
     const exStats: ExStat[] = exercicios.map((ex, i) => {
       const s = Number(ex.sets) || 0;
       const r = Number(ex.reps) || 0;
@@ -126,9 +125,8 @@ export function ShareModal() {
       return { name: ex.name, vol: s * r * loadVal * multi, carga: formatCarga(ex) };
     });
     const totalVol = exStats.reduce((acc, x) => acc + x.vol, 0);
-    const totalCarga = cargas.reduce((acc, x) => acc + x, 0);
 
-    const avgVol = exercicios.length ? (totalCarga / exercicios.length).toFixed(1) : '0.0';
+    const avgVol = averageLoadKg(exercicios).toFixed(1);
     const highlights = [...exStats].sort((a, b) => b.vol - a.vol).slice(0, 3);
     const histHoje = history.find((h) => h.date === today());
     const durStr = histHoje?.durationMin ? formatSeconds(histHoje.durationMin * 60) : '--';
@@ -182,16 +180,26 @@ export function ShareModal() {
     if (busy) return;
     setBusy('download');
     try {
-      const canvas = await ensureCanvas();
-      if (!canvas) return;
+      let file = canvasFileRef.current;
+      if (!file) {
+        const canvas = await ensureCanvas();
+        if (!canvas) return;
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, 'image/jpeg', 0.9)
+        );
+        if (!blob) throw new Error('canvas sem blob');
+        file = new File([blob], `meu-${activeCardName(kind)}-${today()}.jpg`, { type: 'image/jpeg' });
+        canvasFileRef.current = file;
+      }
       const link = document.createElement('a');
-      link.download = `meu-${activeCardName(kind)}-${today()}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.9);
+      link.download = file.name;
+      link.href = URL.createObjectURL(file);
       link.click();
+      window.setTimeout(() => URL.revokeObjectURL(link.href), 30000);
       showToast('Imagem gerada com sucesso! Confira seus downloads.', 'success');
     } catch (err) {
-      console.error(err);
-      showToast('Erro ao gerar imagem. Tente tirar um print.', 'error');
+      console.warn('[download]', err);
+      showToast('Não foi possível gerar a imagem.', 'error');
     } finally {
       setBusy(null);
     }

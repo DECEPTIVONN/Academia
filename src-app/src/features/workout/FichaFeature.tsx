@@ -346,24 +346,8 @@ const FichaCardioCard: React.FC<CardioProps> = ({
     data-id={aeId}
     style={{ '--item-index': index } as React.CSSProperties}
   >
-    <div className="ae-card-header">
-      <div className="ae-icon">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          width={20}
-          height={20}
-        >
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-        </svg>
-      </div>
-      <div className="ae-label">CARDIO</div>
-    </div>
     <div className="ex-card-body">
+      <div className="ae-card-label">CARDIO</div>
       <div className="ae-card-type">{tipo}</div>
       <div className="ae-card-stats">
         <div className="ae-stat-box">
@@ -414,8 +398,8 @@ const FichaCardioRow: React.FC<CardioProps> = ({
       </div>
     </td>
     <td>
+      <span className="ae-table-label">CARDIO</span>{' '}
       <span className="ae-table-type">{tipo}</span>
-      <span className="ae-table-label">AERÓBICO</span>
     </td>
     <td colSpan={2}>
       <div className="ae-table-stats">

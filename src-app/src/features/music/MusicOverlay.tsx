@@ -886,7 +886,7 @@ function PlaylistsView({
       </button>
 
       {creating && (
-        <div className="mu-modal" onClick={() => setCreating(false)} style={{ paddingBottom: kbInset }}>
+        <div className="mu-modal" onClick={() => setCreating(false)} style={{ paddingBottom: kbInset, alignItems: 'flex-start', paddingTop: '12vh' }}>
           <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
             <h4 className="mu-modal__title">Criar Playlist</h4>
             <input

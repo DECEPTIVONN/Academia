@@ -25,6 +25,7 @@ import { useTodayEntryStore } from '@/store/today-entry-store';
 import { useWorkoutStore } from '@/store/workout-store';
 import { trackMaestriaSessoes } from '@/features/gamification/maestria';
 import { useShareStore } from '@/features/gamification/share-store';
+import { averageLoadKg } from '@/lib/suggested-load';
 
 /** Espelha `launchConfetti` (secao-ficha.js L539–557). */
 function launchConfetti(): void {
@@ -74,12 +75,7 @@ export function ConclusaoModal({ open, onClose, onShare }: ConclusaoModalProps) 
     const exercicios = pickExercises(fichaIds, getExerciseMap(exercises));
     const grupos = [...new Set(exercicios.map((e) => e.muscleGroup))];
     const totalSeries = exercicios.reduce((sum, e) => sum + (Number(e.sets) || 0), 0);
-    const totalCarga = exercicios.reduce(
-      (sum, ex) =>
-        sum + (parseFloat(String(ex.load).replace(/[^\d.,]/g, '').replace(',', '.')) || 0),
-      0
-    );
-    const avgVol = exercicios.length ? (totalCarga / exercicios.length).toFixed(1) : '0.0';
+    const avgVol = averageLoadKg(exercicios).toFixed(1);
 
     const totalWorkouts = history.filter((h) => h.completed).length;
     const streak = getStreak(history);
