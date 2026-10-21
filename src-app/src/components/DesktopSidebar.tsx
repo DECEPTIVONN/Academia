@@ -169,6 +169,32 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
             <span className="side-hud__label-main">Buscar</span>
           </span>
         </button>
+        {(['dashboard', 'treinos'] as const).map((id) => {
+          const item = NavSectionItems.find((x) => x.id === id);
+          if (!item) return null;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={
+                item.id === activeSection
+                  ? 'side-hud__item side-hud__item--active'
+                  : 'side-hud__item'
+              }
+              onClick={() => onSelectSection(item.id)}
+              aria-current={item.id === activeSection ? 'page' : undefined}
+              title={item.label}
+            >
+              <span className="side-hud__icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span className="side-hud__label">
+                <span className="side-hud__label-main">{item.label}</span>
+                <span className="side-hud__label-desc">{item.desc}</span>
+              </span>
+            </button>
+          );
+        })}
         {/* v4.21.0 — atalho Músicas e Playlists */}
         <button
           type="button"
@@ -184,7 +210,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
             <span className="side-hud__label-desc">Playlists e trilhas</span>
           </span>
         </button>
-        {NavSectionItems.map((item) => (
+        {NavSectionItems.filter((item) => item.id !== 'dashboard' && item.id !== 'treinos').map((item) => (
           <button
             key={item.id}
             type="button"
@@ -252,13 +278,6 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           <span className="side-hud__util-label">
             {isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
           </span>
-        </button>
-
-        <button type="button" className="side-hud__util" onClick={onLockApp} title="Trancar o app agora">
-          <span className="side-hud__util-icon" aria-hidden="true">
-            {SvgLock}
-          </span>
-          <span className="side-hud__util-label">Trancar</span>
         </button>
 
         <div className="side-hud__foot">EVO FIT · v4.6</div>

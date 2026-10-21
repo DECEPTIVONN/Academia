@@ -240,6 +240,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
   const [menu, setMenu] = useState<{ letter: SheetKey; view: DeckView; idx: number } | null>(null);
   const menuIdx = menu && menu.letter === deckLetter && menu.view === deckView ? menu.idx : null;
   const tplLock = useRef(false);
+  const [confirmTemplateKey, setConfirmTemplateKey] = useState<string | null>(null);
   const activeGridRef = useRef<HTMLDivElement>(null);
   const collectionGridRef = useRef<HTMLDivElement>(null);
 
@@ -407,8 +408,15 @@ export const MontarTab: React.FC<MontarTabProps> = ({
   };
 
   /* ── Templates com lock 500ms (app.js L395–405) ── */
-  const onTemplate = async (key: string) => {
+  const onTemplate = (key: string) => {
     if (tplLock.current) return;
+    setConfirmTemplateKey(key);
+  };
+
+  const applyConfirmedTemplate = async () => {
+    if (!confirmTemplateKey) return;
+    const key = confirmTemplateKey;
+    setConfirmTemplateKey(null);
     tplLock.current = true;
     window.setTimeout(() => {
       tplLock.current = false;
@@ -874,6 +882,13 @@ export const MontarTab: React.FC<MontarTabProps> = ({
         msg={`A ficha ${deckLetter} será limpa e removida da lista.`}
         onYes={() => void confirmDeleteSheetNow()}
         onNo={() => setConfirmDeleteSheet(false)}
+      />
+      <ConfirmModal
+        open={confirmTemplateKey !== null}
+        title="Alterar ficha?"
+        msg="Deseja realmente alterar a ficha com o modelo selecionado? As alterações atuais serão substituídas."
+        onYes={() => void applyConfirmedTemplate()}
+        onNo={() => setConfirmTemplateKey(null)}
       />
     </>
   );

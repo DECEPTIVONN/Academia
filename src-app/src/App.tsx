@@ -4,6 +4,9 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AuthProvider } from '@/core/auth/auth-context';
+import { useAuth } from '@/core/auth/use-auth';
+import { useProfileState } from '@/features/profile/useProfileState';
+import { OnboardingScreen } from '@/features/auth/OnboardingScreen';
 import { DashboardFeature } from '@/features/dashboard/DashboardFeature';
 import { TreinosFeature } from '@/features/workout/treinos/TreinosFeature';
 import { FichaFeature } from '@/features/workout/FichaFeature';
@@ -904,6 +907,7 @@ export function App() {
               AuthModal renderiza a AuthScreen full-screen (z-index 1150,
               abaixo do LockScreen 1200). */}
           <AuthModal />
+          <OnboardingGate />
           <RemoteSyncToast />
 
           {/* ====== INTERFACE DE MÚSICAS E PLAYLISTS (v4.19.0-music) ======
@@ -926,6 +930,21 @@ export function App() {
       </div>
     </AuthProvider>
   );
+}
+
+function OnboardingGate() {
+  const { user } = useAuth();
+  const { state, loading } = useProfileState();
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (user && !loading && state && !state.customization?.onboarded) {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }, [user, loading, state]);
+  if (!user || loading || !state) return null;
+  return <OnboardingScreen open={open} onComplete={() => setOpen(false)} />;
 }
 
 export default App;

@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/core/auth/use-auth';
 import { isSupabaseConfigured } from '@/core/supabase';
+import { isUsernameAvailable } from '@/core/auth/profiles';
 import { DEFAULT_SYNC_KEY, getSyncKey, setSyncKey } from '@/core/sync/supabase-client';
 import { showToast } from '@/lib/toast';
 import { useAuthModalStore } from './auth-modal-store';
@@ -466,6 +467,11 @@ export function AuthScreen() {
     }
     if (password.length < 6) {
       setErrorMsg('A senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+    const available = await isUsernameAvailable(clean);
+    if (!available) {
+      setErrorMsg('Este nome de usuário já está em uso.');
       return;
     }
     setLoading('signup');

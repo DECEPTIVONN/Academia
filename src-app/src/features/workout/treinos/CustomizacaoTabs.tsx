@@ -488,6 +488,17 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
                     onClick={() => pickTimerSkin(s.key, unlocked)}
                   >
                     {!unlocked && LOCK_SVG_SM}
+                    <div className={`timer-skin-preview timer-skin-preview--${s.key}`} aria-hidden="true">
+                      {s.key === 'radar' && <div className="timer-radar" style={{ width: 44, height: 44 }} />}
+                      {s.key === 'hourglass' && (
+                        <div className="timer-hourglass" style={{ width: 44, height: 44 }}>
+                          <span>0:30</span>
+                        </div>
+                      )}
+                      {(s.key === 'cyber' || s.key === 'arcade') && (
+                        <div className="timer-skin-preview__fallback">{s.key === 'cyber' ? '00:30' : '0:30'}</div>
+                      )}
+                    </div>
                     <div style={{ fontWeight: 700, fontSize: '0.8rem', textAlign: 'center' }}>{s.nome}</div>
                     {!unlocked && <span className="bar-skin-option__hint">{s.hint}</span>}
                   </div>

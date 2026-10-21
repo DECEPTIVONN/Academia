@@ -268,6 +268,13 @@ export interface ProfileCustomization {
   since?: string;
   /** v4.9.3-settings — URL ou data-URL da foto de perfil customizada */
   photo?: string;
+  /** v4.41.x — onboarding opcional */
+  age?: number;
+  weightKg?: number;
+  activityDurationValue?: number;
+  activityDurationUnit?: 'weeks' | 'months' | 'years';
+  onboarded?: boolean;
+  onboardingObjective?: string;
 }
 
 /** Conquista gravada em `db.conquistas` — string (id fixo) ou objeto datado. */
