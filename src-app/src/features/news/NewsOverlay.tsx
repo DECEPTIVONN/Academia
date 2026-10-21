@@ -258,7 +258,7 @@ function NewsCard({ index, isFirst, onOpen }: { index: number; isFirst: boolean;
     >
       <div className="aspect-video w-full relative premium-placeholder flex items-center justify-center">
         <div className="flex flex-col items-center gap-2 relative z-10 float-animation">
-          <span className="material-symbols-outlined text-primary/60 text-7xl" style={{ fontVariationSettings: '"FILL" 1' }}>
+          <span className="material-symbols-outlined text-primary/60 text-8xl" style={{ fontVariationSettings: '"FILL" 1' }}>
             {card.icon}
           </span>
           {isFirst && <p className="font-headline-md text-primary/60 text-xs tracking-widest uppercase">Notícias</p>}
@@ -283,8 +283,8 @@ function UpdateCard({ index, onOpen }: { index: number; onOpen: () => void }) {
       onClick={onOpen}
     >
       <div className="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
-        <div className="w-16 h-16 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
-          <span className="material-symbols-outlined text-primary text-3xl">{card.icon}</span>
+        <div className="w-20 h-20 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+          <span className="material-symbols-outlined text-primary text-4xl">{card.icon}</span>
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">{card.label}</p>
@@ -598,7 +598,7 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
         </header>
 
         {/* Main Content Area */}
-        <main className="pt-24 relative arena-bg">
+        <main className="pt-28 relative arena-bg">
           <div className="max-w-lg mx-auto w-full px-4">
             {/* Noticias Section */}
                         <section className={`tab-content space-y-6${tab === 'noticias' ? ' active' : ''}`} id="noticias">
@@ -647,7 +647,7 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
         </main>
 
         {/* Footer */}
-        <div id="news-footer-container" className="max-h-20 overflow-hidden" dangerouslySetInnerHTML={{ __html: FOOTER_HTML }} />
+        <div id="news-footer-container" dangerouslySetInnerHTML={{ __html: FOOTER_HTML }} />
       </div>
 
       {/* Detail Views */}
