@@ -258,7 +258,7 @@ function NewsCard({ index, isFirst, onOpen }: { index: number; isFirst: boolean;
     >
       <div className="aspect-video w-full relative premium-placeholder flex items-center justify-center">
         <div className="flex flex-col items-center gap-2 relative z-10 float-animation">
-          <span className="material-symbols-outlined text-primary/60 text-6xl" style={{ fontVariationSettings: '"FILL" 1' }}>
+          <span className="material-symbols-outlined text-primary/60 text-7xl" style={{ fontVariationSettings: '"FILL" 1' }}>
             {card.icon}
           </span>
           {isFirst && <p className="font-headline-md text-primary/60 text-xs tracking-widest uppercase">Notícias</p>}
@@ -283,8 +283,8 @@ function UpdateCard({ index, onOpen }: { index: number; onOpen: () => void }) {
       onClick={onOpen}
     >
       <div className="p-6 flex items-center gap-4 premium-placeholder overflow-hidden">
-        <div className="w-12 h-12 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
-          <span className="material-symbols-outlined text-primary text-2xl">{card.icon}</span>
+        <div className="w-16 h-16 flex-none flex items-center justify-center bg-primary/10 rounded-lg">
+          <span className="material-symbols-outlined text-primary text-3xl">{card.icon}</span>
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-label-caps text-neon-purple-glow text-[10px] mb-1 uppercase tracking-tighter">{card.label}</p>
@@ -335,8 +335,8 @@ function DetailPane({ kind, active, fading, index, onBack, onClose, onPrev, onNe
         </div>
       </header>
 
-      <main className="pt-24 flex flex-col min-h-screen arena-bg">
-        <div className="max-w-lg mx-auto w-full px-2 flex-1 flex flex-col">
+      <main className="pt-20 flex flex-col min-h-screen arena-bg">
+        <div className="max-w-2xl mx-auto w-full px-2 flex-1 flex flex-col">
           <div
             className="glass-card rounded-xl overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-deep-void/60 flex-grow"
             style={{
@@ -379,7 +379,7 @@ function DetailPane({ kind, active, fading, index, onBack, onClose, onPrev, onNe
               </div>
             </div>
 
-            <div className="px-6 md:px-12 py-8 space-y-10 flex-grow flex flex-col">
+            <div className="px-8 md:px-16 py-10 space-y-12 flex-grow flex flex-col">
               <section
                 className={`space-y-4 flex-grow ${isNews ? 'news-content' : 'update-content'}`}
                 dangerouslySetInnerHTML={{ __html: item.content }}
@@ -404,7 +404,7 @@ function DetailPane({ kind, active, fading, index, onBack, onClose, onPrev, onNe
             </div>
           </div>
         </div>
-        <div className="detail-footer-wrap">
+        <div className="detail-footer-wrap max-h-24 overflow-hidden">
           <div id={`${kind}-detail-footer-container`} dangerouslySetInnerHTML={{ __html: FOOTER_HTML }} />
         </div>
       </main>
@@ -603,7 +603,7 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
         </header>
 
         {/* Main Content Area */}
-        <main className="pt-24 relative arena-bg">
+        <main className="pt-20 relative arena-bg">
           <div className="max-w-lg mx-auto w-full px-4">
             {/* Noticias Section */}
                         <section className={`tab-content space-y-6${tab === 'noticias' ? ' active' : ''}`} id="noticias">
@@ -615,7 +615,7 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
                 <div className="flex justify-center mt-6">
                   <button
                     type="button"
-                    className="btn-show-more px-12 py-3 rounded-full bg-surface-container-highest/80 border border-card-border backdrop-blur-md font-label-caps text-white tracking-widest hover:bg-primary hover:text-deep-void transition-all duration-300 active:scale-95 shadow-xl"
+                    className="btn-show-more px-12 py-3 rounded-full bg-surface-container-highest/80 backdrop-blur-md font-label-caps text-white tracking-widest hover:bg-primary hover:text-deep-void transition-all duration-300 active:scale-95 shadow-xl"
                     onClick={() => setShowAllNews(true)}
                   >
                     MOSTRAR MAIS
@@ -634,7 +634,7 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
                 <div className="flex justify-center mt-6">
                   <button
                     type="button"
-                    className="btn-show-more px-12 py-3 rounded-full bg-surface-container-highest/80 border border-card-border backdrop-blur-md font-label-caps text-white tracking-widest hover:bg-primary hover:text-deep-void transition-all duration-300 active:scale-95 shadow-xl"
+                    className="btn-show-more px-12 py-3 rounded-full bg-surface-container-highest/80 backdrop-blur-md font-label-caps text-white tracking-widest hover:bg-primary hover:text-deep-void transition-all duration-300 active:scale-95 shadow-xl"
                     onClick={() => setShowAllUpdates(true)}
                   >
                     MOSTRAR MAIS
