@@ -493,7 +493,7 @@ function HomeView({
   onOpenMenu: (id: string) => void;
   activePlaylistId: string | null;
 }) {
-  const { tracks, playlists, pinnedQuick, togglePin } = useLibraryStore();
+  const { tracks, externalTracks, playlists, pinnedQuick, togglePin } = useLibraryStore();
   const [picking, setPicking] = useState(false);
 
   /* v4.22.0 — "playlist oculta" da aba Início: tocar qualquer música daqui
@@ -513,8 +513,19 @@ function HomeView({
         trackId: t.id,
         title: t.name,
       })),
+      /* v4.42.0 — links individuais do YouTube também entram na fila oculta. */
+      ...externalTracks.map((t) => ({
+        id: `ui-ext-${t.id}`,
+        kind: 'youtube' as const,
+        refId: t.refId,
+        refType: 'video' as const,
+        title: t.title,
+        artist: t.artist,
+        thumbnail: t.thumbnail,
+        durationSec: t.durationSec,
+      })),
     ],
-    [tracks],
+    [tracks, externalTracks],
   );
 
   const playFromHome = (uiId: string) => {
@@ -628,7 +639,31 @@ function HomeView({
               onPlay={() => playFromHome(`ui-${t.id}`)}
             />
           ))}
-          {tracks.length === 0 && (
+          {externalTracks.map((t) => {
+            const uiId = `ui-ext-${t.id}`;
+            const sub = [t.artist || 'YouTube', t.durationSec ? formatDur(t.durationSec) : '']
+              .filter(Boolean)
+              .join(' • ');
+            return (
+              <li key={t.id} className="mu-row">
+                <button
+                  type="button"
+                  className="mu-row__main"
+                  onClick={() => playFromHome(uiId)}
+                  title="Tocar a partir desta faixa"
+                >
+                  <div className={`mu-row__art ${t.thumbnail ? 'mu-row__art--thumb' : 'mu-row__art--user'}`}>
+                    {t.thumbnail ? <img src={t.thumbnail} alt="" loading="lazy" /> : <Youtube size={16} />}
+                  </div>
+                  <div className="mu-row__meta">
+                    <span className="mu-row__title">{t.title}</span>
+                    <span className="mu-row__sub">{sub}</span>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+          {tracks.length === 0 && externalTracks.length === 0 && (
             <li className="mu-note">
               Envie suas próprias músicas na aba Biblioteca para montar playlists de treino.
             </li>

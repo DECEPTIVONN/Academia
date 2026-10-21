@@ -170,6 +170,12 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
   );
   const [anotacoes, setAnotacoes] = useState(() => editEx?.notes ?? '');
   const [imagem, setImagem] = useState<string | null>(() => editEx?.imageUrl ?? null);
+  /* Garante que as anotações do exercício em edição sejam exibidas (o estado
+     inicial via useState só roda no mount; ao reabrir/editar outro item o
+     valor pode ficar stale). */
+  useEffect(() => {
+    setAnotacoes(editEx?.notes ?? '');
+  }, [editEx?.id, editEx?.notes]);
   const fileRef = useRef<HTMLInputElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 

@@ -52,6 +52,7 @@ import {
   isExternalPlaylistItem,
   loadAudioBlob,
   useLibraryStore,
+  type Playlist,
   type PlaylistItem,
   type SiteTrackId,
 } from '@/features/music/media-store';
@@ -325,6 +326,8 @@ let currentObjectUrl: string | null = null;
 /* YouTube IFrame API (lazy) */
 let ytReady: Promise<void> | null = null;
 let ytPlayer: YTPlayerLike | null = null;
+let ytPlayerReady = false;
+let ytPlayerPromise: Promise<YTPlayerLike> | null = null;
 let ytPendingRef: string | null = null;
 
 declare global {
@@ -637,46 +640,81 @@ function isPlayableItem(it: PlaylistItem): boolean {
 }
 
 async function startUserQueue(items: PlaylistItem[]): Promise<void> {
-  // v4.41.0 — expande containers de playlist/álbum (YouTube/Spotify) do
-  // playlist ativa antes de montar a fila, para que as faixas individuais
-  // apareçam no player do treino. Se a API falhar, o container segue válido.
-  let resolvedItems = items;
+  const playable = items.filter(isPlayableItem);
+  if (playable.length === 0) {
+    // Playlist só com Spotify (ou vazia) → cai na regra do site.
+    if (workoutMusicEnabled()) void playSite('workout');
+    return;
+  }
+
+  queue = playable;
+  queueIndex = 0;
+  context = 'workout-user';
+
+  /* v4.42.0 — toca a 1ª faixa imediatamente. Antes, containers externos de
+     YouTube/Spotify eram expandidos (com chamadas de rede) ANTES de montar a
+     fila, e isso segurava o início da playlist do treino por vários segundos.
+     A expansão agora roda em segundo plano e só atualiza a fila no final. */
+  const started = playQueueIndex(0);
+
   const lib = useLibraryStore.getState();
   const activeId = lib.activePlaylistId;
   const playlist = activeId ? lib.playlists.find((p) => p.id === activeId) : undefined;
-  if (
-    playlist &&
-    items.length > 0 &&
+  const isActivePlaylist =
+    !!playlist &&
     items.length === playlist.items.length &&
-    items.every((it, i) => it.id === playlist.items[i]?.id)
-  ) {
-    let current = playlist;
+    items.every((it, i) => it.id === playlist.items[i]?.id) &&
+    playlist.items.some(isExternalPlaylistItem);
+  // Se a faixa inicial já é um container, tocar como playlist do YouTube/
+  // Spotify resolve; expandir em paralelo removeria o item em reprodução.
+  const firstIsContainer = isExternalPlaylistItem(queue[0]!);
+  if (isActivePlaylist && !firstIsContainer) {
+    void expandActivePlaylistInBackground(playlist.id);
+  }
+
+  await started;
+}
+
+/**
+ * v4.42.0 — expande containers da playlist ativa sem bloquear o play.
+ * Preserva a faixa que está tocando ao reconstruir a fila.
+ */
+async function expandActivePlaylistInBackground(playlistId: string): Promise<void> {
+  try {
+    const found = useLibraryStore.getState().playlists.find((p) => p.id === playlistId);
+    if (!found) return;
+    let current: Playlist = found;
     let changed = false;
     while (current.items.some(isExternalPlaylistItem)) {
       const container = current.items.find(isExternalPlaylistItem);
       if (!container) break;
+      const currentId = current.id;
       const result = await useLibraryStore
         .getState()
-        .expandExternalItem(current.id, container.id);
-      const updated = useLibraryStore.getState().playlists.find((p) => p.id === current.id);
+        .expandExternalItem(currentId, container.id);
+      const updated = useLibraryStore.getState().playlists.find((p) => p.id === currentId);
       if (!updated) break;
       const stillContainer = updated.items.some((it) => it.id === container.id);
       if (result.added > 0 || !stillContainer) changed = true;
       current = updated;
       if (stillContainer) break;
     }
-    if (changed && current.items.length > 0) resolvedItems = current.items;
-  }
+    if (!changed || context !== 'workout-user') return;
 
-  queue = resolvedItems.filter(isPlayableItem);
-  if (queue.length === 0) {
-    // Playlist só com Spotify (ou vazia) → cai na regra do site.
-    if (workoutMusicEnabled()) void playSite('workout');
-    return;
+    const playingItem = queue[queueIndex];
+    const nextQueue = current.items.filter(isPlayableItem);
+    if (nextQueue.length === 0) return;
+    queue = nextQueue;
+    if (playingItem) {
+      const idx = nextQueue.findIndex((it) => it.id === playingItem.id);
+      queueIndex = idx >= 0 ? idx : Math.min(queueIndex, nextQueue.length - 1);
+    } else {
+      queueIndex = 0;
+    }
+    emitState();
+  } catch {
+    /* Falha na API: mantém a fila como está. */
   }
-  queueIndex = 0;
-  context = 'workout-user';
-  await playQueueIndex(queueIndex);
 }
 
 async function playQueueIndex(index: number): Promise<void> {
@@ -825,31 +863,8 @@ function loadYtApi(): Promise<void> {
 
 async function playYouTube(refId: string, isPlaylist: boolean): Promise<void> {
   ytPendingRef = refId;
-  await loadYtApi();
+  await ensureYtPlayer();
   if (ytPendingRef !== refId) return; // contexto trocou durante o load
-
-  if (!ytPlayer) {
-    const host = document.createElement('div');
-    host.style.cssText =
-      'position:fixed;width:1px;height:1px;opacity:0.01;pointer-events:none;left:-10px;bottom:-10px;z-index:-1;';
-    host.id = 'academia-yt-host';
-    document.body.appendChild(host);
-    await new Promise<void>((resolve) => {
-      ytPlayer = new window.YT!.Player(host, {
-        height: '1',
-        width: '1',
-        playerVars: { autoplay: 1, controls: 0, playsinline: 1 },
-        events: {
-          onReady: () => resolve(),
-          onStateChange: (e: YTStateEvent) => {
-            if (e.data === window.YT?.PlayerState?.ENDED && context === 'workout-user') {
-              advanceUserQueue();
-            }
-          },
-        },
-      });
-    });
-  }
 
   const p = ytPlayer as YTPlayerLike;
   if (isPlaylist) p.loadPlaylist({ list: refId, listType: 'playlist', index: 0 });
@@ -858,6 +873,64 @@ async function playYouTube(refId: string, isPlaylist: boolean): Promise<void> {
   playing = true;
   disarmGestures();
   emitState();
+}
+
+/** Cria (uma única vez) o player oculto do YouTube. */
+function createYtPlayer(): Promise<YTPlayerLike> {
+  if (ytPlayerPromise) return ytPlayerPromise;
+  const host = document.createElement('div');
+  host.style.cssText =
+    'position:fixed;width:1px;height:1px;opacity:0.01;pointer-events:none;left:-10px;bottom:-10px;z-index:-1;';
+  host.id = 'academia-yt-host';
+  document.body.appendChild(host);
+  ytPlayerPromise = new Promise<YTPlayerLike>((resolve) => {
+    ytPlayer = new window.YT!.Player(host, {
+      height: '1',
+      width: '1',
+      playerVars: { autoplay: 1, controls: 0, playsinline: 1 },
+      events: {
+        onReady: () => {
+          ytPlayerReady = true;
+          resolve(ytPlayer!);
+        },
+        onStateChange: (e: YTStateEvent) => {
+          if (e.data === window.YT?.PlayerState?.ENDED && context === 'workout-user') {
+            advanceUserQueue();
+          }
+        },
+      },
+    });
+  });
+  return ytPlayerPromise;
+}
+
+async function ensureYtPlayer(): Promise<YTPlayerLike> {
+  await loadYtApi();
+  if (ytPlayer && ytPlayerReady) return ytPlayer;
+  return createYtPlayer();
+}
+
+/**
+ * v4.42.0 — monta o player do YouTube em segundo plano no boot. Antes ele só
+ * era criado ao tocar a 1ª faixa do YouTube, e a inicialização do iframe
+ * (~2–4s) atrasava o início da playlist do treino.
+ */
+function preloadYtPlayer(): void {
+  if (ytPlayer || ytPlayerPromise) return;
+  const start = () => {
+    if (ytPlayer || ytPlayerPromise) return;
+    void ensureYtPlayer().catch(() => {
+      /* sem rede/API: tenta de novo no primeiro play */
+    });
+  };
+  const ric = (window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  }).requestIdleCallback;
+  if (typeof ric === 'function') {
+    ric.call(window, start, { timeout: 2500 });
+  } else {
+    window.setTimeout(start, 1200);
+  }
 }
 
 function stopYt(): void {
@@ -1017,6 +1090,7 @@ export function initAudioEngine(): void {
   // Autoplay do ambiente: tenta direto (pode ser permitido); senão, gesto.
   if (isMusicEnabled()) {
     void loadYtApi();
+    preloadYtPlayer();
     void playSite('main');
     // v4.28 — arma o gesto JÁ no boot. Um resume() pedido FORA de um gesto
     // pode ficar pendente no Chrome; sem isto a trilha só começava quando

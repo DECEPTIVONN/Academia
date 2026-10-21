@@ -52,8 +52,14 @@ export function WorkoutNowPlayingBar() {
 
   return (
     <>
-      {queueOpen && hasQueue && (
-        <div className="wnp-queue" role="region" aria-label="Fila do treino">
+      {hasQueue && (
+        <div
+          className={`wnp-queue${queueOpen ? ' wnp-queue--open' : ''}`}
+          role="region"
+          aria-label="Fila do treino"
+          aria-hidden={!queueOpen}
+          inert={!queueOpen}
+        >
           <div className="wnp-queue__head">
             <span>
               <ListMusic size={15} /> Fila do treino

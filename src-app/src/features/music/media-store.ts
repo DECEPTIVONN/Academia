@@ -595,12 +595,20 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     const fresh = candidates.filter((item) => !existing.has(externalItemKey(item)));
     const items = [...playlist.items, ...fresh];
 
+    // Músicas individuais do YouTube (link de vídeo) também entram em
+    // "Suas músicas", espelhando o comportamento dos uploads.
+    const isVideoRef = ref.kind === 'video' || source?.sourceType === 'video';
+    const singleVideo = kind === 'youtube' && isVideoRef;
+
     // Disponibiliza as faixas externas na biblioteca global (como músicas upadas),
     // para que possam ser adicionadas em qualquer playlist.
     let externalTracks = cur.externalTracks || [];
-    if (addToLibrary && kind === 'youtube' && source) {
+    if (addToLibrary && kind === 'youtube' && (source || isVideoRef)) {
+      const sourceTracks = source?.tracks ?? [
+        { refId: ref.id, refType: 'video' as const, title: title.trim() || 'Vídeo do YouTube' },
+      ];
       const existingExt = new Set(externalTracks.map((t) => t.refId));
-      const newExt = source.tracks
+      const newExt = sourceTracks
         .filter((t) => t.refId && !existingExt.has(t.refId))
         .map((t) => ({
           id: newId('ext'),
@@ -618,7 +626,18 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     const lib: MusicLibrary = {
       ...cur,
       externalTracks,
-      playlists: cur.playlists.map((p) => (p.id === playlistId ? { ...p, items } : p)),
+      playlists: cur.playlists.map((p) => {
+        if (p.id === playlistId) return { ...p, items };
+        // Músicas individuais do YouTube (vídeo) também aparecem em
+        // "Suas músicas" (espelha uploads).
+        if (singleVideo && addToLibrary && p.id === SUAS_MUSICAS_ID) {
+          const existingSuas = new Set(p.items.map(externalItemKey));
+          const toAdd = fresh.filter((it) => !existingSuas.has(externalItemKey(it)));
+          if (toAdd.length === 0) return p;
+          return { ...p, items: [...p.items, ...toAdd] };
+        }
+        return p;
+      }),
     };
     writeLibrary(lib);
     set(lib);

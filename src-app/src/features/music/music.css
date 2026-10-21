@@ -1126,6 +1126,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fmp { animation: none; }
+  .wnp-queue { transition: none; }
 }
 
 @keyframes gtPulse {
@@ -1300,20 +1301,43 @@
   color: #8a8a9c;
 }
 
-/* Fila do player do treino */
+/* Fila do player do treino — abre/fecha com transição suave (v4.42.0) */
 .wnp-queue {
   flex-shrink: 0;
   z-index: 5;
-  margin: 0 12px 8px;
-  padding: 8px;
-  max-height: min(42vh, 380px);
-  overflow-y: auto;
+  margin: 0 12px;
+  padding: 0 8px;
+  max-height: 0;
+  overflow: hidden;
   overscroll-behavior: contain;
   background: rgba(11, 11, 16, 0.97);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid transparent;
   border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0);
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  transform-origin: bottom center;
+  pointer-events: none;
+  transition:
+    max-height 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    margin 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease,
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s ease,
+    box-shadow 0.3s ease;
+}
+
+.wnp-queue--open {
+  max-height: min(42vh, 380px);
+  margin-bottom: 8px;
+  padding: 8px;
+  overflow-y: auto;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  border-color: rgba(255, 255, 255, 0.14);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-  animation: muSlideUp 0.2s ease;
+  pointer-events: auto;
 }
 
 .wnp-queue__head,
