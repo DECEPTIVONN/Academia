@@ -72,6 +72,17 @@ export function ShareModal() {
     return canvas;
   };
 
+  // Pré-renderiza o card quando o modal abre, para que handleShare não perca
+  // a ativação do usuário (gesto) aguardando renderização assíncrona.
+  useEffect(() => {
+    if (!show) return;
+    const card = document.getElementById(cardId);
+    if (!card || canvasRef.current) return;
+    void renderCanvas(card).then((canvas) => {
+      if (canvas) canvasRef.current = canvas;
+    });
+  }, [show]);
+
   const data = useMemo(
     () => ({ exercises, sheets, history, legacy }),
     [exercises, sheets, history, legacy]
