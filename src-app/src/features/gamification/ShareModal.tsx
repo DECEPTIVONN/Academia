@@ -61,6 +61,7 @@ export function ShareModal() {
      chamada e o SO recusava (daí o fallback "Compartilhamento não suportado").
      Agora o arquivo já está pronto e o share roda no próprio gesto. */
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasFileRef = useRef<File | null>(null);
   const cardId = (kind === 'conquista' ? 'shareCardBadge' : kind === 'radar' ? 'shareCardRadar' : 'shareCard');
 
   const ensureCanvas = async (): Promise<HTMLCanvasElement | null> => {
@@ -75,11 +76,29 @@ export function ShareModal() {
   // Pré-renderiza o card quando o modal abre, para que handleShare não perca
   // a ativação do usuário (gesto) aguardando renderização assíncrona.
   useEffect(() => {
-    if (!show) return;
+    if (!show) {
+      canvasFileRef.current = null;
+      return;
+    }
     const card = document.getElementById(cardId);
-    if (!card || canvasRef.current) return;
+    if (!card || canvasRef.current) {
+      if (canvasRef.current && !canvasFileRef.current) {
+        canvasRef.current.toBlob((blob) => {
+          if (!blob) return;
+          const fileName = `meu-${activeCardName(kind)}-${today()}.jpg`;
+          canvasFileRef.current = new File([blob], fileName, { type: 'image/jpeg' });
+        }, 'image/jpeg', 0.9);
+      }
+      return;
+    }
     void renderCanvas(card).then((canvas) => {
-      if (canvas) canvasRef.current = canvas;
+      if (!canvas) return;
+      canvasRef.current = canvas;
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const fileName = `meu-${activeCardName(kind)}-${today()}.jpg`;
+        canvasFileRef.current = new File([blob], fileName, { type: 'image/jpeg' });
+      }, 'image/jpeg', 0.9);
     });
   }, [show]);
 
@@ -183,20 +202,26 @@ export function ShareModal() {
     if (busy) return;
     setBusy('share');
     try {
-      const canvas = await ensureCanvas();
-      if (!canvas) return;
+      let file = canvasFileRef.current;
+      if (!file) {
+        const canvas = await ensureCanvas();
+        if (!canvas) return;
 
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, 'image/jpeg', 0.9)
-      );
-      if (!blob) throw new Error('canvas sem blob');
-      const fileName = `meu-${activeCardName(kind)}-${today()}.jpg`;
-      const file = new File([blob], fileName, { type: 'image/jpeg' });
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, 'image/jpeg', 0.9)
+        );
+        if (!blob) throw new Error('canvas sem blob');
+        const fileName = `meu-${activeCardName(kind)}-${today()}.jpg`;
+        file = new File([blob], fileName, { type: 'image/jpeg' });
+        canvasFileRef.current = file;
+      }
+
+      const fileName = file.name;
 
       const downloadImage = () => {
         const link = document.createElement('a');
         link.download = fileName;
-        link.href = URL.createObjectURL(blob);
+        link.href = URL.createObjectURL(file);
         link.click();
         window.setTimeout(() => URL.revokeObjectURL(link.href), 30000);
       };
@@ -204,6 +229,8 @@ export function ShareModal() {
       const fallbackDownloadAndCopy = () => {
         void (async () => {
           try {
+            const canvas = canvasRef.current;
+            if (!canvas) throw new Error('canvas sem blob');
             const pngBlob = await new Promise<Blob | null>((resolve) =>
               canvas.toBlob(resolve, 'image/png')
             );
