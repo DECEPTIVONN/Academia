@@ -478,6 +478,8 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   });
   const [now, setNow] = useState(() => Date.now());
   const [focusOpen, setFocusOpen] = useState(false);
+  const [noteEx, setNoteEx] = useState<Exercise | null>(null);
+  const [noteText, setNoteText] = useState('');
 
   /* Containers das views (display toggling, como o DOM legado) */
   const tableViewRef = useRef<HTMLDivElement>(null);
@@ -514,7 +516,9 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   /* v4.31.0 — cardio padrão de todo treino (10 min de esteira a 3 km/h): a
      linha de cardio aparece sempre que a ficha tem exercícios, com os valores
      configurados ou o padrão (`effectiveAerobic`). */
-  const hasAe = exercicios.length > 0 || Boolean(sheet?.aerobic?.tipo);
+  const hasAe =
+    (exercicios.length > 0 || Boolean(sheet?.aerobic?.tipo)) &&
+    sheet?.aerobic?.tipo !== 'Nenhum';
   const ae = effectiveAerobic(sheet?.aerobic);
   const aeId = `ae-${treino}`;
 
@@ -644,11 +648,16 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     setFocusOpen(true);
   };
 
-  const onEditNote = async (ex: Exercise) => {
-    const value = window.prompt('Anotação do exercício:', ex.notes ?? '');
-    if (value === null) return;
-    await idb.exercises.put({ ...ex, notes: value.trim() || undefined });
+  const onEditNote = (ex: Exercise) => {
+    setNoteEx(ex);
+    setNoteText(ex.notes ?? '');
+  };
+
+  const saveNote = async () => {
+    if (!noteEx) return;
+    await idb.exercises.put({ ...noteEx, notes: noteText.trim() || undefined });
     document.dispatchEvent(new Event('academia:db-ready'));
+    setNoteEx(null);
   };
 
   const changeView = (mode: ViewMode) => {
@@ -1063,6 +1072,34 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
         onClose={() => setFocusOpen(false)}
         onCompleted={onWorkoutCompleted}
       />
+
+      {noteEx && (
+        <div className="modal-overlay" style={{ display: 'flex' }}>
+          <div className="modal-form" style={{ maxWidth: 420 }}>
+            <div className="modal-form-header" style={{ marginBottom: 16 }}>
+              <h3>Anotações: {noteEx.name}</h3>
+              <button type="button" className="modal-close-btn" onClick={() => setNoteEx(null)} aria-label="Fechar">
+                ✕
+              </button>
+            </div>
+            <textarea
+              className="quick-note-input"
+              style={{ width: '100%', minHeight: 120 }}
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              placeholder="Digite suas anotações..."
+            />
+            <div className="modal-form-actions" style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn" onClick={() => setNoteEx(null)}>
+                Cancelar
+              </button>
+              <button type="button" className="btn btn-primary" onClick={() => void saveNote()}>
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

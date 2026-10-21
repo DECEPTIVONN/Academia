@@ -91,7 +91,8 @@ export const DEFAULT_AEROBIC: AerobicConfig = {
 /** Cardio efetivo de uma ficha: o configurado ou o padrão (`DEFAULT_AEROBIC`). */
 export function effectiveAerobic(
   aerobic: AerobicConfig | null | undefined
-): AerobicConfig {
+): AerobicConfig | null {
+  if (aerobic?.tipo === 'Nenhum') return null;
   return aerobic?.tipo ? aerobic : DEFAULT_AEROBIC;
 }
 

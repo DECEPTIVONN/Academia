@@ -258,7 +258,7 @@ function NewsCard({ index, isFirst, onOpen }: { index: number; isFirst: boolean;
     >
       <div className="aspect-video w-full relative premium-placeholder flex items-center justify-center">
         <div className="flex flex-col items-center gap-2 relative z-10 float-animation">
-          <span className="material-symbols-outlined text-primary/60 text-[120px]" style={{ fontVariationSettings: '"FILL" 1' }}>
+          <span className="material-symbols-outlined text-primary/60 text-[120px]" style={{ fontVariationSettings: '"FILL" 1', fontSize: '120px' }}>
             {card.icon}
           </span>
           {isFirst && <p className="font-headline-md text-primary/60 text-xs tracking-widest uppercase">Notícias</p>}

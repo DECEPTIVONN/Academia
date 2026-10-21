@@ -85,10 +85,20 @@ export interface UploadTrack {
   artist: string;
   addedAt: number;
   kind: 'upload';
-  /** v4.22.0 — duração em segundos (capturada no envio; ordenação "Maior duração"). */
   durationSec?: number;
-  /** v4.22.0 — quantas vezes a faixa começou a tocar (ordenar "Mais tocado"). */
   playCount?: number;
+}
+
+/** Faixa externa (YouTube) disponível na biblioteca global (v4.41.x). */
+export interface ExternalTrackItem {
+  id: string;
+  kind: 'youtube';
+  refId: string;
+  title: string;
+  artist?: string;
+  thumbnail?: string;
+  durationSec?: number;
+  addedAt: number;
 }
 
 export type SiteTrackId = 'main' | 'workout' | 'result' | 'missions';
@@ -131,6 +141,7 @@ export interface Playlist {
 
 export interface MusicLibrary {
   tracks: UploadTrack[];
+  externalTracks: ExternalTrackItem[];
   playlists: Playlist[];
   activePlaylistId: string | null;
   /* v4.21.0 — "Escolhas rápidas" = itens FIXADOS pelo usuário.
@@ -143,6 +154,7 @@ export interface MusicLibrary {
 
 const EMPTY_LIBRARY: MusicLibrary = {
   tracks: [],
+  externalTracks: [],
   playlists: [],
   activePlaylistId: null,
   pinnedQuick: [],
@@ -186,6 +198,7 @@ function readLibrary(): MusicLibrary {
     const parsed = JSON.parse(raw) as Partial<MusicLibrary>;
     return {
       tracks: Array.isArray(parsed.tracks) ? parsed.tracks : [],
+      externalTracks: Array.isArray(parsed.externalTracks) ? parsed.externalTracks : [],
       playlists: Array.isArray(parsed.playlists) ? parsed.playlists : [],
       activePlaylistId: parsed.activePlaylistId ?? null,
       pinnedQuick: Array.isArray(parsed.pinnedQuick) ? parsed.pinnedQuick : [],
@@ -309,6 +322,8 @@ interface LibraryState extends MusicLibrary {
     refId: string,
     title: string,
   ) => void;
+  addExternalTrackToPlaylist: (playlistId: string, trackId: string) => void;
+  removeExternalTrack: (trackId: string) => void;
   /**
    * v4.41.0 — resolve um link externo e persiste as faixas individuais.
    * Se a API/embed falhar, mantém o comportamento antigo: adiciona um
@@ -319,6 +334,7 @@ interface LibraryState extends MusicLibrary {
     kind: 'youtube' | 'spotify',
     ref: { kind: ExternalRefKind; id: string },
     title: string,
+    addToLibrary?: boolean,
   ) => Promise<ExternalLinkAddResult>;
   /** Converte um container antigo (YouTube playlist/Spotify playlist) em faixas. */
   expandExternalItem: (
@@ -557,7 +573,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   },
 
   /* v4.41.0 — link externo: tenta expandir em faixas; se falhar, container. */
-  addExternalLinkToPlaylist: async (playlistId, kind, ref, title) => {
+  addExternalLinkToPlaylist: async (playlistId, kind, ref, title, addToLibrary = true) => {
     let source: ExternalListResult | null = null;
     let error = '';
     try {
@@ -578,8 +594,30 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     const existing = new Set(playlist.items.map(externalItemKey));
     const fresh = candidates.filter((item) => !existing.has(externalItemKey(item)));
     const items = [...playlist.items, ...fresh];
+
+    // Disponibiliza as faixas externas na biblioteca global (como músicas upadas),
+    // para que possam ser adicionadas em qualquer playlist.
+    let externalTracks = cur.externalTracks || [];
+    if (addToLibrary && kind === 'youtube' && source) {
+      const existingExt = new Set(externalTracks.map((t) => t.refId));
+      const newExt = source.tracks
+        .filter((t) => t.refId && !existingExt.has(t.refId))
+        .map((t) => ({
+          id: newId('ext'),
+          kind: 'youtube' as const,
+          refId: t.refId,
+          title: t.title,
+          artist: t.artist,
+          thumbnail: t.thumbnail || source?.cover,
+          durationSec: t.durationSec,
+          addedAt: Date.now(),
+        }));
+      if (newExt.length > 0) externalTracks = [...externalTracks, ...newExt];
+    }
+
     const lib: MusicLibrary = {
       ...cur,
+      externalTracks,
       playlists: cur.playlists.map((p) => (p.id === playlistId ? { ...p, items } : p)),
     };
     writeLibrary(lib);
@@ -662,6 +700,43 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       sourceTitle: source.title,
       truncated: source.truncated,
     };
+  },
+
+  addExternalTrackToPlaylist: (playlistId, trackId) => {
+    const cur = readLibrary();
+    const playlist = cur.playlists.find((p) => p.id === playlistId);
+    const track = cur.externalTracks.find((t) => t.id === trackId);
+    if (!playlist || !track) return;
+    const item: PlaylistItem = {
+      id: newId('it'),
+      kind: 'youtube',
+      refId: track.refId,
+      refType: 'video',
+      title: track.title,
+      artist: track.artist,
+      thumbnail: track.thumbnail,
+      durationSec: track.durationSec,
+      sourceTitle: track.title,
+    };
+    const existing = new Set(playlist.items.map(externalItemKey));
+    if (existing.has(externalItemKey(item))) return;
+    const items = [...playlist.items, item];
+    const lib: MusicLibrary = {
+      ...cur,
+      playlists: cur.playlists.map((p) => (p.id === playlistId ? { ...p, items } : p)),
+    };
+    writeLibrary(lib);
+    set(lib);
+  },
+
+  removeExternalTrack: (trackId) => {
+    const cur = readLibrary();
+    const lib: MusicLibrary = {
+      ...cur,
+      externalTracks: cur.externalTracks.filter((t) => t.id !== trackId),
+    };
+    writeLibrary(lib);
+    set(lib);
   },
 
   removeItem: (playlistId, itemId) => {

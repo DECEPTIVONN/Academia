@@ -990,13 +990,8 @@ function PlaylistDetail({
   onSetWorkout: (on: boolean) => void;
   onOpenMenu: () => void;
 }) {
-  const {
-    tracks,
-    removeItem,
-    addUploadToPlaylist,
-    addExternalLinkToPlaylist,
-    expandExternalItem,
-  } = useLibraryStore();
+  const { tracks, externalTracks, removeItem, addUploadToPlaylist, addExternalLinkToPlaylist, addExternalTrackToPlaylist, expandExternalItem } =
+    useLibraryStore();
   const [adding, setAdding] = useState(false);
   const [link, setLink] = useState('');
   const [linkName, setLinkName] = useState('');
@@ -1004,6 +999,7 @@ function PlaylistDetail({
   const [linkErr, setLinkErr] = useState('');
   const [linkMsg, setLinkMsg] = useState('');
   const [linkBusy, setLinkBusy] = useState(false);
+  const [addToLibrary, setAddToLibrary] = useState(true);
   const [expandingId, setExpandingId] = useState<string | null>(null);
   const [embedItem, setEmbedItem] = useState<PlaylistItem | null>(null);
   const kbInset = useKeyboardInset();
@@ -1055,6 +1051,7 @@ function PlaylistDetail({
         'youtube',
         { kind: parsed.kind === 'list' ? 'playlist' : 'video', id: parsed.id },
         linkName.trim() || (parsed.kind === 'list' ? 'Playlist do YouTube' : 'Vídeo do YouTube'),
+        addToLibrary,
       );
       setLinkBusy(false);
       finishLink(result);
@@ -1077,7 +1074,8 @@ function PlaylistDetail({
           : parsed.kind === 'album'
             ? 'Álbum do Spotify'
             : 'Playlist do Spotify'),
-    );
+        addToLibrary,
+      );
     setLinkBusy(false);
     finishLink(result);
   };
@@ -1130,6 +1128,10 @@ function PlaylistDetail({
   const notInPlaylist = useMemo(
     () => tracks.filter((t) => !playlist.items.some((it) => it.kind === 'upload' && it.trackId === t.id)),
     [tracks, playlist.items],
+  );
+  const notInExternal = useMemo(
+    () => externalTracks.filter((t) => !playlist.items.some((it) => it.kind === 'youtube' && it.refId === t.refId)),
+    [externalTracks, playlist.items],
   );
 
   return (
@@ -1325,6 +1327,25 @@ function PlaylistDetail({
             ) : (
               <p className="mu-note">Todas as suas músicas já estão nesta playlist.</p>
             )}
+            {notInExternal.length > 0 && (
+              <>
+                <span className="mu-modal__label">Músicas do YouTube</span>
+                <ul className="mu-pick-list">
+                  {notInExternal.map((t) => (
+                    <li key={t.id}>
+                      <button
+                        type="button"
+                        className="mu-pick"
+                        onClick={() => addExternalTrackToPlaylist(playlist.id, t.id)}
+                      >
+                        <Youtube size={15} /> {t.title}
+                        <span className="mu-pick__hint">adicionar</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
             <span className="mu-modal__label">Ou cole um link</span>
             <div className="mu-seg">
@@ -1366,6 +1387,10 @@ function PlaylistDetail({
             <p className="mu-note">
               Playlists são expandidas em faixas com capa e duração quando a API responde.
             </p>
+            <label className="mu-note" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={addToLibrary} onChange={(e) => setAddToLibrary(e.target.checked)} />
+              Adicionar as faixas à biblioteca (disponível em todas as playlists)
+            </label>
             {linkMsg && <p className="mu-note mu-note--ok">{linkMsg}</p>}
             {linkErr && <p className="mu-err">{linkErr}</p>}
 
@@ -1562,6 +1587,7 @@ function BibliotecaView({
   const [linkErr, setLinkErr] = useState('');
   const [linkNotice, setLinkNotice] = useState('');
   const [linkBusy, setLinkBusy] = useState(false);
+  const [addToLibrary, setAddToLibrary] = useState(true);
   const [linkTarget, setLinkTarget] = useState<string>('');
   const kbInset = useKeyboardInset();
 
@@ -1605,7 +1631,7 @@ function BibliotecaView({
       const pl = createPlaylist(linkName.trim() || title);
       target = pl.id;
     }
-    return addExternalLinkToPlaylist(target, kind, ref, linkName.trim() || title);
+    return addExternalLinkToPlaylist(target, kind, ref, linkName.trim() || title, addToLibrary);
   };
 
   const addExternalLink = async () => {
@@ -1855,6 +1881,10 @@ function BibliotecaView({
             <p className="mu-note">
               Playlists são expandidas em faixas com capa e duração quando a API responde.
             </p>
+            <label className="mu-note" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={addToLibrary} onChange={(e) => setAddToLibrary(e.target.checked)} />
+              Adicionar as faixas à biblioteca (disponível em todas as playlists)
+            </label>
             {linkErr && <p className="mu-err">{linkErr}</p>}
             <div className="mu-modal__actions">
               <button

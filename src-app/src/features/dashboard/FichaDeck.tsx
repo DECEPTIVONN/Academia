@@ -87,7 +87,9 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
      quando a ficha não tem aeróbico configurado usamos `DEFAULT_AEROBIC`. Uma
      ficha sem nenhum exercício continua exibindo o estado vazio. */
   const cardio = effectiveAerobic(sheet?.aerobic);
-  const hasCardio = exercises.length > 0 || Boolean(sheet?.aerobic?.tipo);
+  const hasCardio =
+    (exercises.length > 0 || Boolean(sheet?.aerobic?.tipo)) &&
+    sheet?.aerobic?.tipo !== 'Nenhum';
   const total = exercises.length + (hasCardio ? 1 : 0);
 
   /* Rodapé: VOLUME MÉDIO DE CARGA (v4.32.0) — média das cargas EFETIVAS dos
@@ -199,11 +201,11 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
             </svg>
             <div className="dash-mini-deck__widget-text">
               <span className="dash-mini-deck__stat-val">
-                {hasCardio ? cardio.tipo.toUpperCase() : '--'}
+                {hasCardio ? cardio!.tipo.toUpperCase() : '--'}
               </span>
               <span className="dash-mini-deck__stat-sub">
                 {hasCardio
-                  ? `${cardio.vel || '--'} km/h · ${cardio.tempo || '--'} min`
+                  ? `${cardio!.vel || '--'} km/h · ${cardio!.tempo || '--'} min`
                   : 'Configurar Cardio'}
               </span>
             </div>

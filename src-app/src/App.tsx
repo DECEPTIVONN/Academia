@@ -81,6 +81,10 @@ export function App() {
   const [isPerfilOverlayOpen, setIsPerfilOverlayOpen] = useState(false);
   const [isPerfilClosing, setIsPerfilClosing] = useState(false);
   const [isConclusaoOpen, setIsConclusaoOpen] = useState(false);
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
+  const skipHistoryPush = useRef(false);
+  const allowExit = useRef(false);
+  const activeSectionRef = useRef(activeSection);
   const [isEncerrarOpen, setIsEncerrarOpen] = useState(false);
   const isShareOpen = useShareStore((s) => s.show);
   const isMaestriaUiOpen = useMaestriaUi((s) => s.colecaoOpen || s.maestriaExId !== null);
@@ -121,6 +125,10 @@ export function App() {
      no desktop a fita fica em x=0 e o conteúdo entra de baixo para cima
      (verticalSwap, transitionguide.md). SEM guarda de re-entrada: um clique
      no meio da animação retargeta a mesma mola (interrupção natural). */
+  useEffect(() => {
+    activeSectionRef.current = activeSection;
+  }, [activeSection]);
+
   const navigateSection = useCallback(
     (sec: SectionType) => {
       /* v4.8.3: sair do Início descarta o overlay pendente */
@@ -133,6 +141,9 @@ export function App() {
       const to = SECTIONS_ORDER.indexOf(sec);
       const commit = () => {
         setActiveSection(sec);
+        if (!skipHistoryPush.current) {
+          window.history.pushState({ section: sec }, '');
+        }
         document.dispatchEvent(new CustomEvent('sectionchange', { detail: sec }));
         repairSectionRaster();
       };
@@ -148,8 +159,28 @@ export function App() {
     [activeSection, repairSectionRaster, stripX]
   );
 
-  /* Resize/cross viewport: a base da fita muda com innerWidth (e o desktop
-     não tem slide lateral) — reposiciona sem animação. */
+  /* Histórico nativo (botão voltar do celular): troca de aba vira entrada
+     de histórico; voltar retorna à aba anterior. Sem estado anterior, pede
+     confirmação antes de sair do app. */
+  useEffect(() => {
+    window.history.replaceState({ section: activeSectionRef.current }, '');
+    const onPopState = (event: PopStateEvent) => {
+      const sec = (event.state as { section?: string } | null)?.section;
+      if (sec && sec !== activeSectionRef.current) {
+        skipHistoryPush.current = true;
+        navigateSection(sec as SectionType);
+        skipHistoryPush.current = false;
+        return;
+      }
+      if (!sec) {
+        if (allowExit.current) return;
+        window.history.pushState({ section: activeSectionRef.current }, '');
+        setExitConfirmOpen(true);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [navigateSection]);
   useEffect(() => {
     const onResize = () => {
       stripX.jump(slideBaseX(SECTIONS_ORDER.indexOf(activeSection)));
@@ -907,6 +938,30 @@ export function App() {
               AuthModal renderiza a AuthScreen full-screen (z-index 1150,
               abaixo do LockScreen 1200). */}
           <AuthModal />
+          {exitConfirmOpen && (
+            <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-4">
+              <div className="w-full max-w-sm rounded-2xl bg-[#0b0b10] border border-white/10 p-6 space-y-4">
+                <h2 className="text-lg font-bold text-white">Sair do app?</h2>
+                <p className="text-sm text-white/60">Deseja realmente fechar o EVO FIT?</p>
+                <div className="flex gap-3">
+                  <button type="button" className="flex-1 rounded-lg bg-white/10 px-4 py-2 text-white" onClick={() => setExitConfirmOpen(false)}>
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 rounded-lg bg-red-500 px-4 py-2 text-white"
+                    onClick={() => {
+                      allowExit.current = true;
+                      setExitConfirmOpen(false);
+                      window.history.back();
+                    }}
+                  >
+                    Sair
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <OnboardingGate />
           <RemoteSyncToast />
 

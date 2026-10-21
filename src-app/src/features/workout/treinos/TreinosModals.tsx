@@ -104,6 +104,7 @@ export const ImageModal: React.FC<{ open: boolean; src: string; onClose: () => v
 
 const AE_OPTIONS = [
   ['', 'Selecione...'],
+  ['Nenhum', 'Nenhum'],
   ['Esteira', 'Esteira'],
   ['Bicicleta', 'Bicicleta'],
   ['Elíptico', 'Elíptico'],

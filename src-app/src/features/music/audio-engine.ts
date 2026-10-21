@@ -873,11 +873,42 @@ function stopYt(): void {
 
 /** Retoma o que deveria tocar no contexto atual (após gesto ou un-pause). */
 function resumeCurrent(): void {
-  if (context === 'workout-user') {
-    if (queue.length > 0) void playQueueIndex(queueIndex);
-    return;
+  if (context === 'workout-user' && queue.length > 0) {
+    const item = queue[queueIndex];
+    if (item?.kind === 'upload') {
+      const el = getUserAudio();
+      applyVolume(el);
+      el.play()
+        .then(() => {
+          playing = true;
+          disarmGestures();
+          emitState();
+        })
+        .catch(() => {
+          playing = false;
+          armGestures();
+          emitState();
+        });
+      return;
+    }
+    if (item?.kind === 'youtube') {
+      try {
+        ytPlayer?.playVideo();
+      } catch {
+        /* player inexistente */
+      }
+      playing = true;
+      disarmGestures();
+      emitState();
+      return;
+    }
+    if (item?.kind === 'site') {
+      void playQueueIndex(queueIndex);
+      return;
+    }
   }
-  void playSite(context);
+  if (context === 'workout-user') return;
+  void playSite(context as Exclude<MusicContext, 'workout-user'>);
 }
 
 /** Boot (main.tsx) — idempotente. */
