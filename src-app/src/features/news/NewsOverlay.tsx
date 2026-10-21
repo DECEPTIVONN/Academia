@@ -335,7 +335,7 @@ function DetailPane({ kind, active, fading, index, onBack, onClose, onPrev, onNe
         </div>
       </header>
 
-      <main className="pt-20 flex flex-col min-h-screen arena-bg">
+      <main className="pt-24 flex flex-col min-h-screen arena-bg">
         <div className="max-w-2xl mx-auto w-full px-2 flex-1 flex flex-col">
           <div
             className="glass-card rounded-xl overflow-hidden flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-deep-void/60 flex-grow"
@@ -345,14 +345,12 @@ function DetailPane({ kind, active, fading, index, onBack, onClose, onPrev, onNe
               transform: fading ? 'translateY(10px)' : 'translateY(0px)',
             }}
           >
-            <div className="relative w-full h-[240px] md:h-[400px] shrink-0 overflow-hidden">
-              <div className="w-full h-full premium-placeholder flex items-center justify-center">
+            <div className="relative w-full h-[240px] md:h-[400px] shrink-0 overflow-hidden bg-[#0b0b10] flex items-center justify-center">
                 <span
                   className={`material-symbols-outlined text-[80px] text-primary/40 animate-bounce ${isNews ? 'news-icon' : 'update-icon'}`}
                 >
                   {item.icon}
                 </span>
-              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-deep-void via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
                 <span
@@ -403,9 +401,6 @@ function DetailPane({ kind, active, fading, index, onBack, onClose, onPrev, onNe
               </div>
             </div>
           </div>
-        </div>
-        <div className="detail-footer-wrap max-h-24 overflow-hidden">
-          <div id={`${kind}-detail-footer-container`} dangerouslySetInnerHTML={{ __html: FOOTER_HTML }} />
         </div>
       </main>
     </div>
@@ -603,7 +598,7 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
         </header>
 
         {/* Main Content Area */}
-        <main className="pt-20 relative arena-bg">
+        <main className="pt-24 relative arena-bg">
           <div className="max-w-lg mx-auto w-full px-4">
             {/* Noticias Section */}
                         <section className={`tab-content space-y-6${tab === 'noticias' ? ' active' : ''}`} id="noticias">
@@ -652,7 +647,7 @@ export function NewsOverlay({ open, onClose }: NewsOverlayProps) {
         </main>
 
         {/* Footer */}
-        <div id="news-footer-container" dangerouslySetInnerHTML={{ __html: FOOTER_HTML }} />
+        <div id="news-footer-container" className="max-h-20 overflow-hidden" dangerouslySetInnerHTML={{ __html: FOOTER_HTML }} />
       </div>
 
       {/* Detail Views */}
