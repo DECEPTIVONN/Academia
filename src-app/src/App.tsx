@@ -29,6 +29,7 @@ import { useCrossBrowserFullscreen } from '@/lib/fullscreen';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
 import { loadLocalData, getTodayTreino, selectSheetEntry } from '@/core/db/queries';
+import { bootstrap } from '@/core/db/bootstrap';
 import { ShareModal } from '@/features/gamification/ShareModal';
 /* v4.19.0-music — interface de Músicas e Playlists (overlay estilo YT Music) */
 import { MusicOverlay } from '@/features/music/MusicOverlay';
@@ -46,6 +47,9 @@ import type { SheetKey } from '@/core/db/schema';
 import { AuthModal } from '@/features/auth/AuthModal';
 import { RemoteSyncToast } from '@/features/sync/RemoteSyncToast';
 import { isEngineRunning, startSyncEngine, stopSyncEngine } from '@/core/sync/sync-manager';
+import { AuthScreen } from '@/features/auth/AuthScreen';
+import { BootErrorBoundary } from '@/features/core/BootErrorBoundary';
+/* Ordem canônica das seções (ordem dos slides na fita + swipe) */
 
 /* Ordem canônica das seções (ordem dos slides na fita + swipe) */
 const SECTIONS_ORDER: SectionType[] = ['progresso', 'treinos', 'dashboard', 'social', 'loja'];

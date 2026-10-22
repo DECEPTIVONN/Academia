@@ -874,13 +874,15 @@ function UploadRow({
   /** Callback disparado ao longo-pressionar a faixa (480ms). */
   onLongPress?: () => void;
 }) {
-  const { onPointerDown, onPointerMove, onPointerUp } = useLongPress(
+  const onClick = onPlay ?? (
+    () => void playPlaylistFromUi([{ id: `ui-${track.id}`, kind: 'upload', trackId: track.id, title: track.name }])
+  );
+
+  const { onPointerDown, onPointerMove, onPointerUp, onClick: longPressOnClick } = useLongPress(
     () => {
       onLongPress?.();
     },
-    () => {
-      onClick?.();
-    }
+    onClick
   );
 
   return (
@@ -888,7 +890,7 @@ function UploadRow({
       <button
         type="button"
         className="mu-row__main"
-        onClick={onClick}
+        onClick={longPressOnClick}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

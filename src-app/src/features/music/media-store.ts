@@ -22,6 +22,7 @@ import {
   type ExternalListResult,
   type ExternalRefKind,
 } from './external-music';
+import { isSupabaseConfigured } from '@/core/supabase';
 
 /* ────────────────────────── IndexedDB (blobs) ────────────────────────── */
 
