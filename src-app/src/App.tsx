@@ -48,7 +48,7 @@ import { AuthModal } from '@/features/auth/AuthModal';
 import { RemoteSyncToast } from '@/features/sync/RemoteSyncToast';
 import { isEngineRunning, startSyncEngine, stopSyncEngine } from '@/core/sync/sync-manager';
 import { AuthScreen } from '@/features/auth/AuthScreen';
-import { BootErrorBoundary } from '@/core/BootErrorBoundary';
+import { BootErrorBoundary } from '@/main';
 /* Ordem canônica das seções (ordem dos slides na fita + swipe) */
 
 /* Ordem canônica das seções (ordem dos slides na fita + swipe) */
