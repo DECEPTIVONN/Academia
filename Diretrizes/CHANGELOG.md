@@ -2,6 +2,15 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.42.7] - 2026-10-22
+
+**Compartilhamento nativo alinhado ao Share.md.**
+
+### Changed
+- `src-app/src/features/gamification/ShareModal.tsx`: imagem pre-gerada em PNG; payload inclui `url` e link no texto; fallback com botoes WhatsApp/X/Facebook quando nao ha Web Share API.
+- `src-app/src/lib/native-share.ts`: ja existente, usado com canShare/AbortError.
+- `src-app/index.html`: meta tags Open Graph/Twitter para previa do link.
+
 ## [v4.42.6] - 2026-10-22
 
 **Evolucao de forca (carga): quarta aba nos detalhes do exercicio.**

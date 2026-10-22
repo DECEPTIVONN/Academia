@@ -21,7 +21,8 @@ import {
   todayLabel,
 } from '@/core/db/queries';
 import { averageLoadKg, effectiveLoadKg } from '@/lib/suggested-load';
-import { shareNative } from '@/lib/native-share';
+import { shareNative, canNativeShare } from '@/lib/native-share';
+import type { NativeShareResult } from '@/lib/native-share';
 import { useShareStore } from './share-store';
 import { useRadarMode } from './useRadarFit';
 import { showToast } from '@/lib/toast';
@@ -55,6 +56,7 @@ export function ShareModal() {
   const { show, kind, badge, quote, close } = useShareStore();
   const radarMode = useRadarMode((s) => s.mode);
   const [busy, setBusy] = useState<'share' | 'download' | null>(null);
+  const [imageReady, setImageReady] = useState(false);
   const radarCloneRef = useRef<HTMLDivElement>(null);
 
   /* v4.22.0 — canvas PRÉ-RENDERIZADO ao abrir o modal. A Web Share API exige
@@ -79,29 +81,26 @@ export function ShareModal() {
   useEffect(() => {
     if (!show) {
       canvasFileRef.current = null;
+      setImageReady(false);
+      canvasRef.current = null;
       return;
     }
+    canvasFileRef.current = null;
+    setImageReady(false);
+    canvasRef.current = null;
     const card = document.getElementById(cardId);
-    if (!card || canvasRef.current) {
-      if (canvasRef.current && !canvasFileRef.current) {
-        canvasRef.current.toBlob((blob) => {
-          if (!blob) return;
-          const fileName = `meu-${activeCardName(kind)}-${today()}.jpg`;
-          canvasFileRef.current = new File([blob], fileName, { type: 'image/jpeg' });
-        }, 'image/jpeg', 0.9);
-      }
-      return;
-    }
+    if (!card) return;
     void renderCanvas(card).then((canvas) => {
       if (!canvas) return;
       canvasRef.current = canvas;
       canvas.toBlob((blob) => {
         if (!blob) return;
-        const fileName = `meu-${activeCardName(kind)}-${today()}.jpg`;
-        canvasFileRef.current = new File([blob], fileName, { type: 'image/jpeg' });
-      }, 'image/jpeg', 0.9);
+        const fileName = `meu-${activeCardName(kind)}-${today()}.png`;
+        canvasFileRef.current = new File([blob], fileName, { type: 'image/png' });
+        setImageReady(true);
+      }, 'image/png', 0.9);
     });
-  }, [show]);
+  }, [show, kind, cardId, quote]);
 
   const data = useMemo(
     () => ({ exercises, sheets, history, legacy }),
@@ -185,10 +184,10 @@ export function ShareModal() {
         const canvas = await ensureCanvas();
         if (!canvas) return;
         const blob = await new Promise<Blob | null>((resolve) =>
-          canvas.toBlob(resolve, 'image/jpeg', 0.9)
+          canvas.toBlob(resolve, 'image/png')
         );
         if (!blob) throw new Error('canvas sem blob');
-        file = new File([blob], `meu-${activeCardName(kind)}-${today()}.jpg`, { type: 'image/jpeg' });
+        file = new File([blob], `meu-${activeCardName(kind)}-${today()}.jpg`, { type: 'image/png' });
         canvasFileRef.current = file;
       }
       const link = document.createElement('a');
@@ -208,82 +207,58 @@ export function ShareModal() {
   /* shareImageNow L807–886 — Web Share API → clipboard → download */
   const handleShare = async () => {
     if (busy) return;
+    const file = canvasFileRef.current;
+    if (!file || !imageReady) {
+      showToast('Imagem ainda sendo preparada. Aguarde.', 'info');
+      return;
+    }
     setBusy('share');
     try {
-      let file = canvasFileRef.current;
-      if (!file) {
-        const canvas = await ensureCanvas();
-        if (!canvas) return;
+      const text = `Confira meu progresso na Evo Fit! ${window.location.origin}`;
+      const nav = navigator as Navigator & { canShare?: (d?: ShareData) => boolean };
+      const canFiles = !nav.canShare || nav.canShare({ files: [file] });
 
-        const blob = await new Promise<Blob | null>((resolve) =>
-          canvas.toBlob(resolve, 'image/jpeg', 0.9)
-        );
-        if (!blob) throw new Error('canvas sem blob');
-        const fileName = `meu-${activeCardName(kind)}-${today()}.jpg`;
-        file = new File([blob], fileName, { type: 'image/jpeg' });
-        canvasFileRef.current = file;
+      let r: NativeShareResult;
+      if (canFiles) {
+        r = await shareNative({ title: 'Evo Fit', text, files: [file] }); // sem url (evita duplicado)
+      } else {
+        r = 'unsupported';
       }
 
-      const fileName = file.name;
+      if (r === 'unsupported') {
+        // nenhum share com arquivo foi tentado
+        r = await shareNative({ title: 'Evo Fit', text });
+        if (r === 'unsupported') r = 'error';
+      }
 
-      const downloadImage = () => {
-        const link = document.createElement('a');
-        link.download = fileName;
-        link.href = URL.createObjectURL(file);
-        link.click();
-        window.setTimeout(() => URL.revokeObjectURL(link.href), 30000);
-      };
-
-      const fallbackDownloadAndCopy = () => {
-        void (async () => {
-          try {
-            const canvas = canvasRef.current;
-            if (!canvas) throw new Error('canvas sem blob');
-            const pngBlob = await new Promise<Blob | null>((resolve) =>
-              canvas.toBlob(resolve, 'image/png')
-            );
-            if (!pngBlob) throw new Error('sem png');
-            await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
-            showToast(
-              'Imagem copiada para a área de transferência. Compartilhe com seus amigos!',
-              'success'
-            );
-          } catch {
-            downloadImage();
-            showToast('Compartilhamento não suportado. Imagem baixada!', 'info');
-          }
-        })();
-      };
-
-      /* v4.22.0 — share REAL: a imagem é compartilhada como ARQUIVO na folha
-         nativa (Android/Windows). Se a plataforma recusar files (desktop sem
-         Web Share Level 2), abre a folha nativa com título/texto (também é
-         interação real do SO) e baixa a imagem junto para o usuário anexar. */
-      const res = await shareNative({
-        title: 'Evo Fit',
-        text: '🔥 Confira meu progresso na Evo Fit!',
-        files: [file],
-      });
-
-      if (res === 'shared') {
+      if (r === 'shared') {
         showToast('Compartilhado!', 'success');
         return;
       }
-      if (res === 'cancelled') return; // usuário fechou a folha — sem fallback
+      if (r === 'cancelled') return; // silêncio total
 
-      // files recusado (ex.: Chrome desktop) → folha nativa com texto/link.
-      const resText = await shareNative({
-        title: 'Evo Fit',
-        text: '🔥 Confira meu progresso na Evo Fit!',
-      });
-      if (resText === 'shared') {
-        downloadImage();
-        showToast('Folha de compartilhamento aberta — anexe a imagem baixada.', 'info');
-        return;
+      // erro real: vai direto para download + clipboard, sem segundo share
+      const link = document.createElement('a');
+      link.download = file.name;
+      link.href = URL.createObjectURL(file);
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(link.href), 30000);
+      try {
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const pngBlob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob(resolve, 'image/png')
+          );
+          if (pngBlob) {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
+            showToast('Imagem copiada para a área de transferência. Compartilhe com seus amigos!', 'success');
+            return;
+          }
+        }
+      } catch {
+        /* ignora */
       }
-      if (resText === 'cancelled') return;
-
-      fallbackDownloadAndCopy();
+      showToast('Compartilhamento não suportado. Imagem baixada!', 'info');
     } catch (err) {
       console.error(err);
       showToast('Erro ao preparar compartilhamento.', 'error');
@@ -291,6 +266,7 @@ export function ShareModal() {
       setBusy(null);
     }
   };
+;
 
   if (!show) return null;
 
@@ -517,7 +493,7 @@ export function ShareModal() {
             type="button"
             className="btn btn-primary"
             id="btnShareNow"
-            disabled={busy !== null}
+            disabled={busy !== null || !imageReady}
             onClick={() => void handleShare()}
             style={{
               display: 'inline-flex',
@@ -583,11 +559,19 @@ export function ShareModal() {
               </>
             )}
           </button>
+            {!canNativeShare() && (
+             <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+               <a href={`https://wa.me/?text=${encodeURIComponent('Confira meu progresso na Evo Fit! ' + window.location.origin)}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">WhatsApp</a>
+               <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Confira meu progresso na Evo Fit!')}&url=${encodeURIComponent(window.location.origin)}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">X</a>
+               <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">Facebook</a>
+             </div>
+           )}
+
           <button
             type="button"
             className="btn btn-secondary"
             style={{ background: 'transparent', border: 'none', opacity: 0.6 }}
-            id="btnFecharShare"
+id="btnFecharShare"
             onClick={close}
           >
             FECHAR
