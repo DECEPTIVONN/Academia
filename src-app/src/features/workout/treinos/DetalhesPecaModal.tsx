@@ -930,9 +930,9 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
         const diff = touchStartX - endX;
         if (Math.abs(diff) > 40) {
             if (diff > 0) {
-                changeSlide((detailSlide + 1) % 3);
+                changeSlide((detailSlide + 1) % 4);
             } else {
-                changeSlide((detailSlide - 1 + 3) % 3);
+                changeSlide((detailSlide - 1 + 4) % 4);
             }
         }
     };
@@ -1300,13 +1300,59 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Page 3: Evolucao de Forca (Carga) */}
+                                    {detailSlide === 3 && (
+                                        <div className="flex-1 flex flex-col justify-center gap-2">
+                                            <h4 className="text-sm font-bold text-white mb-2">
+                                                Evolucao de Forca (Carga)
+                                            </h4>
+                                            {(() => {
+                                                const hist = exerciseProp?.historicoCargas ?? [];
+                                                const maxValor = hist.length ? Math.max(...hist.map((h) => h.valor)) : 0;
+                                                if (hist.length === 0) {
+                                                    return (
+                                                        <p className="text-xs text-zinc-400">
+                                                            Sem historico de carga ainda.
+                                                        </p>
+                                                    );
+                                                }
+                                                return (
+                                                    <div className="ex-chart" style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '120px' }}>
+                                                        {hist.map((h, i) => {
+                                                            const heightPct = maxValor > 0 ? (h.valor / maxValor) * 100 : 0;
+                                                            const dateLbl = new Date(h.data + 'T12:00:00').toLocaleDateString('pt-BR', {
+                                                                day: '2-digit',
+                                                                month: '2-digit',
+                                                            });
+                                                            return (
+                                                                <div key={`${h.data}-${i}`} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>{h.label}</div>
+                                                                    <div
+                                                                        style={{
+                                                                            width: '100%',
+                                                                            height: `${heightPct}%`,
+                                                                            background: 'var(--primary)',
+                                                                            borderRadius: '4px 4px 0 0',
+                                                                        }}
+                                                                        title={`${h.label} em ${dateLbl}`}
+                                                                    />
+                                                                    <div style={{ fontSize: '9px', color: '#64748b' }}>{dateLbl}</div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    )}
                                 </motion.div>
                             </AnimatePresence>
                         </div>
 
                         {/* Interactive Dots Navigator */}
                         <div className="flex justify-center gap-2.5 mt-3 select-none">
-                            {[0, 1, 2].map((idx) => (
+                            {[0, 1, 2, 3].map((idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => changeSlide(idx)}

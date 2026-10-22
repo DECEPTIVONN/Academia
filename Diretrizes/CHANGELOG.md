@@ -2,6 +2,13 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.42.6] - 2026-10-22
+
+**Evolucao de forca (carga): quarta aba nos detalhes do exercicio.**
+
+### Changed
+- `src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`: adicionada 4a pagina (dot) com o grafico de evolucao de carga (historicoCargas), alem da edicao de exercicio que ja registrava o historico.
+
 ## [v4.42.5] - 2026-10-22
 
 **Modal de exercício: scroll e fundo preto.**
