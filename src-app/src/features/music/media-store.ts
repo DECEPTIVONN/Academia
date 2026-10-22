@@ -931,7 +931,7 @@ export async function syncLibraryToSupabase(userId: string, lib: MusicLibrary): 
         user_id: userId,
         library: lib,
         updated_at: new Date().toISOString(),
-      },
+      } as any,
       { onConflict: 'user_id' }
     );
 
@@ -965,7 +965,7 @@ export async function syncLibraryFromSupabase(userId: string): Promise<MusicLibr
     }
 
     console.log('[sync] Biblioteca baixada do Supabase');
-    return data.library as MusicLibrary;
+    return (data as { library: MusicLibrary }).library;
   } catch (err) {
     console.error('[sync] Falha ao baixar biblioteca:', err);
     return null;
