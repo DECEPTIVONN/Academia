@@ -176,6 +176,8 @@ const EMPTY_LIBRARY: MusicLibrary = {
 export const EVO_FIT_ID = 'pl-evo-fit';
 /** Playlist "Suas músicas" — recebe automaticamente cada upload do usuário. */
 export const SUAS_MUSICAS_ID = 'pl-suas-musicas';
+/** Playlist "YouTube" — recebe automaticamente links do YouTube adicionados. */
+export const YOUTUBE_ID = 'pl-youtube';
 
 const EVO_FIT_ITEMS: PlaylistItem[] = [
   { id: 'site-item-main', kind: 'site', siteId: 'main', title: 'MAIN' },
@@ -263,6 +265,13 @@ function seedLibrary(lib: MusicLibrary): MusicLibrary {
     suas = { id: SUAS_MUSICAS_ID, name: 'Suas músicas', items: [], createdAt: Date.now() };
     playlists.push(suas);
   }
+
+  let youtube = playlists.find((p) => p.id === YOUTUBE_ID);
+  if (!youtube) {
+    youtube = { id: YOUTUBE_ID, name: 'YouTube', items: [], createdAt: Date.now() };
+    playlists.push(youtube);
+  }
+
   const already = new Set(
     suas.items.filter((it) => it.kind === 'upload').map((it) => (it as { trackId: string }).trackId),
   );
@@ -654,6 +663,14 @@ export const useLibraryStore = create<LibraryState>((set) => ({
         if (singleVideo && addToLibrary && p.id === SUAS_MUSICAS_ID) {
           const existingSuas = new Set(p.items.map(externalItemKey));
           const toAdd = fresh.filter((it) => !existingSuas.has(externalItemKey(it)));
+          if (toAdd.length === 0) return p;
+          return { ...p, items: [...p.items, ...toAdd] };
+        }
+        // Novo: também adicionar vídeos do YouTube à playlist "YouTube"
+        if (kind === 'youtube' && p.id === YOUTUBE_ID) {
+          const existingYt = new Set(p.items.map(externalItemKey));
+          const toAdd = externalTracks
+            .filter((it) => it.kind === 'youtube' && !existingYt.has(externalItemKey(it)));
           if (toAdd.length === 0) return p;
           return { ...p, items: [...p.items, ...toAdd] };
         }

@@ -495,6 +495,7 @@ function HomeView({
 }) {
   const { tracks, externalTracks, playlists, pinnedQuick, togglePin, removeTrack } = useLibraryStore();
   const [picking, setPicking] = useState(false);
+  const [longPressTrackId, setLongPressTrackId] = useState<string | null>(null);
 
   /* v4.22.0 — "playlist oculta" da aba Início: tocar qualquer música daqui
      monta a fila com TODAS as faixas visíveis (site + uploads), começando
@@ -638,6 +639,7 @@ function HomeView({
               onTogglePin={() => togglePin(pinTrackKey(t.id))}
               onPlay={() => playFromHome(`ui-${t.id}`)}
               onRemove={() => removeTrack(t.id)}
+              onLongPress={() => setLongPressTrackId(t.id)}
             />
           ))}
           {externalTracks.map((t) => {
@@ -671,6 +673,48 @@ function HomeView({
           )}
         </ul>
       </section>
+
+      {longPressTrackId && (
+        <div className="mu-modal mu-modal--sheet" onClick={() => setLongPressTrackId(null)}>
+          <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
+            <h4 className="mu-modal__title">Excluir música</h4>
+            <p className="mu-modal__label">
+              Tem certeza que deseja excluir esta música da sua biblioteca?
+            </p>
+            <div className="mu-actionsheet">
+              <button
+                type="button"
+                className="mu-actionsheet__item mu-actionsheet__item--danger"
+                onClick={() => {
+                  const track = tracks.find((t) => t.id === longPressTrackId);
+                  if (track) {
+                    removeTrack(track.id);
+                  }
+                  setLongPressTrackId(null);
+                }}
+              >
+                <Trash2 size={17} /> Excluir
+              </button>
+              <button
+                type="button"
+                className="mu-actionsheet__item mu-actionsheet__item--neutral"
+                onClick={() => setLongPressTrackId(null)}
+              >
+                Cancelar
+              </button>
+            </div>
+            <div className="mu-modal__actions">
+              <button
+                type="button"
+                className="mu-btn mu-btn--ghost"
+                onClick={() => setLongPressTrackId(null)}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {picking && <PinPickerModal onClose={() => setPicking(false)} />}
     </div>
@@ -818,6 +862,8 @@ function UploadRow({
   isPinned,
   onTogglePin,
   onPlay,
+  onRemove,
+  onLongPress,
 }: {
   track: UploadTrack;
   isPinned?: boolean;
@@ -825,16 +871,29 @@ function UploadRow({
   /** v4.22.0 — na aba Início a fila oculta assume o clique (padrão: faixa isolada). */
   onPlay?: () => void;
   onRemove?: () => void;
+  /** Callback disparado ao longo-pressionar a faixa (480ms). */
+  onLongPress?: () => void;
 }) {
+  const { onPointerDown, onPointerMove, onPointerUp } = useLongPress(
+    () => {
+      onLongPress?.();
+    },
+    () => {
+      onClick?.();
+    }
+  );
+
   return (
     <li className="mu-row">
       <button
         type="button"
         className="mu-row__main"
-        onClick={
-          onPlay ??
-          (() => void playPlaylistFromUi([{ id: `ui-${track.id}`, kind: 'upload', trackId: track.id, title: track.name }]))
-        }
+        onClick={onClick}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
         <div className="mu-row__art mu-row__art--user">
           <Music2 size={16} />
@@ -847,6 +906,15 @@ function UploadRow({
       {onTogglePin && (
         <PinButton isPinned={!!isPinned} onToggle={onTogglePin} label={track.name} />
       )}
+      {/* Área invisível para detectar longo-pressionar */}
+      <div
+        className="mu-row__long-press-area"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerUp}
+        onPointerCancel={onPointerUp}
+      />
     </li>
   );
 }
