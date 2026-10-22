@@ -2,6 +2,42 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.42.5] - 2026-10-22
+
+**Modal de exercício: scroll e fundo preto.**
+
+### Fixed
+- `src-app/src/legacy-style/treino/2-modals.css`: `.modal-form` (formulário de exercício) deixou `overflow: hidden` (que impedia rolar até as observações) e passou a `overflow-y: auto` com `max-height: 90vh`; fundo roxo (`rgba(10,5,20,0.85)`) substituído pelo preto `#111`, alinhado ao tom da aba Minha Ficha.
+
+## [v4.42.4] - 2026-10-22
+
+**Home: modal de Ciclo com heatmap e breakdown.**
+
+### Added
+- `src-app/src/features/dashboard/DashboardFeature.tsx`: clicar no card de ciclo abre um modal com heatmap dos 30 dias do ciclo atual (dias concluídos destacados) e o breakdown por ficha.
+
+## [v4.42.3] - 2026-10-22
+
+**Ofensiva: cinza em novo dia até concluir o treino do dia.**
+
+### Changed
+- `src-app/src/features/dashboard/DashboardFeature.tsx`: quando a ofensiva é maior que 1 dia, o botão de ofensiva exibe o estado cinza (`.dash-streak-btn--off`) ao abrir o app em um novo dia, tornando-se colorido após a conclusão do treino do dia (`completedToday`). O período válido para aumentar a ofensiva permanece 00:00–23:59 de cada dia (data do treino concluído).
+
+## [v4.42.2] - 2026-10-22
+
+**Ajustes de perfil: chave de sync única, nome=handle, destaque funcional, ano de ingresso e ofensivas reais.**
+
+### Added
+- `src-app/src/core/sync/supabase-client.ts`: `getSyncKey()` gera e persiste uma chave única quando não existe chave configurada (evita namespace compartilhado por padrão).
+- `src-app/src/features/auth/AuthScreen.tsx`: cadastro gera chave de sincronização única por padrão (a menos que uma chave existente seja vinculada).
+- `src-app/src/features/profile/ProfileFeature.tsx`: ano de "AQUI DESDE" preenchido com o ano de ingresso na plataforma (conta Supabase ou ano atual em modo offline).
+
+### Changed
+- `src-app/src/features/profile/ProfileFeature.tsx`: removida a opção separada de "Nome de Exibição"; o nome passa a ser o próprio handle.
+- `src-app/src/features/profile/ProfileFeature.tsx`: opções de "Em Destaque" agora salvam imediatamente (funcionais).
+- `src-app/src/features/profile/ProfileFeature.tsx`: "Ofensivas dos Amigos" passa a exibir os amigos realmente adicionados (ou estado vazio quando não houver).
+- `src-app/src/features/profile/profile-data.ts`: fallback de "AQUI DESDE" deixa de ser fixo em 2024.
+
 ## [v4.42.1] - 2026-10-22
 
 **Correção do erro de interface Minified React error #310 (hooks condicionais).**

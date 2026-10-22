@@ -743,7 +743,7 @@ export function revertLockedCustomizations(
 
 /** Texto do handle (`@x • AQUI DESDE yyyy`) — idem L357–361. */
 export function handleText(pc: ProfileCustomization): string {
-  const sinceYear = pc.since || '2024';
+  const sinceYear = pc.since || String(new Date().getFullYear());
   return `${pc.handle || '@deceptivon'} \u2022 AQUI DESDE ${sinceYear}`;
 }
 

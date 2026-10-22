@@ -66,6 +66,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   const pc = profile?.customization;
 
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const [cycleModalOpen, setCycleModalOpen] = useState(false);
   /* v4.31.1 — menu popup do Início + tela de identidade Fit ID */
   const [menuOpen, setMenuOpen] = useState(false);
   const [fitIdOpen, setFitIdOpen] = useState(false);
@@ -265,7 +266,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                 {/* v4.30.0 — substitui o antigo botão Social: mostra a OFENSIVA
                     (dias de sequência) como na referência (chama + valor). */}
                 <button
-                  className={`dash-header-btn dash-streak-btn${streak === 0 ? ' dash-streak-btn--off' : ''} w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center transition-all`}
+                  className={`dash-header-btn dash-streak-btn${(streak === 0 || (streak > 1 && !completedToday)) ? ' dash-streak-btn--off' : ''} w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center transition-all`}
                   id="dashBtnOfensiva"
                   aria-label={`Ofensiva: ${streak} ${streak === 1 ? 'dia' : 'dias'}`}
                   title={`Ofensiva: ${streak} ${streak === 1 ? 'dia' : 'dias'}`}
@@ -430,7 +431,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
               <span className="neon-glow-right-pill" />
             </button>
 
-            <div className="dash-cycle-progress-card" onClick={() => onNavigate('progresso')}>
+            <div className="dash-cycle-progress-card" onClick={() => setCycleModalOpen(true)}>
               <div className="dash-cycle-trophy-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={18} height={18}>
                   <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
@@ -500,6 +501,64 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
         history={history}
         onOpenSettings={onOpenSettings}
       />
+    {cycleModalOpen && (
+      <div
+        className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70"
+        onClick={() => setCycleModalOpen(false)}
+      >
+        <div
+          className="bg-[#121216] border border-zinc-800 rounded-2xl p-4 max-w-md w-full mx-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-white">Ciclo de Treino</h3>
+            <button
+              type="button"
+              onClick={() => setCycleModalOpen(false)}
+              className="text-zinc-400 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-xs text-zinc-400 mb-3">
+            {cycle.done}/{cycle.total} treinos concluídos
+          </p>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(6, 1fr)',
+              gap: '6px',
+              marginBottom: '12px',
+            }}
+          >
+            {Array.from({ length: cycle.total }, (_, i) => {
+              const d = new Date(cycle.startDate + 'T00:00:00');
+              d.setDate(d.getDate() + i);
+              const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              const done = history.some((h) => h.date === key && h.completed);
+              return (
+                <div
+                  key={i}
+                  title={key}
+                  style={{
+                    width: '100%',
+                    aspectRatio: '1',
+                    borderRadius: '4px',
+                    background: done ? 'var(--primary)' : 'rgba(255,255,255,0.08)',
+                  }}
+                />
+              );
+            })}
+          </div>
+          <div className="text-xs text-zinc-400">
+            {Object.entries(cycle.breakdown)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join('  ')}
+          </div>
+        </div>
+      </div>
+    )}
+
     </div>
   );
 };

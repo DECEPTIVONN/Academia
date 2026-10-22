@@ -100,7 +100,17 @@ export async function testSupabaseConnection(): Promise<{ ok: boolean; message: 
 
 export function getSyncKey(): string {
   if (typeof window === 'undefined') return DEFAULT_SYNC_KEY;
-  return (localStorage.getItem(SYNC_KEY_STORAGE) || DEFAULT_SYNC_KEY).trim().toUpperCase();
+  const stored = (localStorage.getItem(SYNC_KEY_STORAGE) || '').trim();
+  if (stored) return stored.toUpperCase();
+  // Por padrão cada usuário (dispositivo) recebe uma chave única, evitando
+  // que dados de usuários distintos compartilhem o namespace padrão.
+  const generated = `ACADEMIA-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
+  try {
+    localStorage.setItem(SYNC_KEY_STORAGE, generated);
+  } catch {
+    /* storage indisponível — retorna a chave gerada mesmo assim */
+  }
+  return generated;
 }
 
 export function setSyncKey(key: string): void {

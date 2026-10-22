@@ -16,6 +16,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
+import { useAuth } from '@/core/auth/use-auth';
+import { loadAddedFriends } from '@/features/social/friend-invites';
 import { fadeIn } from '@/lib/animations';
 import { useProfileState } from '@/features/profile/useProfileState';
 import {
@@ -122,7 +124,15 @@ const groupKeywords = (tiles: HubTile[], extra: string[] = []): string[] => [
 
 export function ProfileFeature() {
   const data = useLocalData();
+  const { user } = useAuth();
   const { state: profile, update } = useProfileState();
+
+  const [addedFriends, setAddedFriends] = useState(() => loadAddedFriends());
+  useEffect(() => {
+    const refresh = () => setAddedFriends(loadAddedFriends());
+    document.addEventListener('academia:friends-changed', refresh);
+    return () => document.removeEventListener('academia:friends-changed', refresh);
+  }, []);
 
   const [devMode, setDevMode] = useState(() => isDevMode());
 
@@ -215,20 +225,34 @@ export function ProfileFeature() {
     if (!profile || initedRef.current) return;
     initedRef.current = true;
     const p = profile.customization;
+    // "Aqui desde (ano de ingresso na plataforma)" — preenche o ano de
+    // ingresso quando ainda não definido, a partir da conta (Supabase) ou
+    // do ano atual (modo offline).
+    let since = p.since;
+    if (!since) {
+      const joinYear = user?.created_at
+        ? new Date(user.created_at).getFullYear()
+        : new Date().getFullYear();
+      since = String(joinYear);
+      void update((d) => {
+        d.customization = { ...d.customization, since };
+      });
+    }
     setDraft({
-      nome: (p.nome || 'DECEPTIVON').toUpperCase(),
+      nome: (p.nome || p.handle?.replace(/^@/, '').toUpperCase() || 'DECEPTIVON').toUpperCase(),
       handle: p.handle || '@deceptivon',
       assinatura: p.assinatura || '',
       showcaseStat: p.showcaseStat || 'streak',
       titulo: p.titulo ?? null,
     });
-  }, [profile]);
+  }, [profile, user, update]);
 
   /* ── Handlers ── */
 
   const saveIdentity = async () => {
-    const nome = draft.nome.trim().toUpperCase() || 'DECEPTIVON';
     const handle = draft.handle.trim() || '@deceptivon';
+    // Por padrão o nome de exibição é o próprio handle (sem opção separada).
+    const nome = handle.replace(/^@/, '').toUpperCase() || 'DECEPTIVON';
     const assinatura = draft.assinatura.trim();
     const showcaseStat = draft.showcaseStat || 'streak';
     const titulo = draft.titulo ?? null;
@@ -538,72 +562,51 @@ export function ProfileFeature() {
             <div className="theme-bg" />
             <div className="theme-content">
               <div className="profile-section-title">OFENSIVAS DOS AMIGOS</div>
-              <div className="friends-streaks">
-                <div className="friend-avatar">
-                  👨‍💻
-                  <span
-                    className="friend-streak-badge"
+                <div className="friends-streaks">
+                  {addedFriends.length === 0 && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                      Nenhum amigo adicionado ainda.
+                    </span>
+                  )}
+                  {addedFriends.map((f) => (
+                    <div className="friend-avatar" key={f.id}>
+                      {f.avatarInitial}
+                      <span
+                        className="friend-streak-badge"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '2px',
+                          padding: '2px 6px',
+                        }}
+                      >
+                        {FlameSvg(10)} 0
+                      </span>
+                    </div>
+                  ))}
+                  <div
+                    className="friend-add-slot"
                     style={{
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: '2px',
-                      padding: '2px 6px',
+                      justifyContent: 'center',
                     }}
                   >
-                    {FlameSvg(10)} 616
-                  </span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      width="14"
+                      height="14"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="friend-avatar">
-                  👳
-                  <span
-                    className="friend-streak-badge"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '2px',
-                      padding: '2px 6px',
-                    }}
-                  >
-                    {FlameSvg(10)} 82
-                  </span>
-                </div>
-                <div className="friend-avatar">
-                  👵
-                  <span
-                    className="friend-streak-badge"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '2px',
-                      padding: '2px 6px',
-                    }}
-                  >
-                    {FlameSvg(10)} 12
-                  </span>
-                </div>
-                <div
-                  className="friend-add-slot"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    width="14"
-                    height="14"
-                  >
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -915,32 +918,7 @@ export function ProfileFeature() {
                       marginBottom: '6px',
                     }}
                   >
-                    Nome de Exibição
-                  </label>
-                  <input
-                    id="inputCustomNome"
-                    className="profile-name-input"
-                    type="text"
-                    maxLength={18}
-                    placeholder="SEU NOME"
-                    style={{ width: '100%', maxWidth: '100%' }}
-                    value={draft.nome}
-                    onChange={(e) => setDraft((d) => ({ ...d, nome: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label
-                    style={{
-                      fontSize: '0.65rem',
-                      letterSpacing: '1.5px',
-                      color: 'var(--text-secondary)',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      display: 'block',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    Handle (@usuário)
+                    Nome / Handle (@usuário)
                   </label>
                   <input
                     id="inputCustomHandle"
@@ -1039,8 +1017,13 @@ export function ProfileFeature() {
                         : ''
                     }`}
                     data-showcase={s.key}
-                    onClick={() => setDraft((d) => ({ ...d, showcaseStat: s.key }))}
-                  >
+                    onClick={() => {
+                      setDraft((d) => ({ ...d, showcaseStat: s.key }));
+                      void update((d) => {
+                        d.customization = { ...d.customization, showcaseStat: s.key };
+                      });
+                      showToast('Destaque atualizado!', 'success');
+                    }}                  >
                     <div
                       className="showcase-stat-option__icon"
                       dangerouslySetInnerHTML={{ __html: s.icon }}

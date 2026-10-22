@@ -477,6 +477,15 @@ export function AuthScreen() {
     setLoading('signup');
     persistRemember();
     applyLinkKey();
+    // Por padrão, cada usuário recebe uma chave de sincronização única
+    // (a menos que tenha vinculado uma chave existente).
+    if (!linkKey.trim()) {
+      try {
+        setSyncKey(`MBC-${clean.toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
+      } catch {
+        /* storage indisponível */
+      }
+    }
     try {
       await signUp(email.trim(), password, clean);
       setPendingConfirm(true);
