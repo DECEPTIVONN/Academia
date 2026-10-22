@@ -69,6 +69,76 @@ const isWorkoutInProgressToday = (): boolean => {
 };
 
 export function App() {
+  const { user, session, loading: authLoading, signOut } = useAuth();
+
+  /* ── Rota protegida: exibe login se usuário não autenticado ── */
+  if (authLoading || !user) {
+    return <AuthScreen />;
+  }
+
+  /* ── Estado de carregamento do bootstrap ── */
+  const [bootstrapLoading, setBootstrapLoading] = useState(true);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+
+  /* ── Iniciar bootstrap com ID do usuário (migração local → Supabase) ── */
+  useEffect(() => {
+    void bootstrap(user?.id)
+      .then(() => {
+        setBootstrapLoading(false);
+      })
+      .catch((err) => {
+        console.error('[App] falha no bootstrap:', err);
+        setBootstrapError(err.message);
+        setBootstrapLoading(false);
+      });
+  }, [user?.id]);
+
+  /* ── Se ainda estiver carregando, mostrar tela de loading ── */
+  if (bootstrapLoading) {
+    return (
+      <div className="h-screen bg-[#0a0514] text-white relative overflow-x-hidden">
+        <div className="cr-bg-container fixed inset-0 pointer-events-none z-0">
+          <div className="cr-bg-layer" />
+          <div className="cr-bg-particles">
+            <div className="cr-particle cr-p1" />
+            <div className="cr-particle cr-p2" />
+            <div className="cr-particle cr-p3" />
+            <div className="cr-particle cr-p4" />
+            <div className="cr-particle cr-p5" />
+          </div>
+          <div className="cr-bg-overlay" />
+        </div>
+        <div className="relative z-10 flex flex-col h-full">
+          <p className="text-center py-20 text-xl">Carregando Evo Fit...</p>
+          <p className="text-center text-zinc-400">Por favor, aguarde enquanto seus dados são carregados.</p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Se houve erro no bootstrap, mostrar tela de erro ── */
+  if (bootstrapError) {
+    return (
+      <div className="h-screen bg-[#0a0514] text-white relative overflow-x-hidden">
+        <BootErrorBoundary>
+          <div className="boot-overlay" role="alert">
+            <div className="boot-title">Erro ao carregar o aplicativo</div>
+            <div className="boot-msg">
+              A interface encontrou um erro durante o carregamento. Tente novamente — se o
+              problema persistir, recarregue a página.
+            </div>
+            <div className="boot-actions">
+              <button type="button" className="boot-btn" onClick={() => window.location.reload()}>
+                Tentar novamente
+              </button>
+            </div>
+          </div>
+        </BootErrorBoundary>
+      </div>
+    );
+  }
+
+  /* ── Usuário autenticado: renderizar aplicação ── */
   const [activeSection, setActiveSection] = useState<SectionType>('dashboard');
   /* v4.8.3-navbars: overlay do Dashboard (Missões/Notícias) liftado para o
      App — a drawer mobile consegue abri-los de qualquer seção. Limpo em

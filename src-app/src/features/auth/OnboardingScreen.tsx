@@ -20,7 +20,7 @@ const OBJECTIVES = [
 ];
 
 export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
-  const { update } = useProfileState();
+  const { update } = useProfileState('local');
   const [step, setStep] = useState<'dados' | 'objetivos'>('dados');
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');

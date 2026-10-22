@@ -17,7 +17,7 @@ export interface UseProfileStateResult {
   update: (mut: (draft: ProfileState) => void) => Promise<void>;
 }
 
-export function useProfileState(): UseProfileStateResult {
+export function useProfileState(userId: string = 'local'): UseProfileStateResult {
   const [state, setState] = useState<ProfileState | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +25,7 @@ export function useProfileState(): UseProfileStateResult {
     let alive = true;
 
     const load = () => {
-      getProfileState()
+      getProfileState(userId)
         .then((next) => {
           if (!alive) return;
           setState(next ?? null);
@@ -45,22 +45,22 @@ export function useProfileState(): UseProfileStateResult {
       document.removeEventListener('academia:db-ready', load);
       document.removeEventListener(PROFILE_UPDATED_EVENT, load);
     };
-  }, []);
+  }, [userId]);
 
   const update = useCallback(async (mut: (draft: ProfileState) => void) => {
     try {
-      const fresh = await getProfileState();
+      const fresh = await getProfileState(userId);
       if (!fresh) return;
       // Campos são JSON-safe; clone via JSON evita compartilhar referências
       const draft: ProfileState = JSON.parse(JSON.stringify(fresh));
       mut(draft);
-      await saveProfileState(draft);
+      await saveProfileState(draft, userId);
       setState(draft);
       document.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT));
     } catch (err) {
       console.warn('[useProfileState] falha ao salvar:', err);
     }
-  }, []);
+  }, [userId]);
 
   return { state, loading, update };
 }

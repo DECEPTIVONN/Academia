@@ -136,16 +136,16 @@ export async function saveCustomExercise(exercise: Exercise): Promise<void> {
 
 /* ── Helpers de Perfil (Fase 2) ── */
 
-export const PROFILE_STATE_KEY = 'local';
+export const PROFILE_STATE_KEY = (userId: string = 'local') => `profile_state_${userId}`;
 
 /** Lê o estado de perfil/customização (derivado da cópia bruta legada). */
-export async function getProfileState(): Promise<ProfileState | undefined> {
-  return idb.profileState.get(PROFILE_STATE_KEY);
+export async function getProfileState(userId: string = 'local'): Promise<ProfileState | undefined> {
+  return idb.profileState.get(PROFILE_STATE_KEY(userId));
 }
 
 /** Grava o estado de perfil inteiro (upsert). */
-export async function saveProfileState(state: ProfileState): Promise<void> {
-  await idb.profileState.put(state);
+export async function saveProfileState(state: ProfileState, userId: string = 'local'): Promise<void> {
+  await idb.profileState.put(state, PROFILE_STATE_KEY(userId));
 }
 
 /** Retorna a maestria de todos os exercícios do usuário */

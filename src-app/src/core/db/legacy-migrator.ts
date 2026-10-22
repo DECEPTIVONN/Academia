@@ -152,7 +152,8 @@ function mapLegacyAerobic(ae: LegacyAerobic | null | undefined): AerobicConfig |
 /* ── Migração ── */
 
 /** Deriva as tabelas do React a partir de um objeto legado já parseado.
- *  Usado pela migração inicial (localStorage) e pela importação de backup. */
+ *  Usado pela migração inicial (localStorage) e pela importação de backup.
+ *  O userId é inserido em todas as linhas para sincronização per-user no Supabase. */
 async function migrateLegacyObject(
   legacy: LegacyDB,
   userId: string,
@@ -175,7 +176,7 @@ async function migrateLegacyObject(
     try {
       const exercises = legacy.exercicios
         .filter((e) => e && e.id && e.nome)
-        .map(mapLegacyExercise);
+        .map((e) => ({ ...mapLegacyExercise(e), userId }));
 
       await idb.exercises.bulkPut(exercises);
       summary.exercisesMigrated = exercises.length;

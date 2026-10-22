@@ -77,7 +77,13 @@ export async function deleteAudioBlob(id: string): Promise<void> {
 
 /* ─────────────────────── Metadados (localStorage) ─────────────────────── */
 
-const LIB_KEY = 'academia_music_library_v1';
+const LIB_KEY_BASE = 'academia_music_library_v1';
+
+function libKey(userId: string): string {
+  return `${LIB_KEY_BASE}_${userId}`;
+}
+
+/* ─────────────────────── Upload Track ─────────────────────── */
 
 export interface UploadTrack {
   id: string;
@@ -150,6 +156,8 @@ export interface MusicLibrary {
   pinnedQuick: string[];
   /** v4.21.0 — migração de seed (Evo Fit + Suas músicas) já aplicada. */
   seeded: boolean;
+  /** v4.43.0 — sufixo do usuário para isolamento de dados por conta. */
+  userId: string;
 }
 
 const EMPTY_LIBRARY: MusicLibrary = {
@@ -159,6 +167,7 @@ const EMPTY_LIBRARY: MusicLibrary = {
   activePlaylistId: null,
   pinnedQuick: [],
   seeded: false,
+  userId: '',
 };
 
 /* ────────────────────── Playlists padrão (seed v4.21.0) ───────────────── */
@@ -191,11 +200,13 @@ function newId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-function readLibrary(): MusicLibrary {
+function readLibrary(userId: string = 'local'): MusicLibrary {
   try {
-    const raw = localStorage.getItem(LIB_KEY);
-    if (!raw) return { ...EMPTY_LIBRARY };
+    const raw = localStorage.getItem(libKey(userId));
+    if (!raw) return { ...EMPTY_LIBRARY, userId: 'local' };
     const parsed = JSON.parse(raw) as Partial<MusicLibrary>;
+    // Ensure userId is preserved
+    const existingUserId = parsed.userId || 'local';
     return {
       tracks: Array.isArray(parsed.tracks) ? parsed.tracks : [],
       externalTracks: Array.isArray(parsed.externalTracks) ? parsed.externalTracks : [],
@@ -203,15 +214,20 @@ function readLibrary(): MusicLibrary {
       activePlaylistId: parsed.activePlaylistId ?? null,
       pinnedQuick: Array.isArray(parsed.pinnedQuick) ? parsed.pinnedQuick : [],
       seeded: parsed.seeded === true,
+      userId: existingUserId,
     };
   } catch {
-    return { ...EMPTY_LIBRARY };
+    return { ...EMPTY_LIBRARY, userId: 'local' };
   }
 }
 
 function writeLibrary(lib: MusicLibrary, options?: { silent?: boolean }): void {
+  const dataToStore = {
+    ...lib,
+    userId: lib.userId || 'local',
+  };
   try {
-    localStorage.setItem(LIB_KEY, JSON.stringify(lib));
+    localStorage.setItem(libKey(lib.userId), JSON.stringify(dataToStore));
   } catch {
     /* storage cheio/indisponível — estado segue em memória */
   }

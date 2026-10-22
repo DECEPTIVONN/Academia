@@ -60,7 +60,7 @@ async function backfillExerciseImages(): Promise<void> {
 }
 
 /** Executa seed → backfill → migração → flush. Seguro de chamar várias vezes. */
-export async function bootstrap(): Promise<void> {
+export async function bootstrap(userId: string = LOCAL_USER_ID): Promise<void> {
   if (started) return;
   started = true;
 
@@ -73,7 +73,7 @@ export async function bootstrap(): Promise<void> {
 
   try {
     if (!isLegacyMigrated()) {
-      const summary = await migrateLegacyData(LOCAL_USER_ID);
+      const summary = await migrateLegacyData(userId);
       console.log('[bootstrap] migração v3 →', summary);
       if (summary.errors.length > 0) {
         console.warn('[bootstrap] erros na migração:', summary.errors);
