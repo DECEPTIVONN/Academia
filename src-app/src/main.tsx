@@ -34,7 +34,7 @@ declare global {
  * Agora a falha vira uma tela de erro acionável (Tentar novamente) + detalhes,
  * com o mesmo visual do overlay de boot do index.html.
  */
-class BootErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+export class BootErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
 
   static getDerivedStateFromError() {
