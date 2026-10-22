@@ -476,6 +476,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
         ...p,
         items: p.items.filter((it) => !((it.kind === 'upload' && it.trackId === trackId) || (it.kind === 'youtube' && it.refId === trackId))),
       })),
+      externalTracks: cur.externalTracks.filter((t) => t.refId !== trackId),
       pinnedQuick: cur.pinnedQuick.filter((k) => k !== pinTrackKey(trackId)),
     };
     if (lib.activePlaylistId && !lib.playlists.some((p) => p.id === lib.activePlaylistId)) {
