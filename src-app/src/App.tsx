@@ -72,9 +72,24 @@ export function App() {
   const { user, session, loading: authLoading, signOut } = useAuth();
 
   /* ── Rota protegida: exibe login se usuário não autenticado ── */
-  if (authLoading || !user) {
+  /* 
+   * Lógica de rota:
+   * - authLoading = true: tela de carregamento inicial (enquanto Supabase verifica sessão)
+   * - authLoading = false && !user: usuário não logado → mostrar AuthScreen
+   * - authLoading = false && user: usuário autenticado → renderizar aplicação
+   * 
+   * IMPORTANTE: A verificação !user deve vir AFTER authLoading para evitar
+   * que o app renderize antes do estado da sessão ser conhecido.
+   */
+  if (authLoading) {
     return <AuthScreen />;
   }
+
+  if (!user) {
+    return <AuthScreen />;
+  }
+
+  /* ── Usuário autenticado: renderizar aplicação ── */
 
   /* ── Estado de carregamento do bootstrap ── */
   const [bootstrapLoading, setBootstrapLoading] = useState(true);

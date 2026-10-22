@@ -908,3 +908,148 @@ export function parseSpotifyLink(url: string): SpotifyRef | null {
 export function parseSpotifyRef(url: string): string | null {
   return parseSpotifyLink(url)?.id ?? null;
 }
+
+/* ──────────────────────── Sync Supabase ───────────────────────────────── */
+
+// Chave da tabela de biblioteca musical por usuário
+const MUSIC_LIB_TABLE = 'music_library';
+
+/** Sincroniza a biblioteca local para o Supabase (upsert por userId). */
+export async function syncLibraryToSupabase(userId: string, lib: MusicLibrary): Promise<void> {
+  if (!isSupabaseConfigured) {
+    console.warn('[sync] Supabase não configurado - pulando sync da biblioteca');
+    return;
+  }
+
+  const supabase = await import('@/core/supabase');
+  const { supabase: sb } = supabase;
+
+  try {
+    const { error } = await sb.from(MUSIC_LIB_TABLE).upsert(
+      {
+        user_id: userId,
+        library: lib,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' }
+    );
+
+    if (error) throw error;
+    console.log('[sync] Biblioteca sincronizada com Supabase');
+  } catch (err) {
+    console.error('[sync] Falha ao sincronizar biblioteca:', err);
+  }
+}
+
+/** Sincroniza a biblioteca do Supabase para o localStorage (download). */
+export async function syncLibraryFromSupabase(userId: string): Promise<MusicLibrary | null> {
+  if (!isSupabaseConfigured) {
+    console.warn('[sync] Supabase não configurado - pulando download da biblioteca');
+    return null;
+  }
+
+  const supabase = await import('@/core/supabase');
+  const { supabase: sb } = supabase;
+
+  try {
+    const { data, error } = await sb.from(MUSIC_LIB_TABLE).select('library').eq('user_id', userId).single();
+
+    if (error) {
+      // Não há dados na nuvem ainda - isso é normal no primeiro acesso
+      if (error.code === 'PGRST116') {
+        console.log('[sync] Nenhuma biblioteca encontrada na nuvem para userId:', userId);
+        return null;
+      }
+      throw error;
+    }
+
+    console.log('[sync] Biblioteca baixada do Supabase');
+    return data.library as MusicLibrary;
+  } catch (err) {
+    console.error('[sync] Falha ao baixar biblioteca:', err);
+    return null;
+  }
+}
+
+/** Realiza o sync completo da biblioteca após login bem-sucedido. */
+export async function syncLibraryOnLogin(userId: string): Promise<void> {
+  // 1. Tenta baixar a biblioteca da nuvem
+  const cloudLib = await syncLibraryFromSupabase(userId);
+
+  // 2. Se houver dados na nuvem, mesclar com local (nuvem tem prioridade)
+  if (cloudLib) {
+    const localLib = readLibrary(userId);
+    const mergedLib = mergeMusicLibraries(cloudLib, localLib);
+    writeLibrary(mergedLib, { silent: true });
+    await syncLibraryToSupabase(userId, mergedLib);
+    console.log('[sync] Biblioteca mesclada (nuvem + local)');
+  } else {
+    // Nenhum dado na nuvem - garantir que local esteja seedado corretamente
+    const seededLib = seedLibrary(readLibrary(userId));
+    writeLibrary(seededLib, { silent: true });
+    await syncLibraryToSupabase(userId, seededLib);
+    console.log('[sync] Biblioteca seedada localmente e enviada para a nuvem');
+  }
+}
+
+/** Mescla duas bibliotecas de música.
+ *  - nuvem tem prioridade para playlists e externalTracks
+ *  - local tem prioridade para tracks (uploads) novos que ainda não vieram da nuvem
+ */
+function mergeMusicLibraries(cloud: MusicLibrary, local: MusicLibrary): MusicLibrary {
+  // Mesclar playlists: nuvem sobrepõe, mas mantém tracks locais que não existem na nuvem
+  const mergedPlaylists = [...cloud.playlists];
+
+  // Garantir que "Suas músicas" e "YouTube" existam
+  const suasKey = 'pl-suas-musicas';
+  const youtubeKey = 'pl-youtube';
+  const evoFitKey = 'pl-evo-fit';
+
+  // Garantir que Suas músicas tenha os uploads locais que faltam
+  const cloudSuas = cloud.playlists.find((p) => p.id === suasKey);
+  const localSuas = local.playlists.find((p) => p.id === suasKey);
+
+  if (localSuas && cloudSuas) {
+    // Criar set de IDs de tracks da nuvem para evitar duplicatas
+    const cloudTrackIds = new Set(
+      (cloudSuas.items.map((it) => it.kind === 'upload' ? (it as { trackId: string }).trackId : '')).filter(Boolean)
+    );
+
+    // Adicionar tracks locais que não estão na nuvem
+    const localUploads = localSuas.items.filter((it) => it.kind === 'upload');
+    for (const upload of localUploads) {
+      const trackId = (upload as { trackId: string }).trackId;
+      if (!cloudTrackIds.has(trackId)) {
+        cloudSuas.items.push(upload);
+      }
+    }
+  } else if (localSuas && !cloudSuas) {
+    // Apenas local - usar como está
+    // (já estará em mergedPlaylists se já existia, mas garantir)
+  }
+
+  // Mesclar externalTracks: nuvem sobrepõe
+  const mergedExternalTracks = [...cloud.externalTracks];
+  const cloudExtIds = new Set(cloud.externalTracks.map((t) => t.refId));
+  for (const ext of local.externalTracks) {
+    if (!cloudExtIds.has(ext.refId)) {
+      mergedExternalTracks.push(ext);
+    }
+  }
+
+  // Mesclar tracks: local tem prioridade (uploads novos)
+  const mergedTracks = [...local.tracks];
+  const localTrackIds = new Set(local.tracks.map((t) => t.id));
+  for (const track of cloud.tracks) {
+    if (!localTrackIds.has(track.id)) {
+      mergedTracks.push(track);
+    }
+  }
+
+  return {
+    ...cloud,
+    tracks: mergedTracks,
+    externalTracks: mergedExternalTracks,
+    playlists: mergedPlaylists,
+  };
+}
