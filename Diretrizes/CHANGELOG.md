@@ -2,6 +2,13 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.42.1] - 2026-10-22
+
+**Correção do erro de interface Minified React error #310 (hooks condicionais).**
+
+### Fixed
+- `src-app/src/App.tsx`: removidas chamadas condicionais de hooks (early returns de auth/bootstrap antes de `useState`/`useEffect`/etc.), que violavam as Rules of Hooks e causavam "Rendered fewer hooks than expected" em runtime. A árvore autenticada foi isolada em `AppShell` (renderizado apenas após autenticação) e os retornos de carregamento/erro do bootstrap foram movidos para depois da declaração de todos os hooks.
+
 ## [v4.42.0] - 2026-10-21
 
 **Músicas avulsas YouTube em Início/Suas músicas, anotações na edição e fila fluida.** Links YouTube vídeo entram em “Suas músicas” e aparecem na lista da aba Início; anotações do exercício são carregadas ao abrir a edição; fila do treino anima abertura/fechamento; início da playlist não espera expansão de containers nem criação do player YouTube.
