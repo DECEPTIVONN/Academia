@@ -73,8 +73,16 @@ const isWorkoutInProgressToday = (): boolean => {
 };
 
 export function App() {
-  
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
 
+function AppContent() {
+  const { user, session, loading: authLoading, signOut } = useAuth();
+  
   /* ── Rota protegida: exibe login se usuário não autenticado ── */
   /* 
    * Lógica de rota:
