@@ -463,14 +463,18 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   },
 
   removeTrack: async (trackId) => {
-    await deleteAudioBlob(trackId);
     const cur = readLibrary();
+    // Apenas tenta deletar blob local para tracks upload; faixas YouTube são apenas referências
+    const trackFromDB = cur.tracks.find((t) => t.id === trackId);
+    if (trackFromDB?.kind === 'upload') {
+      await deleteAudioBlob(trackId);
+    }
     const lib: MusicLibrary = {
       ...cur,
       tracks: cur.tracks.filter((t) => t.id !== trackId),
       playlists: cur.playlists.map((p) => ({
         ...p,
-        items: p.items.filter((it) => !(it.kind === 'upload' && it.trackId === trackId)),
+        items: p.items.filter((it) => !((it.kind === 'upload' && it.trackId === trackId) || (it.kind === 'youtube' && it.refId === trackId))),
       })),
       pinnedQuick: cur.pinnedQuick.filter((k) => k !== pinTrackKey(trackId)),
     };
