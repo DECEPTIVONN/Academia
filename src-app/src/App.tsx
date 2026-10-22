@@ -741,10 +741,6 @@ function AppContent() {
   }, [isPerfilOverlayOpen, isPerfilClosing, closePerfilOverlay, isSearchOpen]);
 
   return (
-    <AuthProvider>
-      {/* v4.0.13: text-white (antes text-[#e5e2e1]) — paridade com o `body{color:var(--text)}`
-          do legado (#ffffff); o cinza derrubava a herança de cor de títulos e textos sem
-          cor própria. Ver globals.css reset local. */}
       <div className="h-screen bg-[#0a0514] text-white relative overflow-x-hidden">
         {/* CR Dynamic Background System */}
         <div id="cr-dynamic-bg" className="cr-bg-container fixed inset-0 pointer-events-none z-0">
@@ -1080,7 +1076,6 @@ function AppContent() {
         {/* Container de toasts (treino.html L1326 — herda animações do CSS legado) */}
         <div className="toast-container" id="toastContainer" />
       </div>
-    </AuthProvider>
   );
 }
 
