@@ -2,6 +2,15 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.43.5] - 2026-10-23
+
+**Onboarding: dados salvos, botão mais escuro e estilo da mensagem de evolução.**
+
+### Fixed
+- `src-app/src/features/profile/useProfileState.ts`: `update()` cria o estado de perfil se ausente, garantindo que os dados do onboarding sejam salvos (e o onboarding exibido apenas uma vez).
+- `src-app/src/features/auth/OnboardingScreen.tsx`: botão "Continuar" com roxo mais escuro (`#5b21b6`).
+- `src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`: mensagem de evolução vazia passa a usar o mesmo estilo/fundo (`.cr-description-box`) da sub-aba de descrição.
+
 ## [v4.43.4] - 2026-10-23
 
 **Evolução de força: mensagem inicial e gráfico alinhado ao editor.**

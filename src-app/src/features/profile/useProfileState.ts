@@ -49,8 +49,18 @@ export function useProfileState(userId: string = 'local'): UseProfileStateResult
 
   const update = useCallback(async (mut: (draft: ProfileState) => void) => {
     try {
-      const fresh = await getProfileState(userId);
-      if (!fresh) return;
+      let fresh = await getProfileState(userId);
+      if (!fresh) {
+        // Garante que o estado exista (primeiro acesso / reset).
+        const { DEFAULT_PROFILE_CUSTOMIZATION } = await import('@/core/db/schema');
+        fresh = {
+          key: userId === 'local' ? 'local' : `profile_state_${userId}`,
+          customization: { ...DEFAULT_PROFILE_CUSTOMIZATION },
+          selectedEmblems: [],
+          conquistas: [],
+        };
+        await saveProfileState(fresh, userId);
+      }
       // Campos são JSON-safe; clone via JSON evita compartilhar referências
       const draft: ProfileState = JSON.parse(JSON.stringify(fresh));
       mut(draft);

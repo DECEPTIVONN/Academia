@@ -1312,9 +1312,9 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                                 const maxValor = hist.length ? Math.max(...hist.map((h) => h.valor)) : 0;
                                                 if (hist.length === 0) {
                                                     return (
-                                                        <p className="text-xs text-zinc-400">
+                                                        <div className="cr-description-box">
                                                             Registre sua evolução de carga em Detalhes para ver sua evolução aqui.
-                                                        </p>
+                                                        </div>
                                                     );
                                                 }
                                                 return (

@@ -105,7 +105,7 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
               <button type="button" className="flex-1 rounded-lg bg-white/10 px-4 py-2 text-white" onClick={handleSkipDados} disabled={saving}>
                 Pular
               </button>
-              <button type="button" className="flex-1 rounded-lg bg-primary px-4 py-2 text-white" onClick={handleSaveDados} disabled={saving}>
+              <button type="button" className="flex-1 rounded-lg px-4 py-2 text-white" style={{ background: '#5b21b6' }} onClick={handleSaveDados} disabled={saving}>
                 {saving ? 'Salvando…' : 'Continuar'}
               </button>
             </div>
