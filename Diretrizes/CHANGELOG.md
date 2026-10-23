@@ -2,6 +2,13 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.43.6] - 2026-10-23
+
+**Onboarding: predefinição de treino aplicada nas fichas.**
+
+### Changed
+- `src-app/src/features/auth/OnboardingScreen.tsx`: ao selecionar um objetivo (exceto "Treino personalizado"), aplica o template correspondente (`applyTemplate`) nas fichas A/B, conforme o mapeamento objetivo→template.
+
 ## [v4.43.5] - 2026-10-23
 
 **Onboarding: dados salvos, botão mais escuro e estilo da mensagem de evolução.**

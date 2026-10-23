@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { showToast } from '@/lib/toast';
+import { loadLocalData } from '@/core/db/queries';
+import { applyTemplate } from '@/features/workout/treinos/treinos-helpers';
 
 interface OnboardingScreenProps {
   open: boolean;
@@ -47,6 +49,16 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
 
   const handleSkipDados = () => setStep('objetivos');
 
+  const OBJECTIVE_TO_TEMPLATE: Record<string, string> = {
+    'Hipertrofia (iniciante)': 'hipertrofia_iniciante',
+    'Hipertrofia (médio)': 'hipertrofia_medio',
+    'Hipertrofia (médio II)': 'hipertrofia_medio_ii',
+    'Tonificar': 'tonificar',
+    'Perda ponderal (médio) SUP/INF': 'perda_ponderal_media',
+    'Perda ponderal (médio II) SUP/INF': 'perda_ponderal_media_ii',
+    'Push/Pull': 'push_pull',
+  };
+
   const handleObjective = async (objective: string) => {
     setSaving(true);
     try {
@@ -58,7 +70,16 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
         try { localStorage.setItem('academia_open_ficha', '1'); } catch { /* ignore */ }
         showToast('Bons treinos! Monte sua ficha em "Minha Ficha".', 'success');
       } else {
-        showToast('Bons treinos!', 'success');
+        const tplKey = OBJECTIVE_TO_TEMPLATE[objective];
+        if (tplKey) {
+          try {
+            const data = await loadLocalData();
+            await applyTemplate(data, tplKey);
+          } catch (e) {
+            console.warn('[onboarding] falha ao aplicar template:', e);
+          }
+        }
+        showToast('Bons treinos! Predefinição aplicada às fichas.', 'success');
       }
       onComplete();
     } finally {
