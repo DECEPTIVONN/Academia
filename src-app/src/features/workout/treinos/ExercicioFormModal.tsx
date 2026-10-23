@@ -455,7 +455,13 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
 
           {/* Evolução de Força (renderExChart L163–187) */}
           <div className="ex-chart-container" id="exChartContainer" style={{ display: showChart ? 'block' : 'none' }}>
-            <h4>📈 Evolução de Força (Carga)</h4>
+            <h4>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
+              </svg>
+              Evolução de Força (Carga)
+            </h4>
             <div className="ex-chart" id="exChart">
               {hist.map((h, i) => {
                 const heightPct = maxValor > 0 ? (h.valor / maxValor) * 100 : 0;

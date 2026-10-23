@@ -2,6 +2,14 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.43.4] - 2026-10-23
+
+**Evolução de força: mensagem inicial e gráfico alinhado ao editor.**
+
+### Changed
+- `src-app/src/features/workout/treinos/DetalhesPecaModal.tsx`: quando não há histórico de carga, exibe "Registre sua evolução de carga em Detalhes para ver sua evolução aqui."; gráfico passa a usar a mesma estrutura (`.chart-bar-wrap`/`.chart-val`/`.chart-bar`/`.chart-date`) do editor de exercício.
+- `src-app/src/features/workout/treinos/ExercicioFormModal.tsx`: ícone de evolução de carga (📈) substituído por SVG no padrão do site (stroke/currentColor).
+
 ## [v4.43.3] - 2026-10-23
 
 **Correção: onboarding do primeiro acesso não aparecia após login.**

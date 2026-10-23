@@ -1313,12 +1313,12 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                                 if (hist.length === 0) {
                                                     return (
                                                         <p className="text-xs text-zinc-400">
-                                                            Sem historico de carga ainda.
+                                                            Registre sua evolução de carga em Detalhes para ver sua evolução aqui.
                                                         </p>
                                                     );
                                                 }
                                                 return (
-                                                    <div className="ex-chart" style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '120px' }}>
+                                                    <div className="ex-chart" id="exChart">
                                                         {hist.map((h, i) => {
                                                             const heightPct = maxValor > 0 ? (h.valor / maxValor) * 100 : 0;
                                                             const dateLbl = new Date(h.data + 'T12:00:00').toLocaleDateString('pt-BR', {
@@ -1326,18 +1326,10 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                                                 month: '2-digit',
                                                             });
                                                             return (
-                                                                <div key={`${h.data}-${i}`} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>{h.label}</div>
-                                                                    <div
-                                                                        style={{
-                                                                            width: '100%',
-                                                                            height: `${heightPct}%`,
-                                                                            background: 'var(--primary)',
-                                                                            borderRadius: '4px 4px 0 0',
-                                                                        }}
-                                                                        title={`${h.label} em ${dateLbl}`}
-                                                                    />
-                                                                    <div style={{ fontSize: '9px', color: '#64748b' }}>{dateLbl}</div>
+                                                                <div className="chart-bar-wrap" key={`${h.data}-${i}`}>
+                                                                    <div className="chart-val">{h.label}</div>
+                                                                    <div className="chart-bar" style={{ height: `${heightPct}%` }} title={`${h.label} em ${dateLbl}`} />
+                                                                    <div className="chart-date">{dateLbl}</div>
                                                                 </div>
                                                             );
                                                         })}
