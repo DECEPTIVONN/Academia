@@ -2,6 +2,13 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.42.8] - 2026-10-23
+
+**Correcao do compartilhamento: botao habilitado apos pre-render.**
+
+### Fixed
+- `src-app/src/features/gamification/ShareModal.tsx`: o botao "COMPARTILHAR" ficava desabilitado indefinidamente porque o pre-render nao atualizava o estado `imageReady`; agora o arquivo PNG e gerado no pre-render (com delay para o DOM montar) e habilita o botao.
+
 ## [v4.42.7] - 2026-10-22
 
 **Compartilhamento nativo alinhado ao Share.md.**

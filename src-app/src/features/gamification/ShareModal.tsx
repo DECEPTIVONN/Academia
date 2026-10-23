@@ -162,7 +162,14 @@ export function ShareModal() {
       if (!card) return;
       void renderCanvas(card)
         .then((c) => {
-          canvasRef.current = cancelled ? null : c;
+          if (cancelled || !c) return;
+          canvasRef.current = c;
+          c.toBlob((blob) => {
+            if (cancelled || !blob || blob.size === 0) return;
+            const fileName = `meu-${activeCardName(kind)}-${today()}.png`;
+            canvasFileRef.current = new File([blob], fileName, { type: 'image/png' });
+            setImageReady(true);
+          }, 'image/png');
         })
         .catch(() => {
           /* pré-render best-effort — o clique re-renderiza se preciso */
@@ -172,7 +179,7 @@ export function ShareModal() {
       cancelled = true;
       window.clearTimeout(t);
     };
-  }, [show, kind, cardId]);
+  }, [show, kind, cardId, quote]);
 
   /* downloadShareImage L774–805 */
   const handleDownload = async () => {
