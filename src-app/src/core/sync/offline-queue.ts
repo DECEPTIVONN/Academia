@@ -62,8 +62,21 @@ export async function queueOfflineMutation(payload: unknown): Promise<void> {
       retryCount: 0,
     };
 
+    /* Coalescência no enfileiramento: se já existe mutação pendente para o
+       mesmo syncKey, atualiza o payload em vez de criar nova entrada. */
+    const allReq = db.transaction([IDB_STORE], 'readonly').objectStore(IDB_STORE).getAll();
+    const all: OfflineMutation[] = await new Promise((res) => {
+      allReq.onsuccess = () => res(allReq.result || []);
+      allReq.onerror = () => res([]);
+    });
+    const existing = all.find((m) => m.syncKey === syncKey && m.status === 'pending');
+
     const tx = db.transaction([IDB_STORE], 'readwrite');
-    tx.objectStore(IDB_STORE).add(mutation);
+    if (existing) {
+      tx.objectStore(IDB_STORE).put({ ...existing, payload: mutation.payload, createdAt: mutation.createdAt });
+    } else {
+      tx.objectStore(IDB_STORE).add(mutation);
+    }
     await new Promise((res) => {
       tx.oncomplete = res;
     });
@@ -99,27 +112,44 @@ export async function flushOfflineQueue(): Promise<number> {
       .sort((a, b) => a.createdAt - b.createdAt);
     if (pending.length === 0) return 0;
 
-    let syncedCount = 0;
+    /* Coalescência (State Folding) — dados.md §5.2:
+       agrupa mutações pendentes por syncKey e envia apenas a MAIS RECENTE
+       de cada grupo, marcando todas as anteriores como sincronizadas. */
+    const byKey = new Map<string, OfflineMutation[]>();
     for (const item of pending) {
+      const list = byKey.get(item.syncKey) || [];
+      list.push(item);
+      byKey.set(item.syncKey, list);
+    }
+
+    let syncedCount = 0;
+    for (const [key, group] of byKey.entries()) {
+      const latest = group[group.length - 1];
       try {
         const { error } = await client
           .from('user_sync')
           .upsert(
             {
-              sync_key: item.syncKey,
-              data: item.payload,
+              sync_key: key,
+              data: latest.payload,
               updated_at: new Date().toISOString(),
             },
             { onConflict: 'sync_key' }
           );
 
         if (!error) {
+          /* Remove todas as mutações do grupo (a última já foi enviada). */
           const delTx = db.transaction([IDB_STORE], 'readwrite');
-          delTx.objectStore(IDB_STORE).delete(item.id);
-          syncedCount++;
+          const store = delTx.objectStore(IDB_STORE);
+          for (const mut of group) store.delete(mut.id);
+          await new Promise((res) => {
+            delTx.oncomplete = res;
+            delTx.onerror = () => res(null);
+          });
+          syncedCount += group.length;
         }
       } catch (e) {
-        console.warn('[offline-queue] Falha ao processar item:', e);
+        console.warn('[offline-queue] Falha ao processar grupo:', e);
       }
     }
     return syncedCount;

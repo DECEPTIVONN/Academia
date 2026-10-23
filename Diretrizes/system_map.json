@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "3.5.91",
-  "last_updated": "2026-10-19",
+  "version": "3.5.92",
+  "last_updated": "2026-10-23",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
   "entry_points": {
@@ -777,6 +777,14 @@
       {
         "file": "src-app/vite.config.ts",
         "purpose": "React + Tailwind v4 + vite-plugin-pwa (ícones PWA /assets/icons/icon-192.png e icon-512.png — ícone unificado branco+Decepticon gerado de D.jpg, v4.7.4-pwa-icon-unificado; casam com os mipmaps do launcher Android). v4.18.0-music: includeAssets ganhou o glob negativo '!assets/sounds/**' — o MAIN.mp3 (7,2 MB) fica FORA do precache do SW e é cacheado sob demanda pelo runtimeCaching StaleWhileRevalidate de /assets/."
+      },
+      {
+        "file": "src-app/src/lib/canonical.ts",
+        "purpose": "Comparação canônica profunda (cleanAndSortObject/safeStringify/canonicalEqual) usada para evitar pushs redundantes e loops de sync (dados.md §4.4)."
+      },
+      {
+        "file": "src-app/src/features/sync/OfflineSyncBanner.tsx",
+        "purpose": "Badge de modo offline / mutações pendentes (dados.md §5.4), montado no App.tsx."
       }
     ],
     "core_db": [

@@ -46,6 +46,7 @@ import { showToast } from '@/lib/toast';
 import type { SheetKey } from '@/core/db/schema';
 import { AuthModal } from '@/features/auth/AuthModal';
 import { RemoteSyncToast } from '@/features/sync/RemoteSyncToast';
+import { OfflineSyncBanner } from '@/features/sync/OfflineSyncBanner';
 import { isEngineRunning, startSyncEngine, stopSyncEngine } from '@/core/sync/sync-manager';
 import { AuthScreen } from '@/features/auth/AuthScreen';
 import { BootErrorBoundary } from '@/main';
@@ -1044,6 +1045,7 @@ function AppShell() {
           )}
           <OnboardingGate />
           <RemoteSyncToast />
+           <OfflineSyncBanner />
 
           {/* ====== INTERFACE DE MÚSICAS E PLAYLISTS (v4.19.0-music) ======
               Aberta pelo card de Configurações ('academia:open-music'). */}

@@ -2,6 +2,18 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.43.0] - 2026-10-23
+
+**Peças faltantes da arquitetura de dados (dados.md): banner offline, coalescência e comparação canônica.**
+
+### Added
+- `src-app/src/lib/canonical.ts`: `cleanAndSortObject`, `safeStringify` e `canonicalEqual` para comparação profunda de snapshots.
+- `src-app/src/features/sync/OfflineSyncBanner.tsx`: indicador de modo offline / mutações pendentes, montado no `App.tsx`.
+
+### Changed
+- `src-app/src/core/sync/sync-manager.ts`: `pushSnapshot` cancela o push quando o snapshot é canonicamente idêntico ao último salvo; `applySnapshot` marca o snapshot recebido como último salvo (evita loop ping-pong).
+- `src-app/src/core/sync/offline-queue.ts`: coalescência (state folding) no enfileiramento e no flush — mutações pendentes do mesmo `syncKey` são agrupadas e apenas a mais recente é enviada.
+
 ## [v4.42.9] - 2026-10-23
 
 **Correcao adicional do compartilhamento: remover render duplicado e reduzir escala.**

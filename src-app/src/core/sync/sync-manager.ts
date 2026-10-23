@@ -42,6 +42,7 @@ import {
   type DeviceRecord,
 } from './device';
 import { queueOfflineMutation, flushOfflineQueue, getOfflinePendingCount } from './offline-queue';
+import { safeStringify } from '@/lib/canonical';
 
 /* ── Snapshot sincronizado (payload JSONB de user_sync.data) ── */
 
@@ -110,6 +111,9 @@ let lastRemoteCheckAt = 0;
 let remoteCheckInFlight = false;
 let applyingRemote = false;
 let pushDebounce: number | null = null;
+/* Último snapshot efetivamente salvo (JSON canônico) — evita pushs redundantes
+   e loops de sincronização (dados.md §4.4). */
+let lastSavedSnapshotJson = '';
 
 function emitStatus(): void {
   document.dispatchEvent(new CustomEvent('academia:sync-status-changed'));
@@ -227,6 +231,13 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
     /* Se a entrada de hoje não existir no snapshot, o today-entry-store
        recarrega sozinho no db-ready; se existir, o merge é automático. */
     setLastSyncedAt(Date.parse(remoteUpdatedAt || snapshot.updatedAt));
+    /* Marca o snapshot recebido como "último salvo" para não re-enviar idêntico
+       (evita loop ping-pong — dados.md §4.4). */
+    try {
+      lastSavedSnapshotJson = safeStringify(snapshot);
+    } catch {
+      /* best-effort */
+    }
     emitDbReady();
     document.dispatchEvent(new CustomEvent('academia:profile-updated'));
   } finally {
@@ -243,6 +254,14 @@ export async function pushSnapshot(): Promise<boolean> {
 
   const snapshot = await buildSnapshot();
   const updatedAt = snapshot.updatedAt;
+
+  /* Comparação canônica profunda: se nada mudou em relação ao último salvo,
+     cancela o push (evita tráfego redundante e loops — dados.md §4.4). */
+  const canonicalJson = safeStringify(snapshot);
+  if (lastSavedSnapshotJson && canonicalJson === lastSavedSnapshotJson) {
+    /* Nada a fazer — estado idêntico ao último push. */
+    return true;
+  }
 
   /* Transmite para outras abas locais (<5 ms) com o dado completo */
   if (crossTabChannel) {
@@ -272,6 +291,7 @@ export async function pushSnapshot(): Promise<boolean> {
     return false;
   }
 
+  lastSavedSnapshotJson = canonicalJson;
   setLastSyncedAt(Date.parse(updatedAt));
   broadcastToRemoteDevices(dataSyncKey(), updatedAt);
   emitStatus();
