@@ -47,7 +47,8 @@ import type { SheetKey } from '@/core/db/schema';
 import { AuthModal } from '@/features/auth/AuthModal';
 import { RemoteSyncToast } from '@/features/sync/RemoteSyncToast';
 import { OfflineSyncBanner } from '@/features/sync/OfflineSyncBanner';
-import { isEngineRunning, startSyncEngine, stopSyncEngine } from '@/core/sync/sync-manager';
+import { isEngineRunning, startSyncEngine, stopSyncEngine, restartSyncEngine } from '@/core/sync/sync-manager';
+import { getSyncKey, setSyncKey, deriveSyncKeyForUser } from '@/core/sync/supabase-client';
 import { AuthScreen } from '@/features/auth/AuthScreen';
 import { BootErrorBoundary } from '@/main';
 /* Ordem canônica das seções (ordem dos slides na fita + swipe) */
@@ -95,6 +96,22 @@ function AppShell() {
   const [bootstrapLoading, setBootstrapLoading] = useState(true);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
 
+  /* ── Vincula a chave de sync à conta autenticada (mesma conta = mesma key) ── */
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const derived = deriveSyncKeyForUser(user.id, user.email);
+      const current = getSyncKey();
+      if (current !== derived) {
+        setSyncKey(derived);
+        // Reinicia o motor para usar a nova chave (se já estiver rodando).
+        if (isEngineRunning()) restartSyncEngine();
+      }
+    } catch {
+      /* storage indisponível */
+    }
+  }, [user?.id, user?.email]);
+
   /* ── Iniciar bootstrap com ID do usuário (migração local → Supabase) ── */
   useEffect(() => {
     void bootstrap(user?.id)
@@ -107,6 +124,31 @@ function AppShell() {
         setBootstrapLoading(false);
       });
   }, [user?.id]);
+
+  /* ── Foto de perfil da conta Google → perfil do app ── */
+  useEffect(() => {
+    if (bootstrapLoading || !user) return;
+    const avatarUrl =
+      (user.user_metadata as any)?.avatar_url ||
+      (user.user_metadata as any)?.picture ||
+      null;
+    if (!avatarUrl) return;
+    (async () => {
+      try {
+        const { getProfileState, saveProfileState } = await import('@/core/db/idb');
+        const state = await getProfileState('local');
+        if (state) {
+          await saveProfileState(
+            { ...state, customization: { ...state.customization, photo: avatarUrl } },
+            'local'
+          );
+          document.dispatchEvent(new CustomEvent('academia:profile-updated'));
+        }
+      } catch {
+        /* best-effort */
+      }
+    })();
+  }, [bootstrapLoading, user?.id]);
 
   /* ── Usuário autenticado: renderizar aplicação ── */
   const [activeSection, setActiveSection] = useState<SectionType>('dashboard');
@@ -247,6 +289,7 @@ function AppShell() {
     setSidebarPinned((prev) => {
       const next = !prev;
       writeLS(PREF_KEYS.sidebarPinned, String(next));
+      try { window.dispatchEvent(new CustomEvent('academia:prefs-changed')); } catch { /* noop */ }
       return next;
     });
   }, []);

@@ -43,6 +43,7 @@ import {
 } from './device';
 import { queueOfflineMutation, flushOfflineQueue, getOfflinePendingCount } from './offline-queue';
 import { safeStringify } from '@/lib/canonical';
+import { applySavedTheme } from '@/features/settings/theme-colors';
 
 /* ── Snapshot sincronizado (payload JSONB de user_sync.data) ── */
 
@@ -58,6 +59,8 @@ export interface AppSnapshot {
   musicLibrary?: unknown;
   /** Amigos adicionados (lista local-first), sincronizada com a nuvem. */
   friends?: unknown;
+  /** Preferências de UI sincronizadas (tema, player, sidebar, lock, navbar, etc.). */
+  prefs?: Record<string, string>;
   updatedAt: string;
   originDeviceId: string;
 }
@@ -157,6 +160,36 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     friends = undefined;
   }
 
+  /* Preferências de UI (tema, player, sidebar, lock, navbar, auto-fullscreen). */
+  const PREF_KEYS_TO_SYNC = [
+    'academia_theme',
+    'academia_theme_custom_hex',
+    'academia_view_mode',
+    'academia_calendar_view',
+    'timerStyle',
+    'academia_pref_sidebar_pinned',
+    'academia_pref_player_mode',
+    'academia_pref_player_pos',
+    'academia_pref_player_persist',
+    'academia_pref_player_secs',
+    'academia_pref_music_enabled',
+    'academia_pref_music_volume',
+    'academia_pref_navbar_mode',
+    'academia_pref_navbar_shape',
+    'academia_pref_auto_fullscreen',
+    'academia_pref_sounds',
+    'academia_pref_vibration',
+    'academia_pref_messages',
+    'academia_pref_online',
+    'academia_pref_app_lock_enabled',
+    'academia_pref_app_lock_biometric',
+  ];
+  const prefs: Record<string, string> = {};
+  for (const k of PREF_KEYS_TO_SYNC) {
+    const v = localStorage.getItem(k);
+    if (v !== null) prefs[k] = v;
+  }
+
   return {
     v: 1,
     exercises,
@@ -167,6 +200,7 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     legacy: (legacyRow?.value as Record<string, unknown>) ?? undefined,
     musicLibrary,
     friends,
+    prefs,
     updatedAt: new Date().toISOString(),
     originDeviceId: getPersistentDeviceId(),
   };
@@ -223,6 +257,20 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
       try {
         localStorage.setItem('academia_added_friends_v1', JSON.stringify(snapshot.friends));
         document.dispatchEvent(new CustomEvent('academia:friends-updated'));
+      } catch {
+        /* best-effort */
+      }
+    }
+    /* Sincroniza preferências de UI (tema, player, sidebar, lock, navbar, ...). */
+    if (snapshot.prefs && typeof snapshot.prefs === 'object') {
+      try {
+        for (const [k, v] of Object.entries(snapshot.prefs)) {
+          if (typeof v === 'string') localStorage.setItem(k, v);
+        }
+        applySavedTheme();
+        document.dispatchEvent(new CustomEvent('academia:prefs-changed'));
+        document.dispatchEvent(new CustomEvent('academia:player-prefs-changed'));
+        document.dispatchEvent(new CustomEvent('academia:lock-prefs-changed'));
       } catch {
         /* best-effort */
       }
@@ -654,6 +702,12 @@ export function startSyncEngine(): void {
   document.addEventListener('academia:db-ready', onLocalDataChanged);
   document.addEventListener('academia:music-changed', onLocalDataChanged);
   document.addEventListener('academia:friends-changed', onLocalDataChanged);
+  document.addEventListener('academia:player-prefs-changed', onLocalDataChanged);
+  document.addEventListener('academia:lock-prefs-changed', onLocalDataChanged);
+  document.addEventListener('academia:navbar-mode-changed', onLocalDataChanged);
+  document.addEventListener('academia:navbar-shape-changed', onLocalDataChanged);
+  document.addEventListener('academia:auto-fullscreen-changed', onLocalDataChanged);
+  document.addEventListener('academia:prefs-changed', onLocalDataChanged);
 
   /* Flush da fila offline ao voltar a conexão */
   window.addEventListener('online', onOnline);
@@ -696,6 +750,12 @@ export function stopSyncEngine(): void {
   document.removeEventListener('academia:db-ready', onLocalDataChanged);
   document.removeEventListener('academia:music-changed', onLocalDataChanged);
   document.removeEventListener('academia:friends-changed', onLocalDataChanged);
+  document.removeEventListener('academia:player-prefs-changed', onLocalDataChanged);
+  document.removeEventListener('academia:lock-prefs-changed', onLocalDataChanged);
+  document.removeEventListener('academia:navbar-mode-changed', onLocalDataChanged);
+  document.removeEventListener('academia:navbar-shape-changed', onLocalDataChanged);
+  document.removeEventListener('academia:auto-fullscreen-changed', onLocalDataChanged);
+  document.removeEventListener('academia:prefs-changed', onLocalDataChanged);
   document.removeEventListener('visibilitychange', onVisibilityChange);
   window.removeEventListener('focus', onWindowFocus);
   window.removeEventListener('online', onOnline);

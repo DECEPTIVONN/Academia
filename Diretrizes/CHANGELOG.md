@@ -2,6 +2,28 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.43.2] - 2026-10-23
+
+**Reset único de dados legados: vinculação automática da sync key à conta.**
+
+### Added
+- `src-app/src/main.tsx`: reset único (versão `v4.43.2-account-sync`) que limpa localStorage, sessionStorage e bancos IndexedDB locais, forçando novo login e início "do zero". Garante que dispositivos com sync keys antigas migrem para o sistema de vinculação automática.
+
+### Changed
+- Todos os dados salvos anteriormente são removidos; usuários precisam fazer login novamente.
+
+## [v4.43.1] - 2026-10-23
+
+**Vinculação da sync key à conta, sync de preferências e foto Google.**
+
+### Added
+- `src-app/src/core/sync/supabase-client.ts`: `deriveSyncKeyForUser()` deriva chave estável a partir do id/e-mail da conta autenticada.
+- `src-app/src/App.tsx`: ao logar, a sync key é derivada da conta (mesma conta = mesmos dados); foto de perfil da conta Google é aplicada ao perfil do app.
+
+### Changed
+- `src-app/src/core/sync/sync-manager.ts`: snapshot passa a incluir `prefs` (tema, player, sidebar, lock, navbar, auto-fullscreen); aplicação restaura-as e dispara eventos de atualização.
+- `src-app/src/features/profile/profile-data.ts`, `src-app/src/App.tsx`: mudanças de tema e sidebar disparam `academia:prefs-changed` para auto-push.
+
 ## [v4.43.0] - 2026-10-23
 
 **Peças faltantes da arquitetura de dados (dados.md): banner offline, coalescência e comparação canônica.**

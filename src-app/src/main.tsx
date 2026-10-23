@@ -82,6 +82,27 @@ initAudioEngine();
 // só aplica as prefs salvas (a reprodução é do audio-engine).
 initBackgroundMusic();
 
+// Reset único de dados legados (v4.43.2): remove sync keys/dados antigos para
+// garantir vinculação automática da sync key à conta. Usuários logados precisam
+// fazer login novamente e começam "do zero".
+const RESET_VERSION = 'v4.43.2-account-sync';
+try {
+  if (localStorage.getItem('academia_reset_version') !== RESET_VERSION) {
+    // Limpa localStorage (auth, sync, prefs, tema, etc.)
+    try { localStorage.clear(); } catch { /* noop */ }
+    try { sessionStorage.clear(); } catch { /* noop */ }
+    // Remove bancos IndexedDB locais.
+    for (const name of ['academia-v4', 'academia_offline_resilience_db', 'academia_media_db', 'mbc_offline_sync_db']) {
+      try { indexedDB.deleteDatabase(name); } catch { /* noop */ }
+    }
+    localStorage.setItem('academia_reset_version', RESET_VERSION);
+    // Recarrega para aplicar o reset limpo.
+    window.location.reload();
+  }
+} catch {
+  /* storage indisponível — segue sem reset */
+}
+
 // Seed + migração do localStorage legado (v3.5.7) + flush da fila offline.
 // Assíncrono: não bloqueia o primeiro render; a UI escuta 'academia:db-ready'.
 void bootstrap();

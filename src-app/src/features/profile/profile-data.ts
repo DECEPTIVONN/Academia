@@ -97,6 +97,7 @@ export function applyAppTheme(themeKey: string): void {
   root.style.setProperty('--gradient', `linear-gradient(135deg, ${theme.p}, ${theme.pd})`);
   root.style.setProperty('--shadow', `rgba(${hexToRgb(theme.p)}, 0.3)`);
   localStorage.setItem('academia_theme', themeKey);
+  try { window.dispatchEvent(new CustomEvent('academia:prefs-changed')); } catch { /* noop */ }
 }
 
 /* ── Preferências soltas (localStorage — secao-perfil.js L1107–1134) ── */

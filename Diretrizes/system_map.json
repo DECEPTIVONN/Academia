@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "3.5.92",
+  "version": "3.5.94",
   "last_updated": "2026-10-23",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",

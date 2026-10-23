@@ -120,6 +120,23 @@ export function setSyncKey(key: string): void {
   localStorage.removeItem(LAST_SYNC_AT_KEY);
 }
 
+/**
+ * Deriva uma chave de sincronização estável a partir da identidade da conta
+ * autenticada (Supabase Auth). Garante que dispositivos logados com a mesma
+ * conta Google/e-mail compartilhem automaticamente os mesmos dados
+ * (dados.md §3 — isolamento/particionamento por syncKey).
+ */
+export function deriveSyncKeyForUser(userId: string, email?: string | null): string {
+  const base = (userId || email || '').trim();
+  if (!base) return getSyncKey();
+  // Chave determinística, estável entre dispositivos da mesma conta.
+  let hash = 0;
+  for (let i = 0; i < base.length; i++) {
+    hash = (hash * 31 + base.charCodeAt(i)) >>> 0;
+  }
+  return `ACADEMIA-${hash.toString(36).toUpperCase().padStart(8, '0')}`;
+}
+
 /** Dispositivo teve a sessão de sync revogada por outro dispositivo? */
 export function isSyncRevoked(): boolean {
   return typeof window !== 'undefined' && localStorage.getItem(SYNC_REVOKED_KEY) === 'true';
