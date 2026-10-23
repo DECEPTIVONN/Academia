@@ -1116,13 +1116,13 @@ function OnboardingGate() {
   const { state, loading } = useProfileState();
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (user && !loading && state && !state.customization?.onboarded) {
+    if (user && !loading && (!state || !state.customization?.onboarded)) {
       setOpen(true);
     } else {
       setOpen(false);
     }
   }, [user, loading, state]);
-  if (!user || loading || !state) return null;
+  if (!user || loading) return null;
   return <OnboardingScreen open={open} onComplete={() => setOpen(false)} />;
 }
 

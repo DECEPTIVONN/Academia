@@ -2,6 +2,14 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.43.3] - 2026-10-23
+
+**Correção: onboarding do primeiro acesso não aparecia após login.**
+
+### Fixed
+- `src-app/src/core/db/bootstrap.ts`: `bootstrap()` retorna `Promise.resolve()` quando já iniciado, evitando `.then` em `undefined` (que impedia `bootstrapLoading` de virar `false`).
+- `src-app/src/App.tsx`: `OnboardingGate` passa a exibir o onboarding quando o usuário está logado e não concluiu o onboarding, mesmo que o `profileState` ainda não tenha carregado.
+
 ## [v4.43.2] - 2026-10-23
 
 **Reset único de dados legados: vinculação automática da sync key à conta.**

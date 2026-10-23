@@ -61,7 +61,7 @@ async function backfillExerciseImages(): Promise<void> {
 
 /** Executa seed → backfill → migração → flush. Seguro de chamar várias vezes. */
 export async function bootstrap(userId: string = LOCAL_USER_ID): Promise<void> {
-  if (started) return;
+  if (started) return Promise.resolve();
   started = true;
 
   try {
