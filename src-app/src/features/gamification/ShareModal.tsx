@@ -37,7 +37,7 @@ interface ExStat {
 async function renderCanvas(card: HTMLElement): Promise<HTMLCanvasElement> {
   const { default: html2canvas } = await import('html2canvas');
   return html2canvas(card, {
-    scale: 2,
+    scale: 1.5,
     backgroundColor: '#000000',
     useCORS: true,
     logging: false,
@@ -78,29 +78,6 @@ export function ShareModal() {
 
   // Pré-renderiza o card quando o modal abre, para que handleShare não perca
   // a ativação do usuário (gesto) aguardando renderização assíncrona.
-  useEffect(() => {
-    if (!show) {
-      canvasFileRef.current = null;
-      setImageReady(false);
-      canvasRef.current = null;
-      return;
-    }
-    canvasFileRef.current = null;
-    setImageReady(false);
-    canvasRef.current = null;
-    const card = document.getElementById(cardId);
-    if (!card) return;
-    void renderCanvas(card).then((canvas) => {
-      if (!canvas) return;
-      canvasRef.current = canvas;
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const fileName = `meu-${activeCardName(kind)}-${today()}.png`;
-        canvasFileRef.current = new File([blob], fileName, { type: 'image/png' });
-        setImageReady(true);
-      }, 'image/png', 0.9);
-    });
-  }, [show, kind, cardId, quote]);
 
   const data = useMemo(
     () => ({ exercises, sheets, history, legacy }),

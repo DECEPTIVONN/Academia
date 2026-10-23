@@ -2,6 +2,13 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.42.9] - 2026-10-23
+
+**Correcao adicional do compartilhamento: remover render duplicado e reduzir escala.**
+
+### Fixed
+- `src-app/src/features/gamification/ShareModal.tsx`: removido pre-render duplicado que podia travar o site; escala do html2canvas reduzida para 1.5.
+
 ## [v4.42.8] - 2026-10-23
 
 **Correcao do compartilhamento: botao habilitado apos pre-render.**
