@@ -24,6 +24,14 @@ import { RadarChart } from '@/features/gamification/RadarChart';
 import { useRadarMode } from '@/features/gamification/useRadarFit';
 import { useShareStore } from '@/features/gamification/share-store';
 import { buildVolumeLineChartSvg } from './volume-line-chart';
+import {
+  convertKgToDisplay,
+  getFirstDayOfWeek,
+  getWeekDayLabels,
+  getWeightUnit,
+  type FirstDayOfWeek,
+  type WeightUnit,
+} from '@/lib/app-prefs';
 
 type CalView = 'monthly' | 'weekly';
 
@@ -48,7 +56,7 @@ const MONTH_NAMES = [
   'DEZEMBRO',
 ];
 
-const WEEK_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+/* v4.44.0 — o primeiro dia da semana vem de Preferências do App. */
 
 /** "Hoje" único do módulo (evita `new Date()` impuro dentro do render — oxlint purity). */
 const TODAY_BASE = new Date();
@@ -118,9 +126,12 @@ const VOLUME_COLORS = [
   '#ef4444',
 ];
 
+/** Volumes são somados em kg; a exibição respeita a unidade escolhida. */
 function formatT(kg: number): string {
-  if (kg >= 1000) return `${(kg / 1000).toFixed(1).replace('.0', '')}T`;
-  return `${Math.round(kg)}kg`;
+  const unit = getWeightUnit();
+  const value = convertKgToDisplay(kg, unit);
+  if (value >= 1000) return `${(value / 1000).toFixed(1).replace('.0', '')}T`;
+  return `${Math.round(value)}${unit}`;
 }
 
 /** Volume de um exercício (espelha `renderVolumeSemanal`). */
@@ -170,6 +181,17 @@ export const ProgressoFeature: React.FC = () => {
   const radarMode = useRadarMode((s) => s.mode);
   const setRadarMode = useRadarMode((s) => s.setMode);
   const [showRadarGuide, setShowRadarGuide] = useState(false);
+  const [firstDay, setFirstDay] = useState<FirstDayOfWeek>(() => getFirstDayOfWeek());
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>(() => getWeightUnit());
+
+  useEffect(() => {
+    const syncPrefs = () => {
+      setFirstDay(getFirstDayOfWeek());
+      setWeightUnit(getWeightUnit());
+    };
+    window.addEventListener('academia:prefs-changed', syncPrefs);
+    return () => window.removeEventListener('academia:prefs-changed', syncPrefs);
+  }, []);
 
   /* Containers animados com fadeIn (secao-progresso.js L115/L258/L402/L586) */
   const weekDaysRef = useRef<HTMLDivElement>(null);
@@ -223,18 +245,22 @@ export const ProgressoFeature: React.FC = () => {
         ? { text: 'RETA FINAL', color: '#fff', background: '#8b5cf6' }
         : { text: 'EM ANDAMENTO', color: undefined, background: undefined };
 
-  /* ===== Sua Semana (Seg → Dom) ===== */
+  /* ===== Sua Semana (respeita o primeiro dia configurado) ===== */
   const weekDays = useMemo(() => {
     const now = TODAY_BASE;
     const start = new Date(now);
-    start.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
-    return WEEK_LABELS.map((label, i) => {
+    if (firstDay === 'sunday') {
+      start.setDate(now.getDate() - now.getDay());
+    } else {
+      start.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+    }
+    return getWeekDayLabels(firstDay).map((label, i) => {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       const dateStr = fmtDate(d);
       return { label, dateStr, done: Boolean(histMap.get(dateStr)?.completed) };
     });
-  }, [histMap]);
+  }, [histMap, firstDay]);
   const weekTrainedCount = weekDays.filter((d) => d.done).length;
 
   /* ===== Calendário mensal ===== */
@@ -242,10 +268,16 @@ export const ProgressoFeature: React.FC = () => {
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay();
+    const firstWeekday = new Date(year, month, 1).getDay();
     const cells: MonthCell[] = [];
 
-    const emptySlots = firstDay === 0 ? 6 : firstDay - 1;
+    /* v4.44.0 — as células vazias seguem o primeiro dia configurado. */
+    const emptySlots =
+      firstDay === 'sunday'
+        ? firstWeekday
+        : firstWeekday === 0
+          ? 6
+          : firstWeekday - 1;
     for (let i = 0; i < emptySlots; i++) {
       cells.push({
         dateStr: '',
@@ -295,7 +327,7 @@ export const ProgressoFeature: React.FC = () => {
       });
     }
     return cells;
-  }, [viewDate, histMap, legacy, t]);
+  }, [viewDate, histMap, legacy, t, firstDay]);
 
   /* ===== Planner semanal ===== */
   const plannerWeeks = useMemo(() => {
@@ -676,13 +708,9 @@ export const ProgressoFeature: React.FC = () => {
                 </button>
               </div>
               <div className="month-grid-header">
-                <span>S</span>
-                <span>T</span>
-                <span>Q</span>
-                <span>Q</span>
-                <span>S</span>
-                <span>S</span>
-                <span>D</span>
+                {getWeekDayLabels(firstDay).map((label, i) => (
+                  <span key={i}>{label[0]}</span>
+                ))}
               </div>
               <div className="month-grid" id="monthCalendar" ref={monthCalRef}>
                 {monthCells.map((cell, i) =>
@@ -1061,7 +1089,7 @@ export const ProgressoFeature: React.FC = () => {
                   textAlign: 'center',
                 }}
               >
-                Total kg levantados por grupo muscular.
+                Total {weightUnit} levantados por grupo muscular.
               </p>
             </div>
 
@@ -1215,7 +1243,7 @@ export const ProgressoFeature: React.FC = () => {
               </p>
               <div className="calc-row">
                 <div className="form-group">
-                  <label>Carga (kg)</label>
+                  <label>Carga ({weightUnit})</label>
                   <input
                     type="number"
                     id="calcWeight"
@@ -1237,7 +1265,7 @@ export const ProgressoFeature: React.FC = () => {
               </div>
               <div className="calc-result" id="calcResult">
                 <div className="res-val">{rmResult}</div>
-                <div className="res-lbl">kg Estimados</div>
+                <div className="res-lbl">{weightUnit} Estimados</div>
               </div>
             </div>
           </div>
@@ -1365,13 +1393,13 @@ export const ProgressoFeature: React.FC = () => {
                   }}
                   id="volDetTotal"
                 >
-                  {volumeDetail ? formatT(volumeDetail.entry.vol) : '0kg'}
+                  {volumeDetail ? formatT(volumeDetail.entry.vol) : `0${weightUnit}`}
                 </div>
                 <div
                   style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}
                   id="volDetAvg"
                 >
-                  Média: {volumeDetail ? formatT(volumeDetail.avgVol) : '0kg'}
+                  Média: {volumeDetail ? formatT(volumeDetail.avgVol) : `0${weightUnit}`}
                 </div>
               </div>
               <div

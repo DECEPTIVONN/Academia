@@ -18,6 +18,7 @@ import type { Exercise, WorkoutSheet } from '@/core/db/schema';
 import { effectiveAerobic } from '@/core/db/schema';
 import type { LegacyRaw } from '@/core/db/queries';
 import { averageLoadKg } from '@/lib/suggested-load';
+import { formatSpeed } from '@/lib/app-prefs';
 import { VolumeKgIcon } from '@/components/VolumeKgIcon';
 
 /** Cartão de exercício no grid Royale (mesmo HTML do legado). */
@@ -205,7 +206,7 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
               </span>
               <span className="dash-mini-deck__stat-sub">
                 {hasCardio
-                  ? `${cardio!.vel || '--'} km/h · ${cardio!.tempo || '--'} min`
+                  ? `${formatSpeed(cardio!.vel)} · ${cardio!.tempo || '--'} min`
                   : 'Configurar Cardio'}
               </span>
             </div>

@@ -9,6 +9,7 @@
 
 import { idb, getUserSheets } from '@/core/db/idb';
 import { LOCAL_USER_ID } from '@/core/db/schema';
+import { formatLoadLabel } from '@/lib/app-prefs';
 import type {
   Exercise,
   WorkoutSheet,
@@ -113,13 +114,13 @@ export function grupoBadgeClass(grupo?: string): string {
   return 'grupo-badge badge-' + (grupo || '').replace(/[íéóáãâ]/g, (c) => GRUPO_BADGE_MAP[c] ?? c);
 }
 
-/** Espelha `formatCarga` (db.js). */
+/** Espelha `formatCarga` (db.js), já convertendo para a unidade de peso escolhida. */
 export function formatCarga(ex: Pick<Exercise, 'load' | 'porLado' | 'tags'>): string {
   if (ex.tags?.includes('Peso do Corpo')) return 'Peso do Corpo';
   if (!ex.load) return '';
-  const c = String(ex.load).trim();
-  const label = c.toLowerCase().endsWith('kg') ? c : `${c}kg`;
-  return ex.porLado ? `${label} cada lado` : label;
+  const label = formatLoadLabel(String(ex.load));
+  const alreadySide = /cada\s*lado$/i.test(label);
+  return ex.porLado && !alreadySide ? `${label} cada lado` : label;
 }
 
 /** Espelha `formatSeconds` (db.js L395). */

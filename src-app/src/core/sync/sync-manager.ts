@@ -16,6 +16,7 @@ import { create } from 'zustand';
 import { type RealtimeChannel } from '@supabase/supabase-js';
 import { idb, emitDbReady } from '@/core/db/idb';
 import { LOCAL_USER_ID } from '@/core/db/schema';
+import { APP_PREF_KEYS } from '@/lib/app-prefs';
 import type {
   Exercise,
   WorkoutSheet,
@@ -183,6 +184,7 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     'academia_pref_online',
     'academia_pref_app_lock_enabled',
     'academia_pref_app_lock_biometric',
+    ...Object.values(APP_PREF_KEYS),
   ];
   const prefs: Record<string, string> = {};
   for (const k of PREF_KEYS_TO_SYNC) {

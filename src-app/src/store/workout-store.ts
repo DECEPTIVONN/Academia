@@ -5,6 +5,7 @@
 
 import { create } from 'zustand';
 import type { SheetKey } from '@/core/db/schema';
+import { playRestTimerSound } from '@/lib/app-prefs';
 
 /** Chaves legadas (JS/treino/secao-ficha.js → initGlobalTimer) — persistem o
  *  treino em andamento entre recarregamentos da página. */
@@ -146,6 +147,8 @@ export const useWorkoutStore = create<ActiveWorkoutState>((set, get) => ({
     const remaining = get().restTimeRemaining - 1;
     if (remaining <= 0) {
       set({ isResting: false, restTimeRemaining: 0 });
+      /* v4.44.0 — aviso sonoro de fim do descanso (pref "Som do temporizador") */
+      playRestTimerSound();
     } else {
       set({ restTimeRemaining: remaining });
     }

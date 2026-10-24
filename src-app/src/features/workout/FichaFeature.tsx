@@ -35,6 +35,7 @@ import { useShareStore } from '@/features/gamification/share-store';
 import { FocusModal } from '@/features/workout/FocusModal';
 import { fadeIn, fadeSwap } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
+import { convertSpeedValue, formatSpeed, getSpeedUnitLabel, isFocusModeDefault } from '@/lib/app-prefs';
 
 /* v4.22.0 — o modo "Coleção" (deck) saiu; o 3º slot virou o botão FOCO. */
 type ViewMode = 'table' | 'grid';
@@ -351,8 +352,8 @@ const FichaCardioCard: React.FC<CardioProps> = ({
       <div className="ae-card-type">{tipo}</div>
       <div className="ae-card-stats">
         <div className="ae-stat-box">
-          <span className="ae-stat-val">{vel || '--'}</span>
-          <span className="ae-stat-unit">KM/H</span>
+          <span className="ae-stat-val">{convertSpeedValue(vel)}</span>
+          <span className="ae-stat-unit">{getSpeedUnitLabel().toUpperCase()}</span>
         </div>
         <div className="ae-stat-divider" />
         <div className="ae-stat-box">
@@ -404,7 +405,7 @@ const FichaCardioRow: React.FC<CardioProps> = ({
     <td colSpan={2}>
       <div className="ae-table-stats">
         <div className="ae-t-stat">
-          <span>Vel:</span> <strong>{vel || '--'} km/h</strong>
+          <span>Vel:</span> <strong>{formatSpeed(vel)}</strong>
         </div>
         <div className="ae-t-stat">
           <span>Tempo:</span> <strong>{tempo || '--'} min</strong>
@@ -651,6 +652,23 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     }
     setFocusOpen(true);
   };
+
+  /* v4.44.0 — pref "Modo Foco por padrão": ao iniciar um treino, abre o foco. */
+  const focusDefaultApplied = useRef(false);
+  useEffect(() => {
+    if (!isActive) {
+      focusDefaultApplied.current = false;
+      return;
+    }
+    if (focusDefaultApplied.current) return;
+    focusDefaultApplied.current = true;
+    if (!isFocusModeDefault() || fichaIds.length === 0) return;
+    if (!sessionStorage.getItem('focusStartTime')) {
+      sessionStorage.setItem('focusStartTime', String(Date.now()));
+    }
+    // eslint-disable-next-line react/set-state-in-effect -- preferência abre o foco junto com o treino
+    setFocusOpen(true);
+  }, [isActive, fichaIds.length]);
 
   const onEditNote = (ex: Exercise) => {
     setNoteEx(ex);

@@ -14,6 +14,7 @@ import type { AerobicConfig, Exercise, SheetKey } from '@/core/db/schema';
 import { DEFAULT_AEROBIC } from '@/core/db/schema';
 import { getMaestriaState, computeMasteryTotals } from '@/features/gamification/maestria';
 import type { LegacyRaw } from '@/core/db/queries';
+import { getSpeedUnitLabel } from '@/lib/app-prefs';
 
 /* Portal para document.body: o .section-strip tem transform/will-change
    (translateX da navegação de seções) e viraria o containing block do
@@ -191,7 +192,7 @@ export const AerobicoModal: React.FC<{
             />
           </div>
           <div className="form-group">
-            <label htmlFor="inputAeVel">Velocidade Média (km/h)</label>
+            <label htmlFor="inputAeVel">Velocidade Média ({getSpeedUnitLabel()})</label>
             <input type="text" id="inputAeVel" placeholder="Ex: 8.5" value={vel} onChange={(e) => setVel(e.target.value)} />
           </div>
         </div>

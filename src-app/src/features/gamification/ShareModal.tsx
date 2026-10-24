@@ -26,6 +26,7 @@ import type { NativeShareResult } from '@/lib/native-share';
 import { useShareStore } from './share-store';
 import { useRadarMode } from './useRadarFit';
 import { showToast } from '@/lib/toast';
+import { convertKgToDisplay, getWeightUnitLabel } from '@/lib/app-prefs';
 
 interface ExStat {
   name: string;
@@ -84,6 +85,8 @@ export function ShareModal() {
     [exercises, sheets, history, legacy]
   );
   const dateLabel = useMemo(() => (show ? todayLabel().toUpperCase() : ''), [show]);
+  /* v4.44.0 — volume do card respeita a unidade de peso escolhida. */
+  const weightUnit = getWeightUnitLabel();
 
   /* openShareCard L703–755 — stats do treino + destaques */
   const view = useMemo(() => {
@@ -285,7 +288,7 @@ export function ShareModal() {
               TREINO {view.treino}: {view.exCount} EXERCÍCIOS
             </h2>
 
-            {/* v4.22.0 — 2 colunas: Exercícios, KG totais, Ofensiva, Duração */}
+            {/* v4.22.0 — 2 colunas: Exercícios, volume total, Ofensiva, Duração */}
             <div className="share-stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px 30px' }}>
               <div className="s-stat-item">
                 <span className="s-stat-val" id="shareExCount">
@@ -295,9 +298,9 @@ export function ShareModal() {
               </div>
               <div className="s-stat-item">
                 <span className="s-stat-val" id="shareVol">
-                  {view.totalVol.toLocaleString('pt-BR')}
+                  {Math.round(convertKgToDisplay(view.totalVol, weightUnit)).toLocaleString('pt-BR')}
                 </span>
-                <span className="s-stat-lbl">KG TOTAIS</span>
+                <span className="s-stat-lbl">{weightUnit.toUpperCase()} TOTAIS</span>
               </div>
               <div className="s-stat-item">
                 <span className="s-stat-val" id="shareStreak">
@@ -343,7 +346,7 @@ export function ShareModal() {
                 {view.highlights.map((h, i) => (
                   <div className="sh-item" key={`${h.name}-${i}`}>
                     <span className="sh-name">{h.name}</span>
-                    <span className="sh-val">{h.carga || `${h.vol}kg total`}</span>
+                    <span className="sh-val">{h.carga || `${Math.round(convertKgToDisplay(h.vol, weightUnit))}${weightUnit} total`}</span>
                   </div>
                 ))}
               </div>

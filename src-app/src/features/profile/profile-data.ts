@@ -8,6 +8,7 @@
 
 import { getStreak } from '@/core/db/queries';
 import type { LocalData } from '@/core/db/queries';
+import { APP_PREF_KEYS } from '@/lib/app-prefs';
 import type {
   ProfileConquista,
   ProfileCustomization,
@@ -133,6 +134,8 @@ export const PREF_KEYS = {
   /* v4.19.0-music — faixas do site durante o treino (Black Panther):
      ausente = 'true'. Se o usuário tiver playlist ativa, ela vence. */
   workoutMusic: 'academia_pref_workout_music',
+  /* v4.44.0-prefs — Preferências do App (unidades, semana, treino e avisos) */
+  ...APP_PREF_KEYS,
 } as const;
 
 export function isDevMode(): boolean {

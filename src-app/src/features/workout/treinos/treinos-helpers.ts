@@ -24,6 +24,7 @@ import { SHEET_ORDER, today, type LocalData } from '@/core/db/queries';
 import { patchLegacyState } from '@/core/db/legacy-state';
 import { effectiveLoadKg } from '@/lib/suggested-load';
 import { showToast } from '@/lib/toast';
+import { formatSpeed } from '@/lib/app-prefs';
 
 /* ── Helpers básicos (db.js L373 uid / L387 formatCarga já em queries) ── */
 
@@ -363,7 +364,7 @@ export function computeDeckStats(
   let cardioSub = 'Configurar Cardio';
   if (ae && ae.tipo) {
     cardioMain = ae.tempo ? `${ae.tempo}min` : '--';
-    cardioSub = `${ae.tipo}${ae.vel ? ' • ' + ae.vel + 'km/h' : ''}`;
+    cardioSub = `${ae.tipo}${ae.vel ? ' • ' + formatSpeed(ae.vel) : ''}`;
   }
 
   return { avg, cardioMain, cardioSub };

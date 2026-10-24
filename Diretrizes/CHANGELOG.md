@@ -2,6 +2,24 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.44.0] - 2026-10-23
+
+**Configurações: Preferências do App (semana, unidades, tema, som e foco) e notificações.**
+
+### Added
+- `src-app/src/lib/app-prefs.ts`: módulo de preferências sem dependências (semana, peso, distância, som do temporizador, foco padrão e placeholders de notificações), com getters/setters que gravam em localStorage e emitem `academia:prefs-changed`, além de `formatLoadLabel`, `convertKgToDisplay`, `formatSpeed`/`convertSpeedValue`, `getWeekDayLabels` e `playRestTimerSound`.
+- `src-app/src/features/settings/SettingsFeature.tsx`: nova tela/tile "Preferências do App" com linhas expansíveis para primeiro dia da semana (segunda/domingo), unidade de peso (kg/lb), unidade de distância (km/mi), tema e idioma, mais os toggles "Som do temporizador (entre as séries)" e "Modo Foco por padrão nos treinos".
+- Tela de Notificações reorganizada com "Permitir notificações" (solicita permissão do navegador) e placeholders persistidos para lembretes de treino, novidades e atualizações, ligas e mensagens motivacionais.
+- `src-app/src/features/settings/settings.css`: estilos `.set-pref-*` (linhas com ícone/rótulo/valor, opções, swatch e grade de temas).
+
+### Changed
+- `src-app/src/core/db/queries.ts`: `formatCarga` converte a carga para a unidade de peso escolhida; sufixo "cada lado" não é duplicado.
+- `src-app/src/features/workout/FichaFeature.tsx` e `FichaDeck.tsx`, `treinos-helpers.ts` e `TreinosModals.tsx`: velocidade do cardio exibida em km/h ou mph conforme a preferência; "Modo Foco por padrão" abre o foco ao iniciar um treino.
+- `src-app/src/features/training/ProgressoFeature.tsx`: "Sua Semana", o cabeçalho e as células do calendário mensal respeitam o primeiro dia configurado; volumes e calculadora 1RM usam a unidade de peso escolhida.
+- `src-app/src/features/gamification/ShareModal.tsx`: volume total e destaques do card usam a unidade de peso configurada.
+- `src-app/src/store/workout-store.ts`: ao fim do descanso entre séries, toca o aviso sonoro (se ativado).
+- `src-app/src/features/profile/profile-data.ts` e `src-app/src/core/sync/sync-manager.ts`: novas chaves entram em `PREF_KEYS` e passam a ser sincronizadas entre dispositivos.
+
 ## [v4.43.7] - 2026-10-23
 
 **Amigos: modal "Adicionar" reestilizado com abas e busca de jogador.**

@@ -51,6 +51,21 @@ import {
   setMusicVolume,
 } from '@/lib/background-music';
 import { WALL_PRESETS } from '@/features/lock/lock-wallpapers';
+import {
+  getDistanceUnit,
+  getFirstDayOfWeek,
+  getWeightUnit,
+  isFocusModeDefault,
+  isTimerSoundEnabled,
+  setDistanceUnit,
+  setFirstDayOfWeek,
+  setFocusModeDefault,
+  setTimerSoundEnabled,
+  setWeightUnit,
+  type DistanceUnit,
+  type FirstDayOfWeek,
+  type WeightUnit,
+} from '@/lib/app-prefs';
 /* v4.22.0 — preferências do miniplayer (modo fixo/flexível) */
 import {
   getDrawerThickness,
@@ -211,6 +226,75 @@ const SvgTimer = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
     <circle cx="12" cy="12" r="10" />
     <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+/* v4.44.0 — Preferências do App */
+const SvgGear = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </svg>
+);
+
+const SvgCalendar = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="19" height="19">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const SvgDumbbell = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="19" height="19">
+    <path d="m6.5 6.5 11 11" />
+    <path d="m21 21-1.5-1.5" />
+    <path d="m3 3 1.5 1.5" />
+    <path d="m18 22 4-4" />
+    <path d="m2 6 4-4" />
+    <path d="m3 10 7-7" />
+    <path d="m14 21 7-7" />
+  </svg>
+);
+
+const SvgRoute = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="19" height="19">
+    <circle cx="6" cy="19" r="3" />
+    <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
+    <circle cx="18" cy="5" r="3" />
+  </svg>
+);
+
+const SvgTarget = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="6" />
+    <circle cx="12" cy="12" r="2" />
+  </svg>
+);
+
+const SvgMegaphone = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+    <path d="m3 11 18-5v12L3 14v-3z" />
+    <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+  </svg>
+);
+
+const SvgTrophy = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
+);
+
+const SvgChevronRightSm = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+    <polyline points="9 18 15 12 9 6" />
   </svg>
 );
 
@@ -427,6 +511,15 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   );
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  /* v4.44.0 — Preferências do App (unidades, semana, treino e avisos) */
+  const [firstDay, setFirstDayState] = useState<FirstDayOfWeek>(() => getFirstDayOfWeek());
+  const [weightUnit, setWeightUnitState] = useState<WeightUnit>(() => getWeightUnit());
+  const [distanceUnit, setDistanceUnitState] = useState<DistanceUnit>(() => getDistanceUnit());
+  const [openPref, setOpenPref] = useState<string | null>(null);
+  const [language, setLanguage] = useState(() => readLS('academia_lang') || 'pt');
+  const [timerSound, setTimerSoundState] = useState(() => isTimerSoundEnabled());
+  const [focusDefault, setFocusDefaultState] = useState(() => isFocusModeDefault());
+
   const [timerStyle, setTimerStyle] = useState(() => readLS('timerStyle') || 'radar');
   const [navbarMode, setNavbarMode] = useState<string>(
     () => readLS(PREF_KEYS.navbarMode) || 'fixed'
@@ -473,7 +566,29 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     vibration: readLS(PREF_KEYS.vibration) !== 'false',
     messages: readLS(PREF_KEYS.messages) !== 'false',
     online: readLS(PREF_KEYS.online) === 'true',
+    notifications: readLS(PREF_KEYS.notifications) === 'true',
+    notifyUpdates: readLS(PREF_KEYS.notifyUpdates) === 'true',
+    notifyLeagues: readLS(PREF_KEYS.notifyLeagues) === 'true',
   }));
+
+  /* v4.44.0 — mantém a UI alinhada quando as preferências chegam do sync. */
+  useEffect(() => {
+    const syncPrefs = () => {
+      setFirstDayState(getFirstDayOfWeek());
+      setWeightUnitState(getWeightUnit());
+      setDistanceUnitState(getDistanceUnit());
+      setTimerSoundState(isTimerSoundEnabled());
+      setFocusDefaultState(isFocusModeDefault());
+      setPrefs((current) => ({
+        ...current,
+        notifications: readLS(PREF_KEYS.notifications) === 'true',
+        notifyUpdates: readLS(PREF_KEYS.notifyUpdates) === 'true',
+        notifyLeagues: readLS(PREF_KEYS.notifyLeagues) === 'true',
+      }));
+    };
+    window.addEventListener('academia:prefs-changed', syncPrefs);
+    return () => window.removeEventListener('academia:prefs-changed', syncPrefs);
+  }, []);
 
   /* Segurança/Notificações — prefs salvas; o Bloqueio do App passou a ter
      efeito real na v4.6.0-shell (PIN + inatividade + biometria fake). */
@@ -622,6 +737,71 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const togglePref = (key: keyof typeof prefs, checked: boolean) => {
     setPrefs((p) => ({ ...p, [key]: checked }));
     writeLS(PREF_KEYS[key], String(checked));
+    window.dispatchEvent(new CustomEvent('academia:prefs-changed'));
+  };
+
+  /* v4.44.0 — Preferências do App: unidades, semana, treino e tema */
+  const changeFirstDay = (value: FirstDayOfWeek) => {
+    setFirstDayOfWeek(value);
+    setFirstDayState(value);
+    showToast(
+      `Semana começa em ${value === 'monday' ? 'segunda-feira' : 'domingo'}.`,
+      'success'
+    );
+  };
+
+  const changeWeightUnit = (value: WeightUnit) => {
+    setWeightUnit(value);
+    setWeightUnitState(value);
+    showToast(`Unidade de peso: ${value === 'kg' ? 'quilogramas (kg)' : 'libras (lb)'}.`, 'success');
+  };
+
+  const changeDistanceUnit = (value: DistanceUnit) => {
+    setDistanceUnit(value);
+    setDistanceUnitState(value);
+    showToast(`Unidade de distância: ${value === 'km' ? 'quilômetros (km)' : 'milhas (mi)'}.`, 'success');
+  };
+
+  const changeLanguage = (value: string) => {
+    writeLS('academia_lang', value);
+    setLanguage(value);
+    window.dispatchEvent(new CustomEvent('academia:prefs-changed'));
+    showToast(`Idioma definido como ${value === 'pt' ? 'Português' : 'English'}.`, 'success');
+  };
+
+  const toggleTimerSound = (checked: boolean) => {
+    setTimerSoundEnabled(checked);
+    setTimerSoundState(checked);
+  };
+
+  const toggleFocusDefault = (checked: boolean) => {
+    setFocusModeDefault(checked);
+    setFocusDefaultState(checked);
+  };
+
+  const toggleNotifications = async (checked: boolean) => {
+    if (!checked) {
+      togglePref('notifications', false);
+      return;
+    }
+    if (typeof Notification === 'undefined') {
+      togglePref('notifications', true);
+      showToast('Notificações simuladas ativadas!', 'info');
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      togglePref('notifications', true);
+      showToast('Permissão de notificações já concedida!', 'success');
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      togglePref('notifications', true);
+      showToast('Permissão de notificações concedida!', 'success');
+    } else {
+      togglePref('notifications', false);
+      showToast('Permissão negada nas preferências do navegador.', 'error');
+    }
   };
 
   const updateLock = (key: LockKey, value: string) => {
@@ -875,11 +1055,25 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       ],
     },
     {
+      id: 'preferencias',
+      title: 'Preferências do App',
+      desc: 'Primeiro dia da semana, unidades de peso e distância, tema, som do temporizador e modo foco',
+      icon: SvgGear,
+      badge: `${firstDay === 'monday' ? 'Seg' : 'Dom'} · ${weightUnit} · ${distanceUnit}`,
+      keywords: [
+        'preferencias', 'preferências', 'app', 'geral', 'primeiro dia', 'semana',
+        'segunda', 'domingo', 'unidade', 'medida', 'peso', 'kg', 'lb', 'libras',
+        'distancia', 'distância', 'km', 'milhas', 'mi', 'tema', 'idioma',
+        'som', 'temporizador', 'timer', 'descanso', 'series', 'séries',
+        'modo foco', 'foco', 'treino',
+      ],
+    },
+    {
       id: 'notificacoes',
       title: 'Notificações',
-      desc: 'Lembrete de treino e mensagens motivacionais',
+      desc: 'Permissão, lembretes de treino, novidades, ligas e mensagens',
       icon: SvgBell,
-      badge: lock.reminder === 'true' ? 'Lembrete ativo' : 'Silenciadas',
+      badge: prefs.notifications ? 'Ativas' : 'Silenciadas',
       keywords: [
         'notificacoes', 'lembrete', 'treino', 'horario', 'alarme',
         'mensagens', 'motivacionais', 'frases', 'incentivo', 'pwa',
@@ -1766,20 +1960,287 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       content: <SyncSettingsPanel />,
     },
 
+    /* ================= PREFERÊNCIAS DO APP ================= */
+    preferencias: {
+      eyebrow: 'ACADEMIA • PREFERÊNCIAS',
+      title: 'Preferências do App',
+      content: (
+        <>
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">GERAL</div>
+                <h3 className="set-card__title">Unidades e calendário</h3>
+                <p className="set-card__desc">
+                  Defina como pesos, distâncias e a semana aparecem no aplicativo.
+                </p>
+              </div>
+            </div>
+
+            <div className="set-pref-list">
+              <button
+                type="button"
+                className={`set-pref-row${openPref === 'week' ? ' is-open' : ''}`}
+                aria-expanded={openPref === 'week'}
+                onClick={() => setOpenPref((current) => (current === 'week' ? null : 'week'))}
+              >
+                <span className="set-pref-row__icon">{SvgCalendar}</span>
+                <span className="set-pref-row__label">Primeiro dia da semana</span>
+                <span className="set-pref-row__value">
+                  {firstDay === 'monday' ? 'Segunda-feira' : 'Domingo'}
+                </span>
+                <span className="set-pref-row__chev">{SvgChevronRightSm}</span>
+              </button>
+              {openPref === 'week' && (
+                <div className="set-pref-options" role="group" aria-label="Primeiro dia da semana">
+                  {([
+                    { value: 'monday', label: 'Segunda-feira' },
+                    { value: 'sunday', label: 'Domingo' },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`set-pref-option${firstDay === option.value ? ' is-active' : ''}`}
+                      onClick={() => changeFirstDay(option.value)}
+                    >
+                      {firstDay === option.value && SvgCheck}
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                className={`set-pref-row${openPref === 'weight' ? ' is-open' : ''}`}
+                aria-expanded={openPref === 'weight'}
+                onClick={() => setOpenPref((current) => (current === 'weight' ? null : 'weight'))}
+              >
+                <span className="set-pref-row__icon">{SvgDumbbell}</span>
+                <span className="set-pref-row__label">Unidade de medida</span>
+                <span className="set-pref-row__value">{weightUnit === 'kg' ? 'kg' : 'lb'}</span>
+                <span className="set-pref-row__chev">{SvgChevronRightSm}</span>
+              </button>
+              {openPref === 'weight' && (
+                <div className="set-pref-options" role="group" aria-label="Unidade de peso">
+                  {([
+                    { value: 'kg', label: 'Quilogramas (kg)' },
+                    { value: 'lb', label: 'Libras (lb)' },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`set-pref-option${weightUnit === option.value ? ' is-active' : ''}`}
+                      onClick={() => changeWeightUnit(option.value)}
+                    >
+                      {weightUnit === option.value && SvgCheck}
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                className={`set-pref-row${openPref === 'distance' ? ' is-open' : ''}`}
+                aria-expanded={openPref === 'distance'}
+                onClick={() => setOpenPref((current) => (current === 'distance' ? null : 'distance'))}
+              >
+                <span className="set-pref-row__icon">{SvgRoute}</span>
+                <span className="set-pref-row__label">Unidade de distância</span>
+                <span className="set-pref-row__value">{distanceUnit === 'km' ? 'km' : 'mi'}</span>
+                <span className="set-pref-row__chev">{SvgChevronRightSm}</span>
+              </button>
+              {openPref === 'distance' && (
+                <div className="set-pref-options" role="group" aria-label="Unidade de distância">
+                  {([
+                    { value: 'km', label: 'Quilômetros (km)' },
+                    { value: 'mi', label: 'Milhas (mi)' },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`set-pref-option${distanceUnit === option.value ? ' is-active' : ''}`}
+                      onClick={() => changeDistanceUnit(option.value)}
+                    >
+                      {distanceUnit === option.value && SvgCheck}
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">APARÊNCIA</div>
+                <h3 className="set-card__title">Tema</h3>
+                <p className="set-card__desc">
+                  Cor de destaque usada em todo o aplicativo.
+                </p>
+              </div>
+            </div>
+
+            <div className="set-pref-list">
+              <button
+                type="button"
+                className={`set-pref-row${openPref === 'theme' ? ' is-open' : ''}`}
+                aria-expanded={openPref === 'theme'}
+                onClick={() => setOpenPref((current) => (current === 'theme' ? null : 'theme'))}
+              >
+                <span className="set-pref-row__icon">{SvgPalette}</span>
+                <span className="set-pref-row__label">Tema</span>
+                <span
+                  className="set-pref-swatch"
+                  style={{ background: activeHex }}
+                  aria-hidden="true"
+                />
+                <span className="set-pref-row__value">{themeDisplayName(themeKey)}</span>
+                <span className="set-pref-row__chev">{SvgChevronRightSm}</span>
+              </button>
+              {openPref === 'theme' && (
+                <div className="set-pref-theme">
+                  <div className="set-pref-theme-dots" role="group" aria-label="Temas do app">
+                    {THEME_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        title={preset.name}
+                        aria-label={`Tema ${preset.name}`}
+                        className={`set-pref-theme-dot${themeKey === preset.id ? ' is-active' : ''}`}
+                        style={{ background: preset.p }}
+                        onClick={() => selectPreset(preset.id)}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="set-btn"
+                    onClick={() => setPickerOpen(true)}
+                  >
+                    {SvgPalette}
+                    Cor personalizada
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">IDIOMA</div>
+                <h3 className="set-card__title">Idioma do aplicativo</h3>
+                <p className="set-card__desc">Idioma de preferência para a interface.</p>
+              </div>
+            </div>
+
+            <div className="set-pref-list">
+              <button
+                type="button"
+                className={`set-pref-row${openPref === 'language' ? ' is-open' : ''}`}
+                aria-expanded={openPref === 'language'}
+                onClick={() => setOpenPref((current) => (current === 'language' ? null : 'language'))}
+              >
+                <span className="set-pref-row__icon">{SvgGlobe}</span>
+                <span className="set-pref-row__label">Idioma</span>
+                <span className="set-pref-row__value">
+                  {language === 'pt' ? 'Português (BR)' : 'English (US)'}
+                </span>
+                <span className="set-pref-row__chev">{SvgChevronRightSm}</span>
+              </button>
+              {openPref === 'language' && (
+                <div className="set-pref-options" role="group" aria-label="Idioma">
+                  {([
+                    { value: 'pt', label: 'Português (BR)' },
+                    { value: 'en', label: 'English (US)' },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`set-pref-option${language === option.value ? ' is-active' : ''}`}
+                      onClick={() => changeLanguage(option.value)}
+                    >
+                      {language === option.value && SvgCheck}
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">TREINO</div>
+                <h3 className="set-card__title">Durante o treino</h3>
+                <p className="set-card__desc">
+                  Ajustes de descanso e foco para as suas sessões.
+                </p>
+              </div>
+            </div>
+            <div className="set-toggles">
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgVolume}</span>
+                  <div>
+                    <span className="set-toggle__label">Som do temporizador (entre as séries)</span>
+                    <span className="set-toggle__desc">
+                      Toca um aviso sonoro ao terminar o descanso entre séries
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={timerSound}
+                    onChange={(e) => toggleTimerSound(e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgTarget}</span>
+                  <div>
+                    <span className="set-toggle__label">Modo Foco por padrão nos treinos</span>
+                    <span className="set-toggle__desc">
+                      Abre automaticamente o Modo Foco ao iniciar um treino
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={focusDefault}
+                    onChange={(e) => toggleFocusDefault(e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+            </div>
+          </section>
+        </>
+      ),
+    },
+
     /* ================= NOTIFICAÇÕES ================= */
     notificacoes: {
       eyebrow: 'ACADEMIA • NOTIFICAÇÕES',
       title: 'Notificações',
       content: (
         <>
-          {/* v4.9.3-settings — Master Card: Notificações PWA (reference) */}
+          {/* v4.44.0 — notificações em estilo de lista (placeholders salvos) */}
           <section className="set-card">
             <div className="set-card__head">
               <div>
                 <div className="set-card__eyebrow">SISTEMA</div>
                 <h3 className="set-card__title">Notificações do Sistema & Segundo Plano (PWA)</h3>
                 <p className="set-card__desc">
-                  Ative notificações nativas do navegador para alertas em segundo plano.
+                  Permita os avisos do navegador e escolha o que receber.
                 </p>
               </div>
             </div>
@@ -1788,35 +2249,39 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 <div className="set-toggle__info">
                   <span className="set-toggle__icon">{SvgBell}</span>
                   <div>
-                    <span className="set-toggle__label">Ativar Notificações</span>
+                    <span className="set-toggle__label">Permitir notificações</span>
                     <span className="set-toggle__desc">
                       Solicita permissão do navegador para enviar notificações
                     </span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="set-btn set-btn--primary"
-                  onClick={() => {
-                    if (typeof Notification !== 'undefined') {
-                      void Notification.requestPermission().then((perm) => {
-                        if (perm === 'granted') {
-                          new Notification('Notificações Ativas!', {
-                            body: 'O EVO FIT enviará seus alertas e lembretes em segundo plano.',
-                            icon: '/icon-192.png',
-                          });
-                          showToast('Permissão de notificações concedida!', 'success');
-                        } else {
-                          showToast('Permissão negada nas preferências do navegador.', 'error');
-                        }
-                      });
-                    } else {
-                      showToast('Notificações simuladas ativadas!', 'info');
-                    }
-                  }}
-                >
-                  Ativar
-                </button>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={prefs.notifications}
+                    onChange={(e) => void toggleNotifications(e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgGlobe}</span>
+                  <div>
+                    <span className="set-toggle__label">Segundo Plano</span>
+                    <span className="set-toggle__desc">
+                      Receber alertas mesmo com o app fechado
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={prefs.online}
+                    onChange={(e) => togglePref('online', e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
               </div>
               <div className="set-toggle">
                 <div className="set-toggle__info">
@@ -1845,25 +2310,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   Testar
                 </button>
               </div>
-              <div className="set-toggle">
-                <div className="set-toggle__info">
-                  <span className="set-toggle__icon">{SvgGlobe}</span>
-                  <div>
-                    <span className="set-toggle__label">Segundo Plano</span>
-                    <span className="set-toggle__desc">
-                      Receber alertas mesmo com o app fechado
-                    </span>
-                  </div>
-                </div>
-                <label className="set-switch">
-                  <input
-                    type="checkbox"
-                    checked={prefs.online}
-                    onChange={(e) => togglePref('online', e.target.checked)}
-                  />
-                  <span className="set-switch__track" />
-                </label>
-              </div>
             </div>
           </section>
 
@@ -1880,10 +2326,10 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             <div className="set-toggles">
               <div className="set-toggle">
                 <div className="set-toggle__info">
-                  <span className="set-toggle__icon">{SvgTimer}</span>
+                  <span className="set-toggle__icon">{SvgDumbbell}</span>
                   <div>
                     <span className="set-toggle__label">
-                      Lembrete de Horário de Treino
+                      Lembretes de treino
                       <span className="set-badge-soon" style={{ marginLeft: 7 }}>
                         EM BREVE
                       </span>
@@ -1904,9 +2350,62 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               </div>
               <div className="set-toggle">
                 <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgMegaphone}</span>
+                  <div>
+                    <span className="set-toggle__label">
+                      Novidades e atualizações
+                      <span className="set-badge-soon" style={{ marginLeft: 7 }}>
+                        EM BREVE
+                      </span>
+                    </span>
+                    <span className="set-toggle__desc">
+                      Avisos sobre novos recursos e versões do app
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={prefs.notifyUpdates}
+                    onChange={(e) => togglePref('notifyUpdates', e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+              <div className="set-toggle">
+                <div className="set-toggle__info">
+                  <span className="set-toggle__icon">{SvgTrophy}</span>
+                  <div>
+                    <span className="set-toggle__label">
+                      Ligas
+                      <span className="set-badge-soon" style={{ marginLeft: 7 }}>
+                        EM BREVE
+                      </span>
+                    </span>
+                    <span className="set-toggle__desc">
+                      Avisos de temporadas, subidas de divisão e resultados
+                    </span>
+                  </div>
+                </div>
+                <label className="set-switch">
+                  <input
+                    type="checkbox"
+                    checked={prefs.notifyLeagues}
+                    onChange={(e) => togglePref('notifyLeagues', e.target.checked)}
+                  />
+                  <span className="set-switch__track" />
+                </label>
+              </div>
+              <div className="set-toggle">
+                <div className="set-toggle__info">
                   <span className="set-toggle__icon">{SvgChat}</span>
                   <div>
-                    <span className="set-toggle__label">Mensagens Motivacionais</span>
+                    <span className="set-toggle__label">
+                      Mensagens motivacionais
+                      <span className="set-badge-soon" style={{ marginLeft: 7 }}>
+                        EM BREVE
+                      </span>
+                    </span>
                     <span className="set-toggle__desc">
                       Frases de incentivo ao concluir treinos
                     </span>
@@ -1937,8 +2436,8 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               </div>
             )}
             <p className="set-note" style={{ marginTop: 10 }}>
-              Em breve: o lembrete de treino será enviado por notificações do
-              sistema no horário definido.
+              Estas opções são placeholders: as preferências ficam salvas, mas o
+              envio real de push será ativado em uma próxima versão.
             </p>
           </section>
         </>
