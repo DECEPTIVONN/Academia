@@ -211,6 +211,31 @@ export function MapPinIcon(props: SocialIconProps) {
   );
 }
 
+/** Lupa (buscar jogador) — Ícones.md §7. */
+export function SearchIcon(props: SocialIconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </Icon>
+  );
+}
+
+/** QR Code (convite por código) — Ícones.md §7. */
+export function QrCodeIcon(props: SocialIconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <path d="M14 14h3v3h-3z" />
+      <path d="M21 14v3" />
+      <path d="M14 21h3" />
+      <path d="M21 21h.01" />
+    </Icon>
+  );
+}
+
 /** Check (resgatado / concluído) — Ícones.md §7. */
 export function CheckIcon(props: SocialIconProps) {
   return (

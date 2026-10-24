@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "3.5.98",
+  "version": "3.5.99",
   "last_updated": "2026-10-23",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -616,7 +616,7 @@
       },
       {
         "file": "src-app/src/features/social/",
-        "purpose": "Aba SOCIAL (React): SocialFeature.tsx (re-exporta LigasFeature) + LigasFeature.tsx (3 sub-abas Amigos/Bate-papo/Guerra de Clãs, ligas semanal/mensal, banner de temporada, ranking filtrável, guilda/chat local e modais) + ligas-data.ts + ligas-icons.tsx + social.css. Amigos: convite permanente por QR/link em friend-invites.ts, FriendQrModal.tsx e QrScannerModal.tsx — código = user.id do Supabase ou UUID local persistido, link ?amigo=&nome=, amigos adicionados em localStorage e leitor de câmera com jsQR (QR invertido/baixo contraste). Estado de ligas/guilda é local; não há tabela de amizades no backend."
+        "purpose": "Aba SOCIAL (React): SocialFeature.tsx (re-exporta LigasFeature) + LigasFeature.tsx (3 sub-abas Amigos/Bate-papo/Guerra de Clãs, ligas semanal/mensal, banner de temporada, ranking filtrável, guilda/chat local e modais) + ligas-data.ts + ligas-icons.tsx + social.css. Amigos: convite permanente por QR/link em friend-invites.ts, FriendQrModal.tsx e QrScannerModal.tsx — código = user.id do Supabase ou UUID local persistido, link ?amigo=&nome=, amigos adicionados em localStorage e leitor de câmera com jsQR (QR invertido/baixo contraste). O FriendQrModal tem duas abas (QR Code e Buscar jogador); a busca consulta public.profiles (username/display_name) em friend-search.ts e adiciona o jogador pelo id da conta. Estado de ligas/guilda é local; não há tabela de amizades no backend."
       },
       {
         "file": "src-app/src/features/settings/",
@@ -835,7 +835,7 @@
       "musicas": "[ATUAL] src-app/src/features/music/ (MusicOverlay, FloatingMiniPlayer, WorkoutNowPlayingBar, player-prefs.ts, background-music.ts) + src-app/src/features/music/music.css",
       "bloqueio_lock": "[ATUAL] src-app/src/features/lock/LockScreen.tsx + src-app/src/features/lock/lock.css (z-index 1200, wallpapers neon/grafite/violeta/magenta)",
       "busca_global": "[ATUAL] src-app/src/features/search/GlobalSearchOverlay.tsx + src-app/src/features/search/search.css (Ctrl/Cmd+K → .gs-*)",
-      "social_e_ligas": "[ATUAL] src-app/src/features/social/ (SocialFeature.tsx, LigasFeature.tsx, ligas-data.ts, ligas-icons.tsx, friend-invites.ts, FriendQrModal.tsx, QrScannerModal.tsx) + src-app/src/features/social/social.css",
+      "social_e_ligas": "[ATUAL] src-app/src/features/social/ (SocialFeature.tsx, LigasFeature.tsx, ligas-data.ts, ligas-icons.tsx, friend-invites.ts, friend-search.ts, FriendQrModal.tsx, QrScannerModal.tsx) + src-app/src/features/social/social.css",
       "noticias_e_missoes": "[ATUAL] src-app/src/features/news/NewsOverlay.tsx + src-app/src/features/dashboard/MissionsOverlay.tsx + src-app/src/features/news/news-overlay.css + src-app/src/features/dashboard/missions-overlay.css",
       "dados_locais_idb": "[ATUAL] src-app/src/core/db/ (Dexie schema, migrações, repositórios exercícios/fichas/histórico/maestria/sync) + src-app/src/core/sync/offline-queue.ts",
       "sync_e_conta": "[ATUAL] src-app/src/core/sync/ (sync-manager.ts, supabase-client.ts, device.ts, offline-queue.ts) + src-app/src/features/sync/ (SyncSettingsPanel, ConnectedDevices, ScreensCustomizationPanel, AppLoadingScreen, RemoteSyncToast, sync.css) + src-app/src/core/auth/ + src-app/src/features/auth/",

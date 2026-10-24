@@ -937,9 +937,11 @@ export function LigasFeature({
     const reload = () => setFriends(loadAddedFriends());
     document.addEventListener('academia:db-ready', reload);
     document.addEventListener('academia:friends-updated', reload);
+    document.addEventListener('academia:friends-changed', reload);
     return () => {
       document.removeEventListener('academia:db-ready', reload);
       document.removeEventListener('academia:friends-updated', reload);
+      document.removeEventListener('academia:friends-changed', reload);
     };
   }, []);
   const [members] = useState<FriendItem[]>(INITIAL_MEMBERS);
@@ -1141,6 +1143,8 @@ export function LigasFeature({
       } else {
         showToast('Convite de amizade inválido.', 'error');
       }
+
+      return result;
     },
     [friendCode],
   );
@@ -1419,6 +1423,10 @@ export function LigasFeature({
         <FriendQrModal
           inviteUrl={inviteUrl}
           name={displayName}
+          selfId={user?.id ?? null}
+          onAddPlayer={(invite) => {
+            applyInvite(invite);
+          }}
           onClose={() => setShowAddFriendModal(false)}
           onScan={() => {
             setShowAddFriendModal(false);

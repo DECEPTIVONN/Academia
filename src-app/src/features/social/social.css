@@ -1439,15 +1439,17 @@
 
 .friend-qr-card {
   position: relative;
-  width: min(94vw, 390px);
-  max-height: min(92vh, 720px);
+  width: min(94vw, 408px);
+  max-height: min(92vh, 760px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #0b0b10;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  border-radius: 24px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.3);
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(var(--primary-rgb, 139, 92, 246), 0.22), transparent 62%),
+    linear-gradient(180deg, #14141d 0%, #0b0b10 58%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   color: #fff;
   animation: friend-qr-pop 0.18s ease-out;
 }
@@ -1490,11 +1492,16 @@
   transform: scale(0.95);
 }
 
+.friend-qr__header {
+  padding: 20px 22px 0;
+  text-align: center;
+}
+
 .friend-qr__body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 22px 22px 8px;
+  padding: 16px 22px 10px;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1504,15 +1511,345 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin: 0 0 12px;
+  gap: 8px;
+  margin: 0;
   font-family: var(--font-primary, 'Rajdhani', sans-serif);
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 900;
   letter-spacing: 0.02em;
   line-height: 1;
   text-transform: uppercase;
   text-shadow: 0 3px 0 rgba(0, 0, 0, 0.32), 0 0 14px rgba(255, 255, 255, 0.22);
+}
+
+.friend-qr__title svg {
+  color: var(--primary, #8b5cf6);
+  filter: drop-shadow(0 0 8px rgba(var(--primary-rgb, 139, 92, 246), 0.55));
+}
+
+.friend-qr__subtitle {
+  margin: 7px auto 0;
+  max-width: 300px;
+  color: #9a9aae;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+/* ---------- Abas em pílula (QR Code / Buscar) ---------- */
+
+.friend-qr__tabs {
+  display: flex;
+  gap: 6px;
+  margin: 14px 18px 0;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #0f0f16;
+}
+
+.friend-qr__tab {
+  flex: 1;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #8a8a9c;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.friend-qr__tab:hover {
+  color: #fff;
+}
+
+.friend-qr__tab.is-active {
+  color: #fff;
+  background: var(--primary, #8b5cf6);
+  box-shadow: 0 6px 18px rgba(var(--primary-rgb, 139, 92, 246), 0.38);
+}
+
+.friend-qr__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 0;
+  gap: 10px;
+}
+
+.friend-qr__panel--search {
+  align-items: stretch;
+  gap: 12px;
+}
+
+/* ---------- Moldura do QR (cantos estilo visor) ---------- */
+
+.friend-qr__code-frame {
+  position: relative;
+  padding: 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.22);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.07);
+}
+
+.friend-qr__corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--primary, #8b5cf6);
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(var(--primary-rgb, 139, 92, 246), 0.45));
+}
+
+.friend-qr__corner--tl {
+  top: -5px;
+  left: -5px;
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 12px;
+}
+
+.friend-qr__corner--tr {
+  top: -5px;
+  right: -5px;
+  border-left: 0;
+  border-bottom: 0;
+  border-top-right-radius: 12px;
+}
+
+.friend-qr__corner--bl {
+  bottom: -5px;
+  left: -5px;
+  border-right: 0;
+  border-top: 0;
+  border-bottom-left-radius: 12px;
+}
+
+.friend-qr__corner--br {
+  bottom: -5px;
+  right: -5px;
+  border-left: 0;
+  border-top: 0;
+  border-bottom-right-radius: 12px;
+}
+
+.friend-qr__nameplate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.friend-qr__name {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.friend-qr__code-label {
+  color: #8a8a9c;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ---------- Busca por jogador ---------- */
+
+.friend-qr__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0f0f16;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.friend-qr__search:focus-within {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.65);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+}
+
+.friend-qr__search > svg {
+  flex-shrink: 0;
+  color: #8a8a9c;
+}
+
+.friend-qr__search input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.friend-qr__search input::placeholder {
+  color: #6b6b80;
+  font-weight: 600;
+}
+
+.friend-qr__search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.friend-qr__search-clear {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #9a9aae;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.friend-qr__search-clear:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.friend-qr__results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: min(46vh, 290px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+
+.friend-qr__empty {
+  margin: 8px 4px;
+  color: #8a8a9c;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.friend-qr__result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #0f0f16;
+}
+
+.friend-qr__avatar {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, var(--primary, #8b5cf6), #4c1d95);
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+}
+
+.friend-qr__result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.friend-qr__result-name {
+  overflow: hidden;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.friend-qr__result-handle {
+  overflow: hidden;
+  color: #8a8a9c;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.friend-qr__add {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--primary, #8b5cf6);
+  border-radius: 10px;
+  background: var(--primary, #8b5cf6);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(var(--primary-rgb, 139, 92, 246), 0.3);
+  transition: filter 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.friend-qr__add:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+}
+
+.friend-qr__add:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.friend-qr__add.is-added,
+.friend-qr__add:disabled {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  box-shadow: none;
+  cursor: default;
 }
 
 .friend-qr__code {
@@ -1617,26 +1954,50 @@
 }
 
 @media (max-height: 700px) {
+  .friend-qr__header {
+    padding-top: 14px;
+  }
+
   .friend-qr__body {
-    padding-top: 16px;
+    padding-top: 10px;
   }
 
   .friend-qr__title {
-    margin-bottom: 8px;
-    font-size: 20px;
+    font-size: 19px;
+  }
+
+  .friend-qr__subtitle {
+    font-size: 10.5px;
+  }
+
+  .friend-qr__tabs {
+    margin-top: 10px;
+  }
+
+  .friend-qr__tab {
+    min-height: 34px;
+    font-size: 10px;
+  }
+
+  .friend-qr__code-frame {
+    padding: 9px;
   }
 
   .friend-qr__code {
-    width: min(52vw, 200px);
+    width: min(46vw, 176px);
+  }
+
+  .friend-qr__name {
+    font-size: 15px;
   }
 
   .friend-qr__hint {
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: 11px;
   }
 
   .friend-qr__footer {
-    margin-top: 10px;
+    margin-top: 8px;
     padding-top: 12px;
     padding-bottom: 14px;
   }
@@ -1644,6 +2005,33 @@
   .friend-qr__action {
     min-height: 42px;
     font-size: 12px;
+  }
+
+  .friend-qr__results {
+    max-height: min(38vh, 210px);
+  }
+}
+
+@media (max-width: 380px) {
+  .friend-qr__tab {
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .friend-qr__result {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .friend-qr__avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+
+  .friend-qr__add {
+    padding: 7px 8px;
+    font-size: 9.5px;
   }
 }
 

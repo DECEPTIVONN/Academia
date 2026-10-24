@@ -2,6 +2,19 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.43.7] - 2026-10-23
+
+**Amigos: modal "Adicionar" reestilizado com abas e busca de jogador.**
+
+### Added
+- `src-app/src/features/social/friend-search.ts`: busca de jogadores na tabela `public.profiles` (username/display_name), com sanitização da consulta e erro específico de modo offline.
+- `src-app/src/features/social/social-icons.tsx`: ícones `SearchIcon` e `QrCodeIcon` no padrão stroke/currentColor.
+
+### Changed
+- `src-app/src/features/social/FriendQrModal.tsx`: modal com duas abas ("Meu QR Code" e "Buscar jogador"), moldura de QR com cantos destacados, placa com nome/código e lista de resultados com botão "Adicionar"/"Adicionado" (debounce de 350 ms, mínimo de 2 caracteres).
+- `src-app/src/features/social/social.css`: novo visual do modal (cabeçalho, abas em pílula, moldura do QR, campo de busca e cartões de resultado) mantendo a paleta atual (roxo).
+- `src-app/src/features/social/LigasFeature.tsx`: `applyInvite` retorna o resultado, escuta também `academia:friends-changed` e passa `selfId`/`onAddPlayer` ao modal.
+
 ## [v4.43.6] - 2026-10-23
 
 **Onboarding: predefinição de treino aplicada nas fichas.**
