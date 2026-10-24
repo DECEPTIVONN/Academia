@@ -2,6 +2,14 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.44.1] - 2026-10-23
+
+**Onboarding: corrigido reaparecimento a cada acesso.**
+
+### Fixed
+- `src-app/src/core/db/idb.ts`: `PROFILE_STATE_KEY('local')` agora retorna a chave canônica `local` (antes `profile_state_local`). Como a tabela `profileState` usa `keyPath: 'key'`, o Dexie ignora a chave passada em `put()` e grava com o `key` do objeto — o onboarding era salvo em `local`, mas lido em `profile_state_local`, que nunca existia, fazendo a tela de primeiro acesso reaparecer em todo carregamento. `saveProfileState` também força `{ ...state, key }` para garantir a chave correta.
+- `src-app/src/core/sync/sync-manager.ts`: `academia:profile-updated` entrou na lista de auto-push (init/stop), para que dados de perfil e a flag `onboarded` cheguem ao snapshot remoto e não sejam sobrescritos por um pull antigo.
+
 ## [v4.44.0] - 2026-10-23
 
 **Configurações: Preferências do App (semana, unidades, tema, som e foco) e notificações.**

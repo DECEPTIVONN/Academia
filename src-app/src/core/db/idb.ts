@@ -136,16 +136,29 @@ export async function saveCustomExercise(exercise: Exercise): Promise<void> {
 
 /* ── Helpers de Perfil (Fase 2) ── */
 
-export const PROFILE_STATE_KEY = (userId: string = 'local') => `profile_state_${userId}`;
+/**
+ * Chave primária do estado de perfil.
+ *
+ * IMPORTANTE: a tabela `profileState` tem `keyPath: 'key'` (chave inline), e o
+ * Dexie ignora o argumento `key` do `put()` nesse caso — a gravação usa o
+ * `key` do próprio objeto. Por isso a chave do usuário local precisa ser
+ * exatamente `local` (a mesma usada por `ensureProfileState`, pelo bootstrap e
+ * pelo snapshot de sync). Antes retornávamos `profile_state_local`, o que fazia
+ * a leitura nunca encontrar o perfil salvo e o onboarding reaparecer a cada
+ * acesso.
+ */
+export const PROFILE_STATE_KEY = (userId: string = 'local') =>
+  userId === 'local' ? 'local' : `profile_state_${userId}`;
 
 /** Lê o estado de perfil/customização (derivado da cópia bruta legada). */
 export async function getProfileState(userId: string = 'local'): Promise<ProfileState | undefined> {
   return idb.profileState.get(PROFILE_STATE_KEY(userId));
 }
 
-/** Grava o estado de perfil inteiro (upsert). */
+/** Grava o estado de perfil inteiro (upsert na chave canônica do usuário). */
 export async function saveProfileState(state: ProfileState, userId: string = 'local'): Promise<void> {
-  await idb.profileState.put(state, PROFILE_STATE_KEY(userId));
+  const key = PROFILE_STATE_KEY(userId);
+  await idb.profileState.put({ ...state, key });
 }
 
 /** Retorna a maestria de todos os exercícios do usuário */

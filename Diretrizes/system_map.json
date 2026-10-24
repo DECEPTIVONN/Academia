@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "last_updated": "2026-10-23",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -764,7 +764,7 @@
       },
       {
         "file": "src-app/src/core/sync/",
-        "purpose": "Motor de sincronização multi-dispositivo (v4.9.0-sync): supabase-client.ts (credenciais do painel em localStorage mbc_supabase_url/mbc_supabase_anon_key com fallback .env VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY — .env tem prioridade; cache por sessão, isSyncConfigured, testSupabaseConnection, chaves mbc_sync_key default ACADEMIA_SYNC, mbc_device_id, mbc_last_sync_at, mbc_sync_revoked, setLastSyncedAt/lastSyncedAt), device.ts (getPersistentDeviceId, detectCurrentDevice, buildCurrentDeviceRecord, formatRelativeActiveTime, registro em user_sync.devices), offline-queue.ts (fila IndexedDB academia_offline_resilience_db/mutation_queue com auto-flush no evento online) e sync-manager.ts (snapshot JSONB dos dados essenciais — exercícios, fichas, histórico, maestrias, perfil/customização e estado legado — na tabela user_sync, push/pull com LWW por updatedAt, BroadcastChannel academia_multi_device_sync_channel, canal Realtime sync_room_${key}, heartbeat 25s, registry com rename/kick/revogação, useDevicesStore, syncNow, restartSyncEngine, reconnectAfterRevocation, auto-push com debounce de 1500ms no evento academia:db-ready)."
+        "purpose": "Motor de sincronização multi-dispositivo (v4.9.0-sync): supabase-client.ts (credenciais do painel em localStorage mbc_supabase_url/mbc_supabase_anon_key com fallback .env VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY — .env tem prioridade; cache por sessão, isSyncConfigured, testSupabaseConnection, chaves mbc_sync_key default ACADEMIA_SYNC, mbc_device_id, mbc_last_sync_at, mbc_sync_revoked, setLastSyncedAt/lastSyncedAt), device.ts (getPersistentDeviceId, detectCurrentDevice, buildCurrentDeviceRecord, formatRelativeActiveTime, registro em user_sync.devices), offline-queue.ts (fila IndexedDB academia_offline_resilience_db/mutation_queue com auto-flush no evento online) e sync-manager.ts (snapshot JSONB dos dados essenciais — exercícios, fichas, histórico, maestrias, perfil/customização e estado legado — na tabela user_sync, push/pull com LWW por updatedAt, BroadcastChannel academia_multi_device_sync_channel, canal Realtime sync_room_${key}, heartbeat 25s, registry com rename/kick/revogação, useDevicesStore, syncNow, restartSyncEngine, reconnectAfterRevocation, auto-push com debounce de 1500ms nos eventos academia:db-ready, academia:prefs-changed e academia:profile-updated)."
       },
       {
         "file": "src-app/src/features/sync/",
@@ -793,6 +793,7 @@
     ],
     "core_db": [
       "src-app/src/core/db/schema.ts: Dexie schema v4 (exercícios, fichas, histórico, maestria, sync-queue, preferências, Fit ID, lock, wallpapers, música).",
+      "src-app/src/core/db/idb.ts: instância Dexie + helpers tipados; `PROFILE_STATE_KEY`/`getProfileState`/`saveProfileState` usam a chave canônica `local` (tabela profileState tem keyPath inline — o `put` grava com o `key` do objeto, nunca com a chave explícita).",
       "src-app/src/core/db/queries.ts: CRUD tipado + queries compostas (fichas por músculo, histórico por período, maestria por exercício).",
       "src-app/src/core/db/legacy-migrator.ts: migrações 1→4 (add indices, split fichas/histórico, maestria, sync-queue, lock, Fit ID, wallpapers, música).",
       "src-app/src/core/sync/supabase-client.ts: cliente Supabase (anon key), helpers upsert/select/rpc, realtime subscriptions para sync multi-dispositivo.",

@@ -710,6 +710,9 @@ export function startSyncEngine(): void {
   document.addEventListener('academia:navbar-shape-changed', onLocalDataChanged);
   document.addEventListener('academia:auto-fullscreen-changed', onLocalDataChanged);
   document.addEventListener('academia:prefs-changed', onLocalDataChanged);
+  /* v4.44.1 — perfil/onboarding também entram no auto-push (antes só existiam
+     no IndexedDB local e o snapshot remoto ficava sem `onboarded`). */
+  document.addEventListener('academia:profile-updated', onLocalDataChanged);
 
   /* Flush da fila offline ao voltar a conexão */
   window.addEventListener('online', onOnline);
@@ -758,6 +761,7 @@ export function stopSyncEngine(): void {
   document.removeEventListener('academia:navbar-shape-changed', onLocalDataChanged);
   document.removeEventListener('academia:auto-fullscreen-changed', onLocalDataChanged);
   document.removeEventListener('academia:prefs-changed', onLocalDataChanged);
+  document.removeEventListener('academia:profile-updated', onLocalDataChanged);
   document.removeEventListener('visibilitychange', onVisibilityChange);
   window.removeEventListener('focus', onWindowFocus);
   window.removeEventListener('online', onOnline);
