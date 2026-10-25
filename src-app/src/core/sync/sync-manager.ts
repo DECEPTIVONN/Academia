@@ -70,6 +70,18 @@ interface DevicesPayload {
   devices: DeviceRecord[];
 }
 
+/* v4.45.0 — Telas Personalizadas: imagens da tela de bloqueio e do
+   splash/carregamento (ScreensCustomizationPanel / Configurações → Segurança).
+   Chave ausente = "nunca definida" (não sobrescreve o valor de outro
+   dispositivo); string vazia = "imagem removida", que se propaga e limpa o
+   valor nos demais. */
+const CUSTOM_SCREEN_KEYS: string[] = [
+  'mbc_lock_desktop',
+  'mbc_lock_mobile',
+  'mbc_loading_vertical',
+  'mbc_loading_horizontal',
+];
+
 /* ── Verificação automática de novidades (egress baixo) ──
    Consulta apenas updated_at; o snapshot completo só é baixado se mudou.
    O Realtime continua sendo o caminho rápido; isto é o fallback para
@@ -184,6 +196,8 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     'academia_pref_online',
     'academia_pref_app_lock_enabled',
     'academia_pref_app_lock_biometric',
+    /* v4.45.0 — imagens das Telas Personalizadas (ver CUSTOM_SCREEN_KEYS) */
+    ...CUSTOM_SCREEN_KEYS,
     ...Object.values(APP_PREF_KEYS),
   ];
   const prefs: Record<string, string> = {};
@@ -267,7 +281,10 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
     if (snapshot.prefs && typeof snapshot.prefs === 'object') {
       try {
         for (const [k, v] of Object.entries(snapshot.prefs)) {
-          if (typeof v === 'string') localStorage.setItem(k, v);
+          if (typeof v !== 'string') continue;
+          /* v4.45.0 — "imagem removida" em outro dispositivo (marcador vazio) */
+          if (v === '' && CUSTOM_SCREEN_KEYS.includes(k)) localStorage.removeItem(k);
+          else localStorage.setItem(k, v);
         }
         applySavedTheme();
         document.dispatchEvent(new CustomEvent('academia:prefs-changed'));

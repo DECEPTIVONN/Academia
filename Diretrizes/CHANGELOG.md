@@ -2,6 +2,19 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.45.0] - 2026-10-25
+
+**Telas Personalizadas: imagens da tela de bloqueio e do splash agora sincronizam na nuvem.**
+
+### Fixed
+- `src-app/src/core/sync/sync-manager.ts`: as imagens das **Telas Personalizadas** (`mbc_lock_desktop`, `mbc_lock_mobile`, `mbc_loading_vertical`, `mbc_loading_horizontal`) entram no `prefs` do snapshot enviado para a tabela `user_sync` (`CUSTOM_SCREEN_KEYS`, incluído em `PREF_KEYS_TO_SYNC`). Antes elas viviam apenas no `localStorage` do dispositivo e nunca chegavam à nuvem, então a tela de bloqueio e o splash personalizados não apareciam nos outros aparelhos.
+- `src-app/src/core/sync/sync-manager.ts`: no `applySnapshot`, a string vazia vinda da nuvem remove a chave local dessas imagens (o `LockScreen` e a splash do `index.html` voltam ao preset padrão). Chave ausente continua significando "nunca definida" — um dispositivo sem imagens não apaga as dos outros (last-write-wins só entre valores reais).
+- `src-app/src/features/sync/ScreensCustomizationPanel.tsx`: "Remover imagem" grava `''` em vez de apagar a chave (chave apagada = "nunca definida", o valor antigo continuaria vencendo na nuvem); o prop `storageKey` do `ImageCard` foi removido (a persistência é responsabilidade do `onChange`).
+- `src-app/src/features/settings/SettingsFeature.tsx`: o botão "Remover" dos papéis de parede da tela de bloqueio também grava o marcador vazio, para a remoção propagar entre dispositivos.
+
+### Changed
+- `src-app/src/features/sync/ScreensCustomizationPanel.tsx`: os 4 slots reagem a `academia:lock-prefs-changed` recarregando do `localStorage`, então imagens que chegam da nuvem (ou de outra aba) aparecem nos cards e nas prévias com o painel já aberto.
+
 ## [v4.44.2] - 2026-10-24
 
 **Conta Google no perfil, foto do usuário e cronômetro de descanso do legado.**

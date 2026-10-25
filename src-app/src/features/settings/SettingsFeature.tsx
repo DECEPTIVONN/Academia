@@ -1959,7 +1959,9 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                       <button
                         type="button"
                         onClick={() => {
-                          localStorage.removeItem(storageKey);
+                          /* v4.45.0 — marcador vazio: a remoção também precisa
+                             sincronizar (chave apagada = "nunca definida"). */
+                          localStorage.setItem(storageKey, '');
                           lockPrefsChanged();
                           showToast('Imagem removida.', 'info');
                         }}

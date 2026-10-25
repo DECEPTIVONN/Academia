@@ -127,12 +127,11 @@ const SvgKeyRound = (
 interface ImageCardProps {
   title: string;
   tag: string;
-  storageKey: string;
   value: string;
   onChange: (v: string) => void;
 }
 
-function ImageCard({ title, tag, storageKey, value, onChange }: ImageCardProps) {
+function ImageCard({ title, tag, value, onChange }: ImageCardProps) {
   const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -167,8 +166,10 @@ function ImageCard({ title, tag, storageKey, value, onChange }: ImageCardProps) 
   };
 
   const handleClear = () => {
+    /* v4.45.0 — onChange('') grava o marcador vazio (a remoção precisa
+       chegar aos outros dispositivos; apagar a chave a tornaria "nunca
+       definida" e o valor antigo continuaria valendo na nuvem). */
     onChange('');
-    localStorage.removeItem(storageKey);
     showToast('Imagem removida — voltando ao padrão.', 'info');
   };
 
@@ -230,6 +231,19 @@ export function ScreensCustomizationPanel() {
     return () => mq.removeEventListener('change', on);
   }, []);
 
+  /* v4.45.0 — imagens que chegam da nuvem (ou de outra aba) também atualizam
+     os cards/previews com o painel aberto. */
+  useEffect(() => {
+    const sync = () => {
+      setLockDesktop(localStorage.getItem('mbc_lock_desktop') || '');
+      setLockMobile(localStorage.getItem('mbc_lock_mobile') || '');
+      setLoadVertical(localStorage.getItem('mbc_loading_vertical') || '');
+      setLoadHorizontal(localStorage.getItem('mbc_loading_horizontal') || '');
+    };
+    window.addEventListener('academia:lock-prefs-changed', sync);
+    return () => window.removeEventListener('academia:lock-prefs-changed', sync);
+  }, []);
+
   /* ESC fecha a prévia */
   useEffect(() => {
     if (preview !== 'lock') return;
@@ -265,8 +279,9 @@ export function ScreensCustomizationPanel() {
 
   const update = (setter: (v: string) => void, key: string) => (v: string) => {
     setter(v);
-    if (v) localStorage.setItem(key, v);
-    else localStorage.removeItem(key);
+    /* v4.45.0 — sempre grava (mesmo vazio): a string vazia é o marcador de
+       "removida" e precisa entrar no snapshot da nuvem. */
+    localStorage.setItem(key, v);
     /* LockScreen reage a este evento ao reavaliar o wallpaper */
     window.dispatchEvent(new Event('academia:lock-prefs-changed'));
   };
@@ -296,14 +311,12 @@ export function ScreensCustomizationPanel() {
           <ImageCard
             title="Papel de Parede Desktop (16:9)"
             tag="Computador"
-            storageKey="mbc_lock_desktop"
             value={lockDesktop}
             onChange={update(setLockDesktop, 'mbc_lock_desktop')}
           />
           <ImageCard
             title="Papel de Parede Mobile (9:16)"
             tag="Smartphone"
-            storageKey="mbc_lock_mobile"
             value={lockMobile}
             onChange={update(setLockMobile, 'mbc_lock_mobile')}
           />
@@ -333,14 +346,12 @@ export function ScreensCustomizationPanel() {
           <ImageCard
             title="Splash Vertical (Celular / 9:16)"
             tag="Vertical"
-            storageKey="mbc_loading_vertical"
             value={loadVertical}
             onChange={update(setLoadVertical, 'mbc_loading_vertical')}
           />
           <ImageCard
             title="Splash Horizontal (Desktop / 16:9)"
             tag="Horizontal"
-            storageKey="mbc_loading_horizontal"
             value={loadHorizontal}
             onChange={update(setLoadHorizontal, 'mbc_loading_horizontal')}
           />
