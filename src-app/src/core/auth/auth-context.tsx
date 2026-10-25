@@ -22,6 +22,8 @@ export interface AuthContextValue {
   signIn:          (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signUp:          (email: string, password: string, displayName?: string) => Promise<void>;
+  /** Define/troca a senha da conta (usada após login com Google). */
+  updatePassword:  (password: string) => Promise<void>;
   signOut:         () => Promise<void>;
   resetPassword:   (email: string) => Promise<void>;
 }
@@ -115,6 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw formatAuthError(error);
   }, []);
 
+  const updatePassword = useCallback(async (password: string) => {
+    if (!isSupabaseConfigured) throw new Error('Supabase não configurado.');
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw formatAuthError(error);
+  }, []);
+
   const signOut = useCallback(async () => {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
@@ -133,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, session, loading,
-      signIn, signInWithGoogle, signUp, signOut, resetPassword,
+      signIn, signInWithGoogle, signUp, updatePassword, signOut, resetPassword,
     }}>
       {children}
     </AuthContext.Provider>

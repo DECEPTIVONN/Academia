@@ -2,6 +2,19 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.46.0] - 2026-10-25
+
+**Login sem botão de fechar e sem a chave ativa; perguntas pós-login com nome, usuário e senha.**
+
+### Changed
+- `src-app/src/features/auth/AuthScreen.tsx`: removidos o botão **fechar** (X no canto superior direito) e a linha **“Chave ativa”** do welcome; saíram junto o estado `activeSyncKey` e os imports `getSyncKey`/`DEFAULT_SYNC_KEY`/`KeyRound`. `setSyncKey` continua sendo aplicado pela gaveta “Vincular Chave” e o ESC segue fechando a tela.
+- `src-app/src/features/auth/OnboardingScreen.tsx`: nova primeira etapa **“Sua conta”** nas perguntas pós-login, que pede **Nome** e **Nome de usuário (@handle)** — validados com a mesma regra do cadastro (3–20, `a-z0-9_`) — e grava `customization.nome`/`customization.handle` no perfil (os mesmos campos das Configurações e do card de perfil). Os campos são pré-preenchidos com o perfil salvo ou com os dados do provedor (nome do Google, e-mail) sem sobrescrever o que o usuário digitar.
+- `src-app/src/features/auth/OnboardingScreen.tsx`: a pergunta **"Senha do usuário"** aparece apenas quando a sessão entrou pelo **Google** (`app_metadata.provider`/`identities`), pois contas de e-mail já têm senha. É opcional (mín. 6 caracteres) e chama o novo `updatePassword`, criando a senha real da conta para o login por e-mail.
+- `src-app/src/features/auth/OnboardingScreen.tsx`: navegação das etapas corrigida — “Voltar” na etapa de dados retorna para a conta e “Voltar” no objetivo retorna para os dados (antes apontava para a própria etapa e não saía do lugar).
+
+### Added
+- `src-app/src/core/auth/auth-context.tsx`: `updatePassword(password)` no `AuthContextValue`, usando `supabase.auth.updateUser({ password })` com o mesmo `formatAuthError` dos outros métodos (guard `isSupabaseConfigured` para o Modo Offline).
+
 ## [v4.45.0] - 2026-10-25
 
 **Telas Personalizadas: imagens da tela de bloqueio e do splash agora sincronizam na nuvem.**

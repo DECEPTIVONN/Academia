@@ -39,13 +39,12 @@ import {
   UserPlus,
   Eye,
   EyeOff,
-  KeyRound,
   X,
 } from 'lucide-react';
 import { useAuth } from '@/core/auth/use-auth';
 import { isSupabaseConfigured } from '@/core/supabase';
 import { isUsernameAvailable } from '@/core/auth/profiles';
-import { DEFAULT_SYNC_KEY, getSyncKey, setSyncKey } from '@/core/sync/supabase-client';
+import { setSyncKey } from '@/core/sync/supabase-client';
 import { showToast } from '@/lib/toast';
 import { useAuthModalStore } from './auth-modal-store';
 import './auth-screen.css';
@@ -318,13 +317,6 @@ export function AuthScreen() {
 
   const [linkKey, setLinkKey] = useState('');
   const [showLinkSection, setShowLinkSection] = useState(false);
-  const [activeSyncKey, setActiveSyncKey] = useState<string>(() => {
-    try {
-      return getSyncKey();
-    } catch {
-      return '';
-    }
-  });
 
   const [qrSession, setQrSession] = useState<{ pin: string } | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState('');
@@ -392,7 +384,6 @@ export function AuthScreen() {
     if (!k) return;
     try {
       setSyncKey(k);
-      setActiveSyncKey(getSyncKey());
     } catch {
       /* localStorage indisponível */
     }
@@ -572,16 +563,6 @@ export function AuthScreen() {
     <div className="fixed inset-0 z-[1150] w-full h-full flex flex-col bg-black overflow-y-auto no-scrollbar select-none text-white">
       <CurvedPerspectiveBackground />
 
-      {/* Fechar (volta ao app sem logar) */}
-      <button
-        type="button"
-        onClick={close}
-        className="absolute top-5 right-5 z-20 w-9 h-9 rounded-full bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer backdrop-blur-md"
-        aria-label="Fechar"
-      >
-        <X className="w-4 h-4" />
-      </button>
-
       <div className="relative z-10 w-full flex-1 flex flex-col justify-between px-6 py-10 max-w-lg mx-auto">
         {/* Cabeçalho da Marca */}
         <motion.div
@@ -706,15 +687,6 @@ export function AuthScreen() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-
-                {/* Chave de sync ativa (quando customizada) */}
-                {activeSyncKey && activeSyncKey !== DEFAULT_SYNC_KEY && (
-                  <p className="text-[11px] text-zinc-500 flex items-center justify-center gap-1">
-                    <KeyRound className="w-3 h-3 text-cyan-400" />
-                    <span>Chave ativa:</span>
-                    <span className="font-mono text-zinc-300">{activeSyncKey}</span>
-                  </p>
-                )}
               </motion.div>
             )}
 
