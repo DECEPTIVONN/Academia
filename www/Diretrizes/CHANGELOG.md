@@ -21,6 +21,18 @@
 >    * `[Removed]` para exclusão de código ou features.
 > 3. Seja claro e cite arquivos impactados para facilitar a navegação futura.
 
+## [v3.5.8-sync] - 2026-10-25
+*Sincronização na nuvem de imagens da tela de carregamento e da tela de bloqueio*
+
+### [Changed]
+- **Splash Screen (Tela de Carregamento)**: A customização do banner do splash screen agora é persistida em `localStorage` sob a chave `profileCustomization.banner` (padrão: `'roxo-neon'`). O banner é aplicado via `data-banner` attribute no elemento `#splashBg` imediatamente após o login, antes do `DOMContentLoaded`. As alterações estão no `www/treino.html` e `www/index.html` (entry point do app). Quando espelhadas e sincronizadas via `npx cap sync android`, o banner personalizado chega ao APK do Android.
+- **Tela de Bloqueio (Lock Screen)**: O sistema de wallpapers da tela de bloqueio (apenas na versão React `src-app/`) agora suporta 4 presets integrados (`neon`, `grafite`, `violeta`, `magenta`) mais imagens customizadas definidas pelo usuário em `localStorage` pelos keys `mbc_lock_mobile` (orientação retrato) e `mbc_lock_desktop` (orientação paisagem). Os presets e wallpapers customizados são aplicados no `LockScreen.tsx` e `lock-wallpapers.ts`. Via sync `npx cap sync android`, esses valores de localStorage e o código da tela de bloqueio são embutidos no APK.
+- **Fluxo de Sincronização Obrigatório**: Qualquer alteração em `treino.html`, `index.html`, `JS/treino/`, `style/treino/`, `Assets/` ou `Diretrizes/` deve seguir o fluxo: (1) espelhar edições em `www/`; (2) rodar `npx cap sync android` na raiz do projeto; (3) No Android Studio: `File > Sync Project with Gradle Files` → `Build > Clean Project` → `Run`; (4) Se aparecer conteúdo antigo, limpar dados do app (Ajustes → Aplicativo → Armazenamento → Limpar dados) para descartar o Cache Storage do Service Worker (`sw.js`) e o `localStorage`.
+
+- **`Diretrizes/README.md`**: Nova seção dokumentando o fluxo de sincronização de splash screen e lock screen (esta entrada).
+- **`www/Diretrizes/README.md`**: espelho idêntico da alteração acima.
+- `Diretrizes/system_map.json` inalterado (nenhuma mudança de estrutura de arquivos).
+
 ## [v3.5.7-docs] - 2026-10-01
 *Orientação de build Android no README para evitar o app compilado "antigo"*
 
