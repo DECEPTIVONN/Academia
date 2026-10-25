@@ -276,6 +276,19 @@ export interface ProfileCustomization {
   activityDurationUnit?: 'weeks' | 'months' | 'years';
   onboarded?: boolean;
   onboardingObjective?: string;
+  /** v4.47.0 — perguntas pós-login (onboarding em etapas) */
+  /** Motivo de usar o app */
+  appReason?: string;
+  /** Principais objetivos fitness */
+  mainGoals?: string;
+  /** Tempo de experiência com musculação */
+  experienceLevel?: string;
+  /** Sexo */
+  gender?: string;
+  /** Frequência de treino (dias por semana, 7 = todos os dias) */
+  trainingFrequencyDays?: number;
+  /** Local de treino */
+  trainingPlace?: string;
 }
 
 /** Conquista gravada em `db.conquistas` — string (id fixo) ou objeto datado. */

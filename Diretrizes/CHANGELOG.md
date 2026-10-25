@@ -2,6 +2,23 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.47.0] - 2026-10-25
+
+**Assistente de perguntas pós-login no estilo das imagens de referência, com destaque em vermelho.**
+
+### Changed
+- `src-app/src/features/auth/OnboardingScreen.tsx`: reescrito como assistente de tela cheia no estilo das imagens — cabeçalho com seta **voltar**, nome da pergunta + contador **"(n/10)"** e **"Pular"**; título grande com o trecho em destaque em **vermelho `#ef4444`**; cartões de opção com título, descrição, selo ("Popular", "Powerlifting", "Recomendado") e rádio; botão **"Continuar"** fixo no rodapé (cinza/desabilitado até houver resposta).
+- `src-app/src/features/auth/OnboardingScreen.tsx`: ordem das 10 etapas — **Sua Conta → Motivo de Uso → Principais Objetivos → Tempo de Experiência → Sexo → Idade → Peso → Frequência de Treino → Local de Treino → Programa de Treino** (conta e programa obrigatórios; as demais com "Pular").
+- `src-app/src/features/auth/OnboardingScreen.tsx`: **Idade** virou etapa própria com valor em destaque (substitui o campo de idade dentro do antigo bloco "Dados opcionais"); a etapa "Peso" manteve a pergunta com o mesmo tratamento.
+- `src-app/src/features/auth/OnboardingScreen.tsx`: as perguntas antigas "Pratica atividade física?" e "Há quanto tempo?" saíram do fluxo — a nova **Tempo de Experiência** (nível na musculação) e a **Frequência de Treino** cobrem o mesmo uso; os campos `activityDuration*` continuam no schema, apenas o onboarding deixa de preenchê-los.
+- `src-app/src/features/auth/OnboardingScreen.tsx`: cada etapa de resposta única grava no perfil ao avançar (respostas ficam salvas se o usuário fechar no meio); "Pular" avança sem gravar; "Voltar" preserva o que já foi respondido.
+
+### Added
+- `src-app/src/core/db/schema.ts`: novos campos opcionais em `ProfileCustomization` — `appReason` (motivo de usar o app), `mainGoals` (principais objetivos), `experienceLevel` (tempo de experiência), `gender` (sexo), `trainingFrequencyDays` (frequência, 7 = todos os dias) e `trainingPlace` (local de treino). Por serem parte do `profileState`, sincronizam com a nuvem junto do snapshot.
+
+### Fixed
+- `src-app/src/features/auth/OnboardingScreen.tsx`: as etiquetas do layout são `<div>` em vez de `<header>`/`<main>`/`<footer>` — o CSS legado global aplica `header { position: fixed }`, `main { min-height: 100vh }` e `footer::before/::after` posicionados de forma absoluta; com a tag `<footer>` o pseudo-elemento cobria o botão e **os cliques em "Continuar" não chegavam**. O conteúdo também passou a ter `min-height: 0` inline, senão o `min-height: 100vh` do legado empurrava o rodapé para fora da tela em janelas baixas (botão inalcançável).
+
 ## [v4.46.0] - 2026-10-25
 
 **Login sem botão de fechar e sem a chave ativa; perguntas pós-login com nome, usuário e senha.**
