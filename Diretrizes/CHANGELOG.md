@@ -5,10 +5,24 @@
 ## [v4.48.0] - 2026-10-25
 
 **Música de fundo (MAIN) não sobrevive mais ao fechamento do site.**
-
-### Fixed
+### Fixed
 - `src-app/src/features/music/audio-engine.ts`: a MAIN — e as demais faixas ocultas (RESULT, Missões), que tocam como `AudioBufferSourceNode` em loop sobre um `AudioContext` — continuava tocando depois de fechar o site; o navegador não suspende Web Audio quando a aba/janela desaparece e, no computador, fechar o painel/vista do app nem sempre destrói a página. Novo tratamento de ciclo de vida no `initAudioEngine()`: `pagehide` (fechar aba/janela, navegar) e `visibilitychange → hidden` pausam tudo (fonte Web Audio + `<audio>` do site + uploads da fila + `pauseVideo()` do YouTube) via `pauseAllForLifecycle()`; `visibilitychange → visible` retoma de onde parou com `resumeAfterVisibility()` (só se a música estava tocando e a pref seguir ligada). A pausa usa `pauseHidden()`, então o ponto da faixa é preservado.
 - `src-app/src/lib/background-music.ts`: o loop legado do `HTMLAudioElement` recebe o mesmo tratamento (`pagehide`/`hidden` pausam; `visible` retoma quando a reprodução é deste módulo) — hoje o `audio-engine` assume a posse no boot, então isto é a rede de segurança caso o motor falhe.
+
+## [v4.49.0] - 2026-10-25
+
+**Perguntas pós-login aprimoradas com novas etapas e tela de boas-vindas.**
+
+### Changed
+- `src-app/src/features/auth/OnboardingScreen.tsx`: adicionadas novas perguntas de pós-login — **"Por que usar o app fitness?”** e **"Como conheceu o app?”** — como texto informativo nas etapas de conta (para contas não-Google) e no rodapé; **peso, idade e altura** agora fazem parte da mesma etapa (**corpo**), com campos numéricos sincronizados na nuvem.
+- `src-app/src/features/auth/OnboardingScreen.tsx`: reescrito o assistant com 11 etapas no estilo das imagens de referência — ordem: **Sua Conta → Motivo de Uso → Principais Objetivos → Tempo de Experiência → Sexo → Idade, Peso e Altura (juntas) → Frequência de Treino → Local de Treino → Indicação → Programa de Treino → Notificações** (últimas duas etapas, com tela de boas-vindas ao final).
+- `src-app/src/features/auth/OnboardingScreen.tsx`: título das boas-vindas agora exibe **“Bem-vindo ao Evo Fit, {nome}!”** com logo G lime-green (#CCFF00) no topo; tela de boas-vindas tem duração de 2.8s antes de fechar automaticamente.
+- `src-app/src/core/db/schema.ts`: campos opcionais já existentes `heightCm`, `appReasons`, `referralSource`, `mainGoals`, `experienceLevel`, `gender`, `trainingFrequencyDays`, `trainingPlace`, `notificationsEnabled` são mantidos/garantidos para o novo onboarding.
+
+### Added
+- `src-app/src/features/auth/OnboardingScreen.tsx`: etapa **notificações** é a última do fluxo de perguntas; ao concluir, exibe tela de boas-vindas “Bem-vindo ao Evo Fit” por 2.8s antes de fechar, com auto-close timer.
+- `src-app/src/features/auth/OnboardingScreen.tsx`: pergunta **"Por que usar o app fitness?”** aparece como texto informativo quando a conta não é do Google (para contas e-mail, permite definir senha depois).
+- `src-app/src/features/auth/OnboardingScreen.tsx`: pergunta **"Como conheceu o app?”** aparece como texto informativo no rodapé da etapa de indicação.
 
 ## [v4.47.0] - 2026-10-25
 

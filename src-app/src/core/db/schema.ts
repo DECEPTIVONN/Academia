@@ -277,7 +277,7 @@ export interface ProfileCustomization {
   onboarded?: boolean;
   onboardingObjective?: string;
   /** v4.47.0 — perguntas pós-login (onboarding em etapas) */
-  /** Motivo de usar o app */
+  /** Motivo de usar o app (v4.47 — escolha única, legado; v4.49 usa appReasons) */
   appReason?: string;
   /** Principais objetivos fitness */
   mainGoals?: string;
@@ -289,6 +289,15 @@ export interface ProfileCustomization {
   trainingFrequencyDays?: number;
   /** Local de treino */
   trainingPlace?: string;
+  /** v4.49.0 — 2º lote de perguntas pós-login */
+  /** Altura (cm) */
+  heightCm?: number;
+  /** Motivos de usar o app de fitness (múltipla escolha, máx. 3) */
+  appReasons?: string[];
+  /** Como o usuário conheceu o app */
+  referralSource?: string;
+  /** Notificações ativadas no onboarding */
+  notificationsEnabled?: boolean;
 }
 
 /** Conquista gravada em `db.conquistas` — string (id fixo) ou objeto datado. */

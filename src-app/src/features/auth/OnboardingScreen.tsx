@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft } from 'lucide-react';
+import { motion } from 'motion/react';
+import { ArrowLeft, Check, Facebook, Instagram, MessageCircle, MoreHorizontal, Music2, Search, Ticket, Users } from 'lucide-react';
 import { useAuth } from '@/core/auth/use-auth';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { DEFAULT_PROFILE_CUSTOMIZATION, type ProfileCustomization } from '@/core/db/schema';
@@ -16,6 +17,8 @@ interface OnboardingScreenProps {
 /* Cor em destaque das perguntas pós-login (vermelho, conforme solicitado). */
 const ACCENT = '#ef4444';
 const ACCENT_SOFT = 'rgba(239, 68, 68, 0.12)';
+const CARD_BORDER = '1px solid rgba(255,255,255,0.12)';
+const DIVIDER = '1px solid rgba(255,255,255,0.08)';
 
 const OBJECTIVES = [
   'Hipertrofia (iniciante)',
@@ -31,12 +34,30 @@ const OBJECTIVES = [
 /* Mesma regra do cadastro (AuthScreen): 3–20 chars, letras/números/_ */
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
+/* Máximo de motivos da etapa "Motivo" (imagem de referência). */
+const MAX_REASONS = 3;
+
 function slugifyUsername(raw: string): string {
   return raw
     .toLowerCase()
     .replace(/[^a-z0-9_]/g, '')
     .slice(0, 20);
 }
+
+/* ── Ícones da etapa "Indicação" (o lucide não traz TikTok/Reddit) ── */
+
+const REFERRAL_ICONS = {
+  afiliado: Ticket,
+  instagram: Instagram,
+  tiktok: Music2,
+  facebook: Facebook,
+  reddit: MessageCircle,
+  google: Search,
+  amigos: Users,
+  outro: MoreHorizontal,
+} as const;
+
+type ReferralIcon = keyof typeof REFERRAL_ICONS;
 
 /* ── Definição das etapas (ordem do assistente) ── */
 
@@ -46,17 +67,19 @@ type StepId =
   | 'objetivos'
   | 'experiencia'
   | 'sexo'
-  | 'idade'
-  | 'peso'
+  | 'corpo'
   | 'frequencia'
   | 'local'
-  | 'plano';
+  | 'indicacao'
+  | 'plano'
+  | 'notificacoes';
 
 interface OptionDef {
   value: string;
   title: string;
   desc?: string;
   badge?: string;
+  icon?: ReferralIcon;
 }
 
 interface StepDef {
@@ -68,6 +91,8 @@ interface StepDef {
   subtitle: string;
   options?: OptionDef[];
   skippable?: boolean;
+  /** Rótulo do botão do rodapé (padrão: Continuar). */
+  actionLabel?: string;
 }
 
 const STEPS: StepDef[] = [
@@ -80,16 +105,22 @@ const STEPS: StepDef[] = [
   },
   {
     id: 'motivo',
-    label: 'Motivo de Uso',
-    title: 'Qual é o seu {motivo} de usar o app?',
-    subtitle: 'Conte pra que isso serve pra você. Usamos a resposta pra ajustar dicas e metas.',
+    label: 'Motivo',
+    title: 'Por que você quer usar um {aplicativo de fitness}?',
+    subtitle: `Selecione até ${MAX_REASONS} motivos.`,
     skippable: true,
     options: [
-      { value: 'Emagrecer', title: 'Emagrecer', desc: 'Perder peso com constância e acompanhamento.' },
-      { value: 'Ganhar massa muscular', title: 'Ganhar massa muscular', desc: 'Hipertrofia e força no treino.' },
-      { value: 'Sentir-me mais saudável', title: 'Sentir-me mais saudável', desc: 'Mais disposição e bem-estar no dia a dia.' },
-      { value: 'Organizar minha rotina', title: 'Organizar minha rotina', desc: 'Montar fichas e acompanhar o progresso.' },
-      { value: 'Manter a constância', title: 'Manter a constância', desc: 'Motivação, metas e gamificação para não parar.' },
+      { value: 'Sou iniciante e quero orientação', title: 'Sou iniciante e quero orientação' },
+      { value: 'Quero melhorar minha rotina de treino atual', title: 'Quero melhorar minha rotina de treino atual' },
+      { value: 'Quero mais variedade no meu plano de treino', title: 'Quero mais variedade no meu plano de treino' },
+      {
+        value: 'Quero um plano de treino ideal para as minhas necessidades específicas',
+        title: 'Quero um plano de treino ideal para as minhas necessidades específicas',
+      },
+      {
+        value: 'Quero saber exatamente o que fazer na academia todas as vezes',
+        title: 'Quero saber exatamente o que fazer na academia todas as vezes',
+      },
     ],
   },
   {
@@ -148,8 +179,14 @@ const STEPS: StepDef[] = [
       { value: 'Prefiro não informar', title: 'Prefiro não informar' },
     ],
   },
-  { id: 'idade', label: 'Idade', title: 'Qual é a sua {idade}?', subtitle: 'Usamos sua idade para personalizar suas recomendações de treino.', skippable: true },
-  { id: 'peso', label: 'Peso', title: 'Qual é o seu {peso}?', subtitle: 'Usamos seu peso para personalizar cálculos de cargas e treinos.', skippable: true },
+  {
+    /* Idade + peso + altura na MESMA etapa (pedido). */
+    id: 'corpo',
+    label: 'Idade, Peso e Altura',
+    title: 'Conte um pouco sobre o seu {corpo}',
+    subtitle: 'Idade, peso e altura personalizam cargas, descanso e métricas de progresso.',
+    skippable: true,
+  },
   {
     id: 'frequencia',
     label: 'Frequência de Treino',
@@ -184,6 +221,23 @@ const STEPS: StepDef[] = [
     ],
   },
   {
+    id: 'indicacao',
+    label: 'Indicação',
+    title: 'Como você {conheceu} o app?',
+    subtitle: 'Queremos saber como você nos encontrou para melhorar nosso serviço.',
+    skippable: true,
+    options: [
+      { value: 'Código de afiliado', title: 'Código de afiliado', icon: 'afiliado' },
+      { value: 'Instagram', title: 'Instagram', icon: 'instagram' },
+      { value: 'TikTok', title: 'TikTok', icon: 'tiktok' },
+      { value: 'Facebook', title: 'Facebook', icon: 'facebook' },
+      { value: 'Reddit', title: 'Reddit', icon: 'reddit' },
+      { value: 'Google', title: 'Google', icon: 'google' },
+      { value: 'Amigos ou família', title: 'Amigos ou família', icon: 'amigos' },
+      { value: 'Outro', title: 'Outro', icon: 'outro' },
+    ],
+  },
+  {
     id: 'plano',
     label: 'Programa de Treino',
     title: 'Qual {programa} você quer seguir?',
@@ -191,13 +245,20 @@ const STEPS: StepDef[] = [
     skippable: false,
     options: OBJECTIVES.map((objective) => ({ value: objective, title: objective })),
   },
+  {
+    /* Última etapa (pedido): notificações → tela de boas-vindas. */
+    id: 'notificacoes',
+    label: 'Notificações',
+    title: '{Ativar} notificações',
+    subtitle: 'Para obter todos os benefícios do Evo Fit, ative suas notificações para receber:',
+    skippable: true,
+    actionLabel: 'Ativar',
+  },
 ];
 
-/* Campos do perfil gravados por cada etapa de opção. */
+/* Campos do perfil gravados por cada etapa de opção única. */
 function fieldsForStep(stepId: StepId, value: string): Partial<ProfileCustomization> {
   switch (stepId) {
-    case 'motivo':
-      return { appReason: value };
     case 'objetivos':
       return { mainGoals: value };
     case 'experiencia':
@@ -208,6 +269,8 @@ function fieldsForStep(stepId: StepId, value: string): Partial<ProfileCustomizat
       return { trainingFrequencyDays: Number(value) };
     case 'local':
       return { trainingPlace: value };
+    case 'indicacao':
+      return { referralSource: value };
     default:
       return {};
   }
@@ -216,15 +279,13 @@ function fieldsForStep(stepId: StepId, value: string): Partial<ProfileCustomizat
 /* ── Peças visuais (estilo das imagens de referência, destaque vermelho) ── */
 
 function renderTitle(text: string) {
-  return text.split(/\{|\}/).map((part, i) =>
-    i % 2 === 1 ? (
-      <span key={i} style={{ color: ACCENT }}>
-        {part}
-      </span>
-    ) : (
-      <React.Fragment key={i}>{part}</React.Fragment>
-    ),
-  );
+  return text.split(/\\{|\\}/).map((part, i) => {
+    if (i % 2 === 1) {
+      return <span key={i} style={{ color: ACCENT }}>{part}</span>;
+    } else {
+      return <React.Fragment key={i}>{part}</React.Fragment>;
+    }
+  });
 }
 
 function Radio({ selected }: { selected: boolean }) {
@@ -242,6 +303,45 @@ function Radio({ selected }: { selected: boolean }) {
   );
 }
 
+function Checkbox({ checked }: { checked: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="shrink-0 flex items-center justify-center w-6 h-6 rounded-md border-2 transition-colors"
+      style={{
+        borderColor: checked ? ACCENT : 'rgba(255,255,255,0.3)',
+        background: checked ? ACCENT : 'transparent',
+      }}
+    >
+      {checked && <Check className="w-4 h-4" strokeWidth={3} style={{ color: '#07070a' }} />}
+    </span>
+  );
+}
+
+/** Linha de múltipla escolha (etapa Motivo): texto à esquerda, check à direita. */
+function CheckRow({
+  title,
+  checked,
+  onToggle,
+}: {
+  title: string;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={checked}
+      className="w-full flex items-center gap-4 py-4 text-left"
+      style={{ borderTop: DIVIDER }}
+    >
+      <span className="flex-1 text-[15px] leading-snug text-white">{title}</span>
+      <Checkbox checked={checked} />
+    </button>
+  );
+}
+
 function OptionCard({
   option,
   selected,
@@ -251,17 +351,27 @@ function OptionCard({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const Icon = option.icon ? REFERRAL_ICONS[option.icon] : null;
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className="w-full flex items-center gap-4 rounded-2xl border px-4 py-4 text-left transition-colors"
+      className="w-full flex items-center gap-4 rounded-2xl px-4 py-4 text-left transition-colors"
       style={{
+        border: CARD_BORDER,
         borderColor: selected ? ACCENT : 'rgba(255,255,255,0.12)',
         background: selected ? ACCENT_SOFT : 'rgba(255,255,255,0.02)',
       }}
     >
+      {Icon && (
+        <span
+          className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg"
+          style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.85)' }}
+        >
+          <Icon className="w-5 h-5" />
+        </span>
+      )}
       <span className="min-w-0 flex-1">
         {option.badge && (
           <span
@@ -282,17 +392,77 @@ function OptionCard({
 const inputCls =
   'w-full h-11 rounded-xl bg-black/40 border border-white/12 px-3 text-[15px] text-white placeholder-white/30 focus:outline-none focus:border-[#ef4444] transition-colors';
 
+/** Campo numérico compacto da etapa "corpo" (rótulo • valor • unidade). */
+function MetricField({
+  label,
+  unit,
+  value,
+  onChange,
+  placeholder,
+  min,
+  max,
+  step,
+  inputMode,
+  ariaLabel,
+}: {
+  label: string;
+  unit: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  min: number;
+  max: number;
+  step?: string;
+  inputMode?: 'numeric' | 'decimal';
+  ariaLabel: string;
+}) {
+  return (
+    <label
+      className="flex items-center gap-3 rounded-2xl px-4 py-3"
+      style={{ border: CARD_BORDER, background: 'rgba(255,255,255,0.02)' }}
+    >
+      <span className="flex-1 text-sm text-white/60">{label}</span>
+      <input
+        type="number"
+        inputMode={inputMode}
+        className="w-24 bg-transparent text-2xl font-bold text-white text-right outline-none"
+        style={{ caretColor: ACCENT }}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        min={min}
+        max={max}
+        step={step}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+      />
+      <span className="w-10 text-sm text-white/40">{unit}</span>
+    </label>
+  );
+}
+
 export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
   const { user, updatePassword } = useAuth();
   const { state, update } = useProfileState('local');
   const [stepIndex, setStepIndex] = useState(0);
+  /* 'wizard' = perguntas; 'welcome' = tela "Bem-vindo ao Evo Fit". */
+  const [phase, setPhase] = useState<'wizard' | 'welcome'>('wizard');
   const [answers, setAnswers] = useState<Partial<Record<StepId, string>>>({});
+  const [reasons, setReasons] = useState<string[] | undefined>(undefined);
   const [edited, setEdited] = useState<{ nome?: string; handle?: string }>({});
   const [password, setPassword] = useState('');
   const [age, setAge] = useState<string | undefined>(undefined);
   const [weight, setWeight] = useState<string | undefined>(undefined);
+  const [height, setHeight] = useState<string | undefined>(undefined);
+  const [notifPerm, setNotifPerm] = useState<string>(() =>
+    typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
+  );
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  /** Perguntas concluídas (onboarded gravado) — evita duplicar a escrita. */
+  const onboardedRef = useRef(false);
+  /** Boas-vindas encerrada — o onComplete do pai dispara uma única vez. */
+  const closedRef = useRef(false);
+  const completeRef = useRef(onComplete);
 
   /* Login por Google: a conta não tem senha própria, então perguntamos uma
      (permite entrar depois com e-mail + senha). Contas de e-mail já têm senha. */
@@ -323,38 +493,97 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
       : slugifyUsername((user?.email ?? '').split('@')[0] ?? ''));
   const ageValue = age ?? (saved?.age != null ? String(saved.age) : '');
   const weightValue = weight ?? (saved?.weightKg != null ? String(saved.weightKg) : '');
+  const heightValue = height ?? (saved?.heightCm != null ? String(saved.heightCm) : '');
 
   const step = STEPS[stepIndex];
   const total = STEPS.length;
+  const selectedReasons = reasons ?? saved?.appReasons ?? [];
 
   const answerOf = (id: StepId): string => {
     if (answers[id]) return answers[id] as string;
     const fromProfile: Record<string, string | undefined> = {
-      motivo: saved?.appReason,
       objetivos: saved?.mainGoals,
       experiencia: saved?.experienceLevel,
       sexo: saved?.gender,
       frequencia: saved?.trainingFrequencyDays != null ? String(saved.trainingFrequencyDays) : undefined,
       local: saved?.trainingPlace,
+      indicacao: saved?.referralSource,
       plano: saved?.onboardingObjective,
     };
     return fromProfile[id] ?? '';
   };
-  const answer = step.options ? answerOf(step.id) : '';
+  const answer = step.options && step.id !== 'motivo' ? answerOf(step.id) : '';
 
-  const canContinue = step.options
-    ? Boolean(answer)
-    : step.id === 'idade'
-      ? ageValue.trim() !== ''
-      : step.id === 'peso'
-        ? weightValue.trim() !== ''
-        : true;
+  const canContinue =
+    step.id === 'motivo'
+      ? selectedReasons.length > 0
+      : step.id === 'corpo'
+        ? ageValue.trim() !== '' && weightValue.trim() !== '' && heightValue.trim() !== ''
+        : step.options
+          ? Boolean(answer)
+          : true;
+
+  /* Guarda o callback mais novo do pai (fecha o onboarding no fim das boas-vindas). */
+  useEffect(() => {
+    completeRef.current = onComplete;
+  });
+
+  useEffect(() => {
+    if (phase !== 'welcome') return;
+    const timer = window.setTimeout(() => closeWelcome(), 2800);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   if (!open) return null;
 
   const goTo = (index: number) => {
     setStepIndex(Math.max(0, Math.min(total - 1, index)));
     setError('');
+  };
+
+  /** Marca o onboarding como concluído e entra na tela de boas-vindas. */
+  async function enterWelcome(): Promise<void> {
+    if (onboardedRef.current) return;
+    onboardedRef.current = true;
+    try {
+      await update((draft) => {
+        draft.customization.onboarded = true;
+      });
+    } finally {
+      setPhase('welcome');
+    }
+  }
+
+  /** Sai do onboarding (toque ou timer da tela de boas-vindas). */
+  function closeWelcome(): void {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    completeRef.current();
+  }
+
+  const handleSkip = () => {
+    /* Última etapa: pular também conclui (vai para as boas-vindas). */
+    if (stepIndex >= total - 1) {
+      void enterWelcome();
+      return;
+    }
+    goTo(stepIndex + 1);
+  };
+
+  const toggleReason = (value: string) => {
+    const current = selectedReasons;
+    if (current.includes(value)) {
+      setReasons(current.filter((item) => item !== value));
+      setError('');
+      return;
+    }
+    if (current.length >= MAX_REASONS) {
+      setError(`Selecione no máximo ${MAX_REASONS} motivos.`);
+      return;
+    }
+    setError('');
+    setReasons([...current, value]);
   };
 
   const handleSaveConta = async (): Promise<boolean> => {
@@ -397,7 +626,97 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
     setError('');
     const current = STEPS[stepIndex];
 
-    /* Última etapa: aplica o programa + fecha o onboarding. */
+    if (current.id === 'conta') {
+      setSaving(true);
+      try {
+        const ok = await handleSaveConta();
+        if (!ok) return;
+        goTo(stepIndex + 1);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    /* Motivo: múltipla escolha (até 3), salva como lista. */
+    if (current.id === 'motivo') {
+      if (selectedReasons.length === 0) {
+        setError('Escolha pelo menos um motivo — ou toque em "Pular".');
+        return;
+      }
+      setSaving(true);
+      try {
+        await update((draft) => {
+          draft.customization.appReasons = selectedReasons;
+        });
+        goTo(stepIndex + 1);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    /* Idade + peso + altura na mesma etapa. */
+    if (current.id === 'corpo') {
+      const ageNum = Number(ageValue);
+      const weightNum = Number(weightValue);
+      const heightNum = Number(heightValue);
+      if (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 120) {
+        setError('Idade: informe um número inteiro entre 1 e 120.');
+        return;
+      }
+      if (!Number.isFinite(weightNum) || weightNum < 1 || weightNum > 400) {
+        setError('Peso: informe um valor entre 1 e 400 kg.');
+        return;
+      }
+      if (!Number.isFinite(heightNum) || heightNum < 100 || heightNum > 250) {
+        setError('Altura: informe um valor entre 100 e 250 cm.');
+        return;
+      }
+      setSaving(true);
+      try {
+        await update((draft) => {
+          draft.customization.age = ageNum;
+          draft.customization.weightKg = weightNum;
+          draft.customization.heightCm = heightNum;
+        });
+        goTo(stepIndex + 1);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    /* Última etapa: pede permissão de notificação e conclui. */
+    if (current.id === 'notificacoes') {
+      setSaving(true);
+      try {
+        let granted = notifPerm === 'granted';
+        if (!granted && typeof Notification !== 'undefined' && Notification.permission !== 'denied') {
+          try {
+            const result = await Notification.requestPermission();
+            setNotifPerm(result);
+            granted = result === 'granted';
+          } catch {
+            granted = false;
+          }
+        }
+        if (granted) showToast('Notificações ativadas!', 'success');
+        else if (notifPerm === 'denied')
+          showToast('Notificações bloqueadas no navegador. Ative-as nas configurações do site.', 'info');
+        else showToast('Tudo certo! Você pode ativar depois em Configurações.', 'info');
+
+        await update((draft) => {
+          draft.customization.notificationsEnabled = granted;
+        });
+        await enterWelcome();
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    /* Programa de treino: aplica a ficha (o onboarding só fecha no fim). */
     if (current.id === 'plano') {
       const objective = answer;
       if (!objective) return;
@@ -405,7 +724,6 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
       try {
         await update((draft) => {
           draft.customization.onboardingObjective = objective;
-          draft.customization.onboarded = true;
         });
         if (objective === 'Treino personalizado') {
           try { localStorage.setItem('academia_open_ficha', '1'); } catch { /* ignore */ }
@@ -422,18 +740,6 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
           }
           showToast('Bons treinos! Predefinição aplicada às fichas.', 'success');
         }
-        onComplete();
-      } finally {
-        setSaving(false);
-      }
-      return;
-    }
-
-    if (current.id === 'conta') {
-      setSaving(true);
-      try {
-        const ok = await handleSaveConta();
-        if (!ok) return;
         goTo(stepIndex + 1);
       } finally {
         setSaving(false);
@@ -460,45 +766,52 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
       return;
     }
 
-    /* Idade / Peso: validação numérica quando preenchidos. */
-    if (current.id === 'idade') {
-      const value = Number(ageValue);
-      if (!Number.isFinite(value) || value < 1 || value > 120 || !Number.isInteger(value)) {
-        setError('Idade: informe um número inteiro entre 1 e 120.');
-        return;
-      }
-      setSaving(true);
-      try {
-        await update((draft) => { draft.customization.age = value; });
-        goTo(stepIndex + 1);
-      } finally {
-        setSaving(false);
-      }
-      return;
-    }
-
-    if (current.id === 'peso') {
-      const value = Number(weightValue);
-      if (!Number.isFinite(value) || value < 1 || value > 400) {
-        setError('Peso: informe um valor entre 1 e 400 kg.');
-        return;
-      }
-      setSaving(true);
-      try {
-        await update((draft) => { draft.customization.weightKg = value; });
-        goTo(stepIndex + 1);
-      } finally {
-        setSaving(false);
-      }
-      return;
-    }
-
     goTo(stepIndex + 1);
   };
+
+  /* ═════════════ Tela de boas-vindas (pós-perguntas) ═════════════ */
+  if (phase === 'welcome') {
+    const firstName = nome.trim().split(/\s+/)[0] || '';
+    return createPortal(
+      <div
+        className="fixed inset-0 z-[1200] flex flex-col items-center justify-center gap-6 px-6 cursor-pointer select-none"
+        style={{ background: '#07070a' }}
+        onClick={closeWelcome}
+        role="status"
+      >
+        <motion.img
+          src="/assets/Logo.png"
+          alt="Logo Evo Fit"
+          width={128}
+          height={128}
+          className="rounded-[32px] shadow-2xl"
+          initial={{ opacity: 0, scale: 0.86 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        />
+        <motion.h1
+          className="text-3xl sm:text-4xl font-bold text-white text-center leading-snug"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        >
+          Bem-vindo ao Evo Fit{firstName ? `, ${firstName}` : ''}!
+        </motion.h1>
+      </div>,
+      document.body,
+    );
+  }
+
+  const footerLabel = saving
+    ? 'Salvando…'
+    : step.id === 'notificacoes' && notifPerm === 'granted'
+      ? 'Continuar'
+      : (step.actionLabel ?? 'Continuar');
 
   return createPortal(
     <div className="fixed inset-0 z-[1200] flex flex-col text-white" style={{ background: '#07070a' }}>
       {/* Cabeçalho: voltar • nome da pergunta + contador • pular */}
+
       <div className="flex items-center justify-between h-14 px-4 shrink-0">
         {stepIndex > 0 ? (
           <button
@@ -525,7 +838,7 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
         {step.skippable ? (
           <button
             type="button"
-            onClick={() => goTo(stepIndex + 1)}
+            onClick={handleSkip}
             className="w-12 text-right text-[15px] text-white/70 hover:text-white transition-colors"
             disabled={saving}
           >
@@ -537,6 +850,7 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
       </div>
 
       {/* Conteúdo — div (não <main>): o CSS legado dá min-height:100vh a main */}
+
       <div
         key={step.id}
         className="flex-1 min-h-0 overflow-y-auto px-5 pb-6"
@@ -552,14 +866,90 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
         )}
 
         <div className="mt-6 space-y-3">
-          {step.options?.map((option) => (
-            <OptionCard
-              key={option.value}
-              option={option}
-              selected={answer === option.value}
-              onSelect={() => setAnswers((prev) => ({ ...prev, [step.id]: option.value }))}
-            />
-          ))}
+          {/* Motivo: linhas com checkbox (múltipla escolha) */}
+
+          {step.id === 'motivo' &&
+            step.options?.map((option) => (
+              <CheckRow
+                key={option.value}
+                title={option.title}
+                checked={selectedReasons.includes(option.value)}
+                onToggle={() => toggleReason(option.value)}
+              />
+            ))}
+
+          {/* Demais etapas de opção: cartões com rádio */}
+
+          {step.id !== 'motivo' &&
+            step.options?.map((option) => (
+              <OptionCard
+                key={option.value}
+                option={option}
+                selected={answer === option.value}
+                onSelect={() => setAnswers((prev) => ({ ...prev, [step.id]: option.value }))}
+              />
+            ))}
+
+          {/* Prévia das notificações (ilustração, como na imagem) */}
+
+          {step.id === 'notificacoes' && (
+            <div className="mt-6 space-y-3">
+              <div className="rounded-2xl p-4" style={{ border: CARD_BORDER, background: 'rgba(255,255,255,0.04)' }}>
+                <div className="flex items-center justify-between text-xs text-white/45">
+                  <span>Treino</span>
+                  <span>07:42</span>
+                </div>
+                <div className="mt-1 font-semibold text-white">Levantamento Terra</div>
+                <div className="text-sm text-white/50">Próximo: Série 2/3 - 10 reps - 80kg</div>
+                <div className="mt-3 text-sm text-white/70">Descanso</div>
+              </div>
+
+              <div className="rounded-2xl p-4 flex items-start gap-3" style={{ border: CARD_BORDER, background: 'rgba(255,255,255,0.04)' }}>
+                <img src="/assets/icons/icon-192.png" alt="" width={36} height={36} className="rounded-lg shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-sm font-semibold text-white">O tempo de descanso está terminado</span>
+                    <span className="text-xs text-white/40 shrink-0">agora</span>
+                  </div>
+                  <div className="text-sm text-white/50">Próximo: Levantamento Terra - 8 reps - 80kg</div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl p-4 flex items-start gap-3" style={{ border: CARD_BORDER, background: 'rgba(255,255,255,0.04)' }}>
+                <span
+                  className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-xs font-bold"
+                  style={{ background: ACCENT_SOFT, color: '#fca5a5' }}
+                >
+                  CA
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-sm font-semibold text-white">Coach Alex</span>
+                    <span className="text-xs text-white/40 shrink-0">agora</span>
+                  </div>
+                  <div className="text-sm text-white/50">
+                    Ei, vi seu último treino. Como foi o supino inclinado com 75 kg?
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl p-4 flex items-start gap-3" style={{ border: CARD_BORDER, background: 'rgba(255,255,255,0.04)' }}>
+                <span
+                  className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg text-lg font-black"
+                  style={{ color: ACCENT }}
+                >
+                  ⌃
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-sm font-semibold text-white">Pontuação de Força</span>
+                    <span className="text-xs text-white/40 shrink-0">agora</span>
+                  </div>
+                  <div className="text-sm text-white/50">Sua Pontuação de Força aumentou em 4 pontos</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {step.id === 'conta' && (
             <div className="space-y-4">
@@ -611,63 +1001,85 @@ export function OnboardingScreen({ open, onComplete }: OnboardingScreenProps) {
                   </span>
                 </label>
               )}
+
+              {/* Nova pergunta: Porque usar o app fitness? - como texto informativo */}
+              {!isGoogleAccount && (
+                <label className="block text-sm text-white/70">
+                  <p className="text-white mb-1">Por que usar o app fitness?</p>
+                  <p className="text-white/50 text-xs">Ajude-nos a entender suas motivações para melhorar o app.</p>
+                </label>
+              )}
+
+              {/* Nova pergunta: Como conheceu o app? - como texto informativo */}
+              {!isGoogleAccount && (
+                <label className="block text-sm text-white/70">
+                  <p className="text-white mb-1">Como conheceu o app?</p>
+                  <p className="text-white/50 text-xs">Queremos saber como você nos encontrou para melhorar nosso serviço.</p>
+                </label>
+              )}
+
+              {/* Peso, idade e altura devem estar juntos - já estão na etapa corpo */}
             </div>
           )}
 
-          {step.id === 'idade' && (
-            <div className="rounded-2xl border border-white/12 bg-white/[0.03] px-4 py-8 flex items-center justify-center gap-3">
-              <input
-                type="number"
-                inputMode="numeric"
-                className="w-28 bg-transparent text-5xl font-bold text-white text-center outline-none focus:outline-none"
-                style={{ caretColor: ACCENT }}
+          {/* Idade + peso + altura juntos na mesma etapa */}
+          {step.id === 'corpo' && (
+            <div className="space-y-3">
+              <MetricField
+                label="Idade"
+                unit="anos"
                 value={ageValue}
-                onChange={(e) => setAge(e.target.value)}
+                onChange={setAge}
+                placeholder="--"
                 min={1}
                 max={120}
-                placeholder="--"
-                aria-label="Idade"
+                inputMode="numeric"
+                ariaLabel="Idade"
               />
-              <span className="text-xl font-semibold text-white/40">anos</span>
-            </div>
-          )}
-
-          {step.id === 'peso' && (
-            <div className="rounded-2xl border border-white/12 bg-white/[0.03] px-4 py-8 flex items-center justify-center gap-3">
-              <input
-                type="number"
-                inputMode="decimal"
-                className="w-32 bg-transparent text-5xl font-bold text-white text-center outline-none focus:outline-none"
-                style={{ caretColor: ACCENT }}
+              <MetricField
+                label="Peso"
+                unit="kg"
                 value={weightValue}
-                onChange={(e) => setWeight(e.target.value)}
+                onChange={setWeight}
+                placeholder="--"
                 min={1}
                 max={400}
                 step="0.1"
-                placeholder="--"
-                aria-label="Peso em quilogramas"
+                inputMode="decimal"
+                ariaLabel="Peso em quilogramas"
               />
-              <span className="text-xl font-semibold text-white/40">kg</span>
+              <MetricField
+                label="Altura"
+                unit="cm"
+                value={heightValue}
+                onChange={setHeight}
+                placeholder="--"
+                min={100}
+                max={250}
+                inputMode="numeric"
+                ariaLabel="Altura em centímetros"
+              />
             </div>
           )}
         </div>
       </div>
 
-      {/* Rodapé: Continuar — div (não <footer>): o CSS legado decora footer::before/::after
-          com posicionamento absoluto e bloquearia os cliques no botão. */}
+      {/* Rodapé: Continuar/Ativar — div (não <footer>): o CSS legado decora
+          footer::before/::after posicionados e bloquearia os cliques. */}
+
       <div className="shrink-0 px-5 pt-2 pb-7">
         <button
           type="button"
           onClick={() => void handleContinue()}
           disabled={!canContinue || saving}
           className="w-full h-12 rounded-full text-[15px] font-bold transition-colors"
-          style={
+          style={{
             canContinue
               ? { background: ACCENT, color: '#fff' }
-              : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }
-          }
+              : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' },
+          }}
         >
-          {saving ? 'Salvando…' : 'Continuar'}
+          {footerLabel}
         </button>
       </div>
     </div>,
