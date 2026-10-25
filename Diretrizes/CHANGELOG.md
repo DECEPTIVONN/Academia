@@ -2,6 +2,22 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.44.2] - 2026-10-24
+
+**Conta Google no perfil, foto do usuário e cronômetro de descanso do legado.**
+
+### Fixed
+- `src-app/src/App.tsx`: a sessão Google agora preenche **e-mail, nome, @handle e foto** do perfil (antes só gravava `photo`). Campos só são preenchidos quando estão vazios/padrão (`DECEPTIVON`/`@deceptivon`); foto personalizada pelo usuário é preservada e avatares do Google são atualizados.
+- `src-app/src/features/settings/SettingsFeature.tsx`: o botão **Salvar Informações** gravava apenas o nome — agora salva nome, @handle, e-mail e foto juntos; o campo de e-mail usa `user.email` como fallback; a prévia da foto acompanha o valor digitado/selecionado.
+- `src-app/src/features/profile/ProfileFeature.tsx` e `src-app/src/features/dashboard/DashboardFeature.tsx`: o avatar do cabeçalho e do Início dão prioridade à foto (`customization.photo`) em vez de exibirem sempre o emblema/dicebear.
+
+### Changed
+- `src-app/src/features/workout/RestTimerWidget.tsx` (novo, montado no `App`): cronômetro de descanso flutuante idêntico ao legado (`#restTimer`): contagem mm:ss, clique reinicia em 60 s, ✕ encerra, visuais **radar/ampulheta/cyber/arcade** (progresso proporcional ao tempo restante) e corrida de 1 s única — antes o timer só decrementava com o Modo Foco aberto, ficando congelado na Ficha.
+- `src-app/src/store/workout-store.ts`: `tickRestTimer` ignora ticks fora do descanso, `startRestTimer` valida o valor (inválido → 60) e, ao zerar, dispara o bipe + toast "Tempo de descanso encerrado! Bora pro próximo!" (paridade `secao-ficha.js`).
+- `src-app/src/lib/app-prefs.ts`: `playRestTimerSound` agora reproduz o bipe único de 800 Hz com decaimento de 0,5 s + vibração `[200,100,200]` do `playBeep()` legado.
+- `src-app/src/features/workout/FichaFeature.tsx`, `FocusModal.tsx` e `ActiveWorkoutModal.tsx`: removeram o widget/tick duplicado do descanso (o tick passou a ser único no `RestTimerWidget`).
+- `src-app/src/features/settings/SettingsFeature.tsx` e `src-app/src/features/workout/treinos/CustomizacaoTabs.tsx`: escolher o estilo do cronômetro emite `academia:timer-style-changed`; a customização (Radar/Ampulheta/Cyber/Arcade) agora também grava `timerStyle` no localStorage, então a skin escolhida passa a valer no cronômetro real.
+
 ## [v4.44.1] - 2026-10-23
 
 **Onboarding: corrigido reaparecimento a cada acesso.**

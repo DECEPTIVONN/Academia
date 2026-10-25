@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import type { SheetKey } from '@/core/db/schema';
 import { playRestTimerSound } from '@/lib/app-prefs';
+import { showToast } from '@/lib/toast';
 
 /** Chaves legadas (JS/treino/secao-ficha.js → initGlobalTimer) — persistem o
  *  treino em andamento entre recarregamentos da página. */
@@ -60,6 +61,9 @@ interface ActiveWorkoutState {
   isResting: boolean;
   restTimeRemaining: number;
   restTotalDuration: number;
+  /** Incrementa a cada startRestTimer — reinicia o intervalo no widget (como o
+   *  clearInterval/setInterval do legado ao reiniciar o cronômetro). */
+  restRunId: number;
 
   // Ações
   startWorkout: (sheetKey: SheetKey, title: string) => void;
@@ -83,6 +87,7 @@ export const useWorkoutStore = create<ActiveWorkoutState>((set, get) => ({
   isResting: false,
   restTimeRemaining: 0,
   restTotalDuration: 0,
+  restRunId: 0,
 
   startWorkout: (sheetKey, title) => {
     const start = Date.now();
@@ -136,19 +141,29 @@ export const useWorkoutStore = create<ActiveWorkoutState>((set, get) => ({
   },
 
   startRestTimer: (seconds) => {
+    /* startRestTimer (secao-ficha.js L581–593): valor inválido/<= 0 vira 60 s. */
+    const parsed = parseInt(String(seconds), 10);
+    const secs = Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
     set({
       isResting: true,
-      restTimeRemaining: seconds,
-      restTotalDuration: seconds,
+      restTimeRemaining: secs,
+      restTotalDuration: secs,
+      restRunId: get().restRunId + 1,
     });
   },
 
   tickRestTimer: () => {
-    const remaining = get().restTimeRemaining - 1;
+    /* Só decrementa enquanto o descanso está ativo — evita intervalos órfãos
+       (duplo mount) acelerando o cronômetro. */
+    const state = get();
+    if (!state.isResting || state.restTimeRemaining <= 0) return;
+
+    const remaining = state.restTimeRemaining - 1;
     if (remaining <= 0) {
       set({ isResting: false, restTimeRemaining: 0 });
-      /* v4.44.0 — aviso sonoro de fim do descanso (pref "Som do temporizador") */
+      /* Paridade com `playBeep()` + toast do legado (secao-ficha.js L666–676) */
       playRestTimerSound();
+      showToast('Tempo de descanso encerrado! Bora pro próximo!', 'info');
     } else {
       set({ restTimeRemaining: remaining });
     }

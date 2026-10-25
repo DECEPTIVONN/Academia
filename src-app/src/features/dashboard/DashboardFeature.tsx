@@ -154,9 +154,10 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   /* v4.31.1 — avatar do Fit ID: usa a imagem do emblema quando existe; sprites
      exigem recorte/crop, então caem no dicebear — igual ao card do Perfil. */
   const avatarUrl =
-    emblem && emblem.type === 'image' && emblem.url
+    emblemPc?.photo ||
+    (emblem && emblem.type === 'image' && emblem.url
       ? emblem.url
-      : `https://api.dicebear.com/7.x/avataaars/svg?seed=${emblemPc?.avatarSeed || 'Deceptivon'}`;
+      : `https://api.dicebear.com/7.x/avataaars/svg?seed=${emblemPc?.avatarSeed || 'Deceptivon'}`);
   const titulo = tituloNome(pc?.titulo ?? legacy?.profileCustomization?.titulo);
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
@@ -201,7 +202,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                 id="dashAvatar"
                 data-frame={emblemPc?.avatarFrame || ''}
               >
-                {emblem ? (
+                {emblemPc?.photo ? (
+                <img
+                  src={emblemPc.photo}
+                  alt="Avatar"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                  referrerPolicy="no-referrer"
+                />
+              ) : emblem ? (
                   <div
                     className={`profile-avatar__emblem-wrapper${emblemPulsing ? ' animate-pulse' : ''}`}
                     style={{

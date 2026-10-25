@@ -44,8 +44,6 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
   const { exercises, sheets, history, legacy } = useLocalData();
   const entry = useTodayEntryStore((s) => s.entry);
   const restTimeRemaining = useWorkoutStore((s) => s.restTimeRemaining);
-  const isResting = useWorkoutStore((s) => s.isResting);
-  const tickRestTimer = useWorkoutStore((s) => s.tickRestTimer);
 
   const [focusIds, setFocusIds] = useState<string[]>([]);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -99,14 +97,6 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
     wasOpenRef.current = open;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- efeito só na transição open
   }, [open, data, sheets]);
-
-  /* Sincronia com o timer de descanso (updateTimerDisplay L686-689):
-     o tique global só roda no ActiveWorkoutModal; aqui replicamos o intervalo */
-  useEffect(() => {
-    if (!open || !isResting || restTimeRemaining <= 0) return undefined;
-    const id = window.setInterval(() => useWorkoutStore.getState().tickRestTimer(), 1000);
-    return () => window.clearInterval(id);
-  }, [open, isResting, restTimeRemaining, tickRestTimer]);
 
   /* Lock de body (openModal/closeModal legado abre/fecha este modal também) */
   useEffect(() => {

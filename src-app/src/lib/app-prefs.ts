@@ -189,8 +189,11 @@ export function setFocusModeDefault(enabled: boolean): void {
 }
 
 /**
- * Aviso sonoro de fim do descanso entre séries (dois bipes curtos).
- * Respeita a preferência e nunca lança em navegadores sem Web Audio.
+ * Aviso sonoro de fim do descanso entre séries — idêntico ao `playBeep()` da
+ * versão legacy (Legacy/JS/treino/secao-ficha.js L732–750): um bipe único de
+ * 800 Hz (seno) com decaimento de 0,5 s + vibração [200, 100, 200] quando o
+ * dispositivo suporta. Respeita a preferência e nunca lança em navegadores sem
+ * Web Audio.
  */
 export function playRestTimerSound(): void {
   if (!isTimerSoundEnabled()) return;
@@ -203,24 +206,24 @@ export function playRestTimerSound(): void {
     if (!Ctor) return;
 
     const ctx = new Ctor();
-    const now = ctx.currentTime;
-    [0, 0.18].forEach((offset, index) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(index === 0 ? 880 : 1180, now + offset);
-      gain.gain.setValueAtTime(0.0001, now + offset);
-      gain.gain.exponentialRampToValueAtTime(0.2, now + offset + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.16);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + offset);
-      osc.stop(now + offset + 0.18);
-    });
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    gain.gain.setValueAtTime(0.5, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.5);
+
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200]);
+    }
 
     window.setTimeout(() => {
       void ctx.close().catch(() => {});
-    }, 600);
+    }, 700);
   } catch {
     /* áudio bloqueado sem gesto do usuário */
   }

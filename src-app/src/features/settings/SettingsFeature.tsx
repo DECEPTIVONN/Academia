@@ -622,8 +622,21 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     if (!profile || secInitedRef.current) return;
     secInitedRef.current = true;
     const p = profile.customization;
-    setSec({ nome: p.nome || '', handle: p.handle || '', email: p.email || '', senha: '', photo: p.photo || '' });
-  }, [profile]);
+    setSec({ nome: p.nome || '', handle: p.handle || '', email: p.email || user?.email || '', senha: '', photo: p.photo || '' });
+  }, [profile, user?.email]);
+
+  /* Preenche campos que chegam depois do mount (ex.: e-mail/foto da conta
+     Google sincronizados pelo App) sem sobrescrever o que o usuário digitou. */
+  const profileEmail = profile?.customization.email;
+  const profilePhoto = profile?.customization.photo;
+  useEffect(() => {
+    if (!profileEmail && !profilePhoto && !user?.email) return;
+    setSec((s) => {
+      const email = s.email || profileEmail || user?.email || '';
+      const photo = s.photo || profilePhoto || '';
+      return email === s.email && photo === s.photo ? s : { ...s, email, photo };
+    });
+  }, [profileEmail, profilePhoto, user?.email]);
 
   /* Backup */
   const fileRef = useRef<HTMLInputElement>(null);
@@ -640,6 +653,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const selectTimer = (value: string) => {
     writeLS('timerStyle', value);
     setTimerStyle(value);
+    window.dispatchEvent(new CustomEvent('academia:timer-style-changed'));
   };
 
   const selectNavbarMode = (value: string) => {
@@ -875,6 +889,19 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     });
     showToast('Campo atualizado!', 'success');
     if (field === 'senha') setSec((s) => ({ ...s, senha: '' }));
+  };
+
+  const saveAccountInfo = async () => {
+    await update((d) => {
+      d.customization = {
+        ...d.customization,
+        nome: sec.nome,
+        handle: sec.handle,
+        email: sec.email,
+        photo: sec.photo,
+      };
+    });
+    showToast('Informações atualizadas!', 'success');
   };
 
   const handleExport = async () => {
@@ -1242,7 +1269,13 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
                   <div style={{ width: 64, height: 64, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(63, 63, 70, 0.8)', flexShrink: 0 }}>
-                    <ProfileEmblem customization={profile?.customization} />
+                    <ProfileEmblem
+                      customization={
+                        profile?.customization
+                          ? { ...profile.customization, photo: sec.photo }
+                          : null
+                      }
+                    />
                   </div>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <input
@@ -1283,6 +1316,14 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                         />
                       </label>
                     </div>
+                    <button
+                      type="button"
+                      className="set-btn"
+                      style={{ alignSelf: 'flex-start' }}
+                      onClick={() => void saveSecurityField('photo', sec.photo)}
+                    >
+                      Salvar foto
+                    </button>
                   </div>
                 </div>
                 {showAvatarDropdown && (
@@ -1320,7 +1361,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                     <p className="set-card__desc">Dados salvos localmente neste dispositivo.</p>
                   </div>
                 </div>
-                <form onSubmit={(e) => { e.preventDefault(); void saveSecurityField('nome', sec.nome); }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <form onSubmit={(e) => { e.preventDefault(); void saveAccountInfo(); }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div className="set-field">
                     <label className="set-field__label" htmlFor="setSec-nome">
                       {SvgUser}

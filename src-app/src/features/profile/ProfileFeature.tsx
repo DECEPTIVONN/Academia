@@ -299,6 +299,16 @@ export function ProfileFeature() {
   const showcaseVal = showcaseDef ? showcaseDef.compute(stats) : 0;
 
   const AvatarNode = (() => {
+    if (pc.photo) {
+      return (
+        <img
+          src={pc.photo}
+          alt="Avatar"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          referrerPolicy="no-referrer"
+        />
+      );
+    }
     const emblem = IDENTITY_EMBLEMS.find((e) => e.id === (pc.mainEmblem || 'prestigio-1'));
     const pulsing = pc.mainEmblemPulse !== false;
     if (emblem) {

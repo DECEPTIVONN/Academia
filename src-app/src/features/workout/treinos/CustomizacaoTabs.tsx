@@ -27,6 +27,7 @@ import {
   isDevMode,
   isUnlocked,
   unlockHint,
+  writeLS,
 } from '@/features/profile/profile-data';
 import { showToast } from '@/lib/toast';
 
@@ -346,6 +347,8 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
     void update((d) => {
       d.customization = { ...d.customization, timerSkin: key };
     });
+    writeLS('timerStyle', key);
+    window.dispatchEvent(new CustomEvent('academia:timer-style-changed'));
     showToast('Estilo de cronômetro atualizado!', 'success');
   };
 

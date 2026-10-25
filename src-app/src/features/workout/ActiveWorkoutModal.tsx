@@ -4,7 +4,7 @@
  * acumular XP de maestria e salvar a sessão no IndexedDB / Supabase.
  */
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, Circle, X, Trophy, Timer, SkipForward } from 'lucide-react';
 import { useWorkoutStore } from '@/store/workout-store';
@@ -27,7 +27,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({ onClose 
     isResting,
     restTimeRemaining,
     startRestTimer,
-    tickRestTimer,
     skipRestTimer,
     finishWorkout,
   } = useWorkoutStore();
@@ -46,17 +45,6 @@ export const ActiveWorkoutModal: React.FC<ActiveWorkoutModalProps> = ({ onClose 
       .map((id) => map.get(id))
       .filter((e): e is Exercise => Boolean(e));
   }, [allExercises, sheet]);
-
-  // Decrementar timer de descanso
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (isResting && restTimeRemaining > 0) {
-      interval = setInterval(() => {
-        tickRestTimer();
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isResting, restTimeRemaining, tickRestTimer]);
 
   if (!isActive || !sheetKey) return null;
 

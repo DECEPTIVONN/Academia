@@ -468,7 +468,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   open = true,
 }) => {
   const { exercises, sheets, history, legacy, loading } = useLocalData();
-  const { isActive, startTime, startRestTimer, skipRestTimer, isResting, restTimeRemaining } = useWorkoutStore();
+  const { isActive, startTime, startRestTimer, skipRestTimer } = useWorkoutStore();
   const entry = useTodayEntryStore((s) => s.entry);
   const loadEntry = useTodayEntryStore((s) => s.load);
 
@@ -957,17 +957,6 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
                 </span>
               </div>
             </div>
-
-            {/* ===== CRONÔMETRO DE DESCANSO ===== */}
-            {isResting && (
-              <div
-                className="rest-timer"
-                style={{ marginTop: 16, fontFamily: 'Rajdhani', fontSize: '0.875rem' }}
-              >
-                <div className="text-xs font-mono text-purple-300 uppercase">Descanso em Andamento</div>
-                <div className="text-2xl font-mono font-black text-white">{restTimeRemaining}s</div>
-              </div>
-            )}
 
             {/* ===== SUGESTÃO ===== */}
             <div

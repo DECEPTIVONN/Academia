@@ -34,6 +34,7 @@ import { ShareModal } from '@/features/gamification/ShareModal';
 /* v4.19.0-music — interface de Músicas e Playlists (overlay estilo YT Music) */
 import { MusicOverlay } from '@/features/music/MusicOverlay';
 import { FloatingMiniPlayer } from '@/features/music/FloatingMiniPlayer';
+import { RestTimerWidget } from '@/features/workout/RestTimerWidget';
 /* v4.21.0-music — barra de música no rodapé da Ficha (treino) */
 import { WorkoutNowPlayingBar } from '@/features/music/WorkoutNowPlayingBar';
 import { useShareStore } from '@/features/gamification/share-store';
@@ -125,29 +126,76 @@ function AppShell() {
       });
   }, [user?.id]);
 
-  /* ── Foto de perfil da conta Google → perfil do app ── */
+  /* ── Conta Google → perfil do app ──
+     Preenche e-mail, nome, @handle e foto a partir da sessão/metadata (Google),
+     apenas quando o campo correspondente ainda está vazio ou no padrão
+     'DECEPTIVON'/'@deceptivon'. Uma foto escolhida manualmente pelo usuário
+     (upload/preset) é preservada; avatares do Google são atualizados. */
   useEffect(() => {
     if (bootstrapLoading || !user) return;
-    const avatarUrl =
-      (user.user_metadata as any)?.avatar_url ||
-      (user.user_metadata as any)?.picture ||
-      null;
-    if (!avatarUrl) return;
-    (async () => {
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+    const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+    const avatarSrc = str(meta.avatar_url) || str(meta.picture);
+    const accountEmail = str(user.email);
+    const accountName = str(meta.full_name) || str(meta.name);
+    const rawHandle =
+      str(meta.user_name) ||
+      str(meta.preferred_username) ||
+      (accountEmail.includes('@') ? accountEmail.split('@')[0] : '');
+    const cleanHandle = rawHandle
+      .replace(/^@+/, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '')
+      .slice(0, 20);
+    const accountHandle = cleanHandle ? `@${cleanHandle}` : '';
+
+    if (!avatarSrc && !accountEmail && !accountName && !accountHandle) return;
+
+    const apply = async () => {
       try {
         const { getProfileState, saveProfileState } = await import('@/core/db/idb');
         const state = await getProfileState('local');
-        if (state) {
-          await saveProfileState(
-            { ...state, customization: { ...state.customization, photo: avatarUrl } },
-            'local'
-          );
-          document.dispatchEvent(new CustomEvent('academia:profile-updated'));
+        if (!state) return;
+
+        const c = { ...state.customization };
+        let changed = false;
+
+        const isDefaultName = !c.nome || c.nome === 'DECEPTIVON';
+        const isDefaultHandle = !c.handle || c.handle === '@deceptivon';
+        const isGooglePhoto = Boolean(
+          c.photo && /googleusercontent\.com|ggpht\.com/i.test(c.photo)
+        );
+
+        if (accountEmail && !c.email) {
+          c.email = accountEmail;
+          changed = true;
         }
+        if (accountName && isDefaultName) {
+          c.nome = accountName;
+          changed = true;
+        }
+        if (accountHandle && isDefaultHandle) {
+          c.handle = accountHandle;
+          changed = true;
+        }
+        if (avatarSrc && (!c.photo || isGooglePhoto) && c.photo !== avatarSrc) {
+          c.photo = avatarSrc;
+          changed = true;
+        }
+        if (!changed) return;
+
+        await saveProfileState({ ...state, customization: c }, 'local');
+        document.dispatchEvent(new CustomEvent('academia:profile-updated'));
       } catch {
         /* best-effort */
       }
-    })();
+    };
+
+    void apply();
+    /* O pull inicial do sync roda ~1,2 s após o db-ready e pode aplicar um
+       snapshot remoto sem e-mail/foto — reaplica uma vez depois desse pull. */
+    const retry = window.setTimeout(() => void apply(), 3500);
+    return () => window.clearTimeout(retry);
   }, [bootstrapLoading, user?.id]);
 
   /* ── Usuário autenticado: renderizar aplicação ── */
@@ -1103,6 +1151,7 @@ function AppShell() {
           {/* ====== TELA DE BLOQUEIO (v4.6.0-shell) ======
               z-index 1200 — acima de todos os overlays/modais. */}
           <LockScreen />
+          <RestTimerWidget />
         </div>
 
         {/* Container de toasts (treino.html L1326 — herda animações do CSS legado) */}
