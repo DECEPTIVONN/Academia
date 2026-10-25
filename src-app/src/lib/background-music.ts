@@ -30,6 +30,8 @@ const DEFAULT_VOLUME = 70;
 let audio: HTMLAudioElement | null = null;
 let gestureArmed = false;
 let inited = false;
+/* v4.48.0 — a página ficou oculta com o loop tocando? (retoma ao voltar) */
+let legacyWasPlaying = false;
 /** v4.19.0-music — quando true, a reprodução é do audio-engine (motor
  *  multi-contexto); este módulo fica só com prefs + evento academia:music-changed. */
 let playbackClaimed = false;
@@ -174,4 +176,26 @@ export function initBackgroundMusic(): void {
     // ex.: app instalado com permissão); se recusado, arma o gesto.
     el.play().then(disarmGestures).catch(() => armGestures());
   }
+
+  /* v4.48.0 — fechar ou ocultar o site não pode deixar o loop tocando
+     "sozinha" no computador. pagehide = aba/janela/navegação fechando;
+     visibilitychange = o site sumiu da vista (no desktop, fechar o painel
+     nem sempre destrói a página). Com a posse no audio-engine (sempre desde
+     o boot), este módulo só garante o próprio elemento — o motor cuida do resto. */
+  const pauseLegacy = () => {
+    if (playbackClaimed || !audio) return;
+    if (!audio.paused) legacyWasPlaying = true;
+    audio.pause();
+    disarmGestures();
+  };
+  window.addEventListener('pagehide', pauseLegacy);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      pauseLegacy();
+      return;
+    }
+    if (!legacyWasPlaying) return;
+    legacyWasPlaying = false;
+    if (isMusicEnabled() && !playbackClaimed) playMusicNow();
+  });
 }

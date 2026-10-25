@@ -2,6 +2,14 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.48.0] - 2026-10-25
+
+**Música de fundo (MAIN) não sobrevive mais ao fechamento do site.**
+
+### Fixed
+- `src-app/src/features/music/audio-engine.ts`: a MAIN — e as demais faixas ocultas (RESULT, Missões), que tocam como `AudioBufferSourceNode` em loop sobre um `AudioContext` — continuava tocando depois de fechar o site; o navegador não suspende Web Audio quando a aba/janela desaparece e, no computador, fechar o painel/vista do app nem sempre destrói a página. Novo tratamento de ciclo de vida no `initAudioEngine()`: `pagehide` (fechar aba/janela, navegar) e `visibilitychange → hidden` pausam tudo (fonte Web Audio + `<audio>` do site + uploads da fila + `pauseVideo()` do YouTube) via `pauseAllForLifecycle()`; `visibilitychange → visible` retoma de onde parou com `resumeAfterVisibility()` (só se a música estava tocando e a pref seguir ligada). A pausa usa `pauseHidden()`, então o ponto da faixa é preservado.
+- `src-app/src/lib/background-music.ts`: o loop legado do `HTMLAudioElement` recebe o mesmo tratamento (`pagehide`/`hidden` pausam; `visible` retoma quando a reprodução é deste módulo) — hoje o `audio-engine` assume a posse no boot, então isto é a rede de segurança caso o motor falhe.
+
 ## [v4.47.0] - 2026-10-25
 
 **Assistente de perguntas pós-login no estilo das imagens de referência, com destaque em vermelho.**

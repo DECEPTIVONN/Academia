@@ -984,10 +984,52 @@ function resumeCurrent(): void {
   void playSite(context as Exclude<MusicContext, 'workout-user'>);
 }
 
+/* ═══════════ v4.48.0 — Ciclo de vida: nada toca com o site fechado ═══════════
+   MAIN (e as demais faixas ocultas) toca como AudioBufferSourceNode em loop
+   sobre um AudioContext: o navegador NÃO suspende Web Audio quando a aba/janela
+   desaparece. No desktop, onde fechar o painel/vista do app nem sempre destrói
+   a página, a trilha seguia tocando depois de fechar o site — e até depois de
+   fechar o navegador. Agora:
+    • `pagehide` (fechar aba/janela, navegar) → pausa tudo;
+    • `visibilitychange` → hidden pausa; visible retoma de onde parou, se a
+      música ainda estiver ligada na pref.
+   A pausa preserva o ponto (`pauseHidden`), então reabrir o site continua a
+   faixa do mesmo lugar em vez de recomeçar. */
+let resumeAfterHide = false;
+
+function pauseAllForLifecycle(): void {
+  resumeAfterHide = playing; // captura ANTES de playing virar false
+  pauseSite(); // fonte Web Audio (MAIN/RESULT/Missões) + <audio> do site
+  if (userAudio) userAudio.pause(); // uploads da fila do usuário
+  try {
+    ytPlayer?.pauseVideo(); // faixa/iframe do YouTube
+  } catch {
+    /* player inexistente */
+  }
+  playing = false;
+  disarmGestures();
+  emitState();
+}
+
+function resumeAfterVisibility(): void {
+  if (!resumeAfterHide) return;
+  resumeAfterHide = false;
+  if (!isMusicEnabled()) return;
+  armGestures(); // caso o AudioContext tenha sido suspenso: retoma no 1º toque
+  resumeCurrent();
+}
+
 /** Boot (main.tsx) — idempotente. */
 export function initAudioEngine(): void {
   if (inited) return;
   inited = true;
+
+  // v4.48.0 — fechar/ocultar o site não pode deixar a MAIN tocando sozinha.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') pauseAllForLifecycle();
+    else resumeAfterVisibility();
+  });
+  window.addEventListener('pagehide', pauseAllForLifecycle);
 
   // v4.19.0 — assume a reprodução global (módulo v4.18 fica só com prefs).
   claimMusicPlayback();
