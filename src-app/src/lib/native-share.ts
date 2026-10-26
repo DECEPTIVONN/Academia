@@ -40,10 +40,15 @@ export async function shareNative(data: NativeSharePayload): Promise<NativeShare
   const nav = navigator as Navigator & { canShare?: (d?: ShareData) => boolean };
   try {
     // canShare recusa combos inválidos (ex.: files no desktop) → fallback.
+    // v4.52.1-share — quando HÁ arquivo, a checagem usa SÓ `{ files }`: alguns
+    // navegadores validam apenas essa propriedade e devolviam false para
+    // `{ files, title, text }`, o que descartava a imagem e o compartilhamento
+    // virava "só texto" (o share em si aceita os três campos juntos).
     if (nav.canShare) {
+      const probe: ShareData = data.files?.length ? { files: data.files } : data;
       let allowed = false;
       try {
-        allowed = nav.canShare(data);
+        allowed = nav.canShare(probe);
       } catch {
         allowed = false;
       }

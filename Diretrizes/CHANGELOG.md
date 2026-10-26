@@ -2,6 +2,22 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.52.1] - 2026-10-26
+
+**Imagem voltou a ser enviada junto com o texto: a checagem de `canShare()` estava descartando o arquivo.**
+
+O usuário relatou que só o texto chegava no compartilhamento. Causa: `shareNative()` validava a payload COMPLETA (`{ title, text, files }`) com `navigator.canShare()`. Algumas implementações dessa API validam apenas a propriedade `files` (orientação do próprio web.dev) e respondiam `false` para a payload com texto/título — o app interpretava como "plataforma sem share de arquivo" e seguia para o fallback de texto, sem nunca chamar a folha com a imagem. Reproduzido em navegador com um canShare estrito: `canShare({title,text,files})` = **false**, `canShare({files})` = **true**; com a correção o `share()` recebe `{title, text, files:[PNG 172 KB]}`.
+
+### Changed
+- `src-app/src/lib/native-share.ts`: quando a payload contém arquivo, a checagem passa a usar apenas `{ files: data.files }` (o `share()` continua recebendo título + texto + imagem juntos).
+- `src-app/src/features/gamification/ShareModal.tsx`: `handleShare` tenta em cascata `{title, text, files}` → `{files}` (plataformas que recusam texto+arquivo, ex.: iOS), e só então o fallback; o fallback de plataforma sem share de arquivo agora chama `deliverImage()`, que **baixa E copia o PNG para a área de transferência** (antes baixava só), com toast explicando o que aconteceu; cancelar a folha de texto não dispara download.
+
+### Verificado (harness temporário no navegador, removido depois)
+- canShare estrito (recusa texto na payload) → share recebe texto + imagem.
+- share() lança TypeError com texto+arquivo (iOS-like) → repete com `{files}` e a imagem vai embora.
+- Sem suporte a arquivo (desktop-like) → texto compartilhado + PNG baixado e copiado (clipboard `image/png`).
+- `tsc -b`, `oxlint` (0 erros) e `vite build` OK.
+
 ## [v4.52.0] - 2026-10-26
 
 **Compartilhamento consertado: texto e imagem saem juntos, gerados pelo site, em todas as plataformas.**

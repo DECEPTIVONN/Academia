@@ -111,6 +111,22 @@ export function ShareModal() {
     window.setTimeout(() => URL.revokeObjectURL(link.href), 30000);
   };
 
+  /**
+   * v4.52.1-share — entrega o PNG onde a folha nativa não chega: baixa o
+   * arquivo E tenta copiá-lo para a área de transferência (celular sem share
+   * de imagem, desktop, etc.). O download é o seguro: sempre acontece.
+   */
+  const deliverImage = async (file: File): Promise<void> => {
+    downloadFile(file);
+    try {
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
+      }
+    } catch {
+      /* sem permissão de clipboard: o download já entregou a imagem */
+    }
+  };
+
   const data = useMemo(
     () => ({ exercises, sheets, history, legacy }),
     [exercises, sheets, history, legacy]
@@ -228,41 +244,39 @@ export function ShareModal() {
       }
 
       const text = shareText;
-      const nav = navigator as Navigator & { canShare?: (d?: ShareData) => boolean };
-      const payload: ShareData = { title: 'Evo Fit', text, files: [file] };
-      let canFiles = true;
-      try {
-        canFiles = !nav.canShare || nav.canShare(payload);
-      } catch {
-        canFiles = false;
-      }
 
-      if (canFiles) {
+      /* v4.52.1-share — a imagem tem PRIORIDADE: o payload tenta primeiro
+         texto + imagem e, se a plataforma recusar a combinação, repete SÓ com
+         a imagem (shareNative faz a checagem de arquivo com `{ files }` só).
+         Antes, uma recusa da combinação derrubava o arquivo e o app mandava
+         apenas o texto. */
+      const payloads: ShareData[] = [
+        { title: 'Evo Fit', text, files: [file] },
+        { files: [file] },
+      ];
+      for (const payload of payloads) {
         const r: NativeShareResult = await shareNative(payload);
         if (r === 'shared') {
-          showToast('Compartilhado!', 'success');
+          showToast('Compartilhado com a imagem!', 'success');
           return;
         }
         if (r === 'cancelled') return; // usuário fechou a folha — sem fallback
+        // 'unsupported' (combinação não aceita) → tenta o próximo formato
       }
 
-      // Plataforma sem share de arquivo (ex.: Chrome desktop): compartilha o
-      // texto e entrega a imagem baixada para anexar manualmente.
+      // Plataforma sem compartilhamento de arquivos (ex.: Chrome desktop):
+      // entrega a imagem por download + área de transferência e, se der,
+      // manda o texto pela folha nativa.
+      console.info('[share] plataforma sem share de arquivo — imagem entregue por download/clipboard');
       const textResult = await shareNative({ title: 'Evo Fit', text });
-      if (textResult === 'shared' || textResult === 'cancelled') {
-        downloadFile(file);
-        showToast('Link compartilhado. A imagem foi baixada para você anexar.', 'info');
-        return;
-      }
-
-      // Sem Web Share: baixa a imagem e tenta copiá-la para a área de transferência.
-      downloadFile(file);
-      try {
-        await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
-        showToast('Imagem copiada e baixada. Cole no seu app de mensagens!', 'success');
-      } catch {
-        showToast('Imagem baixada! Anexe no seu app de mensagens.', 'info');
-      }
+      if (textResult === 'cancelled') return; // respeita o cancelamento
+      await deliverImage(file);
+      showToast(
+        textResult === 'shared'
+          ? 'Texto compartilhado. A imagem foi baixada e copiada — cole onde quiser!'
+          : 'Imagem baixada e copiada para a área de transferência!',
+        'success',
+      );
     } catch (err) {
       console.error(err);
       showToast('Erro ao preparar compartilhamento.', 'error');
