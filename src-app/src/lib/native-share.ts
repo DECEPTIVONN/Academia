@@ -40,7 +40,15 @@ export async function shareNative(data: NativeSharePayload): Promise<NativeShare
   const nav = navigator as Navigator & { canShare?: (d?: ShareData) => boolean };
   try {
     // canShare recusa combos inválidos (ex.: files no desktop) → fallback.
-    if (nav.canShare && !nav.canShare(data)) return 'unsupported';
+    if (nav.canShare) {
+      let allowed = false;
+      try {
+        allowed = nav.canShare(data);
+      } catch {
+        allowed = false;
+      }
+      if (!allowed) return 'unsupported';
+    }
     await navigator.share(data);
     return 'shared';
   } catch (err) {

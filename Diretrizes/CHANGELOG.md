@@ -2,6 +2,24 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.52.0] - 2026-10-26
+
+**Compartilhamento consertado: texto e imagem saem juntos, gerados pelo site, em todas as plataformas.**
+
+O modal de compartilhamento estava morto: o botão COMPARTILHAR ficava `disabled` para sempre porque a variável `imageReady` nunca recebia valor, e mesmo quando o canvas era renderizado o arquivo nunca era criado (`canvasFileRef.current = canvasFileRef.current || null` não fazia nada) — o compartilhamento caía sempre no texto sem imagem. Verificado em navegador com um harness temporário (removido depois): antes do fix o botão estava `disabled: true`; depois, o clique entrega título + texto + PNG em 171 KB (552×793).
+
+### Changed
+- `src-app/src/features/gamification/ShareModal.tsx`: novo `buildShareFile()` que rasteriza o card ativo (html2canvas, que continua chunk sob demanda), chama `toBlob('image/png')` e devolve um `File` real (antes o `.jpg` errado agora é `evo-fit-{treino|conquista|radar}-{data}.png`); a imagem é pré-renderizada ao ABRIR o modal (e não no clique) porque a Web Share API exige gesto do usuário e o html2canvas leva ~1s, o que estourava a ativação transitória do navegador; `renderSeqRef` descarta render antigo que termine depois de trocar de card; `handleShare` agora envia `shareNative({ title, text, files: [png] })` (texto + imagem juntos) e, se a plataforma recusar arquivo (ex.: Chrome desktop), compartilha o texto e baixa a imagem; sem Web Share, baixa o PNG e tenta copiá-lo para a área de transferência; `handleDownload` reusa o mesmo arquivo e o botão COMPARTILHAR deixou de ficar desabilitado (`disabled={busy !== null}`), mostrando "PREPARANDO..." enquanto a imagem é gerada; texto compartilhado personalizado por card (`shareText`: treino com exercícios/volume, conquista com o nome do emblema, radar) e os links de WhatsApp/X/Facebook passam a usá-lo.
+- `src-app/src/lib/native-share.ts`: a chamada a `canShare()` ficou envolta em `try/catch` — um navegador que lance nessa API não derruba o fluxo e cai no fallback (antes viraria exceção e exibiria "Erro ao preparar compartilhamento").
+
+### Removed
+- `src-app/share-test.html` + `src-app/src/share-test.tsx`: harness temporário usado para testar os três cards e os três caminhos de fallback (Web Share com arquivo, Web Share só texto e sem Web Share). Não faz parte do app.
+
+### Verificado
+- `tsc -b` OK, `oxlint` 0 erros (73 avisos pré-existentes), `vite build` OK (html2canvas segue fora do bundle inicial).
+- Navegador (cards treino/conquista/radar): clique em COMPARTILHAR entrega `{title, text, files:[PNG 152–178 KB]}`; `canShare` recusando arquivo → share de texto + download do PNG; sem Web Share → download do PNG + tentativa de cópia para clipboard. Erro no console: nenhum.
+- Limitação: o app exige login (App.tsx), então os testes rodaram num harness temporário com os mesmos componentes/CSS; a folha nativa em si (Android/iOS) precisa de aparelho.
+
 ## [v4.51.0] - 2026-10-26
 
 **Performance do carregamento inicial: 9,5 MB saíram do caminho crítico (sem tocar em visual, features ou funcionamento).**
