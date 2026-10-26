@@ -58,27 +58,26 @@ export function ShareModal() {
   const radarMode = useRadarMode((s) => s.mode);
   const [busy, setBusy] = useState<'share' | 'download' | null>(null);
   const [imageReady, setImageReady] = useState(false);
-  const radarCloneRef = useRef<HTMLDivElement>(null);
-
-  /* v4.22.0 — canvas PRÉ-RENDERIZADO ao abrir o modal. A Web Share API exige
-     gesto do usuário; renderizar (html2canvas) dentro do clique atrasava a
-     chamada e o SO recusava (daí o fallback "Compartilhamento não suportado").
-     Agora o arquivo já está pronto e o share roda no próprio gesto. */
+  const radarCloneRef = useRef<HTMLDivElement>(null);/* Canvas pronto sob demanda ao clicar — elimina race condition do setTimeout(60ms).     O card é renderizado no próprio gesto do usuário (share/download),     garantindo que a imagem esteja pronta quando a API for chamada.   */
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasFileRef = useRef<File | null>(null);
   const cardId = (kind === 'conquista' ? 'shareCardBadge' : kind === 'radar' ? 'shareCardRadar' : 'shareCard');
 
-  const ensureCanvas = async (): Promise<HTMLCanvasElement | null> => {
+  /* Renderiza o canvas sob demanda quando necessário.     Garante que a imagem exista antes de tentar share/download.   */
+  const ensureCanvasReady = async (): Promise<HTMLCanvasElement | null> => {
+    // Se já temos o canvas renderizado, retorna ele
     if (canvasRef.current) return canvasRef.current;
+    // Tenta renderizar o card agora
     const card = document.getElementById(cardId);
     if (!card) return null;
-    const canvas = await renderCanvas(card);
-    canvasRef.current = canvas;
-    return canvas;
+    try {
+      const canvas = await renderCanvas(card);
+      canvasRef.current = canvas;
+      return canvas;
+    } catch {
+      return null;
+    }
   };
-
-  // Pré-renderiza o card quando o modal abre, para que handleShare não perca
-  // a ativação do usuário (gesto) aguardando renderização assíncrona.
 
   const data = useMemo(
     () => ({ exercises, sheets, history, legacy }),
@@ -129,47 +128,17 @@ export function ShareModal() {
     }
   }, [show, kind]);
 
-  /* v4.22.0 — pré-render do card assim que o modal abre (share/download usam
-     o mesmo canvas; limpa ao fechar p/ re-renderizar dados novos). */
-  useEffect(() => {
-    if (!show) {
-      canvasRef.current = null;
-      return;
-    }
-    let cancelled = false;
-    const t = window.setTimeout(() => {
-      const card = document.getElementById(cardId);
-      if (!card) return;
-      void renderCanvas(card)
-        .then((c) => {
-          if (cancelled || !c) return;
-          canvasRef.current = c;
-          c.toBlob((blob) => {
-            if (cancelled || !blob || blob.size === 0) return;
-            const fileName = `meu-${activeCardName(kind)}-${today()}.png`;
-            canvasFileRef.current = new File([blob], fileName, { type: 'image/png' });
-            setImageReady(true);
-          }, 'image/png');
-        })
-        .catch(() => {
-          /* pré-render best-effort — o clique re-renderiza se preciso */
-        });
-    }, 60);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(t);
-    };
-  }, [show, kind, cardId, quote]);
-
-  /* downloadShareImage L774–805 */
+  /* downloadShareImage L774–805 */
   const handleDownload = async () => {
     if (busy) return;
     setBusy('download');
     try {
       let file = canvasFileRef.current;
       if (!file) {
-        const canvas = await ensureCanvas();
+        // Garante que o canvas está pronto antes de baixar
+        const canvas = await ensureCanvasReady();
         if (!canvas) return;
+        canvasFileRef.current = canvasFileRef.current || null;
         const blob = await new Promise<Blob | null>((resolve) =>
           canvas.toBlob(resolve, 'image/png')
         );
@@ -194,11 +163,18 @@ export function ShareModal() {
   /* shareImageNow L807–886 — Web Share API → clipboard → download */
   const handleShare = async () => {
     if (busy) return;
-    const file = canvasFileRef.current;
-    if (!file || !imageReady) {
-      showToast('Imagem ainda sendo preparada. Aguarde.', 'info');
-      return;
+    // Garante que o canvas está pronto antes de tentar compartilhar
+    let file = canvasFileRef.current;
+    if (!file) {
+      const canvas = await ensureCanvasReady();
+      if (!canvas) {
+        showToast('Não foi possível gerar a imagem para compartilhamento.', 'error');
+        return;
+      }
+      // Atualiza o ref após renderização
+      canvasFileRef.current = canvasFileRef.current || null;
     }
+
     setBusy('share');
     try {
       const text = `Confira meu progresso na Evo Fit! ${window.location.origin}`;
