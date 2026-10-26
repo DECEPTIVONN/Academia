@@ -392,8 +392,8 @@ function emitState(): void {
    notificação ganha nome, arte, duração/barra de progresso e prev/next. */
 
 const MS_ARTWORK = [
-  { src: '/assets/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-  { src: '/assets/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+  { src: '/assets/icons/logo-192.png', sizes: '192x192', type: 'image/png' },
+  { src: '/assets/icons/logo-512.png', sizes: '512x512', type: 'image/png' },
 ];
 
 function mediaSession(): MediaSession | null {
@@ -911,6 +911,24 @@ async function ensureYtPlayer(): Promise<YTPlayerLike> {
 }
 
 /**
+ * v4.51.0-perf — executa `run` só DEPOIS do load da página e do primeiro idle.
+ * Usado no arranque da música: MAIN.mp3 (7,4 MB) + a faixa de Missões (1,5 MB)
+ * e a API do YouTube saem do caminho crítico do boot e deixam de competir com
+ * o bundle pelo mesmo bandwidth no primeiro carregamento.
+ */
+function whenIdleAfterLoad(run: () => void): void {
+  const schedule = (): void => {
+    const ric = (window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    }).requestIdleCallback;
+    if (typeof ric === 'function') ric.call(window, () => run(), { timeout: 2000 });
+    else window.setTimeout(run, 1200);
+  };
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule, { once: true });
+}
+
+/**
  * v4.42.0 — monta o player do YouTube em segundo plano no boot. Antes ele só
  * era criado ao tocar a 1ª faixa do YouTube, e a inicialização do iframe
  * (~2–4s) atrasava o início da playlist do treino.
@@ -1131,18 +1149,25 @@ export function initAudioEngine(): void {
 
   // Autoplay do ambiente: tenta direto (pode ser permitido); senão, gesto.
   if (isMusicEnabled()) {
-    void loadYtApi();
-    preloadYtPlayer();
-    void playSite('main');
-    // v4.28 — arma o gesto JÁ no boot. Um resume() pedido FORA de um gesto
-    // pode ficar pendente no Chrome; sem isto a trilha só começava quando
-    // outra ação (abrir/fechar Missões, etc.) redisparava o play — daí a
-    // sensação de "demora muito para aparecer". No 1º toque o AudioContext
-    // retoma e a faixa — já pré-decodificada — toca na hora.
+    // v4.28 — arma o gesto JÁ no boot (custo zero, só listeners). Um resume()
+    // pedido FORA de um gesto pode ficar pendente no Chrome; sem isto a trilha
+    // só começava quando outra ação (abrir/fechar Missões, etc.) redisparava o
+    // play — daí a sensação de "demora muito para aparecer". No 1º toque o
+    // AudioContext retoma e a faixa — já pré-decodificada — toca na hora.
     armGestures();
-    // v4.27 — pré-decodifica Missões (faixa leve) em 2º plano: abrir o overlay
-    // de Missões não espera o fetch + decode.
-    void loadHiddenBuffer(SITE_TRACKS.missions.src);
+    // v4.51.0-perf — o download/decode das trilhas (MAIN 7,2 MB, Missões
+    // 1,5 MB) e a API do YouTube só começam após o load + idle. `waStartSeq`
+    // garante que o arranque do boot não reinicie uma faixa que um gesto já
+    // iniciou antes do idle.
+    whenIdleAfterLoad(() => {
+      if (!isMusicEnabled()) return;
+      void loadYtApi();
+      preloadYtPlayer();
+      if (context === 'main' && !playing && waStartSeq === 0) void playSite('main');
+      // v4.27 — pré-decodifica Missões (faixa leve) em 2º plano: abrir o
+      // overlay de Missões não espera o fetch + decode.
+      void loadHiddenBuffer(SITE_TRACKS.missions.src);
+    });
   }
 }
 

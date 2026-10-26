@@ -2343,7 +2343,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                       new Notification('⏰ Teste de Alarme EVO FIT', {
                         body: 'Disparo de notificação em segundo plano testado com sucesso!',
-                        icon: '/icon-192.png',
+                        icon: '/assets/icons/logo-192.png',
                       });
                     } else {
                       showToast('⚡ Teste de alerta disparado na interface!', 'info');
@@ -3234,10 +3234,11 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 justifyContent: 'center',
                 flexShrink: 0,
               }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary, #f97316)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="28" height="28">
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
+                <img
+                  src="/assets/icons/logo-192.png"
+                  alt="Ícone do EVO FIT"
+                  style={{ width: '100%', height: '100%', borderRadius: 14, objectFit: 'cover', display: 'block' }}
+                />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ fontFamily: 'var(--font-family)', fontSize: '1rem', fontWeight: 800, color: 'var(--text)', margin: 0 }}>

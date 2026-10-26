@@ -2,6 +2,31 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.51.0] - 2026-10-26
+
+**Performance do carregamento inicial: 9,5 MB saíram do caminho crítico (sem tocar em visual, features ou funcionamento).**
+
+Medido no build de produção (`vite preview`): antes, o carregamento da página baixava **9,5 MB** (MAIN.mp3 7,4 MB + Revenger Phoenix 1,5 MB + bundle 486 KB + CSS 93 KB) e ainda carregava a API do YouTube; agora baixa **657 KB** até o evento `load` e o restante só depois dele.
+
+### Changed
+- `src-app/src/features/music/audio-engine.ts`: o arranque da música saiu do boot. `armGestures()` continua imediato (só listeners, custo zero), mas `loadYtApi()`, `preloadYtPlayer()`, `playSite('main')` e o pré-decode da faixa de Missões passam a rodar em `whenIdleAfterLoad()` — depois do `load` + `requestIdleCallback` (fallback `setTimeout`). Guarda `waStartSeq === 0` impede que o arranque atrasado reinicie uma faixa que um gesto do usuário já iniciou. Nada muda no comportamento da música (ela só podia tocar após um gesto, já que os contextos `main/missions/result` usam Web Audio e o `AudioContext` nasce suspenso).
+- `src-app/index.html`: o watchdog de boot (intervalo de 250 ms que acompanhava o `#root`) agora se encerra com `clearInterval` quando o app monta e a splash sai (antes rodava a sessão inteira); e ganhou `preconnect` para `fonts.googleapis.com` / `fonts.gstatic.com` (Material Symbols), evitando DNS/TLS extra só depois de baixar o CSS do Google.
+
+### Notas (avaliado e descartado)
+- `qrcode` sob demanda (`import()` em `AuthScreen`/`FriendQrModal`): o split gerou um chunk compartilhado e **aumentou** o pacote inicial (486 KB → ~500 KB gzip) — revertido; nada mudou nesses arquivos.
+- Todas as seções seguem montadas no `.section-strip` desde o boot (requisito do swipe/`translateX`), então `React.lazy` nelas mudaria o funcionamento — não aplicado. `src-app/dist` não é versionado; o build de produção foi refeito e validado.
+
+## [v4.50.0] - 2026-10-26
+
+**Logo do site trocada para `src-app/public/assets/Logo.png` na aba do navegador, no site e na instalação como PWA.**
+
+### Changed
+- `src-app/public/assets/icons/`: novos ícones derivados de `src-app/public/assets/Logo.png` (1254×1254) — `logo-32.png`, `logo-48.png`, `logo-180.png`, `logo-192.png`, `logo-512.png` e `logo-maskable-512.png` (logo a 78% sobre fundo preto, para o recorte circular do Android). Os nomes são novos de propósito: `/assets/*` é servido com cache de 1 ano (`immutable` no `vercel.json`), então sobrescrever `icon-192.png`/`icon-512.png` deixaria o ícone antigo nos navegadores que já o baixaram.
+- `src-app/index.html`: `<link rel="icon">` deixa `D.jpg` e passa a `logo-32.png` / `logo-48.png`; `apple-touch-icon` usa `logo-180.png`; `og:image` aponta para `logo-512.png`.
+- `src-app/vite.config.ts`: ícones do manifesto PWA (`manifest.icons`) → `logo-192.png` e `logo-512.png` (`purpose: any`) + `logo-maskable-512.png` (`purpose: maskable`).
+- `src-app/src/features/music/audio-engine.ts`: artwork da Media Session (notificação e controles de música do aparelho) → `logo-192.png` / `logo-512.png`.
+- `src-app/src/features/settings/SettingsFeature.tsx`: o cartão "Instalar Aplicativo (PWA)" exibe `logo-192.png` no lugar do ícone de lápis; a notificação de teste usa `/assets/icons/logo-192.png` (o caminho anterior `/icon-192.png` não existia no build).
+
 ## [v4.48.0] - 2026-10-25
 
 **Música de fundo (MAIN) não sobrevive mais ao fechamento do site.**

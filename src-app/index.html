@@ -7,15 +7,20 @@
     <meta name="description" content="Sistema de fichas de treino para academia. Gerencie exercícios, acompanhe progresso diário e receba confirmação ao concluir o treino.">
     <meta property="og:title" content="EVO FIT">
     <meta property="og:description" content="Confira meu progresso na Evo Fit!">
-    <meta property="og:image" content="/assets/icons/icon-192.png">
+    <meta property="og:image" content="/assets/icons/logo-512.png">
     <meta property="og:url" content="https://evo-fit.vercel.app/">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="theme-color" content="#8b5cf6">
-    <link rel="icon" type="image/jpeg" href="/assets/icons/D.jpg">
-    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/logo-32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icons/logo-48.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/logo-180.png">
 
     <!-- Fonts (offline-first: Rajdhani/Inter/Outfit servidos localmente em /vendor,
          igual ao www/index.html da versão offline) -->
+    <!-- v4.51.0-perf — adianta DNS/TLS do Material Symbols (CDN), que só é
+         descoberto depois de baixar e parsear o CSS do Google. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="/vendor/fonts.css">
     <link rel="stylesheet" href="/vendor/fontawesome.min.css">
     <!-- Material Symbols segue CDN (mesmo comportamento da versão offline) -->
@@ -417,13 +422,16 @@
         }, 10000);
 
         /* ── 7) Watchdog: acompanha a montagem do #root ── */
-        setInterval(function () {
-          if (erroExibido) return;
+        var watchdog = setInterval(function () {
+          if (erroExibido) { clearInterval(watchdog); return; }
           var ok = montado();
           var dt = Date.now() - t0;
           if (ok) {
             if (overlayMode === 'loading') hideOverlay();
             if (pendingSaida && !saida) sair();
+            /* v4.51.0-perf — app montado e splash fora: o watchdog encerra
+               (antes o intervalo de 250 ms continuava rodando a sessão toda). */
+            if (!splashAtiva()) clearInterval(watchdog);
             return;
           }
           if (erroInfo && dt > 4000) { showError(); return; }   // erro de execução
