@@ -179,10 +179,10 @@ export function ShareModal() {
     try {
       const text = `Confira meu progresso na Evo Fit! ${window.location.origin}`;
       const nav = navigator as Navigator & { canShare?: (d?: ShareData) => boolean };
-      const canFiles = !nav.canShare || nav.canShare({ files: [file] });
+      const canFiles = !nav.canShare || (file && nav.canShare({ files: [file] }));
 
       let r: NativeShareResult;
-      if (canFiles) {
+      if (canFiles && file) {
         r = await shareNative({ title: 'Evo Fit', text, files: [file] }); // sem url (evita duplicado)
       } else {
         r = 'unsupported';
@@ -201,27 +201,34 @@ export function ShareModal() {
       if (r === 'cancelled') return; // silêncio total
 
       // erro real: vai direto para download + clipboard, sem segundo share
+      if (!file) {
+        showToast('Compartilhamento não suportado. Imagem baixada!', 'info');
+        return;
+      }
       const link = document.createElement('a');
       link.download = file.name;
       link.href = URL.createObjectURL(file);
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(link.href), 30000);
-      try {
-        const canvas = canvasRef.current;
-        if (canvas) {
-          const pngBlob = await new Promise<Blob | null>((resolve) =>
-            canvas.toBlob(resolve, 'image/png')
-          );
-          if (pngBlob) {
-            await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
-            showToast('Imagem copiada para a área de transferência. Compartilhe com seus amigos!', 'success');
-            return;
-          }
-        }
-      } catch {
-        /* ignora */
+
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        showToast('Compartilhamento não suportado. Imagem baixada!', 'info');
+        return;
       }
-      showToast('Compartilhamento não suportado. Imagem baixada!', 'info');
+      const pngBlob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/png')
+      );
+      if (!pngBlob) {
+        showToast('Compartilhamento não suportado. Imagem baixada!', 'info');
+        return;
+      }
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
+        showToast('Imagem copiada para a área de transferência. Compartilhe com seus amigos!', 'success');
+      } catch {
+        showToast('Compartilhamento não suportado. Imagem baixada!', 'info');
+      }
     } catch (err) {
       console.error(err);
       showToast('Erro ao preparar compartilhamento.', 'error');
