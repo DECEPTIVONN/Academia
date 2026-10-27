@@ -27,6 +27,7 @@
 
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { showToast } from '@/lib/toast';
 import { useCrossBrowserFullscreen } from '@/lib/fullscreen';
 import './inicio-menu.css';
@@ -189,7 +190,9 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
     };
   }, [open]);
 
-  if (!open) return null;
+  const { mounted, closing } = useModalPresence(open);
+
+  if (!mounted) return null;
 
   /* Registro de Treinos / Rankings / Ajuda ainda não existem: avisam (só no
      TOQUE — v4.32.0) e fecham. */
@@ -250,7 +253,7 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
 
   return toBody(
     <div
-      className="inicio-menu-overlay"
+      className={`inicio-menu-overlay${closing ? ' is-closing' : ''}`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

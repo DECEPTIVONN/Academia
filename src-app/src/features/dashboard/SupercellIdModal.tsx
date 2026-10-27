@@ -11,6 +11,7 @@ import {
     User,
     Award,
     Shield,
+    Gift,
     Mail,
     Plus,
     ChevronRight,
@@ -440,7 +441,7 @@ export default function FITIdStandalone({
 
                             {/* ID Name */}
                             <div className="mt-2.5 flex items-center gap-1.5 bg-white/10 px-3.5 py-1 rounded-full border border-white/20">
-                                <div className="bg-slate-900 text-white font-extrabold text-[8px] px-1 py-0.2 rounded tracking-tighter uppercase font-sans border border-slate-700">
+                                <div className="bg-slate-900 text-white font-extrabold text-[8px] px-1 py-0.2 rounded tracking-tighter uppercase  border border-slate-700">
                                     ID
                                 </div>
                                 <span className="text-xs font-black tracking-tight text-white uppercase">
@@ -539,7 +540,7 @@ export default function FITIdStandalone({
                                         <div className="my-2 relative z-10">
                                             <span className="text-[10px] uppercase font-black tracking-widest text-[var(--primary-light)]">Pontuação do Império</span>
                                             <div className="flex items-baseline gap-1 mt-0.5">
-                                                <span className="text-4xl font-black font-sans tracking-tight text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.25)]">
+                                                <span className="text-4xl font-black  tracking-tight text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.25)]">
                                                     {profile.trophies * 3 + 125}
                                                 </span>
                                                 <span className="text-base font-black text-[var(--primary-light)]">PTS</span>
@@ -568,8 +569,8 @@ export default function FITIdStandalone({
                                         className="p-4 bg-white/5 border border-white/20 rounded-2xl shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--primary-light)] transition-all active:scale-98 group"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 text-[var(--primary-dark)] flex items-center justify-center text-xl shrink-0">
-                                                🎁
+                                            <div className="w-10 h-10 rounded-xl bg-white/5 text-[var(--primary-dark)] flex items-center justify-center shrink-0">
+                                                <Gift className="w-5 h-5" />
                                             </div>
                                             <div className="text-left">
                                                 <h4 className="text-xs font-black text-white uppercase">Junte pontos e ganhe prêmios</h4>

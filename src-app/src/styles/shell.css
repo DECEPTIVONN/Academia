@@ -1610,3 +1610,12 @@
 .deck-header {
   background: var(--card-bg) !important;
 }
+
+/* v4.54.x - avatar do Inicio arredondado */
+.dash-profile-avatar.profile-avatar { border-radius: 50% !important; }
+.dash-profile-avatar.profile-avatar img { border-radius: 50% !important; }
+
+
+/* v4.54.x - emblemas de identificacao redondos */
+.emblem-card, .emblem-card__icon { border-radius: 50% !important; overflow: hidden; }
+

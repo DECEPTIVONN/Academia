@@ -691,3 +691,10 @@
     background: #07070b;
   }
 }
+
+/* v4.54.x - saida suave do menu do inicio */
+.inicio-menu-overlay.is-closing { animation: inicioMenuFadeOut 0.18s ease forwards; pointer-events: none; }
+.inicio-menu-overlay.is-closing .inicio-menu { animation: inicioMenuOut 0.18s cubic-bezier(0.4,0,1,1) forwards; }
+@keyframes inicioMenuFadeOut { to { opacity: 0; } }
+@keyframes inicioMenuOut { to { opacity: 0; transform: translateY(-6px) scale(0.96); } }
+

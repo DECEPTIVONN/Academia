@@ -2,6 +2,29 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.54.7] - 2026-10-27
+
+**Ajustes finais de UI: avatar redondo no Início, tipografia/ícones do Fit ID, emblemas redondos e saída suave do menu do Início.**
+
+### Changed
+- `src-app/src/styles/shell.css`: avatar do Início (`dash-profile-avatar`) passa a ser circular.
+- `src-app/src/features/dashboard/SupercellIdModal.tsx`: tipografia do Fit ID herda Rajdhani (removido `font-sans`); ícones de emoji (🎁, 🛡️) substituídos por `Gift`/`Shield`.
+- `src-app/src/styles/shell.css`: emblemas de identificação (`.emblem-card`) passam a ser redondos.
+- `src-app/src/features/dashboard/InicioMenuModal.tsx`: entrada/saída animada via `useModalPresence` + classes `.is-closing` em `inicio-menu.css`.
+
+### Verificado
+- `npm --prefix src-app run build`: OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos.
+- `npm run lint:docs`: OK.
+
+## [v4.54.6] - 2026-10-27
+
+**Ajustes de UI no Início e no Fit ID.**
+
+### Changed
+- `src-app/src/styles/shell.css`: avatar do Início (`dash-profile-avatar`) passa a ser circular (border-radius 50%).
+- `src-app/src/features/dashboard/SupercellIdModal.tsx`: tipografia do Fit ID deixa de forçar `font-sans` (herda Rajdhani do restante do site); ícones de emoji (🎁, 🛡️) substituídos por ícones lucide (`Gift`, `Shield`) nas seções "Junte pontos e ganhe prêmios" e "Proteção da conta".
+
 ## [v4.54.5] - 2026-10-27
 
 **Fit ID: alinhamento visual das configurações com o app.**
