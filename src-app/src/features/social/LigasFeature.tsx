@@ -905,7 +905,17 @@ function DiamondNav({ active, onGo }: { active: SubTab; onGo: (t: SubTab) => voi
                 </span>
               )}
               <div className="-rotate-45 text-white">
-                <span className={pressed === it.tab ? 'ligas-nav-icon--tap' : ''}>
+                <span
+                  className={
+                    pressed === it.tab
+                      ? it.tab === 'amigos'
+                        ? 'ligas-nav-icon--tap-amigos'
+                        : it.tab === 'bate-papo'
+                          ? 'ligas-nav-icon--tap-guilda'
+                          : 'ligas-nav-icon--tap-liga'
+                      : ''
+                  }
+                >
                   {isActive && it.tab === 'amigos' ? (
                     <Shield size={20} className="animate-pulse" />
                   ) : (

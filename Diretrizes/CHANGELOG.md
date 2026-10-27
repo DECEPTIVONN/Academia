@@ -4,11 +4,11 @@
 
 ## [v4.54.2] - 2026-10-27
 
-**Animação dos ícones Amigos, Guilda e Liga ao tocar.**
+**Animações profissionais dos ícones Amigos, Guilda e Liga ao tocar.**
 
 ### Added
-- `src-app/src/features/social/LigasFeature.tsx`: estado `pressed` no `DiamondNav` (360 ms) aplica a classe `ligas-nav-icon--tap` ao ícone tocado, disparando uma animação de escala/rotação; também adiciona `ligas-nav-btn` ao botão para o feedback de pressão (`:active`).
-- `src-app/src/features/social/social.css`: keyframes `ligas-nav-icon-tap` (escala até 1.45× com rotação) e regra `ligas-nav-btn:active` (`scale(0.92)`), com bloco `prefers-reduced-motion`.
+- `src-app/src/features/social/LigasFeature.tsx`: estado `pressed` (360 ms) no `DiamondNav` aplica uma classe específica ao ícone tocado — `ligas-nav-icon--tap-amigos`, `--tap-guilda` ou `--tap-liga` — disparando animações distintas para cada ícone; o botão recebe `ligas-nav-btn` para o feedback de pressão (`:active`).
+- `src-app/src/features/social/social.css`: animações dedicadas por ícone — escudo com escala + brilho (`ligas-shield-tap`), balão de mensagem com pop/rotação (`ligas-message-tap`) e espadas se batendo (`ligas-swords-tap`) — além de `ligas-nav-btn:active` (`scale(0.92)`) e bloco `prefers-reduced-motion`.
 
 ## [v4.54.1] - 2026-10-27
 
