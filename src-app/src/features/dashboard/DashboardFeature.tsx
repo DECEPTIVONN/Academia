@@ -508,6 +508,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
         onClose={() => setFitIdOpen(false)}
         name={userName}
         avatarUrl={avatarUrl}
+        avatarFrame={emblemPc?.avatarFrame || ''}
         title={titulo}
         xp={xp}
         streak={streak}

@@ -460,15 +460,6 @@ export interface IdentityEmblem {
 }
 
 export const IDENTITY_EMBLEMS: IdentityEmblem[] = [
-  { id: 'estrela-alada', nome: 'Estrela Alada', desc: 'Glória celestial reservada aos comandantes aéreos.', type: 'sprite', x: '0%', y: '0%', raridade: 'Raro', corRaridade: '#60a5fa' },
-  { id: 'escudo-caveira', nome: 'Escudo Caveira', desc: 'A defesa impenetrável dos imortais.', type: 'sprite', x: '-100%', y: '0%', raridade: 'Raro', corRaridade: '#60a5fa' },
-  { id: 'coracao-leao', nome: 'Coração de Leão', desc: 'A bravura indomável dos reis da arena.', type: 'sprite', x: '-200%', y: '0%', raridade: 'Raro', corRaridade: '#60a5fa' },
-  { id: 'aguia-dourada', nome: 'Águia Dourada', desc: 'Visão suprema e ataques precisos.', type: 'sprite', x: '0%', y: '-100%', raridade: 'Épico', corRaridade: '#c084fc' },
-  { id: 'legado-alpha', nome: 'Legado Alpha', desc: 'O símbolo original dos veteranos do prestígio.', type: 'sprite', x: '-100%', y: '-100%', raridade: 'Épico', corRaridade: '#c084fc' },
-  { id: 'vetor-v', nome: 'Vetor V', desc: 'Velocidade e agressividade em estado puro.', type: 'sprite', x: '-200%', y: '-100%', raridade: 'Épico', corRaridade: '#c084fc' },
-  { id: 'anjo-morte', nome: 'Anjo da Morte', desc: 'O prenúncio do fim para seus oponentes.', type: 'sprite', x: '0%', y: '-200%', raridade: 'Lendário', corRaridade: '#4ae176' },
-  { id: 'estrela-nova', nome: 'Estrela Nova', desc: 'A explosão de poder de um supernova.', type: 'sprite', x: '-100%', y: '-200%', raridade: 'Lendário', corRaridade: '#4ae176' },
-  { id: 'lobo-prata', nome: 'Lobo de Prata', desc: 'O caçador solitário que domina a noite.', type: 'sprite', x: '-200%', y: '-200%', raridade: 'Lendário', corRaridade: '#4ae176' },
   {
     id: 'prestigio-1',
     nome: 'Prestígio 1',
@@ -493,15 +484,6 @@ export const IDENTITY_EMBLEMS: IdentityEmblem[] = [
     desc: 'Concedido aos veteranos das primeiras batalhas simuladas.',
     type: 'image',
     url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAHEAJfpIZWgH1umKlvbg59Pp41BdGLOOe8lhKRNj-nnsD5DkIIy30D-nA5-Re98xlGobzOdLU2PGI22xdmLpofZp3teQL8o3CI4-VQs9wI334uxnX1huYBwUjTZerVJMzq43mEbyoBw9iM74jIojuIanroPUzwIQ5o1a-GrUP1aCMQXlhDHNUjawn0lp-fMJfknNsy709tjjqt0amLPIQmYozpE3F_Hja775x3Bf5MuXNhWI_ch75gobs38rKjtdwqRCov1Uxk7ko',
-    raridade: 'Lendário',
-    corRaridade: '#4ae176',
-  },
-  {
-    id: 'caveira-alada',
-    nome: 'Caveira Alada',
-    desc: 'Ceifador aéreo, terror dos oponentes na arena.',
-    type: 'image',
-    url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDSDob9FO6LAhjuTYsBXjQp_NNC5RRdCYF5osBDe6eTVdRVXglK8ZCa84lQuXK_xmU_6-oMymbv-TGIB4GVgKnf86Dyd9rsszFo3dKKnmp4Q_VKxBtlfJgmskM92m-V_nSPycm0LR_N294VjBhRhbBiYmr5zVFd6-waOW1R_qpUwWLA9upBq1aUg3e_Cl7goSdAzQq59zzaYltXvjRAQv5u3b6TXtDKrl4U1R5_5BDx-ubUcd59WEwtoDB89Sn8SZge5uhE_ttHkA',
     raridade: 'Lendário',
     corRaridade: '#4ae176',
   },

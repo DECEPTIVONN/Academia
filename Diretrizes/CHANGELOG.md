@@ -2,6 +2,42 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.54.5] - 2026-10-27
+
+**Fit ID: alinhamento visual das configurações com o app.**
+
+### Changed
+- `src-app/src/features/dashboard/SupercellIdModal.tsx`: a tela de configurações do Fit ID passou a usar a paleta do app (zinc/primary) nos contêineres, textos e toggles, em vez dos tons claros herdados do port legado.
+
+## [v4.54.4] - 2026-10-27
+
+**Fit ID: amigos reais, "Outros Apps", moldura funcional e remoção de emblemas legado/prestígio.**
+
+### Changed
+- `src-app/src/features/dashboard/SupercellIdModal.tsx`: a aba Amigos agora lista os amigos realmente adicionados no app (`loadAddedFriends()`), sincronizando via eventos; "Adicionar Amigos" avisa para adicionar na aba Social. "Meus Jogos" renomeado para "Outros Apps". O avatar do Fit ID recebe `data-frame` da moldura escolhida, aplicando o contorno.
+- `src-app/src/features/profile/profile-data.ts`: removidos os emblemas "Estrela Alada", "Escudo Caveira", "Coração de Leão", "Águia Dourada", "Legado Alpha", "Vetor V", "Anjo da Morte", "Estrela Nova", "Lobo de Prata" e "Caveira Alada".
+- `src-app/src/features/dashboard/FitIdOverlay.tsx` e `DashboardFeature.tsx`: propagam `avatarFrame` até o avatar do Fit ID.
+- `src-app/src/features/workout/treinos/CustomizacaoTabs.tsx`: fallback para `prestigio-1` se o emblema salvo foi removido.
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros e 73 avisos.
+- `npm run lint:docs`: OK.
+
+## [v4.54.3] - 2026-10-27
+
+**Fit ID: amigos reais, "Outros Apps", moldura de avatar funcional e remoção de emblemas legado/prestígio.**
+
+### Changed
+- `src-app/src/features/dashboard/SupercellIdModal.tsx`: a aba Amigos passa a listar os amigos realmente adicionados no app (`loadAddedFriends()`), sincronizando via `academia:friends-updated`/`academia:friends-changed`/`academia:db-ready`; o botão "Adicionar Amigos" virou aviso para adicionar na aba Social. "Meus Jogos" foi renomeado para "Outros Apps". O avatar do Fit ID recebe `data-frame` da moldura escolhida, aplicando o contorno correspondente.
+- `src-app/src/features/profile/profile-data.ts`: removidos os emblemas "Estrela Alada", "Escudo Caveira", "Coração de Leão", "Águia Dourada", "Legado Alpha", "Vetor V", "Anjo da Morte", "Estrela Nova", "Lobo de Prata" e "Caveira Alada" de `IDENTITY_EMBLEMS`.
+- `src-app/src/features/dashboard/FitIdOverlay.tsx` e `DashboardFeature.tsx`: propagam `avatarFrame` até o avatar do Fit ID.
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros e 73 avisos (mesma contagem anterior).
+- `npm run lint:docs`: OK.
+
 ## [v4.54.2] - 2026-10-27
 
 **Animações profissionais dos ícones Amigos, Guilda e Liga ao tocar.**

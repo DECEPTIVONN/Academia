@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import '@/features/auth/auth-screen.css';
+import { loadAddedFriends } from '@/features/social/friend-invites';
+import type { FriendItem as RealFriend } from '@/features/social/ligas-data';
+import { showToast } from '@/lib/toast';
 import {
     Settings,
     X,
@@ -40,6 +43,7 @@ export interface FITIdModalProps {
     onClose?: () => void;
     profile?: PlayerProfile;
     avatarUrl?: string;
+    avatarFrame?: string | null;
     onUpdateProfile?: (newProfile: PlayerProfile) => void;
 }
 
@@ -51,6 +55,18 @@ export interface Friend {
     emoji: string;
     avatarBg: string;
     online: boolean;
+}
+
+function mapRealFriend(f: RealFriend): Friend {
+    return {
+        name: f.name,
+        clan: f.clan || 'Amigo',
+        trophies: f.trophies || 0,
+        level: f.level || 1,
+        emoji: f.avatarInitial || '👤',
+        avatarBg: f.avatarColor,
+        online: f.online,
+    };
 }
 
 // Preset accounts to switch between
@@ -203,6 +219,7 @@ export default function FITIdStandalone({
     onClose = () => { },
     profile: propProfile,
     avatarUrl,
+    avatarFrame,
     onUpdateProfile: propUpdateProfile
 }: FITIdModalProps) {
     // Local fallback profile
@@ -262,12 +279,20 @@ export default function FITIdStandalone({
         }
     }, [profile.username]);
 
-    // Save friends to localStorage whenever it changes
+    // Sincroniza a lista do Fit ID com os amigos reais adicionados no app.
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(`sc_friends_${profile.username}`, JSON.stringify(friendsList));
-        }
-    }, [friendsList, profile.username]);
+        if (typeof window === 'undefined') return;
+        const reload = () => setFriendsList(loadAddedFriends().map(mapRealFriend));
+        reload();
+        document.addEventListener('academia:friends-updated', reload);
+        document.addEventListener('academia:friends-changed', reload);
+        document.addEventListener('academia:db-ready', reload);
+        return () => {
+            document.removeEventListener('academia:friends-updated', reload);
+            document.removeEventListener('academia:friends-changed', reload);
+            document.removeEventListener('academia:db-ready', reload);
+        };
+    }, []);
 
     if (!isOpen) return null;
 
@@ -302,30 +327,7 @@ export default function FITIdStandalone({
                 localStorage.setItem(`sc_email_${profile.username}`, inputVal.trim());
             }
         } else if (editingField === 'addFriend') {
-            const randLevel = Math.floor(Math.random() * 10) + 3;
-            const randTrophies = Math.floor(Math.random() * 4000) + 500;
-            const emojis = ['🕵️', '🧟', '🧑‍🚀', '👸', '🧙', '🦸', '🦹', '🐱', '🐼', '🤖'];
-            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-            const gradientBgs = [
-                'from-teal-500 to-emerald-600',
-                'from-[var(--primary)] to-purple-600',
-                'from-orange-500 to-red-600',
-                'from-pink-500 to-rose-600',
-                'from-sky-500 to-blue-600'
-            ];
-            const randomBg = gradientBgs[Math.floor(Math.random() * gradientBgs.length)];
-
-            const newFriend: Friend = {
-                name: inputVal.trim(),
-                clan: 'RETR',
-                trophies: randTrophies,
-                level: randLevel,
-                emoji: randomEmoji,
-                avatarBg: randomBg,
-                online: Math.random() > 0.3
-            };
-
-            setFriendsList([newFriend, ...friendsList]);
+            showToast('Adicione amigos na aba Social — eles aparecem aqui automaticamente.', 'info');
         }
 
         setEditingField(null);
@@ -422,7 +424,7 @@ export default function FITIdStandalone({
                         <div className="flex flex-col items-center">
                             {/* Profile Barbarian Ring Avatar */}
                             <div className="relative group">
-                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--primary)] via-[var(--primary-dark)] to-[var(--primary)] p-1 shadow-[0_4px_15px_rgba(var(--primary-rgb,139,92,246),0.35)] relative">
+                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--primary)] via-[var(--primary-dark)] to-[var(--primary)] p-1 shadow-[0_4px_15px_rgba(var(--primary-rgb,139,92,246),0.35)] relative profile-avatar" data-frame={avatarFrame || ''}>
                                     <div className="w-full h-full rounded-full bg-slate-900 border-2 border-white flex items-center justify-center text-4xl overflow-hidden">
                                         {avatarUrl ? (
                                             <img src={avatarUrl} alt={profile.username} className="w-full h-full object-cover" />
@@ -509,7 +511,7 @@ export default function FITIdStandalone({
                                         }`}
                                 >
                                     <Gamepad2 className="w-5 h-5" />
-                                    <span className="text-[9px] uppercase tracking-wider">Meus Jogos</span>
+                                    <span className="text-[9px] uppercase tracking-wider">Outros Apps</span>
                                 </button>
                             </div>
 
@@ -749,16 +751,16 @@ export default function FITIdStandalone({
                         // ========== B. SETTINGS MODE (CONFIGURAÇÕES) ==========
                         <div className="space-y-4 text-left">
                             {/* Toggles Container */}
-                            <div className="bg-white/5 border border-white/20 rounded-2xl shadow-sm p-4 space-y-4">
+                            <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl shadow-sm p-4 space-y-4">
                                 {/* Mostrar status on-line */}
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h4 className="text-xs font-black text-white uppercase">Mostrar status on-line</h4>
-                                        <p className="text-[9px] text-slate-400">Seus amigos podem ver quando você está ativo.</p>
+                                        <p className="text-[9px] text-zinc-400">Seus amigos podem ver quando você está ativo.</p>
                                     </div>
                                     <button
                                         onClick={() => { soundManager.playMove(); setStatusOnline(!statusOnline); }}
-                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${statusOnline ? 'bg-emerald-500/100 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${statusOnline ? 'bg-emerald-500/100 flex justify-end' : 'bg-zinc-700 flex justify-start'}`}
                                     >
                                         <span className="w-4.5 h-4.5 rounded-full bg-white/5 shadow-md" />
                                     </button>
@@ -768,11 +770,11 @@ export default function FITIdStandalone({
                                 <div className="flex items-center justify-between border-t border-white/10 pt-4">
                                     <div>
                                         <h4 className="text-xs font-black text-white uppercase">Receber pedidos de amizade</h4>
-                                        <p className="text-[9px] text-slate-400">Permitir que outros jogadores enviem solicitações.</p>
+                                        <p className="text-[9px] text-zinc-400">Permitir que outros jogadores enviem solicitações.</p>
                                     </div>
                                     <button
                                         onClick={() => { soundManager.playMove(); setReceiveFriendRequests(!receiveFriendRequests); }}
-                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${receiveFriendRequests ? 'bg-emerald-500/100 flex justify-end' : 'bg-slate-300 flex justify-start'}`}
+                                        className={`w-12 h-6.5 rounded-full p-1 transition-all ${receiveFriendRequests ? 'bg-emerald-500/100 flex justify-end' : 'bg-zinc-700 flex justify-start'}`}
                                     >
                                         <span className="w-4.5 h-4.5 rounded-full bg-white/5 shadow-md" />
                                     </button>
@@ -780,7 +782,7 @@ export default function FITIdStandalone({
                             </div>
 
                             {/* Account Box Container (Player ID, Email change, Account Switch, LogOut) */}
-                            <div className="bg-white/5 border border-white/20 rounded-2xl shadow-sm p-4 space-y-4">
+                            <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl shadow-sm p-4 space-y-4">
                                 {/* ID de jogador */}
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-start gap-2.5">
@@ -788,13 +790,13 @@ export default function FITIdStandalone({
                                             <User className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block leading-none">ID de jogador</span>
+                                            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest block leading-none">ID de jogador</span>
                                             <span className="text-xs font-black text-white uppercase tracking-tight">{profile.username}</span>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => handleOpenEdit('username')}
-                                        className="px-2.5 py-1 text-[10px] font-black text-[var(--primary-dark)] hover:bg-white/5 border border-white/20 rounded-lg transition-all"
+                                        className="px-2.5 py-1 text-[10px] font-black text-[var(--primary-dark)] hover:bg-zinc-900/60 border border-zinc-800 rounded-lg transition-all"
                                     >
                                         ALTERAR
                                     </button>
@@ -807,13 +809,13 @@ export default function FITIdStandalone({
                                             <Mail className="w-4 h-4" />
                                         </div>
                                         <div className="min-w-0 max-w-[180px]">
-                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block leading-none">Conectou-se com</span>
+                                            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest block leading-none">Conectou-se com</span>
                                             <span className="text-xs font-bold text-white truncate block">{connectedEmail}</span>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => handleOpenEdit('email')}
-                                        className="px-2.5 py-1 text-[10px] font-black text-[var(--primary-dark)] hover:bg-white/5 border border-white/20 rounded-lg transition-all"
+                                        className="px-2.5 py-1 text-[10px] font-black text-[var(--primary-dark)] hover:bg-zinc-900/60 border border-zinc-800 rounded-lg transition-all"
                                     >
                                         ALTERAR
                                     </button>
@@ -822,7 +824,7 @@ export default function FITIdStandalone({
                                 {/* Alternar conta button */}
                                 <div
                                     onClick={() => { soundManager.playMove(); setEditingField('switch'); }}
-                                    className="flex items-center justify-between border-t border-white/10 pt-4 cursor-pointer hover:bg-white/5 -mx-4 px-4 py-2 transition-all group"
+                                    className="flex items-center justify-between border-t border-white/10 pt-4 cursor-pointer hover:bg-zinc-800/60 -mx-4 px-4 py-2 transition-all group"
                                 >
                                     <div className="flex items-center gap-2.5">
                                         <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-[var(--primary-dark)] shrink-0">
@@ -830,10 +832,10 @@ export default function FITIdStandalone({
                                         </div>
                                         <div>
                                             <h4 className="text-xs font-black text-white uppercase">Alternar conta</h4>
-                                            <p className="text-[9px] text-slate-400">Mudar para outra conta salva do FIT ID.</p>
+                                            <p className="text-[9px] text-zinc-400">Mudar para outra conta salva do FIT ID.</p>
                                         </div>
                                     </div>
-                                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-[var(--primary-dark)] transition-colors" />
+                                    <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-[var(--primary-dark)] transition-colors" />
                                 </div>
 
                                 {/* Sair button */}

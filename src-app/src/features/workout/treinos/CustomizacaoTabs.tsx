@@ -293,7 +293,7 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
   const u: Unlocks = { stats, devMode, maestrias };
 
   /* Identidade: seleção local (preview) + pulso (persistido) */
-  const [activeEmblemId, setActiveEmblemId] = useState(() => pc.mainEmblem || 'prestigio-1');
+  const [activeEmblemId, setActiveEmblemId] = useState(() => (IDENTITY_EMBLEMS.some((e) => e.id === pc.mainEmblem) ? pc.mainEmblem : 'prestigio-1') || 'prestigio-1');
   const [pulse, setPulse] = useState(() => pc.mainEmblemPulse !== false);
 
   /* Aplica atributos globais assim que o estado recarrega (ProfileFeature L162) */
@@ -307,7 +307,7 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
   const [prevPulse, setPrevPulse] = useState(pc.mainEmblemPulse);
   if (prevMain !== pc.mainEmblem) {
     setPrevMain(pc.mainEmblem);
-    setActiveEmblemId(pc.mainEmblem || 'prestigio-1');
+    setActiveEmblemId(IDENTITY_EMBLEMS.some((e) => e.id === pc.mainEmblem) ? (pc.mainEmblem as string) : 'prestigio-1');
   }
   if (prevPulse !== pc.mainEmblemPulse) {
     setPrevPulse(pc.mainEmblemPulse);

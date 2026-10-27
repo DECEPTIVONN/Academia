@@ -16,6 +16,7 @@ interface FitIdOverlayProps {
   onClose: () => void;
   name: string;
   avatarUrl: string;
+  avatarFrame?: string | null;
   title?: string | null;
   xp: number;
   streak: number;
@@ -30,6 +31,7 @@ export const FitIdOverlay: React.FC<FitIdOverlayProps> = ({
   onClose,
   name,
   avatarUrl,
+  avatarFrame,
   xp,
   streak,
 }) => {
@@ -62,7 +64,7 @@ export const FitIdOverlay: React.FC<FitIdOverlayProps> = ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
         >
-          <SupercellIdStandalone isOpen={open} onClose={onClose} profile={profile} avatarUrl={avatarUrl} />
+          <SupercellIdStandalone isOpen={open} onClose={onClose} profile={profile} avatarUrl={avatarUrl} avatarFrame={avatarFrame} />
         </motion.div>
       )}
     </AnimatePresence>
