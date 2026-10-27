@@ -268,13 +268,6 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
     <div
       className={`modal-overlay${closing ? ' is-closing' : ''}`}
       id="modalExercicio"
-      style={{
-        display: 'flex',
-        opacity: closing ? 0 : 1,
-        visibility: 'visible',
-        pointerEvents: closing ? 'none' : 'auto',
-        transition: 'opacity 0.22s ease',
-      }}
       role="dialog"
       aria-modal="true"
       onClick={(e) => {

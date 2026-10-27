@@ -2294,3 +2294,17 @@
   font-family: var(--font-mono, monospace);
   font-size: 10px;
 }
+
+/* v4.54.2 - animacao dos icones Amigos/Guilda/Liga ao tocar */
+.ligas-nav-btn:active { transform: rotate(45deg) scale(0.92); }
+.ligas-nav-icon--tap { display: inline-flex; animation: ligas-nav-icon-tap 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes ligas-nav-icon-tap {
+  0% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(1.45) rotate(-18deg); }
+  60% { transform: scale(0.88) rotate(12deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ligas-nav-icon--tap { animation: none; }
+}
+

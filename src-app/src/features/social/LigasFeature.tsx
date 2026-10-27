@@ -867,6 +867,14 @@ function FriendRow({
 /* ── Diamantes de navegação (Amigos / Guilda / Liga) ── */
 
 function DiamondNav({ active, onGo }: { active: SubTab; onGo: (t: SubTab) => void }) {
+  const [pressed, setPressed] = useState<SubTab | null>(null);
+
+  useEffect(() => {
+    if (pressed === null) return;
+    const timer = window.setTimeout(() => setPressed(null), 360);
+    return () => window.clearTimeout(timer);
+  }, [pressed]);
+
   const items: { tab: SubTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { tab: 'amigos', label: 'Amigos', icon: <Shield size={20} /> },
     { tab: 'bate-papo', label: 'Guilda', icon: <MessageSquare size={18} />, badge: 11 },
@@ -882,9 +890,10 @@ function DiamondNav({ active, onGo }: { active: SubTab; onGo: (t: SubTab) => voi
             <button
               onClick={() => {
                 standaloneSound.playMove();
+                setPressed(it.tab);
                 onGo(it.tab);
               }}
-              className={`relative w-14 h-14 rotate-45 rounded-2xl border-2 flex items-center justify-center transition-all cursor-pointer ${
+              className={`relative w-14 h-14 rotate-45 rounded-2xl border-2 flex items-center justify-center transition-all cursor-pointer ligas-nav-btn ${
                 isActive
                   ? 'ligas-gradient border-[var(--primary-light)] ligas-glow-strong scale-110'
                   : 'bg-slate-900/80 border-slate-700/80 hover:border-slate-500'
@@ -896,11 +905,13 @@ function DiamondNav({ active, onGo }: { active: SubTab; onGo: (t: SubTab) => voi
                 </span>
               )}
               <div className="-rotate-45 text-white">
-                {isActive && it.tab === 'amigos' ? (
-                  <Shield size={20} className="animate-pulse" />
-                ) : (
-                  it.icon
-                )}
+                <span className={pressed === it.tab ? 'ligas-nav-icon--tap' : ''}>
+                  {isActive && it.tab === 'amigos' ? (
+                    <Shield size={20} className="animate-pulse" />
+                  ) : (
+                    it.icon
+                  )}
+                </span>
               </div>
             </button>
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-300">{it.label}</span>

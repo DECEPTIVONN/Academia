@@ -2,6 +2,22 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.54.2] - 2026-10-27
+
+**Animação dos ícones Amigos, Guilda e Liga ao tocar.**
+
+### Added
+- `src-app/src/features/social/LigasFeature.tsx`: estado `pressed` no `DiamondNav` (360 ms) aplica a classe `ligas-nav-icon--tap` ao ícone tocado, disparando uma animação de escala/rotação; também adiciona `ligas-nav-btn` ao botão para o feedback de pressão (`:active`).
+- `src-app/src/features/social/social.css`: keyframes `ligas-nav-icon-tap` (escala até 1.45× com rotação) e regra `ligas-nav-btn:active` (`scale(0.92)`), com bloco `prefers-reduced-motion`.
+
+## [v4.54.1] - 2026-10-27
+
+**Correção da animação de saída dos modais: a saída agora é visível em vez de instantânea.**
+
+### Fixed
+- `src-app/src/styles/modal-motion.css`: removido `opacity: 0 !important;` do `.modal-overlay.is-closing`, que derrubava a animação de fade (o `!important` vencia o `@keyframes` e deixava overlay/painel invisíveis na hora). Agora o fade usa apenas `modalOverlayOut`/`modalPanelOut` (220 ms).
+- `src-app/src/features/workout/treinos/ExercicioFormModal.tsx` e `TreinosModals.tsx` (AerobicoModal): removidos os estilos inline de `opacity`/`visibility`/`transition` que competiam com a classe `.is-closing`, deixando o CSS legado + `modal-motion.css` conduzirem a animação de entrada e saída.
+
 ## [v4.54.0] - 2026-10-27
 
 **Opção "Entrar em modo teste" nas opções de login, disponível somente em desenvolvimento.**

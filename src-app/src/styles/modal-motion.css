@@ -12,7 +12,6 @@
  */
 
 .modal-overlay.is-closing {
-  opacity: 0 !important;
   pointer-events: none !important;
   animation: modalOverlayOut 0.22s ease forwards;
 }
