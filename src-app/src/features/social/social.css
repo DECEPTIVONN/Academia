@@ -1435,6 +1435,43 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   overscroll-behavior: contain;
+  animation: friend-qr-fade 0.2s ease both;
+}
+
+@keyframes friend-qr-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes friend-qr-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* v4.53.0 — saída do modal de amigos (fade do overlay + recolhimento). */
+.friend-qr-overlay.is-closing {
+  pointer-events: none;
+  animation: friend-qr-fade-out 0.22s ease forwards;
+}
+
+.friend-qr-overlay.is-closing .friend-qr-card {
+  animation: friend-qr-out 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes friend-qr-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
 }
 
 .friend-qr-card {
@@ -2043,6 +2080,41 @@
   z-index: 10010;
   overflow: hidden;
   background: #000;
+  animation: qr-scanner-in 0.24s ease both;
+}
+
+/* v4.53.0 — entrada e saída do leitor de QR (fade + leve zoom). */
+@keyframes qr-scanner-in {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes qr-scanner-out {
+  to {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+.qr-scanner.is-closing {
+  pointer-events: none;
+  animation: qr-scanner-out 0.22s ease forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .friend-qr-overlay,
+  .friend-qr-overlay.is-closing,
+  .friend-qr-overlay.is-closing .friend-qr-card,
+  .qr-scanner,
+  .qr-scanner.is-closing {
+    animation: none;
+  }
 }
 
 .qr-scanner__video {

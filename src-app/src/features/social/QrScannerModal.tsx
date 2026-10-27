@@ -13,6 +13,7 @@ import { X } from 'lucide-react';
 import jsQR, { type QRCode as ScannedQrCode } from 'jsqr';
 import { parseFriendInvite, type FriendInvite } from './friend-invites';
 import { standaloneSound } from './ligas-data';
+import { useModalExit } from '@/hooks/useModalPresence';
 
 interface QrScannerModalProps {
   onClose: () => void;
@@ -46,6 +47,8 @@ export function QrScannerModal({ onClose, onInvite }: QrScannerModalProps) {
   const [status, setStatus] = useState<'loading' | 'scanning' | 'error'>('loading');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  /* v4.53.0 — anima a saída antes de o pai desmontar o modal/câmera. */
+  const { closing, requestClose } = useModalExit(onClose);
 
   useEffect(() => {
     onInviteRef.current = onInvite;
@@ -142,7 +145,8 @@ export function QrScannerModal({ onClose, onInvite }: QrScannerModalProps) {
         if (handledRef.current) return;
         handledRef.current = true;
         stopCamera();
-        onInviteRef.current(invite);
+        /* v4.53.0 — fecha com animação e só então entrega o convite ao pai. */
+        requestClose(() => onInviteRef.current(invite));
       } catch {
         /* frame inválido/segurança do canvas: tenta no próximo */
       }
@@ -193,7 +197,7 @@ export function QrScannerModal({ onClose, onInvite }: QrScannerModalProps) {
       cancelled = true;
       stopCamera();
     };
-  }, [stopCamera]);
+  }, [requestClose, stopCamera]);
 
   /* Limpa o aviso de QR inválido */
   useEffect(() => {
@@ -205,8 +209,8 @@ export function QrScannerModal({ onClose, onInvite }: QrScannerModalProps) {
   const handleClose = useCallback(() => {
     standaloneSound.playMove();
     stopCamera();
-    onClose();
-  }, [onClose, stopCamera]);
+    requestClose();
+  }, [requestClose, stopCamera]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -222,7 +226,12 @@ export function QrScannerModal({ onClose, onInvite }: QrScannerModalProps) {
   }, [handleClose]);
 
   return createPortal(
-    <div className="qr-scanner" role="dialog" aria-modal="true" aria-label="Escanear QR Code">
+    <div
+      className={`qr-scanner${closing ? ' is-closing' : ''}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Escanear QR Code"
+    >
       <video
         ref={videoRef}
         className="qr-scanner__video"

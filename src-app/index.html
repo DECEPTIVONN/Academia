@@ -33,6 +33,15 @@
          continua fixa no rodapé. Os estilos vivem aqui porque
          src-app/src/legacy-style/ é espelho intocável. -->
     <style>
+      /* v4.53.0 — imagens padrão da splash: ocultas, só carregam a URL. */
+      .splash-default-asset {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+      }
       /* v4.27 — com imagem personalizada o logo EVO FIT / WORKOUT TRACKER
          continua visível (pedido do usuário); só a saudação fica oculta. */
       .splash-screen--custom .splash-screen__user { display: none; }
@@ -149,6 +158,13 @@
     </style>
   </head>
   <body class="bg-[#131313] text-white antialiased selection:bg-purple-500 selection:text-white">
+    <!-- v4.53.0 — imagens PADRÃO da splash (mobile/retrato e desktop/paisagem).
+         Ficam ocultas só para o Vite processar os caminhos; o script inline de
+         boot copia a URL para o fundo da splash quando não há imagem custom. -->
+    <div class="splash-default-asset" aria-hidden="true">
+      <img id="splashDefaultPortrait" src="./src/assets/LoagingVertical.png" alt="" />
+      <img id="splashDefaultLandscape" src="./src/assets/LoagingHorizontal.png" alt="" />
+    </div>
     <!-- ✨ Splash Screen Personalizada (Feature 9) — port de treino.html L102–118 -->
     <div id="splashScreen" class="splash-screen">
       <div class="splash-screen__bg" id="splashBg"></div>
@@ -361,9 +377,17 @@
 
           try {
             var portrait = window.innerHeight > window.innerWidth;
+            /* v4.53.0 — imagem PADRÃO da splash: mobile → LoagingVertical.png,
+               desktop → LoadingHorizontal.png (src/assets). Uma imagem
+               personalizada (mbc_loading_*) continua tendo prioridade. */
+            var defaultEl = document.getElementById(
+              portrait ? 'splashDefaultPortrait' : 'splashDefaultLandscape'
+            );
+            var defaultBg = defaultEl && defaultEl.src ? defaultEl.src : '';
             var customBg =
               localStorage.getItem(portrait ? 'mbc_loading_vertical' : 'mbc_loading_horizontal') ||
-              localStorage.getItem(portrait ? 'mbc_loading_horizontal' : 'mbc_loading_vertical');
+              localStorage.getItem(portrait ? 'mbc_loading_horizontal' : 'mbc_loading_vertical') ||
+              defaultBg;
             if (customBg) {
               var bgEl = document.getElementById('splashBg');
               bgEl.style.backgroundImage = 'url("' + customBg + '")';

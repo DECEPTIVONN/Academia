@@ -22,6 +22,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
 import {
   getCycleStats,
+  getCycleTimeline,
   getExerciseMap,
   getStreak,
   getTodayTreino,
@@ -31,6 +32,7 @@ import {
   type SheetKey,
 } from '@/core/db/queries';
 import { SheetSelectorModal } from '@/features/dashboard/SheetSelectorModal';
+import { CycleModal } from '@/features/dashboard/CycleModal';
 import { FichaDeck } from '@/features/dashboard/FichaDeck';
 import { MissionsOverlay } from '@/features/dashboard/MissionsOverlay';
 import { InicioMenuModal } from '@/features/dashboard/InicioMenuModal';
@@ -129,6 +131,11 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   }, [exercises, sheets, history, legacy, override, dataKey]);
 
   const { suggestion, sheet, sheetExercises, xp, cycle, streak, completedToday } = derived;
+  /* Linha do tempo 0–30 do ciclo atual (modal do card CICLO). */
+  const cycleTimeline = useMemo(
+    () => getCycleTimeline({ exercises, sheets, history, legacy }),
+    [exercises, sheets, history, legacy]
+  );
   const hasCardio = Boolean(sheet?.aerobic?.tipo);
   const totalItems = sheetExercises.length + (hasCardio ? 1 : 0);
   const thumb = sheetExercises.find((ex) => ex.imageUrl)?.imageUrl ?? null;
@@ -509,63 +516,16 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
         history={history}
         onOpenSettings={onOpenSettings}
       />
-    {cycleModalOpen && (
-      <div
-        className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70"
-        onClick={() => setCycleModalOpen(false)}
-      >
-        <div
-          className="bg-[#121216] border border-zinc-800 rounded-2xl p-4 max-w-md w-full mx-4"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-white">Ciclo de Treino</h3>
-            <button
-              type="button"
-              onClick={() => setCycleModalOpen(false)}
-              className="text-zinc-400 hover:text-white"
-            >
-              ✕
-            </button>
-          </div>
-          <p className="text-xs text-zinc-400 mb-3">
-            {cycle.done}/{cycle.total} treinos concluídos
-          </p>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(6, 1fr)',
-              gap: '6px',
-              marginBottom: '12px',
-            }}
-          >
-            {Array.from({ length: cycle.total }, (_, i) => {
-              const d = new Date(cycle.startDate + 'T00:00:00');
-              d.setDate(d.getDate() + i);
-              const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-              const done = history.some((h) => h.date === key && h.completed);
-              return (
-                <div
-                  key={i}
-                  title={key}
-                  style={{
-                    width: '100%',
-                    aspectRatio: '1',
-                    borderRadius: '4px',
-                    background: done ? 'var(--primary)' : 'rgba(255,255,255,0.08)',
-                  }}
-                />
-              );
-            })}
-          </div>
-          <div className="text-xs text-zinc-400">
-            {Object.entries(cycle.breakdown)
-              .map(([k, v]) => `${k}: ${v}`)
-              .join('  ')}
-          </div>
-        </div>
-      </div>
-    )}
+      {/* v4.53.0 — modal dos ciclos: lista 0–30 do ciclo atual e detalhe
+          individual do treino selecionado. */}
+      <CycleModal
+        open={cycleModalOpen}
+        onClose={() => setCycleModalOpen(false)}
+        cycle={cycle}
+        timeline={cycleTimeline}
+        exercises={exercises}
+        sheets={sheets}
+      />
 
     </div>
   );

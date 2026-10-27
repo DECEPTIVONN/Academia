@@ -16,6 +16,7 @@ import React, { useMemo } from 'react';
 import type { Exercise, SheetKey, WorkoutSheet } from '@/core/db/schema';
 import { SHEET_ORDER, type LegacyRaw } from '@/core/db/queries';
 import { FichaDeck } from '@/features/dashboard/FichaDeck';
+import { useModalPresence } from '@/hooks/useModalPresence';
 
 interface SheetSelectorModalProps {
   open: boolean;
@@ -38,6 +39,8 @@ export const SheetSelectorModal: React.FC<SheetSelectorModalProps> = ({
   onLetterChange,
 }) => {
   const activeLetter = letter;
+  /* v4.53.0 — mantém o modal montado durante o fade de saída. */
+  const { mounted, closing } = useModalPresence(open);
 
   const exerciseMap = useMemo(
     () => new Map(exercises.map((e) => [e.id, e])),
@@ -74,15 +77,17 @@ export const SheetSelectorModal: React.FC<SheetSelectorModalProps> = ({
     selectTab(next);
   };
 
+  if (!mounted) return null;
+
   return (
     <div
-      className="modal-overlay"
+      className={`modal-overlay${closing ? ' is-closing' : ''}`}
       id="modalSeletorFichas"
-      style={{ display: open ? 'flex' : 'none' }}
+      style={{ display: 'flex' }}
       onClick={(e) => {
         if ((e.target as HTMLElement).classList.contains('modal-overlay')) onClose();
       }}
-      aria-hidden={!open}
+      aria-hidden={closing}
     >
       <div className="dash-mini-deck">
         {/* Header: menu + abas A–J + swap + view toggle */}

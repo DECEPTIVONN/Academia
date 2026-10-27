@@ -2,6 +2,34 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.53.0] - 2026-10-27
+
+**Três pedidos do usuário: imagem padrão nas telas de carregamento/bloqueio, modal com os ciclos 0–30 no Início e animação de entrada/saída nos modais de treino, cardio, exercício, amigos e QR Code.**
+
+### Added
+- `src-app/src/lib/screen-defaults.ts`: `defaultScreenImage(portrait)` devolve `LoagingVertical.png` (mobile/retrato) ou `LoadingHorizontal.png` (desktop/paisagem), importados de `src-app/src/assets/` para o Vite resolver as URLs no build. A grafia "Loaging" é a do arquivo original.
+- `src-app/src/hooks/useModalPresence.ts`: `MODAL_EXIT_MS = 220` (mesmo tempo do CSS), `useModalPresence(open)` — mantém o modal montado e expõe `closing` durante a saída — e `useModalExit(onClose)` — roda a animação antes de chamar o `onClose` do pai, com ação opcional pós-animação.
+- `src-app/src/features/dashboard/CycleModal.tsx` + `cycle-modal.css`: modal do card CICLO do Início, em `createPortal(document.body)`, com a linha do tempo **0–30** do ciclo atual (0 = abertura, 1..30 = treinos concluídos e pendentes) e o detalhe individual do treino selecionado (data, ficha, duração e exercícios, marcando os concluídos). Fecha no Esc/backdrop, trava o scroll do body, o Esc/chevron voltam do detalhe para a lista e reabrir sempre cai na lista.
+- `src-app/src/styles/modal-motion.css`: `modalOverlayOut` + `modalPanelOut` — fade do `.modal-overlay` e recolhimento do painel (`translateY(24px) scale(0.96)`) em 220 ms, com `prefers-reduced-motion`.
+- `src-app/src/core/db/queries.ts`: `CycleTimelineItem` + `getCycleTimeline(data)` — 31 posições (0 = `currentCycleStartDate`; 1..30 = um item por letra em `completedKeys` desde o início do ciclo, preenchendo até 30; o restante fica pendente). Usa a mesma contagem de `getCycleStats`, então o total fecha com o número do card CICLO.
+
+### Changed
+- `src-app/index.html`: `<img>` ocultos `#splashDefaultPortrait`/`#splashDefaultLandscape` (classe `.splash-default-asset`) só para o Vite processar os caminhos; o script inline de boot usa a imagem padrão quando não há `mbc_loading_*` — a imagem personalizada continua com prioridade.
+- `src-app/src/features/lock/LockScreen.tsx`: fundo do bloqueio em três níveis — imagem custom → imagem padrão (somente quando o usuário **não** escolheu um wallpaper) → preset (`resolveWallpaper`). O estado `wallExplicit` é re-sincronizado em `academia:lock-prefs-changed`.
+- `src-app/src/features/sync/AppLoadingScreen.tsx` e `src-app/src/features/sync/ScreensCustomizationPanel.tsx`: as prévias de carregamento e de bloqueio caem na imagem padrão quando não há imagem custom, e a prévia de bloqueio respeita o preset escolhido do mesmo jeito que o LockScreen.
+- `src-app/src/features/dashboard/DashboardFeature.tsx`: o modal inline antigo (grade de quadradinhos por dia, com Tailwind) foi removido e substituído pelo `<CycleModal/>`, alimentado por `getCycleTimeline`; o card CICLO abre o novo modal.
+- `src-app/src/features/dashboard/SheetSelectorModal.tsx`, `src-app/src/features/workout/treinos/TreinosModals.tsx` (AerobicoModal) e `ExercicioFormModal.tsx`: usam `useModalPresence` + classe `.is-closing` e o `modal-motion.css`; Aerobico/ExercicioForm deixaram de controlar `visibility`/`opacity` inline na abertura.
+- `src-app/src/features/workout/treinos/TreinosFeature.tsx`: o `key` de Aerobico/ExercicioForm passou a `aeSession`/`formSession` (incrementa ao **abrir**, não ao fechar), então o modal permanece montado para animar a saída e ainda reinicializa o estado a cada abertura.
+- `src-app/src/features/social/FriendQrModal.tsx` e `QrScannerModal.tsx`: `useModalExit` — Esc/X/backdrop animam antes do `onClose` do pai; o botão "Escanear" espera a saída do modal de amigos para abrir o leitor; o leitor entrega o convite lido depois da animação (`requestClose(() => onInvite(invite))`).
+- `src-app/src/features/social/social.css`: entrada/saída de `.friend-qr-overlay` (fade + `scale(0.94) translateY(10px)` no card) e `.qr-scanner` (fade + zoom leve), com bloco `prefers-reduced-motion`.
+- `src-app/src/main.tsx`: importa `modal-motion.css` depois de `shell.css`, para vencer os empates de cascata com o CSS legado.
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK — as duas imagens padrão entram em `dist/assets/` com hash (`LoagingVertical-*.png` 1,08 MB e `LoagingHorizontal-*.png` 960 KB) e nenhum erro de tipos.
+- `npm --prefix src-app run lint`: 0 erros e 73 avisos — a mesma contagem de antes; `CycleModal.tsx` e `useModalPresence.ts` não geram avisos.
+- `npm run lint:docs`: OK (319 caminhos verificados, §15 coerente, CHANGELOG dentro do limite).
+- Limitação: a validação visual em navegador não foi executada nesta sessão (o app exige login); o comportamento dos modais foi revisado no código e o build de produção foi gerado.
+
 ## [v4.52.1] - 2026-10-26
 
 **Imagem voltou a ser enviada junto com o texto: a checagem de `canShare()` estava descartando o arquivo.**

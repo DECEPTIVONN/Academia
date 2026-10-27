@@ -24,6 +24,7 @@ import {
 } from './social-icons';
 import { shareNative } from '@/lib/native-share';
 import { showToast } from '@/lib/toast';
+import { useModalExit } from '@/hooks/useModalPresence';
 import { standaloneSound } from './ligas-data';
 import { loadAddedFriends, type FriendInvite } from './friend-invites';
 import {
@@ -107,6 +108,8 @@ export function FriendQrModal({
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [addedCodes, setAddedCodes] = useState<Set<string>>(addedFriendCodes);
+  /* v4.53.0 — anima a saída antes de o pai desmontar o modal. */
+  const { closing, requestClose } = useModalExit(onClose);
 
   /* Gera o QR branco sobre fundo transparente (o verde do cartão aparece). */
   useEffect(() => {
@@ -131,7 +134,7 @@ export function FriendQrModal({
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') requestClose();
     };
     document.addEventListener('keydown', onKey);
     const previousOverflow = document.body.style.overflow;
@@ -140,7 +143,7 @@ export function FriendQrModal({
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onClose]);
+  }, [requestClose]);
 
   /* Busca com debounce: só dispara a partir de 2 caracteres. */
   useEffect(() => {
@@ -285,11 +288,11 @@ export function FriendQrModal({
 
   return createPortal(
     <div
-      className="friend-qr-overlay"
+      className={`friend-qr-overlay${closing ? ' is-closing' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="friend-qr-title"
-      onClick={onClose}
+      onClick={() => requestClose()}
     >
       <div className="friend-qr-card" onClick={(event) => event.stopPropagation()}>
         <button
@@ -297,7 +300,7 @@ export function FriendQrModal({
           className="friend-qr__close"
           onClick={() => {
             standaloneSound.playMove();
-            onClose();
+            requestClose();
           }}
           aria-label="Fechar"
         >
@@ -416,7 +419,7 @@ export function FriendQrModal({
                 className="friend-qr__action"
                 onClick={() => {
                   standaloneSound.playMove();
-                  onScan();
+                  requestClose(onScan);
                 }}
               >
                 Escanear

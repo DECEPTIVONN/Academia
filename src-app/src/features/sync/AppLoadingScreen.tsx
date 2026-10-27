@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { defaultScreenImage } from '@/lib/screen-defaults';
 import './sync.css';
 
 const SvgCloud = (
@@ -48,9 +49,9 @@ export function AppLoadingScreen({ verticalImage, horizontalImage, onComplete }:
     return () => window.clearInterval(t);
   }, [onComplete]);
 
-  const activeBg = portrait
-    ? verticalImage || horizontalImage || ''
-    : horizontalImage || verticalImage || '';
+  const activeBg =
+    (portrait ? verticalImage || horizontalImage : horizontalImage || verticalImage) ||
+    defaultScreenImage(portrait);
 
   return (
     <div className="sy-loading">

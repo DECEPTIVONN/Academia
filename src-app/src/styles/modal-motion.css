@@ -1,0 +1,59 @@
+/**
+ * modal-motion.css — animação de SAÍDA dos modais do app (v4.53.0).
+ *
+ * O CSS legado já anima a entrada (`.modal-overlay` → fadeIn;
+ * `.modal-form`/`.modal-picker`/… → slideUp). Este arquivo cobre o caminho
+ * inverso: os componentes usam `useModalPresence`/`useModalExit` para manter
+ * o modal montado por `MODAL_EXIT_MS` (220 ms) e aplicam a classe
+ * `.is-closing`, que dispara o fade do overlay + o recolhimento do painel.
+ *
+ * Importado por último em `main.tsx` (depois de shell.css) para vencer os
+ * empates com o CSS legado sem usar !important em tudo.
+ */
+
+.modal-overlay.is-closing {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  animation: modalOverlayOut 0.22s ease forwards;
+}
+
+.modal-overlay.is-closing .modal-form,
+.modal-overlay.is-closing .modal-picker,
+.modal-overlay.is-closing .modal-confirm,
+.modal-overlay.is-closing .modal-conclusao,
+.modal-overlay.is-closing .modal-image-container,
+.modal-overlay.is-closing .dash-mini-deck {
+  animation: modalPanelOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes modalOverlayOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalPanelOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay.is-closing,
+  .modal-overlay.is-closing .modal-form,
+  .modal-overlay.is-closing .modal-picker,
+  .modal-overlay.is-closing .modal-confirm,
+  .modal-overlay.is-closing .modal-conclusao,
+  .modal-overlay.is-closing .modal-image-container,
+  .modal-overlay.is-closing .dash-mini-deck {
+    animation-duration: 0.01ms;
+  }
+}

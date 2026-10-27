@@ -15,6 +15,7 @@ import {
   saveExerciseRecord,
   uid,
 } from '@/features/workout/treinos/treinos-helpers';
+import { useModalPresence } from '@/hooks/useModalPresence';
 
 /* Portal para document.body: o .section-strip tem transform/will-change e
    viraria o containing block do position:fixed do .modal-overlay. */
@@ -258,17 +259,21 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
   const hist = editEx?.historicoCargas ?? [];
   const showChart = Boolean(editEx) && hist.length > 0;
   const maxValor = hist.length ? Math.max(...hist.map((h) => h.valor)) : 0;
+  /* v4.53.0 — mantém montado durante o fade de saída. */
+  const { mounted, closing } = useModalPresence(open);
+
+  if (!mounted) return null;
 
   return toBody(
     <div
-      className="modal-overlay"
+      className={`modal-overlay${closing ? ' is-closing' : ''}`}
       id="modalExercicio"
       style={{
         display: 'flex',
-        opacity: open ? 1 : 0,
-        visibility: open ? 'visible' : 'hidden',
-        pointerEvents: open ? 'auto' : 'none',
-        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+        opacity: closing ? 0 : 1,
+        visibility: 'visible',
+        pointerEvents: closing ? 'none' : 'auto',
+        transition: 'opacity 0.22s ease',
       }}
       role="dialog"
       aria-modal="true"

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.52.1",
-  "last_updated": "2026-10-26",
+  "version": "4.53.0",
+  "last_updated": "2026-10-27",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
   "entry_points": {
@@ -603,6 +603,14 @@
         "purpose": "Seção Início (dashboard): DOM legado do calling-card, dash-missions-pill, arena card com radar, card sugerido e ciclo. #dashBtnNoticias abre <NewsOverlay/>, #dashBtnMissoes abre <MissionsOverlay/> (ambos via createPortal desde v4.8.1). v4.8.3-navbars: props novas overlay/onOverlayChange (estado local missionsOpen/newsOpen removido); botões do header/pílula chamam onOverlayChange('news'|'missions'); montagem dos overlays com open={overlay === '...'} e onClose={() => onOverlayChange(null)} — o estado vive no App.tsx para a MobileDrawer poder abrir os overlays de qualquer seção. v4.29.0 — topo em 2 colunas (`.dash-top-row` = `.dash-top-left` 60% com banner+`.dash-identity` | `.dash-top-right` ~40% com botões+MISSÕES, bases alinhadas). v4.30.0 — o RADAR saiu do Início (segue só na Progresso) e o card central virou a PRÉVIA DA FICHA DO DIA (<FichaDeck showMaestria={false}/>, largura total) com a barra de progresso do CICLO em 30 divisões (`.dash-cycle-segments`, `cycle.done` divisões `.filled`) logo abaixo, mantendo a coroa #dashBtnSeletorCrown; o botão Social virou OFENSIVA (#dashBtnOfensiva = chama + #dashStreakValue = getStreak(history)); #dashBtnNoticias usa o ícone `newspaper`; o rótulo 'Missões' saiu da pílula; e a linha de boas-vindas virou texto CONTEXTUAL (#dashGreeting): 'Treino de hoje concluído ✓' se concluído hoje, 'Bem vindo de volta,' só no 1º acesso do dia ao site (localStorage academia_dash_greeting_date) e 'Treino de hoje: FICHA X' ao voltar ao Início (evento sectionchange). Em tela cheia (html.app-fullscreen / display-mode standalone) o .dash-container abre mais espaço vertical via gap — ver shell.css. v4.30.1 — a linha 'SEM CLÃ' saiu do markup (usuário sem clã não exibe nada). v4.31.1 — a prévia usa <FichaDeck showMaestria={false} bodyRow=\"sheet\"/> (a linha do corpo mostra 'TREINO B · FICHA DO DIA' e o rodapé volta a ser VOLUME MÉDIO DE CARGA + CARDIO CONFIGURADO); #dashBtnMenu (que não fazia nada) abre o <InicioMenuModal/> via novo estado menuOpen, e a opção Fit ID abre o <FitIdOverlay/> (fitIdOpen) com nome/avatar/título/XP/ofensiva/fichas/histórico do usuário; novo prop `onOpenSettings` (recebe o openProfileSettings do App.tsx) usado por Configurações no menu e pela engrenagem do Fit ID; o botão de ofensiva recebe a classe `dash-streak-btn--off` quando getStreak(history) === 0 (chama cinza). v4.34.0 - no botao SELETOR DE FICHA da barra inferior, a letra do treino (A/B) sai do selo roxo sobre a miniatura (.dash-workout-letter-badge, removido do JSX) e passa a ser exibida na MESMA linha do \"N ex\", em cinza: `#dashWorkoutLetter` virou um <span class=\"dash-workout-ex-letter\"> DENTRO do <span class=\"dash-workout-ex-count\" id=\"dashWkDetail\"> (ids mantidos - o legado e as sondas os procuram). Resultado: \"TREINO\" / \"A 5 ex\"."
       },
       {
+        "file": "src-app/src/features/dashboard/CycleModal.tsx",
+        "purpose": "Modal do card CICLO do Início: lista a linha do tempo 0–30 do ciclo atual (getCycleTimeline) e o detalhe do treino selecionado (data, ficha, duração e exercícios concluídos), em createPortal(document.body) com Esc/backdrop, body-lock e saída animada via useModalPresence. Estilos em cycle-modal.css."
+      },
+      {
+        "file": "src-app/src/features/dashboard/cycle-modal.css",
+        "purpose": "Estilos do CycleModal (.cycle-modal*): painel #0b0b10 com hairline e acento var(--primary), entrada fade/pop, troca lista↔detalhe (cycle-view-in) e saída .is-closing em 220 ms; inclui prefers-reduced-motion."
+      },
+      {
         "file": "src-app/src/features/dashboard/InicioMenuModal.tsx",
         "purpose": "v4.31.1 — menu popup do botão MENU do Início (#dashBtnMenu), no desenho do menu do Clash Royale adaptado à paleta do site: portal para document.body (mesma causa-raiz dos demais overlays — o .section-strip com will-change/transform seria o containing block do position:fixed), fecha no Esc e no clique do backdrop e trava o scroll do body. 4 grupos separados por hairlines, na ordem: Registro de Treinos e Rankings (placeholders → showToast('… em breve.', 'info') + fecha, com a pílula 'Em breve'), Mensagens (→ onOpenMessages = aba Social, onde vive o bate-papo), Configurações (→ onOpenSettings = hub de configurações do Perfil), Ajuda (placeholder) e Fit ID (→ onOpenFitId). Cada item leva data-menu-item (usado pelos probes). v4.33.0 - novo item TELA CHEIA (entrar/sair) entre Ajuda e Fit ID: 7 itens em 5 grupos; usa o hook useCrossBrowserFullscreen do shell (mesma instância/estado do Drawer e da Sidebar HUD), com ícone próprio (maximizar/minimizar, 17px como os demais) e rótulo dinâmico ('Tela cheia'/'Sair da tela cheia'); a ação é toggleFullscreen + fecha o menu (o estado reage ao evento fullscreenchange)."
       },
@@ -652,7 +660,7 @@
       },
       {
         "file": "src-app/src/core/db/queries.ts",
-        "purpose": "Contrato de dados da Fase 1: loadLocalData(), helpers de derivação do legado (getTodayTreino/determineNextTreino, getStreak, getXp, getCycleStats (contagem POR FICHA do getCycleProgress do dashboard — soma das completedKeys desde currentCycleStartDate com fallback currentFichaWorkouts, independente da flag transitória completed; a Progresso segue por-dia como no legado), todayLabel) e mutações puras de hoje (toggleCheckEntry/toggleSetEntry/selectSheetEntry/applyFichaCompletion)."
+        "purpose": "Contrato de dados da Fase 1: loadLocalData(), helpers de derivação do legado (getTodayTreino/determineNextTreino, getStreak, getXp, getCycleStats (contagem POR FICHA do getCycleProgress do dashboard — soma das completedKeys desde currentCycleStartDate com fallback currentFichaWorkouts, independente da flag transitória completed; a Progresso segue por-dia como no legado), getCycleTimeline (31 posições 0–30 do ciclo atual: 0 = currentCycleStartDate e 1..30 = um item por letra em completedKeys, o restante pendente), todayLabel) e mutações puras de hoje (toggleCheckEntry/toggleSetEntry/selectSheetEntry/applyFichaCompletion)."
       },
       {
         "file": "src-app/src/core/db/bootstrap.ts",
@@ -719,12 +727,20 @@
         "purpose": "Preferências gerais do app sem dependências de features (pode ser importado por helpers de dados): primeiro dia da semana, unidade de peso (kg/lb), unidade de distância (km/mi), som do temporizador, modo foco padrão e placeholders de notificações. Expõe getters/setters (gravam em localStorage e emitem academia:prefs-changed), conversões de exibição (formatLoadLabel, formatSpeed/convertSpeedValue, convertKgToDisplay), getWeekDayLabels e playRestTimerSound (bipe único de 800 Hz + vibração, igual ao playBeep do legado). Consumido por SettingsFeature, profile-data (PREF_KEYS), queries.formatCarga, ProgressoFeature, FichaFeature/FichaDeck, ShareModal, TreinosModals e sync-manager."
       },
       {
+        "file": "src-app/src/lib/screen-defaults.ts",
+        "purpose": "Imagens padrão das telas de carregamento e bloqueio: defaultScreenImage(portrait) devolve LoagingVertical.png (mobile/retrato) ou LoadingHorizontal.png (desktop/paisagem), importadas de src-app/src/assets/. Consumido por index.html (splash, via <img> ocultos), LockScreen, AppLoadingScreen e ScreensCustomizationPanel; imagens custom (mbc_*) e presets de wallpaper explícitos têm prioridade."
+      },
+      {
         "file": "src-app/src/lib/animations.ts",
         "purpose": "Presets de motion (fadeIn, fadeSwap, slideUp, scaleIn, stagger) + hooks useMotion; durações/ezings centralizadas para consistência cross-component."
       },
       {
         "file": "src-app/src/lib/motion-presets.ts",
         "purpose": "Springs compartilhados do Motion v12 (SPRING_SETTLE/SPRING_EXIT/SPRING_SOFT) usados por animations.ts, MobileDrawer e demais animações. v4.8.3.1: recalibrados pelo transitionguide.md — SETTLE 260/28/1 (periodo ~390ms, zeta ~0.87, overshoot <1px), EXIT 340/32/1, SOFT 220/24/0.9 — fluidez premium com interrupção natural preservada. v4.8.3.2: novo SPRING_SLIDE { stiffness: 380, damping: 38, mass: 1 } usado pelo slideSwap lateral da fita pré-montada."
+      },
+      {
+        "file": "src-app/src/hooks/useModalPresence.ts",
+        "purpose": "Presença e saída animada dos modais: MODAL_EXIT_MS (220 ms), useModalPresence(open) mantém o componente montado e expõe closing para a classe .is-closing, e useModalExit(onClose) anima antes de chamar o onClose do pai (aceita ação pós-animação). Usado por CycleModal, SheetSelectorModal, Aerobico/ExercicioForm e FriendQr/QrScanner."
       },
       {
         "file": "src-app/src/components/VolumeKgIcon.tsx",
@@ -783,6 +799,10 @@
         "purpose": "Cascata global (importada por último em main.tsx): variáveis de layout, .section-strip (containing block fixed), .side-hud (Sidebar/Drawer), .bnav-* (barra inferior), utilitários de portal/z-index, overrides Tailwind v4."
       },
       {
+        "file": "src-app/src/styles/modal-motion.css",
+        "purpose": "Animação de SAÍDA dos modais (.modal-overlay.is-closing): fade do overlay + recolhimento do painel em 220 ms (modalOverlayOut/modalPanelOut), com prefers-reduced-motion. Importado por último no main.tsx (depois de shell.css) e acionado por useModalPresence/useModalExit."
+      },
+      {
         "file": "src-app/vite.config.ts",
         "purpose": "React + Tailwind v4 + vite-plugin-pwa. Ícones do manifesto (instalação PWA): /assets/icons/logo-192.png, logo-512.png (purpose any) e logo-maskable-512.png (purpose maskable, logo a 78% sobre fundo preto), todos gerados de assets/Logo.png. includeAssets mantém o glob negativo '!assets/sounds/**' — o MAIN.mp3 (7,2 MB) fica FORA do precache do SW e é cacheado sob demanda pelo runtimeCaching StaleWhileRevalidate de /assets/."
       },
@@ -827,8 +847,10 @@
     },
     "atual_src_app": {
       "shell_e_splash": "[ATUAL] src-app/index.html (splash #splashScreen + overlay de boot) + src-app/src/main.tsx (ordem dos imports CSS) + src-app/src/App.tsx (rotas, overlays, swipe) + src-app/vite.config.ts (PWA/precache)",
+      "imagens_padrao_de_telas": "[ATUAL] src-app/src/lib/screen-defaults.ts (defaultScreenImage) + src-app/src/assets/ (LoagingVertical.png, LoagingHorizontal.png) + src-app/index.html (splash) + src-app/src/features/lock/LockScreen.tsx",
       "tokens_e_cores": "[ATUAL] src-app/src/styles/design-tokens.css + src-app/src/legacy-style/treino/1-core.css (bloco :root = tokens do app) + src-app/src/styles/globals.css (pins de cascata TW4) + src-app/src/features/settings/theme-colors.ts (12 presets)",
       "secao_inicio": "[ATUAL] src-app/src/features/dashboard/DashboardFeature.tsx (arena card, ciclo, ofensiva, prévia) + src-app/src/legacy-style/treino/secoes/dashboard.css",
+      "modal_de_ciclos": "[ATUAL] src-app/src/features/dashboard/CycleModal.tsx (lista 0–30 + detalhe) + src-app/src/features/dashboard/cycle-modal.css + src-app/src/core/db/queries.ts (getCycleTimeline/CycleTimelineItem)",
       "previa_ficha_do_dia": "[ATUAL] src-app/src/features/dashboard/FichaDeck.tsx (grid, mini-deck, stats, cardio) + src-app/src/legacy-style/treino/secoes/dashboard.css (.card-Peito/.card-Costas/… = cor do grupo muscular)",
       "seletor_de_fichas": "[ATUAL] src-app/src/features/dashboard/SheetSelectorModal.tsx + src-app/src/features/dashboard/FichaDeck.tsx + src-app/src/features/dashboard/DashboardFeature.tsx (seletor da barra: letra do treino + contagem) + src-app/src/legacy-style/treino/secoes/dashboard.css (.dash-workout-exercise-card, #dashWorkoutLetter, #dashWkDetail)",
       "menu_do_inicio_e_fit_id": "[ATUAL] src-app/src/features/dashboard/InicioMenuModal.tsx (itens + TELA CHEIA + Fit ID) + src-app/src/features/dashboard/FitIdOverlay.tsx + src-app/src/features/dashboard/inicio-menu.css",
@@ -848,7 +870,7 @@
       "noticias_e_missoes": "[ATUAL] src-app/src/features/news/NewsOverlay.tsx + src-app/src/features/dashboard/MissionsOverlay.tsx + src-app/src/features/news/news-overlay.css + src-app/src/features/dashboard/missions-overlay.css",
       "dados_locais_idb": "[ATUAL] src-app/src/core/db/ (Dexie schema, migrações, repositórios exercícios/fichas/histórico/maestria/sync) + src-app/src/core/sync/offline-queue.ts",
       "sync_e_conta": "[ATUAL] src-app/src/core/sync/ (sync-manager.ts, supabase-client.ts, device.ts, offline-queue.ts) + src-app/src/features/sync/ (SyncSettingsPanel, ConnectedDevices, ScreensCustomizationPanel, AppLoadingScreen, RemoteSyncToast, sync.css) + src-app/src/core/auth/ + src-app/src/features/auth/",
-      "animacoes_e_motion": "[ATUAL] src-app/src/lib/animations.ts + src-app/src/lib/motion-presets.ts",
+      "animacoes_e_motion": "[ATUAL] src-app/src/lib/animations.ts + src-app/src/lib/motion-presets.ts + src-app/src/hooks/useModalPresence.ts + src-app/src/styles/modal-motion.css (.is-closing)",
       "servicos_do_shell": "[ATUAL] src-app/src/lib/ (fullscreen.ts, auto-fullscreen.ts, pwa-install.ts, native-share.ts, background-music.ts, toast.ts, suggested-load.ts, app-prefs.ts)",
       "padrao_overlays_portal": "[ATUAL] src-app/src/App.tsx (createPortal para overlays) + src-app/src/features/dashboard/MissionsOverlay.tsx + src-app/src/features/news/NewsOverlay.tsx + src-app/src/features/dashboard/InicioMenuModal.tsx | CSS: src-app/src/styles/shell.css (.section-strip {will-change:transform} = containing block do fixed)",
       "build_preview_deploy": "[ATUAL] package.json (raiz: build/dev/lint:docs; src-app: build/preview/lint) + src-app/vite.config.ts (PWA/precache) + vercel.json (raiz -> Academia/dist; src-app -> src-app) + src-app/vercel.json (Root Directory = src-app)"

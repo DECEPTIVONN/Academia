@@ -15,6 +15,7 @@ import { DEFAULT_AEROBIC } from '@/core/db/schema';
 import { getMaestriaState, computeMasteryTotals } from '@/features/gamification/maestria';
 import type { LegacyRaw } from '@/core/db/queries';
 import { getSpeedUnitLabel } from '@/lib/app-prefs';
+import { useModalPresence } from '@/hooks/useModalPresence';
 
 /* Portal para document.body: o .section-strip tem transform/will-change
    (translateX da navegação de seções) e viraria o containing block do
@@ -129,17 +130,21 @@ export const AerobicoModal: React.FC<{
   const [tipo, setTipo] = useState(() => aerobic?.tipo || DEFAULT_AEROBIC.tipo);
   const [vel, setVel] = useState(() => aerobic?.vel || DEFAULT_AEROBIC.vel);
   const [tempo, setTempo] = useState(() => aerobic?.tempo || DEFAULT_AEROBIC.tempo);
+  /* v4.53.0 — mantém montado durante o fade de saída. */
+  const { mounted, closing } = useModalPresence(open);
+
+  if (!mounted) return null;
 
   return toBody(
     <div
-      className="modal-overlay"
+      className={`modal-overlay${closing ? ' is-closing' : ''}`}
       id="modalAerobico"
       style={{
         display: 'flex',
-        opacity: open ? 1 : 0,
-        visibility: open ? 'visible' : 'hidden',
-        pointerEvents: open ? 'auto' : 'none',
-        transition: 'opacity 0.2s ease, visibility 0.2s ease',
+        opacity: closing ? 0 : 1,
+        visibility: 'visible',
+        pointerEvents: closing ? 'none' : 'auto',
+        transition: 'opacity 0.22s ease',
       }}
       role="dialog"
       aria-modal="true"

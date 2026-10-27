@@ -246,6 +246,82 @@ export function getCycleStats(data: LocalData): {
   };
 }
 
+/** Item da linha do tempo do ciclo (0 = início, 1..30 = treinos do ciclo). */
+export interface CycleTimelineItem {
+  index: number;
+  status: 'start' | 'done' | 'pending';
+  /** Data do treino (YYYY-MM-DD); no início é a data de abertura do ciclo. */
+  date: string | null;
+  sheetKey: SheetKey | null;
+  durationMin: number | null;
+  checks: string[];
+}
+
+/**
+ * Linha do tempo do ciclo atual: 31 posições (0 a 30).
+ *
+ *   0     → início do ciclo (`currentCycleStartDate`);
+ *   1..30 → treinos concluídos desde o início (um item por letra em
+ *           `completedKeys`), preenchendo até 30; o restante fica pendente.
+ *
+ * A contagem por letra é a mesma de `getCycleStats` (fonte única), então a
+ * lista sempre fecha com o número exibido no card CICLO do Início.
+ */
+export function getCycleTimeline(data: LocalData): CycleTimelineItem[] {
+  const startDate = data.legacy?.currentCycleStartDate ?? today();
+  const done: Omit<CycleTimelineItem, 'index' | 'status'>[] = [];
+
+  const rows = [...data.history]
+    .filter((row) => row.date >= startDate)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  for (const row of rows) {
+    const keys = row.completedKeys?.length
+      ? row.completedKeys
+      : row.completed && row.sheetKey
+        ? [row.sheetKey]
+        : [];
+    for (const key of keys) {
+      if (!SHEET_ORDER.includes(key as SheetKey)) continue;
+      done.push({
+        date: row.date,
+        sheetKey: key as SheetKey,
+        durationMin: row.durationMin,
+        checks: row.checks ?? [],
+      });
+    }
+  }
+
+  const items: CycleTimelineItem[] = [
+    {
+      index: 0,
+      status: 'start',
+      date: startDate,
+      sheetKey: null,
+      durationMin: null,
+      checks: [],
+    },
+  ];
+
+  for (let index = 1; index <= 30; index += 1) {
+    const workout = done[index - 1];
+    items.push(
+      workout
+        ? { index, status: 'done', ...workout }
+        : {
+            index,
+            status: 'pending',
+            date: null,
+            sheetKey: null,
+            durationMin: null,
+            checks: [],
+          }
+    );
+  }
+
+  return items;
+}
+
 /** Volume médio de carga de uma ficha (usado no footer do seletor do Dashboard). */
 export function getAverageLoad(ids: string[], map: Map<string, Exercise>): number | null {
   const values = pickExercises(ids, map)

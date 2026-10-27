@@ -210,6 +210,10 @@ export const TreinosFeature: React.FC = () => {
   /* ── Modais ── */
   const [formOpen, setFormOpen] = useState(false);
   const [editEx, setEditEx] = useState<Exercise | null>(null);
+  /* v4.53.0 — sessão de abertura: o `key` só muda ao ABRIR (não ao fechar),
+     então o modal permanece montado durante a animação de saída. */
+  const [formSession, setFormSession] = useState(0);
+  const [aeSession, setAeSession] = useState(0);
   const [confirmEx, setConfirmEx] = useState<Exercise | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crEx, setCrEx] = useState<Exercise | null>(null);
@@ -294,11 +298,13 @@ export const TreinosFeature: React.FC = () => {
   /* ── Ações de exercício ── */
   const openNew = () => {
     setEditEx(null);
+    setFormSession((n) => n + 1);
     setFormOpen(true);
   };
 
   const openEdit = (ex: Exercise) => {
     setEditEx(ex);
+    setFormSession((n) => n + 1);
     setFormOpen(true);
   };
 
@@ -526,14 +532,17 @@ export const TreinosFeature: React.FC = () => {
             onDelete={askDelete}
             onOpenCR={setCrEx}
             onOpenMaestriaGeral={() => setMgOpen(true)}
-            onOpenAerobico={() => setAeOpen(true)}
+            onOpenAerobico={() => {
+              setAeSession((n) => n + 1);
+              setAeOpen(true);
+            }}
           />
         </div>
       </div>
 
       {/* ── Modais da seção (key remonta a cada abertura → init via useState) ── */}
       <ExercicioFormModal
-        key={formOpen ? `form-${editEx?.id ?? 'new'}` : 'form-closed'}
+        key={`form-${formSession}`}
         open={formOpen}
         editEx={editEx}
         onClose={() => setFormOpen(false)}
@@ -583,7 +592,7 @@ export const TreinosFeature: React.FC = () => {
         onOpenEx={(id) => useMaestriaUi.getState().openMaestriaEx(id)}
       />
       <AerobicoModal
-        key={aeOpen ? `ae-${deckLetter}` : 'ae-closed'}
+        key={`ae-${aeSession}`}
         open={aeOpen}
         letter={deckLetter}
         aerobic={aeSheet?.aerobic ?? null}

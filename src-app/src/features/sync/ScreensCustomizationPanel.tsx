@@ -18,6 +18,7 @@ import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
 import { isBiometricEnabled } from '@/features/lock/lock-store';
 import { resolveWallpaper } from '@/features/lock/lock-wallpapers';
+import { defaultScreenImage } from '@/lib/screen-defaults';
 import { AppLoadingScreen } from './AppLoadingScreen';
 import '@/features/lock/lock.css';
 import './sync.css';
@@ -264,10 +265,12 @@ export function ScreensCustomizationPanel() {
 
   const biometric = isBiometricEnabled();
   const customBg = portrait ? lockMobile || lockDesktop : lockDesktop || lockMobile;
-  const wall = resolveWallpaper(
-    readLS(portrait ? PREF_KEYS.lockWallVertical : PREF_KEYS.lockWallHorizontal) ||
-      (portrait ? 'neon' : 'grafite')
+  const explicitWall = readLS(
+    portrait ? PREF_KEYS.lockWallVertical : PREF_KEYS.lockWallHorizontal
   );
+  const wall = resolveWallpaper(explicitWall || (portrait ? 'neon' : 'grafite'));
+  /* v4.53.0 — sem custom e sem preset escolhido, a prévia usa a imagem padrão. */
+  const previewBg = customBg || (!explicitWall ? defaultScreenImage(portrait) : '');
   const nome = (profile?.customization?.nome || '').trim();
 
   /* Biometria fake da prévia: 1s "verificando" → fecha */
@@ -365,9 +368,9 @@ export function ScreensCustomizationPanel() {
             <div
               className="lock__wall"
               style={
-                customBg
+                previewBg
                   ? {
-                      backgroundImage: `url("${customBg}")`,
+                      backgroundImage: `url("${previewBg}")`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       filter: 'brightness(0.78) saturate(1.05)',

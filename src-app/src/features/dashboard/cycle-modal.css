@@ -1,0 +1,531 @@
+/**
+ * cycle-modal.css — modal "Ciclos de Treino" do Início (v4.53.0).
+ *
+ * Lista todos os ciclos 0–30 do ciclo atual e o detalhe individual de cada
+ * treino. Segue a paleta do app: painel #0b0b10, hairline
+ * rgba(255,255,255,.08), acento var(--primary) e tipografia Rajdhani.
+ *
+ * Animações: entrada (fade + pop) e saída (`.is-closing`), com a mesma
+ * duração de 220 ms do modal-motion.css.
+ */
+
+.cycle-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overscroll-behavior: contain;
+  animation: cycleModalFadeIn 0.22s ease both;
+}
+
+.cycle-modal__panel {
+  position: relative;
+  width: min(94vw, 460px);
+  max-height: min(88vh, 760px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.32);
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(var(--primary-rgb, 139, 92, 246), 0.2), transparent 62%),
+    linear-gradient(180deg, #14141d 0%, #0b0b10 60%);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  color: #fff;
+  animation: cyclePanelIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ── Cabeçalho ─────────────────────────────────────────────── */
+
+.cycle-modal__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.cycle-modal__head-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  color: var(--primary-light, #c084fc);
+  flex-shrink: 0;
+}
+
+.cycle-modal__head-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.cycle-modal__title {
+  margin: 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.cycle-modal__subtitle {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: #8a8a9c;
+  text-transform: capitalize;
+}
+
+.cycle-modal__icon-btn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #14141b;
+  color: #8a8a9c;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
+}
+
+.cycle-modal__icon-btn:hover {
+  color: #fff;
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+}
+
+.cycle-modal__icon-btn:active {
+  transform: scale(0.94);
+}
+
+/* ── Área rolável (lista / detalhe) ────────────────────────── */
+
+.cycle-modal__view {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 18px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5) transparent;
+  animation: cycleViewIn 0.24s ease both;
+}
+
+.cycle-modal__view::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cycle-modal__view::-webkit-scrollbar-thumb {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+  border-radius: 999px;
+}
+
+/* ── Progresso do ciclo ────────────────────────────────────── */
+
+.cycle-modal__progress {
+  margin-bottom: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cycle-modal__progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #8a8a9c;
+}
+
+.cycle-modal__progress-head strong {
+  color: var(--primary-light, #c084fc);
+  font-size: 0.82rem;
+}
+
+.cycle-modal__progress-track {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.cycle-modal__progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary, #8b5cf6), var(--primary-light, #c084fc));
+  box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.55);
+  transition: width 0.4s ease;
+}
+
+.cycle-modal__breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.cycle-modal__breakdown-pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+  color: var(--primary-light, #c084fc);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* ── Lista 0–30 ────────────────────────────────────────────── */
+
+.cycle-modal__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cycle-modal__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.12s ease;
+}
+
+.cycle-modal__item:hover {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.1);
+}
+
+.cycle-modal__item:active {
+  transform: scale(0.99);
+}
+
+.cycle-modal__item-index {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.35);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #8a8a9c;
+}
+
+.cycle-modal__item--start .cycle-modal__item-index {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
+  color: var(--primary-light, #c084fc);
+}
+
+.cycle-modal__item--done .cycle-modal__item-index {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ade80;
+}
+
+.cycle-modal__item--pending {
+  opacity: 0.55;
+}
+
+.cycle-modal__item-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cycle-modal__item-copy strong {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cycle-modal__item-copy span {
+  font-size: 0.68rem;
+  color: #8a8a9c;
+  text-transform: capitalize;
+}
+
+.cycle-modal__item-tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.cycle-modal__item-tag.is-done {
+  background: rgba(34, 197, 94, 0.18);
+  color: #4ade80;
+}
+
+.cycle-modal__item-tag.is-start {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
+  color: var(--primary-light, #c084fc);
+}
+
+.cycle-modal__item-tag.is-pending {
+  color: #5d5d70;
+}
+
+/* ── Detalhe individual ────────────────────────────────────── */
+
+.cycle-modal__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cycle-modal__hero--start {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.4);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+}
+
+.cycle-modal__hero--done {
+  border-color: rgba(34, 197, 94, 0.32);
+  background: rgba(34, 197, 94, 0.09);
+}
+
+.cycle-modal__hero-index {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 18px rgba(var(--primary-rgb, 139, 92, 246), 0.6);
+}
+
+.cycle-modal__hero--done .cycle-modal__hero-index {
+  color: #4ade80;
+  text-shadow: 0 0 18px rgba(34, 197, 94, 0.55);
+}
+
+.cycle-modal__hero-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #8a8a9c;
+}
+
+.cycle-modal__meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cycle-modal__meta-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 11px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.cycle-modal__meta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #8a8a9c;
+}
+
+.cycle-modal__meta-card strong {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.cycle-modal__exercises {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cycle-modal__exercise {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+  color: #cfcfda;
+  font-size: 0.8rem;
+}
+
+.cycle-modal__exercise-check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #4ade80;
+}
+
+.cycle-modal__exercise.is-done .cycle-modal__exercise-check {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.16);
+}
+
+.cycle-modal__exercise-name {
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cycle-modal__exercise-meta {
+  flex-shrink: 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8a8a9c;
+}
+
+.cycle-modal__empty {
+  margin: 4px 0 0;
+  padding: 12px;
+  border-radius: 11px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  color: #8a8a9c;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ── Animações ─────────────────────────────────────────────── */
+
+@keyframes cycleModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cyclePanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cycleViewIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cyclePanelOut {
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+}
+
+.cycle-modal.is-closing {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  animation: none;
+}
+
+.cycle-modal.is-closing .cycle-modal__panel {
+  animation: cyclePanelOut 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@media (max-width: 480px) {
+  .cycle-modal {
+    padding: 10px;
+  }
+
+  .cycle-modal__panel {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cycle-modal,
+  .cycle-modal__panel,
+  .cycle-modal__view,
+  .cycle-modal.is-closing .cycle-modal__panel {
+    animation: none;
+  }
+}

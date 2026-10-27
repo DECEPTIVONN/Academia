@@ -22,6 +22,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
+import { defaultScreenImage } from '@/lib/screen-defaults';
 import { resolveWallpaper } from './lock-wallpapers';
 import { clearPin, isBiometricEnabled, useLockStore, verifyBiometric, verifyPin } from './lock-store';
 import './lock.css';
@@ -159,6 +160,11 @@ export const LockScreen: React.FC = () => {
       ? readLS(PREF_KEYS.lockWallVertical) || 'neon'
       : readLS(PREF_KEYS.lockWallHorizontal) || 'grafite'
   );
+  /* v4.53.0 — só considera o preset quando o usuário ESCOLHEU um wallpaper.
+     Sem escolha, entra a imagem padrão (LoagingVertical/LoadingHorizontal). */
+  const [wallExplicit, setWallExplicit] = useState<boolean>(() =>
+    Boolean(readLS(portrait ? PREF_KEYS.lockWallVertical : PREF_KEYS.lockWallHorizontal))
+  );
   /* v4.9.0-sync — imagem personalizada (mbc_lock_desktop/mobile) */
   const [customBg, setCustomBg] = useState<string>(() => readCustomLockBg(portrait));
   useEffect(() => {
@@ -167,6 +173,9 @@ export const LockScreen: React.FC = () => {
         portrait
           ? readLS(PREF_KEYS.lockWallVertical) || 'neon'
           : readLS(PREF_KEYS.lockWallHorizontal) || 'grafite'
+      );
+      setWallExplicit(
+        Boolean(readLS(portrait ? PREF_KEYS.lockWallVertical : PREF_KEYS.lockWallHorizontal))
       );
       setCustomBg(readCustomLockBg(portrait));
     };
@@ -274,15 +283,17 @@ export const LockScreen: React.FC = () => {
   if (!locked) return null;
 
   const nome = (profile?.customization?.nome || '').trim();
+  /* Fundo: imagem custom > imagem padrão (sem preset escolhido) > preset. */
+  const lockBg = customBg || (!wallExplicit ? defaultScreenImage(portrait) : '');
 
   return (
     <div className="lock" id="appLockScreen" role="dialog" aria-modal="true" aria-label="App bloqueado">
       <div
         className="lock__wall"
         style={
-          customBg
+          lockBg
             ? {
-                backgroundImage: `url("${customBg}")`,
+                backgroundImage: `url("${lockBg}")`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 filter: 'brightness(0.78) saturate(1.05)',
