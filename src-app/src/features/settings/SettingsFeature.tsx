@@ -500,7 +500,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const { state: profile, update } = useProfileState();
 
   /* v4.9.0-sync — sessão Supabase + modal de login */
-  const { user } = useAuth();
+  const { user, isTestMode, signOut } = useAuth();
   const openAuthModal = useAuthModalStore((s) => s.openModal);
   const cloudConfigured = isSyncConfigured() || isSupabaseConfigured;
 
@@ -955,6 +955,13 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   /* v4.9.0-sync — sai só da sessão nuvem (NÃO limpa o banco local: o
      signOut do AuthProvider chama clearLocalDB, destrutivo no modo sync) */
   const handleSignOut = async () => {
+    if (isTestMode) {
+      /* Modo teste: encerra a conta fictícia e limpa o banco local de teste
+         (evita que dados de teste sejam migrados para uma conta real). */
+      await signOut();
+      showToast('Modo teste encerrado. Dados locais de teste foram limpos.', 'info');
+      return;
+    }
     try {
       if (isSupabaseConfigured) await supabase.auth.signOut();
       showToast('Desconectado da conta nuvem. Seus dados continuam neste dispositivo.', 'info');

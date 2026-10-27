@@ -91,7 +91,7 @@ function AppContent() {
 }
 
 function AppShell() {
-  const { user } = useAuth();
+  const { user, isTestMode } = useAuth();
 
   /* ── Estado de carregamento do bootstrap ── */
   const [bootstrapLoading, setBootstrapLoading] = useState(true);
@@ -99,7 +99,7 @@ function AppShell() {
 
   /* ── Vincula a chave de sync à conta autenticada (mesma conta = mesma key) ── */
   useEffect(() => {
-    if (!user) return;
+    if (!user || isTestMode) return;
     try {
       const derived = deriveSyncKeyForUser(user.id, user.email);
       const current = getSyncKey();
@@ -111,11 +111,11 @@ function AppShell() {
     } catch {
       /* storage indisponível */
     }
-  }, [user?.id, user?.email]);
+  }, [user?.id, user?.email, isTestMode]);
 
   /* ── Iniciar bootstrap com ID do usuário (migração local → Supabase) ── */
   useEffect(() => {
-    void bootstrap(user?.id)
+    void bootstrap(isTestMode ? undefined : user?.id)
       .then(() => {
         setBootstrapLoading(false);
       })
@@ -124,7 +124,7 @@ function AppShell() {
         setBootstrapError(err.message);
         setBootstrapLoading(false);
       });
-  }, [user?.id]);
+  }, [user?.id, isTestMode]);
 
   /* ── Conta Google → perfil do app ──
      Preenche e-mail, nome, @handle e foto a partir da sessão/metadata (Google),
@@ -132,7 +132,7 @@ function AppShell() {
      'DECEPTIVON'/'@deceptivon'. Uma foto escolhida manualmente pelo usuário
      (upload/preset) é preservada; avatares do Google são atualizados. */
   useEffect(() => {
-    if (bootstrapLoading || !user) return;
+    if (bootstrapLoading || !user || isTestMode) return;
     const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
     const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
     const avatarSrc = str(meta.avatar_url) || str(meta.picture);
@@ -196,7 +196,7 @@ function AppShell() {
        snapshot remoto sem e-mail/foto — reaplica uma vez depois desse pull. */
     const retry = window.setTimeout(() => void apply(), 3500);
     return () => window.clearTimeout(retry);
-  }, [bootstrapLoading, user?.id]);
+  }, [bootstrapLoading, user?.id, isTestMode]);
 
   /* ── Usuário autenticado: renderizar aplicação ── */
   const [activeSection, setActiveSection] = useState<SectionType>('dashboard');
@@ -722,7 +722,7 @@ function AppShell() {
   useEffect(() => {
     let started = false;
     const start = () => {
-      if (started) return;
+      if (started || isTestMode) return;
       started = true;
       window.setTimeout(() => {
         if (!isEngineRunning()) startSyncEngine();
@@ -735,7 +735,7 @@ function AppShell() {
       window.clearTimeout(fallback);
       stopSyncEngine();
     };
-  }, []);
+  }, [isTestMode]);
 
   useEffect(() => {
     document.body.classList.toggle('perfil-overlay-open', isPerfilOverlayOpen && !isPerfilClosing);
@@ -1161,17 +1161,17 @@ function AppShell() {
 }
 
 function OnboardingGate() {
-  const { user } = useAuth();
+  const { user, isTestMode } = useAuth();
   const { state, loading } = useProfileState();
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (user && !loading && (!state || !state.customization?.onboarded)) {
+    if (!isTestMode && user && !loading && (!state || !state.customization?.onboarded)) {
       setOpen(true);
     } else {
       setOpen(false);
     }
-  }, [user, loading, state]);
-  if (!user || loading) return null;
+  }, [user, loading, state, isTestMode]);
+  if (!user || loading || isTestMode) return null;
   return <OnboardingScreen open={open} onComplete={() => setOpen(false)} />;
 }
 

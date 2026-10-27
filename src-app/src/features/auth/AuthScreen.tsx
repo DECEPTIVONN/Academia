@@ -40,6 +40,7 @@ import {
   Eye,
   EyeOff,
   X,
+  FlaskConical,
 } from 'lucide-react';
 import { useAuth } from '@/core/auth/use-auth';
 import { isSupabaseConfigured } from '@/core/supabase';
@@ -299,7 +300,7 @@ function LegalModal({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: () 
 /* ── Tela principal ── */
 
 export function AuthScreen() {
-  const { user, signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, resetPassword, signInAsTest } = useAuth();
   const close = useAuthModalStore((s) => s.closeModal);
 
   const [mode, setMode] = useState<Mode>('welcome');
@@ -412,6 +413,19 @@ export function AuthScreen() {
       setErrorMsg(err instanceof Error ? err.message : 'Erro ao conectar com o Google.');
     } finally {
       setLoading(null);
+    }
+  }
+
+  /* Modo teste (somente desenvolvimento): conta fictícia local, sem Supabase
+     e sem sincronização. O AuthProvider guarda a flag e restaura no reload. */
+  function handleTestLogin() {
+    setErrorMsg(null);
+    setInfoMsg(null);
+    try {
+      signInAsTest();
+      showToast('Modo teste ativado — sessão local, sem nuvem.', 'info');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Não foi possível entrar em modo teste.');
     }
   }
 
@@ -637,6 +651,19 @@ export function AuthScreen() {
                   <UserPlus className="w-[18px] h-[18px] text-zinc-300" />
                   <span className="font-normal text-zinc-100">Criar conta</span>
                 </button>
+
+                {/* PÍLULA 4 (só em dev): conta local de teste */}
+                {import.meta.env.DEV && (
+                  <button
+                    type="button"
+                    onClick={handleTestLogin}
+                    disabled={busy}
+                    className="w-full h-12 bg-emerald-500/[0.07] hover:bg-emerald-500/[0.13] active:bg-emerald-500/[0.05] border border-dashed border-emerald-500/45 hover:border-emerald-400/70 rounded-full text-emerald-300 font-medium text-sm flex items-center justify-center gap-2.5 transition-all duration-200 active:scale-[0.985] cursor-pointer disabled:opacity-60"
+                  >
+                    <FlaskConical className="w-[17px] h-[17px]" />
+                    <span className="font-normal">Entrar em modo teste</span>
+                  </button>
+                )}
 
                 {/* Ações secundárias (links com marcador, conforme imagens) */}
                 <div className="w-full flex items-center justify-center gap-3 text-xs text-zinc-400 mt-1">

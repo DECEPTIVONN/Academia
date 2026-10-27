@@ -47,6 +47,12 @@ Get-NetTCPConnection -LocalPort 4173 -State Listen | ForEach-Object { Stop-Proce
 - **Strings novas no bundle:** conferir com script Node UTF-8 (`fs.readFileSync(..., 'utf8').includes(...)`) — o PowerShell mojibaka acentos e dá falso-positivo.
 - **Fonte de verdade do que roda:** `src-app/dist/assets/index-*.js`.
 
+### Login de desenvolvimento (modo teste)
+
+- Com `npm run dev`, a tela de login mostra **Entrar em modo teste** (o botão some no build de produção).
+- Cria uma sessão fictícia local (`signInAsTest`/`isTestMode` em `src-app/src/core/auth/auth-context.tsx`), mantida entre reloads por `mbc_test_session`; **não** usa Supabase, **não** inicia sync e **não** abre o onboarding.
+- Para encerrar: **Configurações → Sair da Conta** — o modo teste é desligado e o banco local de teste é limpo (evita migrar dados fictícios para uma conta real).
+
 ## 4. Regras obrigatórias
 
 1. **CHANGELOG imediatamente** após QUALQUER alteração (`Diretrizes/CHANGELOG.md`): `## [vX.X.X] - YYYY-MM-DD` no topo, tags `[Added]/[Changed]/[Fixed]/[Removed]`, citando arquivos. Vale também para documentação/diretrizes/configuração.

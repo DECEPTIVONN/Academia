@@ -18,6 +18,8 @@ export interface AuthContextValue {
   user:    User    | null;
   session: Session | null;
   loading: boolean;
+  /** Sessão local de desenvolvimento (sem Supabase, sem sincronização). */
+  isTestMode: boolean;
 
   signIn:          (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -26,17 +28,58 @@ export interface AuthContextValue {
   updatePassword:  (password: string) => Promise<void>;
   signOut:         () => Promise<void>;
   resetPassword:   (email: string) => Promise<void>;
+  /** Entra com uma conta fictícia local (somente em desenvolvimento). */
+  signInAsTest:    () => void;
+}
+
+/* ── Modo teste (dev) ───────────────────────────────────────────────────────
+   Conta fictícia que vive só no navegador: não chama o Supabase, não inicia o
+   motor de sync e desaparece no build de produção (`import.meta.env.DEV`).
+   A flag em localStorage mantém a sessão entre reloads durante o dev. */
+const TEST_SESSION_KEY = 'mbc_test_session';
+const TEST_USER_ID = 'local-test-user';
+
+function hasTestSession(): boolean {
+  if (!import.meta.env.DEV) return false;
+  try {
+    return localStorage.getItem(TEST_SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function createTestUser(): User {
+  const now = new Date().toISOString();
+  return {
+    id: TEST_USER_ID,
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: 'teste@local.dev',
+    email_confirmed_at: now,
+    phone: '',
+    confirmed_at: now,
+    last_sign_in_at: now,
+    app_metadata: { provider: 'test', providers: ['test'] },
+    user_metadata: { display_name: 'Teste', full_name: 'Usuário Teste' },
+    identities: [],
+    created_at: now,
+    updated_at: now,
+    is_anonymous: false,
+  } as unknown as User;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 export { AuthContext };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user,    setUser]    = useState<User    | null>(null);
+  const bootTest = hasTestSession();
+  const [user,    setUser]    = useState<User    | null>(() => (bootTest ? createTestUser() : null));
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [loading, setLoading] = useState(bootTest ? false : isSupabaseConfigured);
+  const [isTestMode, setIsTestMode] = useState(bootTest);
 
   useEffect(() => {
+    if (isTestMode) return;
     if (!isSupabaseConfigured) return;
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -54,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isTestMode]);
 
   /* "Manter conectado" (v4.15.0-auth): quando desmarcado no AuthScreen
      (mbc_remember_me === 'false'), a persistência termina ao sair da página —
@@ -123,12 +166,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw formatAuthError(error);
   }, []);
 
+  const signInAsTest = useCallback(() => {
+    if (!import.meta.env.DEV) {
+      throw new Error('O modo teste só existe em desenvolvimento.');
+    }
+    try {
+      localStorage.setItem(TEST_SESSION_KEY, '1');
+    } catch {
+      /* storage indisponível: a sessão vale só para esta aba */
+    }
+    setIsTestMode(true);
+    setSession(null);
+    setUser(createTestUser());
+    setLoading(false);
+  }, []);
+
   const signOut = useCallback(async () => {
-    if (isSupabaseConfigured) {
+    const wasTest = isTestMode;
+    if (wasTest) {
+      try {
+        localStorage.removeItem(TEST_SESSION_KEY);
+      } catch {
+        /* storage indisponível */
+      }
+      setIsTestMode(false);
+      setSession(null);
+      setUser(null);
+    }
+    if (isSupabaseConfigured && !wasTest) {
       await supabase.auth.signOut();
     }
     await clearLocalDB();
-  }, []);
+  }, [isTestMode]);
 
   const resetPassword = useCallback(async (email: string) => {
     if (!isSupabaseConfigured) throw new Error('Supabase não configurado.');
@@ -140,8 +209,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, session, loading,
-      signIn, signInWithGoogle, signUp, updatePassword, signOut, resetPassword,
+      user, session, loading, isTestMode,
+      signIn, signInWithGoogle, signUp, updatePassword, signOut, resetPassword, signInAsTest,
     }}>
       {children}
     </AuthContext.Provider>

@@ -2,6 +2,24 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.54.0] - 2026-10-27
+
+**Opção "Entrar em modo teste" nas opções de login, disponível somente em desenvolvimento.**
+
+### Added
+- `src-app/src/core/auth/auth-context.tsx`: novo `signInAsTest()` + `isTestMode` no contexto. Cria um usuário fictício local (`local-test-user` / `teste@local.dev`), restaura a sessão entre reloads pela flag `mbc_test_session` (lida apenas quando `import.meta.env.DEV`) e não chama o Supabase.
+- `src-app/src/features/auth/AuthScreen.tsx`: botão "Entrar em modo teste" na tela de boas-vindas, com ícone de frasco e borda tracejada esmeralda. O botão (e o handler) só são renderizados em desenvolvimento; no build de produção não aparece.
+
+### Changed
+- `src-app/src/App.tsx`: em modo teste o AppShell não deriva a chave de sync, não inicia o motor de sincronização e não preenche o perfil com metadados do Google; o bootstrap usa `LOCAL_USER_ID` (não o id fictício) e o `OnboardingGate` não abre, então o teste cai direto no app.
+- `src-app/src/features/settings/SettingsFeature.tsx`: com sessão de teste, "Sair da Conta" encerra o modo teste via `signOut()` e limpa o banco local — evita que dados fictícios sejam migrados depois para uma conta real. A saída da conta nuvem normal continua sem apagar os dados locais.
+- `Diretrizes/context.md`: nova seção "Login de desenvolvimento (modo teste)" com o fluxo, a persistência por `mbc_test_session` e a saída por Configurações → Sair da Conta.
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros e 73 avisos (mesma contagem anterior).
+- `npm run lint:docs`: OK.
+
 ## [v4.53.0] - 2026-10-27
 
 **Três pedidos do usuário: imagem padrão nas telas de carregamento/bloqueio, modal com os ciclos 0–30 no Início e animação de entrada/saída nos modais de treino, cardio, exercício, amigos e QR Code.**
