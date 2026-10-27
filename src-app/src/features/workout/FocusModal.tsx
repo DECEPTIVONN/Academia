@@ -13,6 +13,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
 import type { Exercise, WorkoutHistory } from '@/core/db/schema';
@@ -41,6 +42,8 @@ function pad2(n: number): string {
 }
 
 export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
+  const { mounted, closing } = useModalPresence(open);
+
   const { exercises, sheets, history, legacy } = useLocalData();
   const entry = useTodayEntryStore((s) => s.entry);
   const restTimeRemaining = useWorkoutStore((s) => s.restTimeRemaining);
@@ -228,23 +231,18 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
   /* v4.31.0 — exercício ainda sem carga definida: dica do peso inicial. */
   const sugestaoCarga = ex ? getSuggestedLoadIfMissing(ex) : null;
 
+  if (!mounted) return null;
+
   return (
     <div
-      className="modal-overlay"
+      className={`modal-overlay${closing ? ' is-closing' : ''}`}
       id="modalFocus"
-      style={{
-        display: 'flex',
-        opacity: open ? 1 : 0,
-        visibility: open ? 'visible' : 'hidden',
-        pointerEvents: open ? 'auto' : 'none',
-        transition: 'opacity 0.2s ease, visibility 0.2s ease',
-      }}
       role="dialog"
       aria-modal={open}
       aria-hidden={!open}
     >
-      {open && ex && (
-        <div className="focus-container">
+      {ex && (
+        <div className="focus-container focus-anim" key={focusIndex}>
           <button
             type="button"
             className="focus-close-btn"

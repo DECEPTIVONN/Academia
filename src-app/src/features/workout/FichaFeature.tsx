@@ -10,6 +10,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
+import { useModalExit } from '@/hooks/useModalPresence';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
 import { idb } from '@/core/db/idb';
@@ -481,6 +482,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   const [focusOpen, setFocusOpen] = useState(false);
   const [noteEx, setNoteEx] = useState<Exercise | null>(null);
   const [noteText, setNoteText] = useState('');
+  const { closing: noteClosing, requestClose: requestNoteClose } = useModalExit(() => setNoteEx(null));
 
   /* Containers das views (display toggling, como o DOM legado) */
   const tableViewRef = useRef<HTMLDivElement>(null);
@@ -679,7 +681,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     if (!noteEx) return;
     await idb.exercises.put({ ...noteEx, notes: noteText.trim() || undefined });
     document.dispatchEvent(new Event('academia:db-ready'));
-    setNoteEx(null);
+    requestNoteClose();
   };
 
   const changeView = (mode: ViewMode) => {
@@ -1096,11 +1098,11 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
       />
 
       {noteEx && (
-        <div className="modal-overlay" style={{ display: 'flex' }}>
+        <div className={`modal-overlay${noteClosing ? ' is-closing' : ''}`} style={{ display: 'flex' }}>
           <div className="modal-form" style={{ maxWidth: 420 }}>
             <div className="modal-form-header" style={{ marginBottom: 16 }}>
               <h3>Anotações: {noteEx.name}</h3>
-              <button type="button" className="modal-close-btn" onClick={() => setNoteEx(null)} aria-label="Fechar">
+              <button type="button" className="modal-close-btn" onClick={() => requestNoteClose()} aria-label="Fechar">
                 ✕
               </button>
             </div>
@@ -1112,7 +1114,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
               placeholder="Digite suas anotações..."
             />
             <div className="modal-form-actions" style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button type="button" className="btn" onClick={() => setNoteEx(null)}>
+              <button type="button" className="btn" onClick={() => requestNoteClose()}>
                 Cancelar
               </button>
               <button type="button" className="btn btn-primary" onClick={() => void saveNote()}>

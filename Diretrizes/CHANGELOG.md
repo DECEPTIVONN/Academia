@@ -2,6 +2,40 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.54.10] - 2026-10-27
+
+**Ajustes finais: cardio/esteira na mesma linha e fonte unificada.**
+
+### Changed
+- `src-app/src/styles/shell.css`: `.ae-table-label` e `.ae-table-type` passam a ser inline (mesma linha) e herdam a tipografia do site.
+
+## [v4.54.9] - 2026-10-27
+
+**Animações suaves no Modo Foco, notas e saída do treino.**
+
+### Changed
+- `src-app/src/features/workout/FocusModal.tsx`: entrada/saída animadas via `useModalPresence`; troca de exercício reexecuta `focusFadeIn` (key no container).
+- `src-app/src/App.tsx`: a interface da ficha de treino anima a saída (fade/scale) antes de desmontar.
+- `src-app/src/features/workout/FichaFeature.tsx`: o modal de anotações passou a usar `useModalExit`, animando exibição e desaparecimento.
+
+### Verificado
+- `npm --prefix src-app run build`: OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos.
+- `npm run lint:docs`: OK.
+
+## [v4.54.8] - 2026-10-27
+
+**Animações suaves na ficha de treino.**
+
+### Changed
+- `src-app/src/App.tsx`: a interface da ficha de treino (overlay) passou a animar a saída (fade/scale) via classe `.is-closing` antes de desmontar, em vez de sumir instantaneamente.
+- `src-app/src/features/workout/FichaFeature.tsx`: o modal de anotações passou a usar `useModalExit`, animando a exibição e o desaparecimento.
+
+### Verificado
+- `npm --prefix src-app run build`: OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos.
+- `npm run lint:docs`: OK.
+
 ## [v4.54.7] - 2026-10-27
 
 **Ajustes finais de UI: avatar redondo no Início, tipografia/ícones do Fit ID, emblemas redondos e saída suave do menu do Início.**

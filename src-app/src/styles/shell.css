@@ -1619,3 +1619,7 @@
 /* v4.54.x - emblemas de identificacao redondos */
 .emblem-card, .emblem-card__icon { border-radius: 50% !important; overflow: hidden; }
 
+
+/* v4.54.x - cardio e esteira na mesma linha */
+.ae-table-label, .ae-table-type { display: inline !important; white-space: nowrap; }
+

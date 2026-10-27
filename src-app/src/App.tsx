@@ -208,6 +208,15 @@ function AppShell() {
      (app.js L48-66): recarregar/fechar o navegador durante o treino devolve o
      usuário à interface de treino, não ao Início. */
   const [isFichaOverlayOpen, setIsFichaOverlayOpen] = useState(isWorkoutInProgressToday);
+  const [fichaClosing, setFichaClosing] = useState(false);
+
+  const closeFichaAnimated = useCallback(() => {
+    setFichaClosing(true);
+    window.setTimeout(() => {
+      setIsFichaOverlayOpen(false);
+      setFichaClosing(false);
+    }, 240);
+  }, []);
   const [isPerfilOverlayOpen, setIsPerfilOverlayOpen] = useState(false);
   const [isPerfilClosing, setIsPerfilClosing] = useState(false);
   const [isConclusaoOpen, setIsConclusaoOpen] = useState(false);
@@ -606,14 +615,14 @@ function AppShell() {
     // v4.19.0-music — botão INCRÍVEL: para a faixa RESULT e volta o MAIN
     window.dispatchEvent(new CustomEvent('academia:workout-closed'));
     setIsConclusaoOpen(false);
-    setIsFichaOverlayOpen(false);
+    closeFichaAnimated();
     setActiveSection('dashboard');
   };
 
   /* closeFichaOverlay (ficha-overlay.js L99–102): com treino ativo → modalEncerrarTreino */
   const handleFecharFicha = () => {
     if (isActive) setIsEncerrarOpen(true);
-    else setIsFichaOverlayOpen(false);
+    else closeFichaAnimated();
   };
 
   /* btnEncerrarConfirmar (app.js L295–335) + encerrarTreinoGlobal (L1093–1104) */
@@ -641,7 +650,7 @@ function AppShell() {
       fichaIds.length > 0 && fichaIds.every((id) => entry.checks.includes(id));
 
     setIsEncerrarOpen(false);
-    setIsFichaOverlayOpen(false);
+    closeFichaAnimated();
     if (vaiConcluir) setIsConclusaoOpen(true);
     else {
       // v4.19.0-music — encerrado sem conclusão → volta a música ambiente
@@ -692,9 +701,9 @@ function AppShell() {
   /* Trava o scroll do body enquanto o overlay fullscreen da Ficha está aberto
      (regra body.ficha-overlay-open de ficha-overlay.css, igual ao legado) */
   useEffect(() => {
-    document.body.classList.toggle('ficha-overlay-open', isFichaOverlayOpen);
+    document.body.classList.toggle('ficha-overlay-open', isFichaOverlayOpen || fichaClosing);
     return () => document.body.classList.remove('ficha-overlay-open');
-  }, [isFichaOverlayOpen]);
+  }, [isFichaOverlayOpen, fichaClosing]);
 
   /* v4.38.13 — retomada do treino no boot: restaura o contexto de música do
      treino (playlist do usuário ou faixa de treino), igual ao clique em TREINAR
@@ -972,9 +981,9 @@ function AppShell() {
               como IRMÃO do scroller (não rola junto) e wrapper rolável
               .ficha-overlay__scroll. */}
           <div
-            className="ficha-overlay"
-            style={{ display: isFichaOverlayOpen ? 'flex' : 'none' }}
-            aria-hidden={!isFichaOverlayOpen}
+            className={`ficha-overlay${fichaClosing ? ' is-closing' : ''}`}
+            style={{ display: isFichaOverlayOpen || fichaClosing ? 'flex' : 'none' }}
+            aria-hidden={!isFichaOverlayOpen && !fichaClosing}
           >
             <button
               className="ficha-overlay-close"
