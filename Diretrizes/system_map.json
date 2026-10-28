@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.56.4",
+  "version": "4.56.5",
   "last_updated": "2026-10-28",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -862,7 +862,7 @@
       "src-app/src/features/training/ofensivas.css: Central de Ofensivas (.of-*) — tela cheia, z-index 900.",
       "src-app/src/features/training/metricas-corporais.css: métricas corporais e comparar métricas (.bm-*) — tela cheia, z-index 900.",
       "src-app/src/features/training/volume-details.css: modal 'Detalhes de Volume' da aba Progresso (.vol-detail*, .vol-detail__*): painel com background glassmorphism, cards de Volume total/Tendência, card de Evolução de carga e lista de Distribuição por exercício com barra proporcional. v4.56.3 — também veste o modal do volume geral aberto pelo card Volume das Tendências.",
-      "src-app/src/features/training/calendar-overlay.css: interface Calendário de Treinos (.cal-ov*): painel fullscreen no mobile com o calendário Mensal/Semanal e o resumo + linha do tempo 0–30 do Ciclo de Treino Atual; corpo rolável (flex + min-height 0) e animações de entrada/saída.",
+      "src-app/src/features/training/calendar-overlay.css: interface Calendário de Treinos (.cal-ov*): painel que cresce para baixo (altura automática, topo fixo) com o calendário Mensal/Semanal e o resumo + linha do ciclo 0–30 em grade compacta (30 células + marcador de início); corpo rolável (flex + min-height 0) e animações de entrada/saída.",
       "src-app/src/features/training/trend-radar.css: Tendências de Treino (.tr-*): Radar Fit em tela cheia, segmented control de período (Semana/Mês/Ano/Todo o período), resumo Treinos/Séries/Volume, ações do cabeçalho, botão Compartilhar Radar e animações de entrada/saída.",
       "src-app/src/legacy-style/treino/ — CSS legado espelhado (não editar); fonte de verdade para paridade visual. Edite o original em Legacy/style/treino/ e rode sync."
     ],

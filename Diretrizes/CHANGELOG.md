@@ -2,6 +2,21 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.5] - 2026-10-28
+
+**Linha do ciclo completa em grade compacta e Semanal que cresce para baixo em vez de abrir em tela cheia.**
+
+### Changed
+- `src-app/src/features/training/ProgressoFeature.tsx` — **Linha do ciclo** redesenhada: os 30 treinos do ciclo agora aparecem **de uma vez** numa grade compacta (número + letra da ficha; verde = feito, apagado = pendente, `title`/`aria-label` com data e duração) logo abaixo do marcador **INÍCIO** (posição 0, com a data de abertura) e de um resumo “X de 30 treinos concluídos · Y restantes”. Antes eram 31 linhas altas, que empurravam o calendário para fora da tela e deixavam a linha “cortada”.
+- **Alternância Mensal ⇄ Semanal:** o corpo do overlay é reposicionado no topo do bloco **Calendário** (`calBodyRef`/`calendarBlockRef`) com rolagem suave a cada troca de visão. Antes a rolagem ficava onde estava (no toggle) e o planner longo aparecia “no meio”, ocupando a tela inteira com o título e o toggle fora da vista. A rolagem só é aplicada quando a visão realmente muda — abrir o calendário continua começando pelo Ciclo.
+- `src-app/src/features/training/calendar-overlay.css` — no mobile (`max-width: 560px`) o painel deixou de ser fullscreen fixo (`height: 100%; max-height: 100vh`): agora tem **altura automática**, topo alinhado (`align-items: flex-start`) e `max-height: calc(100dvh - 16px)` (com fallback `100vh`). O cabeçalho fica sempre visível no topo e a interface **cresce para baixo** conforme o conteúdo (Mensal/Semanal), com a rolagem no `.cal-ov__body`.
+- `calendar-overlay.css`: novos estilos da grade (`.cal-ov__tl-head`, `.cal-ov__tl-legend`, `.cal-ov__tl-dot`, `.cal-ov__tl-start*`, `.cal-ov__tl-grid`, `.cal-ov__tl-cell*`, `.cal-ov__tl-num`, `.cal-ov__tl-letter`, `.cal-ov__tl-summary`) e do bloco `.cal-ov__calendar`; removidos os estilos das linhas altas (`.cal-ov__tl-row`, `.cal-ov__tl-index`, `.cal-ov__tl-copy`, `.cal-ov__tl-title`, `.cal-ov__tl-meta`, `.cal-ov__tl-badge`).
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos (mesma linha de base; nenhum em arquivos alterados).
+- `npm run lint:docs`: OK.
+
 ## [v4.56.4] - 2026-10-28
 
 **Radar e volume só nas telas de Tendências, heatmap sem troca de aba, scroll do calendário e transições de entrada/saída.**

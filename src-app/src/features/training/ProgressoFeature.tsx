@@ -297,6 +297,11 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   const weeklyCardRef = useRef<HTMLDivElement>(null);
   /* v4.56.2 — rolagem horizontal do heatmap de séries (abre no mês atual) */
   const heatScrollRef = useRef<HTMLDivElement>(null);
+  /* v4.56.5 — corpo e bloco do calendário, usados para reposicionar a rolagem
+     quando se alterna Mensal ⇄ Semanal. */
+  const calBodyRef = useRef<HTMLDivElement>(null);
+  const calendarBlockRef = useRef<HTMLDivElement>(null);
+  const prevCalViewRef = useRef<CalView>(calView);
 
   const histMap = useMemo(() => new Map(history.map((h) => [h.date, h])), [history]);
   const exMap = useMemo(() => getExerciseMap(exercises), [exercises]);
@@ -734,6 +739,26 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     if (calView === 'weekly') {
       fadeIn(plannerRef.current);
     }
+  }, [calView, calendarOpen]);
+
+  /* v4.56.5 — ao alternar Mensal ⇄ Semanal, reposiciona o corpo do overlay no
+     topo do bloco "Calendário". Sem isso a rolagem ficava onde estava (o corpo
+     já vinha rolado até o toggle) e o planner longo aparecia ocupando a tela
+     inteira, com o título e o toggle fora da vista. */
+  useEffect(() => {
+    if (!calendarOpen) {
+      prevCalViewRef.current = calView;
+      return;
+    }
+    if (prevCalViewRef.current === calView) return;
+    prevCalViewRef.current = calView;
+
+    const body = calBodyRef.current;
+    const block = calendarBlockRef.current;
+    if (!body || !block) return;
+    const top =
+      block.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - 8;
+    body.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }, [calView, calendarOpen]);
 
   /* ===== Calculadora 1RM (Brzycki) ===== */
@@ -1695,7 +1720,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 <span className="cal-ov__spacer" aria-hidden="true" />
               </header>
 
-              <div className="cal-ov__body">
+              <div className="cal-ov__body" ref={calBodyRef}>
                 {/* Ciclo de Treino Atual (mesmo painel do modal "Ciclos" do Início) */}
                 <section className="cal-ov__cycle">
                   <div className="p-card cycle-card">
@@ -1750,70 +1775,107 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                   </div>
 
                   <div className="cal-ov__timeline">
-                    <h3 className="cal-ov__section-title">Linha do ciclo</h3>
-                    {cycleTimeline.map((item) => (
-                      <div
-                        className={`cal-ov__tl-row cal-ov__tl-row--${item.status}`}
-                        key={item.index}
-                      >
-                        <span className="cal-ov__tl-index">
-                          {item.status === 'start'
-                            ? 'INÍCIO'
-                            : String(item.index).padStart(2, '0')}
+                    <div className="cal-ov__tl-head">
+                      <h3 className="cal-ov__section-title">Linha do ciclo</h3>
+                      <div className="cal-ov__tl-legend" aria-hidden="true">
+                        <span className="cal-ov__tl-legend-item">
+                          <span className="cal-ov__tl-dot cal-ov__tl-dot--done" />
+                          Feito
                         </span>
-                        <div className="cal-ov__tl-copy">
-                          <span className="cal-ov__tl-title">
-                            {item.status === 'start'
-                              ? 'Abertura do ciclo'
-                              : item.status === 'done'
-                                ? `Treino ${item.sheetKey ?? ''}`
-                                : 'Ainda não realizado'}
-                          </span>
-                          <span className="cal-ov__tl-meta">
+                        <span className="cal-ov__tl-legend-item">
+                          <span className="cal-ov__tl-dot cal-ov__tl-dot--pending" />
+                          Pendente
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Abertura do ciclo (posição 0) — mesmo dado da lista 1..30 */}
+                    {cycleTimeline
+                      .filter((item) => item.status === 'start')
+                      .map((item) => (
+                        <div className="cal-ov__tl-start" key={item.index}>
+                          <span className="cal-ov__tl-start-badge">INÍCIO</span>
+                          <span className="cal-ov__tl-start-date">
                             {item.date
                               ? new Date(`${item.date}T12:00:00`).toLocaleDateString('pt-BR', {
                                   day: '2-digit',
                                   month: 'short',
+                                  year: 'numeric',
                                 })
                               : '—'}
-                            {item.durationMin
-                              ? ` · ${formatSeconds(item.durationMin * 60)}`
-                              : ''}
                           </span>
                         </div>
-                        <span className="cal-ov__tl-badge">
-                          {item.status === 'done'
-                            ? 'FEITO'
-                            : item.status === 'start'
-                              ? 'ABERTURA'
-                              : 'PENDENTE'}
-                        </span>
-                      </div>
-                    ))}
+                      ))}
+
+                    {/* Todos os 30 treinos do ciclo de uma vez: grade compacta
+                        (antes eram 31 linhas altas que empurravam o calendário
+                        para fora da tela). */}
+                    <ol className="cal-ov__tl-grid">
+                      {cycleTimeline
+                        .filter((item) => item.status !== 'start')
+                        .map((item) => {
+                          const dateLabel = item.date
+                            ? new Date(`${item.date}T12:00:00`).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: 'short',
+                              })
+                            : null;
+                          const title =
+                            item.status === 'done'
+                              ? `Treino ${item.sheetKey ?? ''} · ${dateLabel ?? ''}${
+                                  item.durationMin
+                                    ? ` · ${formatSeconds(item.durationMin * 60)}`
+                                    : ''
+                                }`
+                              : 'Ainda não realizado';
+                          return (
+                            <li
+                              className={`cal-ov__tl-cell cal-ov__tl-cell--${item.status}`}
+                              key={item.index}
+                              title={title}
+                              aria-label={`Treino ${String(item.index).padStart(2, '0')}: ${title}`}
+                            >
+                              <span className="cal-ov__tl-num">
+                                {String(item.index).padStart(2, '0')}
+                              </span>
+                              <span className="cal-ov__tl-letter">
+                                {item.status === 'done' ? (item.sheetKey ?? '✓') : '—'}
+                              </span>
+                            </li>
+                          );
+                        })}
+                    </ol>
+
+                    <p className="cal-ov__tl-summary">
+                      {cycleDone} de 30 treinos concluídos · {Math.max(0, 30 - cycleDone)}{' '}
+                      restantes
+                    </p>
                   </div>
                 </section>
 
                 {/* Calendário (Mensal grid / Semanal planner) */}
-                <h3 className="cal-ov__section-title">Calendário</h3>
-                <div className="calendar-view-toggle">
-                  <button
-                    type="button"
-                    className={`cal-toggle-btn ${calView === 'monthly' ? 'active' : ''}`}
-                    data-view="monthly"
-                    id="btnMonthlyView"
-                    onClick={() => setCalView('monthly')}
-                  >
-                    Mensal (Grid)
-                  </button>
-                  <button
-                    type="button"
-                    className={`cal-toggle-btn ${calView === 'weekly' ? 'active' : ''}`}
-                    data-view="weekly"
-                    id="btnWeeklyView"
-                    onClick={() => setCalView('weekly')}
-                  >
-                    Semanal (Planner)
-                  </button>
+                <div className="cal-ov__calendar" ref={calendarBlockRef}>
+                  <h3 className="cal-ov__section-title">Calendário</h3>
+                  <div className="calendar-view-toggle">
+                    <button
+                      type="button"
+                      className={`cal-toggle-btn ${calView === 'monthly' ? 'active' : ''}`}
+                      data-view="monthly"
+                      id="btnMonthlyView"
+                      onClick={() => setCalView('monthly')}
+                    >
+                      Mensal (Grid)
+                    </button>
+                    <button
+                      type="button"
+                      className={`cal-toggle-btn ${calView === 'weekly' ? 'active' : ''}`}
+                      data-view="weekly"
+                      id="btnWeeklyView"
+                      onClick={() => setCalView('weekly')}
+                    >
+                      Semanal (Planner)
+                    </button>
+                  </div>
                 </div>
 
                 <div

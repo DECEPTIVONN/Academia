@@ -133,90 +133,154 @@
 }
 
 /* ---------- Linha do ciclo (0–30) ---------- */
+/* v4.56.5 — grade compacta: os 30 treinos do ciclo aparecem de uma vez
+   (antes era uma lista de 31 linhas altas que empurrava o calendário para
+   fora da tela). */
 .cal-ov__timeline {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   padding: 12px;
   border-radius: 16px;
   border: 1px solid var(--card-border);
   background: rgba(255, 255, 255, 0.02);
 }
 
-.cal-ov__timeline .cal-ov__section-title {
-  margin: 0 0 4px;
+.cal-ov__tl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.cal-ov__tl-row {
+.cal-ov__tl-head .cal-ov__section-title {
+  margin: 0;
+}
+
+.cal-ov__tl-legend {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.cal-ov__tl-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cal-ov__tl-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cal-ov__tl-dot--done {
+  background: #4ade80;
+}
+
+.cal-ov__tl-dot--pending {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.cal-ov__tl-start {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.cal-ov__tl-row--pending {
-  opacity: 0.55;
-}
-
-.cal-ov__tl-row--start {
-  border: 1px dashed rgba(var(--primary-rgb, 139, 92, 246), 0.4);
+  border: 1px dashed rgba(var(--primary-rgb, 139, 92, 246), 0.45);
   background: rgba(var(--primary-rgb, 139, 92, 246), 0.08);
 }
 
-.cal-ov__tl-index {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  flex-shrink: 0;
+.cal-ov__tl-start-badge {
   font-family: 'Rajdhani', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.2px;
   color: var(--primary-light);
 }
 
-.cal-ov__tl-copy {
+.cal-ov__tl-start-date {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.cal-ov__tl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cal-ov__tl-cell {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 1px;
-  flex: 1;
-  min-width: 0;
+  min-height: 46px;
+  padding: 6px 2px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: default;
 }
 
-.cal-ov__tl-title {
-  overflow: hidden;
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.cal-ov__tl-cell--done {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.12);
 }
 
-.cal-ov__tl-meta {
+.cal-ov__tl-cell--pending {
+  opacity: 0.5;
+}
+
+.cal-ov__tl-num {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.4px;
+  color: var(--text-secondary);
+}
+
+.cal-ov__tl-cell--done .cal-ov__tl-num {
+  color: #4ade80;
+}
+
+.cal-ov__tl-letter {
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  color: var(--text-tertiary);
+}
+
+.cal-ov__tl-cell--done .cal-ov__tl-letter {
+  color: #86efac;
+}
+
+.cal-ov__tl-summary {
+  margin: 0;
+  text-align: right;
   font-size: 0.7rem;
   color: var(--text-tertiary);
 }
 
-.cal-ov__tl-badge {
-  flex-shrink: 0;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  color: var(--text-tertiary);
-}
-
-.cal-ov__tl-row--done .cal-ov__tl-badge {
-  background: rgba(34, 197, 94, 0.16);
-  color: #4ade80;
-}
-
-.cal-ov__tl-row--start .cal-ov__tl-badge {
-  background: rgba(var(--primary-rgb, 139, 92, 246), 0.2);
-  color: var(--primary-light);
+/* ---------- Bloco do calendário (alvo da rolagem ao trocar de visão) ---------- */
+.cal-ov__calendar {
+  display: flex;
+  flex-direction: column;
+  scroll-margin-top: 12px;
 }
 
 .cal-ov__body::-webkit-scrollbar {
@@ -234,28 +298,37 @@
 
 @media (max-width: 560px) {
   .cal-ov {
-    padding: 0;
+    padding: 8px;
+    /* v4.56.5 — o painel agora cresce para baixo: o topo fica fixo (cabeçalho
+       sempre visível) e a altura acompanha o conteúdo até o limite da tela,
+       em vez de abrir em tela cheia. */
+    align-items: flex-start;
   }
 
   .cal-ov__panel {
     width: 100%;
-    height: 100%;
-    max-height: 100vh;
-    border: 0;
-    border-radius: 0;
+    height: auto;
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 18px;
   }
 
   .cal-ov__body {
     padding: 14px 12px 24px;
   }
 
-  .cal-ov__tl-index {
-    width: 34px;
-    font-size: 0.7rem;
+  .cal-ov__tl-grid {
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 5px;
   }
 
-  .cal-ov__tl-badge {
-    display: none;
+  .cal-ov__tl-cell {
+    min-height: 42px;
+  }
+
+  .cal-ov__tl-legend {
+    font-size: 0.55rem;
+    gap: 4px;
   }
 }
 
