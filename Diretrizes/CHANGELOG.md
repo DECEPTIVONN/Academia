@@ -2,6 +2,29 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.4] - 2026-10-28
+
+**Radar e volume só nas telas de Tendências, heatmap sem troca de aba, scroll do calendário e transições de entrada/saída.**
+
+### Changed
+- `src-app/src/features/training/ProgressoFeature.tsx`: os cards fixos **Volume de Carga** e **Atributos de Performance** saíram da aba — o volume já abre pelo card **Volume** das Tendências (modal) e o Radar Fit pelo card **Treinos** (Tendências de Treino). O botão **Compartilhar Radar** e o guia **“Como são calculados?”** migraram para a tela de Tendências (a interrogação no cabeçalho e o botão abaixo do radar); a aba não monta mais `RadarChart`/`useRadarMode`. O radar da tela de Tendências mantém `id="radarChartContainer"` — o `ShareModal` clona esse SVG ao compartilhar.
+- `src-app/src/App.tsx`: `.prog-heat__scroll` entrou na lista de alvos que ignoram o swipe de seção (como `.month-grid` e `.table-scroll-wrap`) — arrastar o heatmap de séries não troca de aba.
+- **Scroll do Calendário de Treinos:** `.cal-ov__body` ganhou `flex: 1 1 auto; min-height: 0` (e `-webkit-overflow-scrolling: touch`). Sem `min-height: 0` o filho flex não encolhia abaixo do conteúdo, o painel estourava o `max-height` e a **linha do ciclo 0–30** ficava cortada sem rolagem vertical.
+- **Transições de entrada e saída** (mesmo padrão `useModalPresence` + `.is-closing` de `CycleModal`/`Ofensivas`):
+  - Calendário + Ciclo (`.cal-ov`): fade/slide do painel na entrada (já existia) e saída com `cal-ov-out`/`cal-ov-panel-out`.
+  - Tendências de Treino / Radar Fit (`.tr-overlay`): o componente agora aguarda a animação de saída antes de desmontar; `.tr-body` ganhou `flex: 1 1 auto; min-height: 0`.
+  - Volume geral das Tendências (`.modal-overlay` + `.vol-detail`) e **Detalhes de Volume**: montagem condicional com presença (a animação `volDetailIn` volta a rodar a cada abertura) e `volDetailOut` na saída; o último grupo aberto fica retido para o painel não esvaziar enquanto fecha.
+  - Comparar métricas (`BodyMetricsOverlay`): telas Métricas ⇄ Comparar trocam com `bm-screen-in`/`bm-screen-out` (o conteúdo antigo sai antes do novo entrar, com `key={screen}`).
+
+### Fixed
+- `src-app/src/features/training/calendar-overlay.css`: calendário sem rolagem vertical e linha do ciclo exibida pela metade.
+- `src-app/src/features/training/progresso.css`: removido o CSS órfão do alternador `.radar-seg` (o controle agora vive em `.tr-seg`, na tela de Tendências).
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos (mesma linha de base; nenhum em arquivos alterados).
+- `npm run lint:docs`: OK.
+
 ## [v4.56.3] - 2026-10-28
 
 **Volume de carga com a carga sugerida, calendário+ciclo em tela própria, Tendências com radar em tela cheia e volume em modal.**

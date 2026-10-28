@@ -757,45 +757,7 @@
   color: var(--primary-light);
 }
 
-/* ---------- Alternador do Radar (mesmo segmented control das Tendências) ---------- */
-.radar-seg {
-  display: inline-flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.radar-seg__btn {
-  padding: 6px 12px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.7rem;
-  font-weight: 800;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease;
-}
-
-.radar-seg__btn:hover {
-  color: var(--text);
-}
-
-.radar-seg__btn.is-active {
-  background: var(--primary);
-  color: #0a0a0a;
-}
-
 @media (max-width: 420px) {
-  .radar-seg__btn {
-    padding: 6px 9px;
-    font-size: 0.66rem;
-  }
-
   .volume-chart__donut {
     width: 140px;
     height: 140px;

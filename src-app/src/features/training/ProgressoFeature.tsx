@@ -2,16 +2,19 @@
  * ProgressoFeature.tsx — Seção Progresso (port 1:1 de `componentes/secoes/progresso.html`
  * + `JS/treino/secao-progresso.js`)
  *
- * Mantém o DOM/classes legados dos cartões preservados — stats, volume donut,
- * radar real (Fase 3) e calculadora 1RM — e acrescenta (v4.55.0) o cabeçalho
- * "Progresso", a Pontuação de Força, os cards de Atividade (ofensiva + mês
- * atual), o heatmap anual de séries, Tendências, Corpo (métricas corporais) e
- * Conquistas.
+ * Mantém o DOM/classes legados dos cartões preservados — stats e calculadora 1RM
+ * — e acrescenta (v4.55.0) o cabeçalho "Progresso", a Pontuação de Força, os
+ * cards de Atividade (ofensiva + mês atual), o heatmap anual de séries,
+ * Tendências, Corpo (métricas corporais) e Conquistas.
  *
  * v4.56.3: o calendário (Mensal/Semanal) e o Ciclo de Treino saíram do fluxo da
  * aba e vivem no overlay `calendarOpen`; os cards Treinos/Volume das Tendências
  * abrem, respectivamente, o Radar Fit em tela cheia (TrendRadarOverlay) e o
  * modal de volume de carga.
+ *
+ * v4.56.4: os cards fixos de Volume de Carga e Atributos de Performance saíram
+ * da aba (só existem nas telas de Tendências) e todas as telas da aba entram e
+ * saem com animação (`useModalPresence` + `.is-closing`).
  *
  * Calcula tudo a partir de `useLocalData` + `legacyState` (ciclo, cycleEvents);
  * as derivações novas vivem em `progress-stats.ts`.
@@ -33,9 +36,7 @@ import {
   type LocalData,
   type SheetKey,
 } from '@/core/db/queries';
-import { RadarChart } from '@/features/gamification/RadarChart';
-import { useRadarMode } from '@/features/gamification/useRadarFit';
-import { useShareStore } from '@/features/gamification/share-store';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { buildVolumeLineChartSvg } from './volume-line-chart';
 import {
   convertKgToDisplay,
@@ -254,10 +255,11 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   const [calcWeight, setCalcWeight] = useState('');
   const [calcReps, setCalcReps] = useState('');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  /* Modo do radar global (legado: currentRadarMode compartilhado) */
-  const radarMode = useRadarMode((s) => s.mode);
-  const setRadarMode = useRadarMode((s) => s.setMode);
   const [showRadarGuide, setShowRadarGuide] = useState(false);
+  const [volumeDetailGroup, setVolumeDetailGroup] = useState<string | null>(null);
+  /* v4.56.4 — último grupo aberto: o painel continua preenchido durante a
+     animação de saída, quando `volumeDetailGroup` já voltou a null. */
+  const [volumeDetailGroupLast, setVolumeDetailGroupLast] = useState<string | null>(null);
   const [firstDay, setFirstDay] = useState<FirstDayOfWeek>(() => getFirstDayOfWeek());
   const [weightUnit, setWeightUnit] = useState<WeightUnit>(() => getWeightUnit());
   /* v4.55.0 — telas cheias abertas pela aba e filtros das seções novas */
@@ -273,6 +275,12 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   /* v4.56.0 — métricas/fotos vêm do banco (IndexedDB) via hook */
   const { metrics: bodyMetrics } = useBodyMetrics();
 
+  /* v4.56.4 — saída suave das telas da aba: o modal continua montado durante a
+     animação e recebe `.is-closing` (mesmo padrão de CycleModal/Ofensivas). */
+  const calendarPresence = useModalPresence(calendarOpen);
+  const volumeOverviewPresence = useModalPresence(volumeOverviewOpen);
+  const volumeDetailPresence = useModalPresence(Boolean(volumeDetailGroup));
+
   useEffect(() => {
     const syncPrefs = () => {
       setFirstDay(getFirstDayOfWeek());
@@ -285,7 +293,6 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   /* Containers animados com fadeIn (secao-progresso.js L115/L258/L402/L586) */
   const monthCalRef = useRef<HTMLDivElement>(null);
   const plannerRef = useRef<HTMLDivElement>(null);
-  const volumeChartRef = useRef<HTMLDivElement>(null);
   const monthlyCardRef = useRef<HTMLDivElement>(null);
   const weeklyCardRef = useRef<HTMLDivElement>(null);
   /* v4.56.2 — rolagem horizontal do heatmap de séries (abre no mês atual) */
@@ -650,11 +657,11 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   }, [histMap, sheetMap, exMap, volumeMode]);
 
   /* ===== Detalhes de Volume (openVolumeDetails L589–677) ===== */
-  const [volumeDetailGroup, setVolumeDetailGroup] = useState<string | null>(null);
+  const volumeDetailGroupToRender = volumeDetailGroupLast;
 
   const volumeDetail = useMemo(() => {
-    if (!volumeDetailGroup) return null;
-    const entry = volume.entries.find((e) => e.group === volumeDetailGroup);
+    if (!volumeDetailGroupToRender) return null;
+    const entry = volume.entries.find((e) => e.group === volumeDetailGroupToRender);
     if (!entry) return null;
 
     const historyDays: string[] = [];
@@ -679,7 +686,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
         for (const key of keysOfDay(row)) {
           const sheet = sheetMap.get(key as SheetKey);
           for (const ex of pickExercises(sheet?.exerciseIds ?? [], exMap)) {
-            if (ex.muscleGroup === volumeDetailGroup) dayVol += exerciseVolume(ex);
+            if (ex.muscleGroup === volumeDetailGroupToRender) dayVol += exerciseVolume(ex);
           }
         }
       }
@@ -697,7 +704,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
       (a, b) => entry.breakdown[b] - entry.breakdown[a]
     );
     return { entry, chartData, avgVol, trend, showTrend, exNames };
-  }, [volumeDetailGroup, volumeMode, volume, histMap, sheetMap, exMap]);
+  }, [volumeDetailGroupToRender, volumeMode, volume, histMap, sheetMap, exMap]);
 
   /* renderVolumeLineChart (L653): mede o container na abertura do modal */
   useEffect(() => {
@@ -719,10 +726,6 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   useEffect(() => {
     fadeIn(plannerRef.current);
   }, [plannerWeeks, calendarOpen]);
-
-  useEffect(() => {
-    fadeIn(volumeChartRef.current);
-  }, [volume]);
 
   /* app.js L108-130: alternar mensal/semanal mostra o card com fadeIn
      (e o toggle semanal também re-renderiza o planner) */
@@ -789,6 +792,16 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     return () => document.removeEventListener('keydown', onKey);
   }, [calendarOpen, volumeOverviewOpen, volumeDetailGroup, selectedDate]);
 
+  /* Esc fecha o guia do Radar (aberto pela tela de Tendências). */
+  useEffect(() => {
+    if (!showRadarGuide) return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowRadarGuide(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showRadarGuide]);
+
   /* v4.56.3 — o card do mês e o card "Treinos no Mês" abrem a nova interface
      de Calendário (Mensal grid / Semanal planner) + Ciclo de Treino Atual. O
      calendário saiu do fluxo da aba e vive nessa tela cheia. */
@@ -805,6 +818,15 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     setSelectedDate(null);
     setCalendarOpen(false);
   };
+
+  /* v4.56.4 — abre o detalhe de um grupo muscular do volume. O último grupo
+     fica gravado para o painel não esvaziar durante a animação de saída. */
+  const openVolumeDetail = (group: string) => {
+    setVolumeDetailGroupLast(group);
+    setVolumeDetailGroup(group);
+  };
+
+  const closeVolumeDetail = () => setVolumeDetailGroup(null);
 
   /* Convite de amigo (fluxo do Social) reaproveitado pelo card de compartilhar. */
   const inviteFriend = async () => {
@@ -1160,200 +1182,8 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
               </button>
             </div>
 
-            {/* ===== Volume de Carga ===== */}
-            <div className="p-card volume-card">
-              <div
-                className="p-card-header"
-                style={{
-                  flexWrap: 'wrap',
-                  gap: 10,
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    width={18}
-                    height={18}
-                    style={{ color: 'var(--primary)' }}
-                  >
-                    <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11" />
-                    <circle cx={4} cy={12} r={1.5} />
-                    <circle cx={20} cy={12} r={1.5} />
-                  </svg>
-                  Volume de Carga
-                </h3>
-                <select
-                  id="filterVolume"
-                  value={volumeMode}
-                  onChange={(e) => setVolumeMode(e.target.value)}
-                  style={{
-                    padding: '4px 28px 4px 12px',
-                    fontSize: '.75rem',
-                    borderRadius: 12,
-                    backgroundColor: '#111',
-                    backgroundImage:
-                      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 8px center',
-                    backgroundSize: '12px',
-                    color: '#ffffff',
-                    border: '1px solid var(--card-border)',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    appearance: 'none',
-                    WebkitAppearance: 'none',
-                  }}
-                >
-                  <option value="7" style={{ background: '#1a1a1a', color: '#ffffff' }}>
-                    Últimos 7 dias
-                  </option>
-                  <option value="30" style={{ background: '#1a1a1a', color: '#ffffff' }}>
-                    Últimos 30 dias
-                  </option>
-                  <option value="all" style={{ background: '#1a1a1a', color: '#ffffff' }}>
-                    Total da Vida
-                  </option>
-                </select>
-              </div>
-              <div className="volume-chart" id="volumeChart" ref={volumeChartRef}>
-                <VolumeBreakdown
-                  entries={volume.entries}
-                  total={volume.total}
-                  mode={volumeMode}
-                  onOpenGroup={setVolumeDetailGroup}
-                />
-              </div>
-              <p
-                style={{
-                  fontSize: '.75rem',
-                  color: 'var(--text-tertiary)',
-                  marginTop: 15,
-                  textAlign: 'center',
-                }}
-              >
-                Total {weightUnit} levantados por grupo muscular.
-              </p>
-            </div>
-
-            {/* ===== Radar Fit (real — Fase 3) ===== */}
-            <div className="p-card radar-card">
-              <div className="p-card-header" style={{ flexWrap: 'wrap', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h3>Atributos de Performance</h3>
-                  <button
-                    type="button"
-                    onClick={() => setShowRadarGuide(true)}
-                    style={{
-                      background: 'rgba(255,255,255,.1)',
-                      border: 'none',
-                      color: 'var(--text-secondary)',
-                      width: 20,
-                      height: 20,
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '.7rem',
-                      cursor: 'pointer',
-                      transition: '.3s',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    ?
-                  </button>
-                </div>
-                <div className="radar-seg" role="tablist" aria-label="Intervalo do Radar Fit">
-                  <button
-                    type="button"
-                    className={`radar-seg__btn ${radarMode === 'mensal' ? 'is-active' : ''}`}
-                    id="btnRadarMensal"
-                    onClick={() => setRadarMode('mensal')}
-                    aria-selected={radarMode === 'mensal'}
-                    role="tab"
-                  >
-                    Mês
-                  </button>
-                  <button
-                    type="button"
-                    className={`radar-seg__btn ${radarMode === 'total' ? 'is-active' : ''}`}
-                    id="btnRadarTotal"
-                    onClick={() => setRadarMode('total')}
-                    aria-selected={radarMode === 'total'}
-                    role="tab"
-                  >
-                    Todo o período
-                  </button>
-                </div>
-              </div>
-              <RadarChart
-                containerId="radarChartContainer"
-                gradientId="radarGrad"
-                style={{
-                  width: '100%',
-                  minHeight: 300,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginTop: 20,
-                }}
-              />
-              <p
-                style={{
-                  fontSize: '.75rem',
-                  color: 'var(--text-tertiary)',
-                  marginTop: 15,
-                  textAlign: 'center',
-                }}
-              >
-                Baseado na variedade, intensidade e consistência do seu treino.
-              </p>
-              <div id="radarShareBtnContainer" style={{ textAlign: 'center', marginTop: 15 }}>
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() => useShareStore.getState().openRadar()}
-                  style={{
-                    border: '1px solid var(--primary)',
-                    color: 'var(--primary-light)',
-                    background: 'rgba(255,255,255,.05)',
-                    padding: '6px 16px',
-                    borderRadius: 20,
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    fontSize: '.8rem',
-                    transition: '.3s',
-                  }}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    width={14}
-                    height={14}
-                    style={{ marginRight: 4 }}
-                  >
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                    <polyline points="16 6 12 2 8 6" />
-                    <line x1={12} y1={2} x2={12} y2={15} />
-                  </svg>{' '}
-                  COMPARTILHAR RADAR
-                </button>
-              </div>
-            </div>
+            {/* Volume de Carga e Radar Fit saíram da aba: agora abrem pelas
+                Tendências (cards Volume e Treinos). */}
 
             {/* ===== Calculadora 1RM ===== */}
             <div className="p-card calculator-card">
@@ -1475,16 +1305,15 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
       )}
 
       {/* ===== MODAL: DETALHES DE VOLUME (modais.html L829–855) ===== */}
-      {toBody(
+      {volumeDetailPresence.mounted &&
+        toBody(
         <div
-          className="modal-overlay"
+          className={`modal-overlay ${volumeDetailPresence.closing ? 'is-closing' : ''}`}
           id="modalVolumeDetails"
-          style={{ display: volumeDetail ? 'flex' : 'none' }}
           role="dialog"
           aria-modal="true"
-          aria-hidden={!volumeDetail}
           aria-labelledby="volDetGroup"
-          onClick={() => setVolumeDetailGroup(null)}
+          onClick={() => closeVolumeDetail()}
         >
           <div className="vol-detail" onClick={(e) => e.stopPropagation()}>
             <header className="vol-detail__header">
@@ -1499,7 +1328,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 className="vol-detail__close"
                 id="btnFecharVolumeDetails"
                 aria-label="Fechar detalhes de volume"
-                onClick={() => setVolumeDetailGroup(null)}
+                onClick={() => closeVolumeDetail()}
               >
                 <X size={18} strokeWidth={2} />
               </button>
@@ -1583,6 +1412,9 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
         className="modal-overlay"
         id="modalRadarGuide"
         style={{ display: showRadarGuide ? 'flex' : 'none' }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setShowRadarGuide(false);
+        }}
       >
         <div
           className="modal-content"
@@ -1627,8 +1459,8 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
             style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 15 }}
           >
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              O <b>Radar Fit</b> analisa seus treinos dos últimos 30 dias (Mensal) ou todo o
-              histórico (Total) para gerar seu perfil de atleta:
+              O <b>Radar Fit</b> analisa seus treinos do período escolhido em Tendências de
+              Treino (Semana, Mês, Ano ou Todo o período) para gerar seu perfil de atleta:
             </p>
 
             <div
@@ -1829,10 +1661,10 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
       />
 
       {/* ===== Calendário + Ciclo (v4.56.3) ===== */}
-      {calendarOpen &&
+      {calendarPresence.mounted &&
         toBody(
           <div
-            className="cal-ov"
+            className={`cal-ov ${calendarPresence.closing ? 'is-closing' : ''}`}
             id="calendarOverlay"
             role="dialog"
             aria-modal="true"
@@ -2125,15 +1957,14 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
         )}
 
       {/* ===== Volume de carga geral (v4.56.3) ===== */}
-      {volumeOverviewOpen &&
+      {volumeOverviewPresence.mounted &&
         toBody(
           <div
-            className="modal-overlay"
+            className={`modal-overlay ${volumeOverviewPresence.closing ? 'is-closing' : ''}`}
             id="modalVolumeOverview"
             role="dialog"
             aria-modal="true"
             aria-labelledby="volOverviewTitle"
-            style={{ display: 'flex' }}
             onClick={() => setVolumeOverviewOpen(false)}
           >
             <div className="vol-detail vol-detail--overview" onClick={(e) => e.stopPropagation()}>
@@ -2173,7 +2004,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                   mode={volumeMode}
                   onOpenGroup={(group) => {
                     setVolumeOverviewOpen(false);
-                    setVolumeDetailGroup(group);
+                    openVolumeDetail(group);
                   }}
                 />
                 <p className="vol-overview__hint">
@@ -2185,7 +2016,12 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
         )}
 
       {/* ===== Tendências de Treino / Radar Fit (v4.56.3) ===== */}
-      <TrendRadarOverlay open={trendRadarOpen} onClose={() => setTrendRadarOpen(false)} />
+      <TrendRadarOverlay
+        open={trendRadarOpen}
+        onClose={() => setTrendRadarOpen(false)}
+        onOpenGuide={() => setShowRadarGuide(true)}
+        guideOpen={showRadarGuide}
+      />
     </div>
   );
 };

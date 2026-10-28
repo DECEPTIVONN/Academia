@@ -323,6 +323,28 @@
   color: var(--text-tertiary);
 }
 
+/* ---------- Saída (useModalPresence → .is-closing — v4.56.4) ---------- */
+.modal-overlay.is-closing .vol-detail {
+  animation: volDetailOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes volDetailOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(22px) scale(0.965);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay.is-closing .vol-detail {
+    animation-duration: 0.01ms;
+  }
+}
+
 /* Rolagem interna no padrão dos demais painéis */
 .vol-detail__body::-webkit-scrollbar,
 .vol-detail__list::-webkit-scrollbar {

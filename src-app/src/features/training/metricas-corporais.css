@@ -115,6 +115,43 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  animation: bm-screen-in 0.22s ease;
+}
+
+/* v4.56.4 — troca métricas ⇄ comparar: a tela antiga sai antes da nova entrar
+   (key={screen} no componente reinicia `bm-screen-in`). */
+.bm-scroll.is-leaving {
+  pointer-events: none;
+  animation: bm-screen-out 0.18s ease forwards;
+}
+
+@keyframes bm-screen-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bm-screen-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bm-scroll,
+  .bm-scroll.is-leaving {
+    animation-duration: 0.01ms;
+  }
 }
 
 /* ---------- Cartões ---------- */

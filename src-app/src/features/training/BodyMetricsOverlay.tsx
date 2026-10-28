@@ -87,6 +87,10 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
 }) => {
   const { mounted, closing } = useModalPresence(open);
   const [screen, setScreen] = useState<'metrics' | 'compare'>('metrics');
+  /* v4.56.4 — a troca métricas ⇄ comparar entra/sai com fade+slide (o conteúdo
+     fica montado 180 ms na saída antes de trocar de tela). */
+  const [screenLeaving, setScreenLeaving] = useState(false);
+  const screenTimerRef = useRef<number | null>(null);
   const { metrics: state } = useBodyMetrics();
   const [unit, setUnit] = useState<WeightUnit>(() => getWeightUnit());
   const [rangeKey, setRangeKey] = useState('7d');
@@ -110,9 +114,34 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
     setPrevOpen(open);
     if (open) {
       setScreen('metrics');
+      setScreenLeaving(false);
       setSheet(null);
     }
   }
+
+  useEffect(
+    () => () => {
+      if (screenTimerRef.current !== null) window.clearTimeout(screenTimerRef.current);
+    },
+    []
+  );
+
+  const openCompare = () => {
+    if (screenTimerRef.current !== null) window.clearTimeout(screenTimerRef.current);
+    screenTimerRef.current = null;
+    setScreenLeaving(false);
+    setScreen('compare');
+  };
+
+  const backToMetrics = () => {
+    if (screenLeaving) return;
+    setScreenLeaving(true);
+    screenTimerRef.current = window.setTimeout(() => {
+      screenTimerRef.current = null;
+      setScreen('metrics');
+      setScreenLeaving(false);
+    }, 180);
+  };
 
   useEffect(() => {
     const syncPrefs = () => setUnit(getWeightUnit());
@@ -191,7 +220,7 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
         <button
           type="button"
           className="bm-icon-btn"
-          onClick={screen === 'compare' ? () => setScreen('metrics') : onClose}
+          onClick={screen === 'compare' ? backToMetrics : onClose}
           aria-label="Voltar"
         >
           <ArrowLeft size={18} />
@@ -231,7 +260,11 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
         )}
       </header>
 
-      <div className="bm-scroll">
+      <div
+        className={`bm-scroll ${screenLeaving ? 'is-leaving' : ''}`}
+        key={screen}
+        aria-busy={screenLeaving || undefined}
+      >
         {screen === 'metrics' ? (
           <>
             {/* ── Peso ── */}
@@ -342,7 +375,7 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
             </div>
 
             {/* ── Comparar métricas ── */}
-            <button type="button" className="bm-compare" onClick={() => setScreen('compare')}>
+            <button type="button" className="bm-compare" onClick={openCompare}>
               <span className="bm-compare__icon" aria-hidden="true">
                 <LineChart size={18} />
               </span>

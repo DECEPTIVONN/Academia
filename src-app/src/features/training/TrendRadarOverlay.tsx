@@ -9,15 +9,20 @@
  * O Radar Fit em si NÃO muda: o SVG continua saindo de `buildRadarSvgHtml`
  * (features/gamification/radar.ts) com as mesmas fórmulas de
  * `computeRadarStats` — só o recorte de histórico do período escolhido muda.
+ *
+ * O container mantém `id="radarChartContainer"` porque o ShareModal clona esse
+ * SVG ao compartilhar o radar (o card fixo que tinha o id saiu da aba).
  */
 
 import React, { useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Share2 } from 'lucide-react';
 import { useLocalData } from '@/hooks/useLocalData';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { today, type LocalData } from '@/core/db/queries';
 import { getWeightUnit } from '@/lib/app-prefs';
 import { computeRadarStats, buildRadarSvgHtml } from '@/features/gamification/radar';
+import { useShareStore } from '@/features/gamification/share-store';
 import {
   addDays,
   formatVolume,
@@ -34,6 +39,10 @@ export type TrendRadarPeriod = 'week' | 'month' | 'year' | 'all';
 interface TrendRadarOverlayProps {
   open: boolean;
   onClose: () => void;
+  /** Abre o guia "Como são calculados?" (modal da aba Progresso). */
+  onOpenGuide?: () => void;
+  /** Com o guia aberto, o Esc fecha só o guia (não esta tela). */
+  guideOpen?: boolean;
 }
 
 const PERIODS: Array<{ id: TrendRadarPeriod; label: string; days: number | null }> = [
@@ -43,15 +52,23 @@ const PERIODS: Array<{ id: TrendRadarPeriod; label: string; days: number | null 
   { id: 'all', label: 'Todo o período', days: null },
 ];
 
-export const TrendRadarOverlay: React.FC<TrendRadarOverlayProps> = ({ open, onClose }) => {
+export const TrendRadarOverlay: React.FC<TrendRadarOverlayProps> = ({
+  open,
+  onClose,
+  onOpenGuide,
+  guideOpen = false,
+}) => {
   const localData = useLocalData();
   const [period, setPeriod] = React.useState<TrendRadarPeriod>('month');
+  const { mounted, closing } = useModalPresence(open);
 
-  /* Esc fecha; body travado enquanto a tela está aberta. */
+  /* Esc fecha; body travado enquanto a tela está aberta. Com o guia aberto, o
+     Esc é do guia (senão as duas camadas fechariam juntas). */
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key !== 'Escape' || guideOpen) return;
+      onClose();
     };
     document.addEventListener('keydown', onKey);
     const previous = document.body.style.overflow;
@@ -60,7 +77,7 @@ export const TrendRadarOverlay: React.FC<TrendRadarOverlayProps> = ({ open, onCl
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = previous;
     };
-  }, [open, onClose]);
+  }, [open, onClose, guideOpen]);
 
   const view = useMemo(() => {
     const t = today();
@@ -93,11 +110,11 @@ export const TrendRadarOverlay: React.FC<TrendRadarOverlayProps> = ({ open, onCl
     return { treinos, series, volume, html, unit: getWeightUnit() };
   }, [localData, period]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return createPortal(
     <div
-      className="tr-overlay"
+      className={`tr-overlay ${closing ? 'is-closing' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="trTitle"
@@ -113,7 +130,18 @@ export const TrendRadarOverlay: React.FC<TrendRadarOverlayProps> = ({ open, onCl
           <h2 className="tr-title" id="trTitle">
             Tendências de Treino
           </h2>
-          <span className="tr-head__spacer" aria-hidden="true" />
+          <div className="tr-head__actions">
+            {onOpenGuide ? (
+              <button
+                type="button"
+                className="tr-back tr-back--sm"
+                onClick={onOpenGuide}
+                aria-label="Como os atributos são calculados"
+              >
+                <HelpCircle size={19} strokeWidth={2.2} />
+              </button>
+            ) : null}
+          </div>
         </header>
 
         <div className="tr-body">
@@ -153,7 +181,22 @@ export const TrendRadarOverlay: React.FC<TrendRadarOverlayProps> = ({ open, onCl
             </div>
           </div>
 
-          <div className="tr-radar" dangerouslySetInnerHTML={{ __html: view.html }} />
+          <div
+            className="tr-radar"
+            id="radarChartContainer"
+            dangerouslySetInnerHTML={{ __html: view.html }}
+          />
+
+          <div className="tr-share">
+            <button
+              type="button"
+              className="tr-share__btn"
+              onClick={() => useShareStore.getState().openRadar()}
+            >
+              <Share2 size={15} strokeWidth={2.2} />
+              Compartilhar Radar
+            </button>
+          </div>
 
           <p className="tr-foot">
             As tendências estarão disponíveis 2 semanas após seu primeiro treino.

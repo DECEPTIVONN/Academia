@@ -106,9 +106,15 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex: 1 1 auto;
+  /* Sem `min-height: 0` o filho flex não encolhe abaixo do conteúdo e o painel
+     estoura o `max-height` — o resultado era a linha do ciclo cortada e nenhum
+     scroll vertical. */
+  min-height: 0;
   padding: 16px 18px 26px;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cal-ov__section-title {
@@ -250,5 +256,42 @@
 
   .cal-ov__tl-badge {
     display: none;
+  }
+}
+
+/* ---------- Saída (useModalPresence → .is-closing — v4.56.4) ---------- */
+.cal-ov.is-closing {
+  pointer-events: none;
+  animation: cal-ov-out 0.22s ease forwards;
+}
+
+.cal-ov.is-closing .cal-ov__panel {
+  animation: cal-ov-panel-out 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes cal-ov-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes cal-ov-panel-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(22px) scale(0.975);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cal-ov.is-closing,
+  .cal-ov.is-closing .cal-ov__panel {
+    animation-duration: 0.01ms;
   }
 }
