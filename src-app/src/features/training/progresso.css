@@ -1,0 +1,585 @@
+/* ============================================================
+   PROGRESSO — seções novas da aba (v4.55.0)
+   (src-app/src/features/training/ProgressoFeature.tsx)
+
+   Cabeçalho, pontuação de força, cards de Atividade (ofensiva + mês),
+   heatmap anual de séries, Tendências, Corpo (métricas corporais) e
+   Conquistas. Mesmo esquema de cores do app: tokens de `design-tokens.css`
+   (`--card-bg`, `--card-border`, `--text-*`) e acentos SEMPRE em
+   `rgba(var(--primary-rgb, 139, 92, 246), X)` — acompanham o tema escolhido.
+
+   BEM com prefixo `prog-` (não reescreve o CSS legado `.p-card`, ao qual os
+   cartões antigos da seção continuam presos).
+   ============================================================ */
+
+/* ---------- Cabeçalho da aba ---------- */
+.prog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 2px 0;
+}
+
+.prog-head__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.prog-head__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.prog-head__btn:hover {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.15);
+}
+
+.prog-section__title {
+  margin: 8px 2px -6px;
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+/* ---------- Pontuação de força ---------- */
+.prog-score {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: var(--radius-xl);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+}
+
+.prog-score__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
+  color: var(--primary);
+}
+
+.prog-score__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.prog-score__value {
+  font-size: 1.7rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.prog-score__value small {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+}
+
+.prog-score__label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--primary-light);
+}
+
+.prog-score__bar {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.prog-score__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gradient);
+  transition: width var(--transition-base);
+}
+
+.prog-score__text {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* ---------- Atividade (ofensiva + mês) ---------- */
+.prog-activity {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.prog-act {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 22px;
+  min-height: 132px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.prog-act:hover {
+  border-color: var(--card-hover);
+}
+
+.prog-act__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.prog-act--hot .prog-act__icon {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
+  color: var(--primary);
+}
+
+.prog-act__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: #0b0b0f;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.prog-act__chev {
+  position: absolute;
+  top: 16px;
+  right: 14px;
+  color: var(--text-tertiary);
+}
+
+.prog-act__badge--ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.prog-act__texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.prog-act__title {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.prog-act__sub {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.prog-act__watermark {
+  position: absolute;
+  right: 10px;
+  bottom: -14px;
+  font-size: 3.6rem;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+/* ---------- Heatmap de séries ---------- */
+.prog-heat {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius-xl);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+}
+
+.prog-heat__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.prog-heat__count {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.prog-heat__scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+/* v4.55.0 — o toggle legado ganhou a âncora do card do mês; a rolagem
+   suave precisa de um respiro no topo. */
+.calendar-view-toggle {
+  scroll-margin-top: 16px;
+}
+
+.prog-heat__body {
+  display: flex;
+  gap: 8px;
+  min-width: max-content;
+}
+
+.prog-heat__days {
+  display: grid;
+  grid-auto-flow: row;
+  gap: 3px;
+  padding-top: 20px;
+}
+
+.prog-heat__day {
+  height: 14px;
+  font-size: 0.6rem;
+  line-height: 14px;
+  color: var(--text-tertiary);
+}
+
+.prog-heat__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prog-heat__months {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 14px;
+  gap: 3px;
+  height: 16px;
+}
+
+.prog-heat__month {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.prog-heat__weeks {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 14px;
+  gap: 3px;
+}
+
+.prog-heat__week {
+  display: grid;
+  gap: 3px;
+}
+
+.prog-heat__cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.prog-heat__cell--l1 {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+}
+
+.prog-heat__cell--l2 {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+}
+
+.prog-heat__cell--l3 {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.74);
+}
+
+.prog-heat__cell--l4 {
+  background: var(--primary);
+}
+
+.prog-heat__cell--out {
+  background: transparent;
+}
+
+.prog-heat__cell--today {
+  outline: 1px solid var(--primary-light);
+  outline-offset: 1px;
+}
+
+.prog-heat__legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.prog-heat__scale {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.prog-heat__scale span {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* ---------- Tendências ---------- */
+.prog-trends__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 2px -6px;
+}
+
+.prog-trends__head .prog-section__title {
+  margin: 0;
+}
+
+.prog-trends {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.prog-trend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+}
+
+.prog-trend__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.prog-trend__row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prog-trend__value {
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.prog-trend__delta {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-tertiary);
+}
+
+.prog-trend__delta.is-up {
+  color: var(--gym-green);
+}
+
+.prog-trend__delta.is-down {
+  color: var(--danger);
+}
+
+.prog-trend__label {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+/* ---------- Corpo ---------- */
+.prog-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.prog-body:hover {
+  border-color: var(--card-hover);
+}
+
+.prog-body__chev {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+}
+
+.prog-body__value {
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.prog-body__hint {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+/* ---------- Conquistas ---------- */
+.prog-badges {
+  padding: 8px 18px 18px;
+  border-radius: var(--radius-xl);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+}
+
+.prog-badges__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.prog-badges__title {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.prog-badges__chev {
+  color: var(--primary);
+}
+
+.prog-badges__body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 16px;
+}
+
+.prog-badges__medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  color: var(--text-tertiary);
+}
+
+.prog-badges__text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+/* ---------- Dropdown escuro (padrão do app) ---------- */
+.prog-select {
+  padding: 6px 30px 6px 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background-color: #111;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.prog-select option {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+/* ---------- Mobile estreito ---------- */
+@media (max-width: 420px) {
+  .prog-activity,
+  .prog-trends {
+    gap: 10px;
+  }
+
+  .prog-act {
+    min-height: 118px;
+    padding: 14px;
+  }
+
+  .prog-act__title {
+    font-size: 0.92rem;
+  }
+
+  .prog-trend {
+    padding: 14px;
+  }
+
+  .prog-trend__value {
+    font-size: 1.2rem;
+  }
+}

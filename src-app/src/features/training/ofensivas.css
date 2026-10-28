@@ -1,0 +1,619 @@
+/* ============================================================
+   OFENSIVAS — Central de Ofensivas ("Sequências")
+   (src-app/src/features/training/OfensivasOverlay.tsx)
+
+   Tela cheia aberta pela aba Progresso. Mesmo esquema de cores do app:
+   fundo `--background`, cartões `--card-bg`/`--card-border` e TODOS os
+   acentos em `rgba(var(--primary-rgb, 139, 92, 246), X)` — acompanha o
+   tema escolhido em Configurações (o fallback vale para o primeiro paint).
+
+   BEM com prefixo `of-` (Block__Element--Modifier), ícones SVG stroke
+   (`currentColor`) via lucide-react — Diretrizes/Ícones.md.
+   ============================================================ */
+
+.of-root {
+  position: fixed;
+  inset: 0;
+  z-index: 900; /* acima dos overlays de seção (600/700), abaixo do LockScreen (1200) */
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-primary);
+  animation: of-fade-in 0.22s ease;
+}
+
+.of-root.is-closing {
+  animation: of-fade-out 0.22s ease forwards;
+}
+
+.of-root *,
+.of-root *::before,
+.of-root *::after {
+  box-sizing: border-box;
+}
+
+.of-root svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+@keyframes of-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes of-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes of-slide-up {
+  from { transform: translateY(26px); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ---------- Header ---------- */
+.of-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  background: rgba(18, 18, 18, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.of-head__title {
+  margin: 0;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.of-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--primary-light);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.of-icon-btn:hover {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
+}
+
+.of-icon-btn--sm {
+  width: 30px;
+  height: 30px;
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+}
+
+.of-chip {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: var(--radius-full);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.16);
+  color: var(--primary-light);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/* ---------- Área rolável ---------- */
+.of-scroll {
+  flex: 1;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 18px 48px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ---------- Hero ---------- */
+.of-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0 2px;
+}
+
+.of-hero__flame {
+  color: var(--text-secondary);
+}
+
+.of-hero__value {
+  font-size: 3.2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.of-hero__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.of-hero__sub {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+}
+
+/* ---------- Estatísticas ---------- */
+.of-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.of-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 26px;
+  min-height: 108px;
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+}
+
+.of-stat__label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.of-stat__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.of-stat__value {
+  font-size: 1.7rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.of-stat__info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.of-stat__info:hover {
+  color: var(--text);
+  border-color: var(--card-hover);
+}
+
+/* ---------- Classificação ---------- */
+.of-section__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.of-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border);
+}
+
+.of-tab {
+  padding: 12px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.of-tab.is-active {
+  background: var(--primary);
+  color: #0b0b0f;
+  font-weight: 800;
+  box-shadow: 0 6px 18px var(--shadow);
+}
+
+.of-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+}
+
+/* ---------- Semanas ---------- */
+.of-weeks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.of-week {
+  display: grid;
+  grid-template-columns: 92px 1fr 52px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.of-week__bar {
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.of-week__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+  transition: width var(--transition-base);
+}
+
+.of-week--hit .of-week__fill {
+  background: var(--primary);
+}
+
+.of-week__count {
+  text-align: right;
+  font-weight: 800;
+}
+
+.of-week--hit .of-week__count {
+  color: var(--primary-light);
+}
+
+.of-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* ---------- Treinos do mês ---------- */
+.of-month__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.of-month__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.of-month__nav {
+  display: flex;
+  gap: 6px;
+}
+
+.of-month__list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--card-border);
+}
+
+.of-month__opt {
+  padding: 9px 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.of-month__opt:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.of-month__opt.is-active {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
+  color: var(--primary-light);
+}
+
+.of-month__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  text-align: center;
+}
+
+.of-month__summary strong {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.of-month__summary span {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.of-month__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.of-month__dow {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-tertiary);
+}
+
+.of-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-tertiary);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.of-day.is-empty {
+  background: transparent;
+}
+
+.of-day.is-done {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.22);
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.42);
+  color: var(--primary-light);
+}
+
+.of-day.is-today {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.of-day.is-future {
+  opacity: 0.45;
+}
+
+.of-link {
+  align-self: center;
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ---------- Compartilhar atividade ---------- */
+.of-share {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 26px 20px;
+  border-radius: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+  text-align: center;
+}
+
+.of-share__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  color: var(--primary-light);
+}
+
+.of-share__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.of-share__text {
+  margin: 0;
+  max-width: 36ch;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.of-btn {
+  margin-top: 8px;
+  padding: 12px 26px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: #0b0b0f;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 22px var(--shadow);
+  transition: var(--transition-base);
+}
+
+.of-btn:active {
+  transform: scale(0.97);
+}
+
+/* ---------- Folha inferior ---------- */
+.of-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  animation: of-fade-in 0.18s ease;
+}
+
+.of-sheet__panel {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 14px 22px 36px;
+  background: var(--background-alt);
+  border-top: 1px solid var(--card-border);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  animation: of-slide-up 0.24s ease;
+}
+
+.of-sheet__bar {
+  display: block;
+  width: 42px;
+  height: 4px;
+  margin: 0 auto 14px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.of-sheet__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.of-sheet__value {
+  font-size: 2.1rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.of-sheet__text {
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.of-weekrow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.of-weekrow__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.of-weekrow__dow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-tertiary);
+}
+
+.of-weekrow__day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.of-weekrow__day.is-done {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+  color: #fff;
+}
+
+.of-weekrow__day.is-today {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* ---------- Desktop ---------- */
+@media (min-width: 768px) {
+  .of-scroll {
+    padding: 28px 24px 60px;
+  }
+
+  .of-hero__value {
+    font-size: 3.6rem;
+  }
+}

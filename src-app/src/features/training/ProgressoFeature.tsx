@@ -2,9 +2,14 @@
  * ProgressoFeature.tsx — Seção Progresso (port 1:1 de `componentes/secoes/progresso.html`
  * + `JS/treino/secao-progresso.js`)
  *
- * Emite o DOM/classes legados (.p-card, cycle-card, streak, semana, calendário
- * mensal/semanal, stats, volume donut, radar real (Fase 3), calculadora 1RM) e
- * calcula tudo a partir de `useLocalData` + `legacyState` (ciclo, cycleEvents).
+ * Mantém o DOM/classes legados dos cartões preservados — ciclo de treino atual,
+ * calendário mensal/semanal (inalterado), stats, volume donut, radar real
+ * (Fase 3) e calculadora 1RM — e acrescenta (v4.55.0) o cabeçalho "Progresso",
+ * a Pontuação de Força, os cards de Atividade (ofensiva + mês atual), o heatmap
+ * anual de séries, Tendências, Corpo (métricas corporais) e Conquistas.
+ *
+ * Calcula tudo a partir de `useLocalData` + `legacyState` (ciclo, cycleEvents);
+ * as derivações novas vivem em `progress-stats.ts`.
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -13,13 +18,14 @@ import { useLocalData } from '@/hooks/useLocalData';
 import { fadeIn } from '@/lib/animations';
 import {
   SHEET_ORDER,
+  formatSeconds,
   getExerciseMap,
   getStreak,
   pickExercises,
   today,
+  type LocalData,
   type SheetKey,
 } from '@/core/db/queries';
-import type { Exercise, WorkoutHistory } from '@/core/db/schema';
 import { RadarChart } from '@/features/gamification/RadarChart';
 import { useRadarMode } from '@/features/gamification/useRadarFit';
 import { useShareStore } from '@/features/gamification/share-store';
@@ -32,6 +38,34 @@ import {
   type FirstDayOfWeek,
   type WeightUnit,
 } from '@/lib/app-prefs';
+import { Award, ChevronRight, Dumbbell, Flame, Layers, Plus, Weight, Zap } from 'lucide-react';
+import { getBadgeDefinitions, getProfileStats } from '@/features/profile/profile-data';
+import { buildFriendInviteUrl, getFriendCode } from '@/features/social/friend-invites';
+import { shareNative } from '@/lib/native-share';
+import { showToast } from '@/lib/toast';
+import { BodyMetricsOverlay } from './BodyMetricsOverlay';
+import { OfensivasOverlay } from './OfensivasOverlay';
+import {
+  BODY_METRICS_EVENT,
+  getBodyMetrics,
+  latestMeasurementDate,
+  latestValues,
+} from './body-metrics';
+import {
+  exerciseVolume,
+  fmtDateLocal as fmtDate,
+  formatVolume,
+  getSeriesHeatmap,
+  getStrengthScore,
+  getTrends,
+  getWeekSummary,
+  keysOfDay,
+  weeklyTarget,
+  type TrendKey,
+  type TrendMetric,
+  type TrendPeriod,
+} from './progress-stats';
+import './progresso.css';
 
 type CalView = 'monthly' | 'weekly';
 
@@ -61,31 +95,9 @@ const MONTH_NAMES = [
 /** "Hoje" único do módulo (evita `new Date()` impuro dentro do render — oxlint purity). */
 const TODAY_BASE = new Date();
 
-/** Data local YYYY-MM-DD (legado usa toISOString — equivalente no fuso BR). */
-function fmtDate(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate()
-  ).padStart(2, '0')}`;
-}
-
-/** Espelha `formatSeconds` (db.js). */
-function formatSeconds(seconds: number): string {
-  if (!seconds) return '--';
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  if (h > 0) return `${h}h ${m}m ${s}s`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
-}
-
-/** Letras concluídas de um dia (legado: `treinos[]` com fallback em `treino`). */
-function keysOfDay(row: WorkoutHistory | undefined): string[] {
-  if (!row) return [];
-  if (row.completedKeys?.length) return row.completedKeys;
-  if (row.completed && row.sheetKey) return [row.sheetKey];
-  return [];
-}
+/* `fmtDate` (progress-stats: `fmtDateLocal`), `keysOfDay`, `formatSeconds` e
+   `exerciseVolume` são compartilhados com a Central de Ofensivas e vivem em
+   `progress-stats.ts` / `core/db/queries.ts` — sem cópias locais. */
 
 interface MonthCell {
   dateStr: string;
@@ -128,21 +140,16 @@ const VOLUME_COLORS = [
 
 /** Volumes são somados em kg; a exibição respeita a unidade escolhida. */
 function formatT(kg: number): string {
-  const unit = getWeightUnit();
-  const value = convertKgToDisplay(kg, unit);
-  if (value >= 1000) return `${(value / 1000).toFixed(1).replace('.0', '')}T`;
-  return `${Math.round(value)}${unit}`;
+  return formatVolume(kg, getWeightUnit());
 }
 
-/** Volume de um exercício (espelha `renderVolumeSemanal`). */
-function exerciseVolume(ex: Exercise): number {
-  const s = parseInt(String(ex.sets), 10) || 0;
-  const r = parseInt(String(ex.reps), 10) || 0;
-  const c =
-    parseFloat(String(ex.load).replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-  const multi = ex.porLado ? 2 : 1;
-  return s * r * c * multi;
-}
+/** Ícones das tendências (lucide, SVG stroke com `currentColor`). */
+const TREND_ICONS: Record<TrendKey, React.ReactNode> = {
+  treinos: <Dumbbell size={18} />,
+  volume: <Weight size={18} />,
+  energia: <Zap size={18} />,
+  series: <Layers size={18} />,
+};
 
 /* Ícones de tendência (renderVolumeSemanal L529–530) */
 const UP_TREND_ICON =
@@ -168,7 +175,12 @@ function trendInfo(entry: VolumeEntry, mode: string): { label: string; color: st
 
 /* ── Feature ── */
 
-export const ProgressoFeature: React.FC = () => {
+interface ProgressoFeatureProps {
+  /** Abre o overlay do Perfil (tela de Emblemas/Conquistas). */
+  onOpenPerfil?: () => void;
+}
+
+export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil }) => {
   const { exercises, sheets, history, legacy } = useLocalData();
 
   const [calView, setCalView] = useState<CalView>('monthly');
@@ -183,6 +195,14 @@ export const ProgressoFeature: React.FC = () => {
   const [showRadarGuide, setShowRadarGuide] = useState(false);
   const [firstDay, setFirstDay] = useState<FirstDayOfWeek>(() => getFirstDayOfWeek());
   const [weightUnit, setWeightUnit] = useState<WeightUnit>(() => getWeightUnit());
+  /* v4.55.0 — telas cheias abertas pela aba e filtros das seções novas */
+  const [ofensivasOpen, setOfensivasOpen] = useState(false);
+  const [bodyMetricsOpen, setBodyMetricsOpen] = useState(false);
+  const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('week');
+  const [heatYear, setHeatYear] = useState(() => new Date().getFullYear());
+  const [bodyMetrics, setBodyMetrics] = useState(() => getBodyMetrics());
+  /** Âncora do calendário: o card do mês rola até ele sem alterar a visão. */
+  const calendarAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const syncPrefs = () => {
@@ -193,8 +213,14 @@ export const ProgressoFeature: React.FC = () => {
     return () => window.removeEventListener('academia:prefs-changed', syncPrefs);
   }, []);
 
+  /* Métricas corporais: refletem as gravações feitas na tela de medidas. */
+  useEffect(() => {
+    const syncMetrics = () => setBodyMetrics(getBodyMetrics());
+    window.addEventListener(BODY_METRICS_EVENT, syncMetrics);
+    return () => window.removeEventListener(BODY_METRICS_EVENT, syncMetrics);
+  }, []);
+
   /* Containers animados com fadeIn (secao-progresso.js L115/L258/L402/L586) */
-  const weekDaysRef = useRef<HTMLDivElement>(null);
   const monthCalRef = useRef<HTMLDivElement>(null);
   const plannerRef = useRef<HTMLDivElement>(null);
   const volumeChartRef = useRef<HTMLDivElement>(null);
@@ -245,23 +271,85 @@ export const ProgressoFeature: React.FC = () => {
         ? { text: 'RETA FINAL', color: '#fff', background: '#8b5cf6' }
         : { text: 'EM ANDAMENTO', color: undefined, background: undefined };
 
-  /* ===== Sua Semana (respeita o primeiro dia configurado) ===== */
-  const weekDays = useMemo(() => {
-    const now = TODAY_BASE;
-    const start = new Date(now);
-    if (firstDay === 'sunday') {
-      start.setDate(now.getDate() - now.getDay());
-    } else {
-      start.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
-    }
-    return getWeekDayLabels(firstDay).map((label, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      const dateStr = fmtDate(d);
-      return { label, dateStr, done: Boolean(histMap.get(dateStr)?.completed) };
-    });
-  }, [histMap, firstDay]);
-  const weekTrainedCount = weekDays.filter((d) => d.done).length;
+  /* ===== Seções novas (v4.55.0) =====
+     Os cálculos de ofensiva, heatmap, tendências e pontuação vivem em
+     `progress-stats.ts`; aqui só se monta o `LocalData` e a exibição. */
+  const localData = useMemo<LocalData>(
+    () => ({ exercises, sheets, history, legacy }),
+    [exercises, sheets, history, legacy]
+  );
+  const weekTarget = weeklyTarget(legacy);
+  const weekSummary = useMemo(
+    () => getWeekSummary(history, firstDay, weekTarget, exMap, sheetMap, t),
+    [history, firstDay, weekTarget, exMap, sheetMap, t]
+  );
+  const heatmap = useMemo(
+    () => getSeriesHeatmap(history, heatYear, firstDay, exMap, sheetMap, t),
+    [history, heatYear, firstDay, exMap, sheetMap, t]
+  );
+  const heatWorkouts = useMemo(
+    () =>
+      history
+        .filter((h) => h.date.startsWith(String(heatYear)))
+        .reduce((sum, h) => sum + keysOfDay(h).length, 0),
+    [history, heatYear]
+  );
+  /* Rótulos de mês do heatmap: cada um ocupa as colunas até o próximo. */
+  const heatMonths = useMemo(
+    () =>
+      heatmap.monthLabels.map((month, i) => {
+        const next = heatmap.monthLabels[i + 1];
+        return {
+          label: month.label,
+          weekIndex: month.weekIndex,
+          span: Math.max(1, (next ? next.weekIndex : heatmap.weeks.length) - month.weekIndex),
+        };
+      }),
+    [heatmap]
+  );
+  const trends = useMemo(
+    () => getTrends(localData, trendPeriod, exMap, sheetMap, t),
+    [localData, trendPeriod, exMap, sheetMap, t]
+  );
+  const strength = useMemo(() => getStrengthScore(localData), [localData]);
+  const monthWorkouts = useMemo(
+    () =>
+      history
+        .filter((h) => h.date.startsWith(t.slice(0, 7)))
+        .reduce((sum, h) => sum + keysOfDay(h).length, 0),
+    [history, t]
+  );
+  const badgesEarned = useMemo(
+    () =>
+      getBadgeDefinitions(localData, getProfileStats(localData), legacy?.conquistas ?? [], false)
+        .filter((badge) => badge.naturalCheck).length,
+    [localData, legacy]
+  );
+
+  /* Mês atual em Title Case (o card do mês acompanha a data de hoje). */
+  const currentMonthName =
+    MONTH_NAMES[TODAY_BASE.getMonth()].charAt(0) +
+    MONTH_NAMES[TODAY_BASE.getMonth()].slice(1).toLowerCase();
+  const currentDay = TODAY_BASE.getDate();
+
+  const bodyLatest = latestValues(bodyMetrics);
+  const bodyWeightKg = bodyLatest.weightKg ?? legacy?.profileCustomization?.weightKg ?? null;
+  const bodyLastDate = latestMeasurementDate(bodyMetrics);
+  const bodyWeightLabel =
+    bodyWeightKg !== null
+      ? `${convertKgToDisplay(bodyWeightKg, weightUnit).toFixed(1).replace('.', ',')} ${weightUnit}`
+      : '—';
+  const bodyHint =
+    Object.keys(bodyMetrics.photos).length > 0 || bodyLastDate
+      ? 'Toque para ver suas fotos de progresso'
+      : 'Toque para adicionar sua primeira foto';
+
+  const trendDisplay = (metric: TrendMetric): string => {
+    if (metric.value <= 0) return '—';
+    if (metric.key === 'volume') return formatT(metric.value);
+    if (metric.key === 'energia') return `${Math.round(metric.value)} min`;
+    return String(metric.value);
+  };
 
   /* ===== Calendário mensal ===== */
   const monthCells = useMemo<MonthCell[]>(() => {
@@ -496,7 +584,6 @@ export const ProgressoFeature: React.FC = () => {
 
   useEffect(() => {
     fadeIn(plannerRef.current);
-    fadeIn(weekDaysRef.current);
   }, [plannerWeeks]);
 
   useEffect(() => {
@@ -509,7 +596,6 @@ export const ProgressoFeature: React.FC = () => {
     fadeIn(calView === 'monthly' ? monthlyCardRef.current : weeklyCardRef.current);
     if (calView === 'weekly') {
       fadeIn(plannerRef.current);
-      fadeIn(weekDaysRef.current);
     }
   }, [calView]);
 
@@ -537,6 +623,37 @@ export const ProgressoFeature: React.FC = () => {
       document.body.style.overflow = prev;
     };
   }, [anyProgressModalOpen]);
+
+  /* v4.55.0 — o card do mês leva ao calendário da aba EXATAMENTE como ele está
+     (Mensal grid / Semanal planner): retorna o mês para o atual e rola até ele,
+     sem trocar a visão escolhida. */
+  const focusCalendar = () => {
+    setOfensivasOpen(false);
+    setBodyMetricsOpen(false);
+    setViewDate(new Date());
+    window.requestAnimationFrame(() => {
+      calendarAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  /* Convite de amigo (fluxo do Social) reaproveitado pelo card de compartilhar. */
+  const inviteFriend = async () => {
+    const code = getFriendCode();
+    const name = legacy?.profileCustomization?.nome || 'Seu amigo';
+    const url = buildFriendInviteUrl(code, name);
+    const result = await shareNative({
+      title: 'Academia',
+      text: 'Treine comigo no Academia — use meu convite de amigo:',
+      url,
+    });
+    if (result === 'shared' || result === 'cancelled') return;
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('Convite copiado para a área de transferência');
+    } catch {
+      showToast('Não foi possível compartilhar o convite', 'error');
+    }
+  };
 
   const shiftMonth = (delta: number) =>
     setViewDate((d) => new Date(d.getFullYear(), d.getMonth() + delta, 1));
@@ -600,64 +717,93 @@ export const ProgressoFeature: React.FC = () => {
           </div>
 
           <div className="progresso-grid">
-            {/* ===== Ofensiva ===== */}
-            <div className="p-card streak-card">
-              <div
-                className="streak-icon"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'rgba(249,115,22,0.1)',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  color: '#f97316',
-                }}
+            {/* ===== Cabeçalho da aba (v4.55.0) ===== */}
+            <div className="prog-head">
+              <h2 className="prog-head__title">Progresso</h2>
+              <button
+                type="button"
+                className="prog-head__btn"
+                aria-label="Registrar medidas corporais"
+                onClick={() => setBodyMetricsOpen(true)}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  width={20}
-                  height={20}
-                >
-                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-                </svg>
-              </div>
-              <div className="streak-info">
-                <h3>
-                  <span id="progStreakVal">{streak}</span> Dias Seguidos!
-                </h3>
-                <p>Continue treinando para não perder sua ofensiva.</p>
-              </div>
+                <Plus size={20} />
+              </button>
             </div>
 
-            {/* ===== Sua Semana ===== */}
-            <div className="p-card weekly-summary-card">
-              <div className="ws-header">
-                <h3>Sua Semana</h3>
-                <div className="ws-badge">
-                  <span id="weekTrainedCount">{weekTrainedCount}</span> dias treinados
-                </div>
-              </div>
-              <div className="ws-days" id="weekDaysGrid" ref={weekDaysRef}>
-                {weekDays.map((d) => (
-                  <div className="ws-day-item" key={d.dateStr}>
-                    <span className="ws-day-label">{d.label}</span>
-                    <div className={`ws-day-circle ${d.done ? 'completed' : ''}`}>
-                      <span className="check">✓</span>
-                    </div>
+            {/* ===== Pontuação de Força (v4.55.0) ===== */}
+            <h3 className="prog-section__title">Pontuação de Força</h3>
+            <div className="prog-score">
+              <span className="prog-score__icon" aria-hidden="true">
+                <Zap size={22} />
+              </span>
+              {strength.ready ? (
+                <div className="prog-score__body">
+                  <span className="prog-score__value">
+                    {strength.value}
+                    <small>/100</small>
+                  </span>
+                  <div className="prog-score__bar">
+                    <div className="prog-score__fill" style={{ width: `${strength.value}%` }} />
                   </div>
-                ))}
-              </div>
+                  <span className="prog-score__label">{strength.label}</span>
+                </div>
+              ) : (
+                <p className="prog-score__text">
+                  Você precisa completar alguns treinos antes de poder ver sua pontuação.
+                </p>
+              )}
             </div>
 
+            {/* ===== Atividade (v4.55.0) ===== */}
+            <h3 className="prog-section__title">Atividade</h3>
+            <div className="prog-activity">
+              {/* Ofensiva — abre a Central de Ofensivas (sequência e constância) */}
+              <button
+                type="button"
+                className={`prog-act ${streak > 0 ? 'prog-act--hot' : ''}`}
+                onClick={() => setOfensivasOpen(true)}
+                aria-label="Abrir a Central de Ofensivas"
+              >
+                <span className="prog-act__icon" aria-hidden="true">
+                  <Flame size={20} />
+                </span>
+                <ChevronRight className="prog-act__chev" size={16} aria-hidden="true" />
+                <span className="prog-act__texts">
+                  <span className="prog-act__title">
+                    {streak > 0 ? `${streak} dia${streak > 1 ? 's' : ''}` : 'Sem sequência'}
+                  </span>
+                  <span className="prog-act__sub">
+                    {weekSummary.done} / {weekTarget} dias
+                  </span>
+                </span>
+              </button>
+
+              {/* Mês atual — mostra o calendário da aba (Mensal/Semanal) inalterado */}
+              <button
+                type="button"
+                className="prog-act"
+                onClick={focusCalendar}
+                aria-label={`Treinos de ${currentMonthName} — abrir o calendário`}
+              >
+                <span
+                  className={`prog-act__badge ${monthWorkouts > 0 ? 'prog-act__badge--ghost' : ''}`}
+                >
+                  {monthWorkouts > 0 ? `${monthWorkouts} treinos` : 'NOVO'}
+                </span>
+                <ChevronRight className="prog-act__chev" size={16} aria-hidden="true" />
+                <span className="prog-act__texts">
+                  <span className="prog-act__title">{currentMonthName}</span>
+                  <span className="prog-act__sub">
+                    {monthWorkouts} treino{monthWorkouts === 1 ? '' : 's'}
+                  </span>
+                </span>
+                <span className="prog-act__watermark" aria-hidden="true">
+                  {currentDay}
+                </span>
+              </button>
+            </div>
             {/* ===== Toggle calendário ===== */}
-            <div className="calendar-view-toggle">
+            <div className="calendar-view-toggle" ref={calendarAnchorRef}>
               <button
                 type="button"
                 className={`cal-toggle-btn ${calView === 'monthly' ? 'active' : ''}`}
@@ -812,6 +958,149 @@ export const ProgressoFeature: React.FC = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* ===== Séries — heatmap anual (v4.55.0) ===== */}
+            <h3 className="prog-section__title">Séries</h3>
+            <div className="prog-heat">
+              <div className="prog-heat__head">
+                <span className="prog-heat__count">
+                  {heatWorkouts} treino{heatWorkouts === 1 ? '' : 's'}
+                </span>
+                <select
+                  className="prog-select"
+                  aria-label="Ano do heatmap de séries"
+                  value={heatYear}
+                  onChange={(e) => setHeatYear(parseInt(e.target.value, 10))}
+                >
+                  {heatmap.years.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="prog-heat__scroll">
+                <div className="prog-heat__body">
+                  <div className="prog-heat__days" aria-hidden="true">
+                    {getWeekDayLabels(firstDay).map((label) => (
+                      <span className="prog-heat__day" key={label}>
+                        {label[0]}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="prog-heat__grid">
+                    <div className="prog-heat__months" aria-hidden="true">
+                      {heatMonths.map((month) => (
+                        <span
+                          className="prog-heat__month"
+                          key={`${month.label}-${month.weekIndex}`}
+                          style={{ gridColumn: `span ${month.span}` }}
+                        >
+                          {month.label}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="prog-heat__weeks">
+                      {heatmap.weeks.map((week) => (
+                        <div className="prog-heat__week" key={week.startDate}>
+                          {week.cells.map((cell) => (
+                            <span
+                              key={cell.dateStr}
+                              className={`prog-heat__cell ${
+                                cell.inYear
+                                  ? `prog-heat__cell--l${cell.level}`
+                                  : 'prog-heat__cell--out'
+                              } ${cell.isToday ? 'prog-heat__cell--today' : ''}`}
+                              title={`${cell.dateStr} · ${cell.series} série(s)`}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="prog-heat__legend">
+                <span>Menos</span>
+                <span className="prog-heat__scale" aria-hidden="true">
+                  {[0, 1, 2, 3, 4].map((level) => (
+                    <span key={level} className={`prog-heat__cell--l${level}`} />
+                  ))}
+                </span>
+                <span>Mais</span>
+              </div>
+            </div>
+
+            {/* ===== Tendências (v4.55.0) ===== */}
+            <div className="prog-trends__head">
+              <h3 className="prog-section__title">Tendências</h3>
+              <select
+                className="prog-select"
+                aria-label="Período das tendências"
+                value={trendPeriod}
+                onChange={(e) => setTrendPeriod(e.target.value as TrendPeriod)}
+              >
+                <option value="week">Semana passada</option>
+                <option value="month">Último mês</option>
+                <option value="all">Total</option>
+              </select>
+            </div>
+            <div className="prog-trends">
+              {trends.map((metric) => (
+                <div className="prog-trend" key={metric.key}>
+                  <span className="prog-trend__icon" aria-hidden="true">
+                    {TREND_ICONS[metric.key]}
+                  </span>
+                  <div className="prog-trend__row">
+                    <span className="prog-trend__value">{trendDisplay(metric)}</span>
+                    {metric.deltaPct !== null && metric.value > 0 ? (
+                      <span
+                        className={`prog-trend__delta ${metric.deltaPct >= 0 ? 'is-up' : 'is-down'}`}
+                      >
+                        {metric.deltaPct >= 0 ? '+' : '−'}
+                        {Math.abs(Math.round(metric.deltaPct))}%
+                      </span>
+                    ) : null}
+                  </div>
+                  <span className="prog-trend__label">{metric.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* ===== Corpo — métricas corporais (v4.55.0) ===== */}
+            <h3 className="prog-section__title">Corpo</h3>
+            <button
+              type="button"
+              className="p-card prog-body"
+              onClick={() => setBodyMetricsOpen(true)}
+            >
+              <span className="prog-body__value">{bodyWeightLabel}</span>
+              <span className="prog-body__hint">{bodyHint}</span>
+              <ChevronRight className="prog-body__chev" size={18} aria-hidden="true" />
+            </button>
+
+            {/* ===== Conquistas (v4.55.0) ===== */}
+            <h3 className="prog-section__title">Conquistas</h3>
+            <div className="prog-badges">
+              <button type="button" className="prog-badges__row" onClick={() => onOpenPerfil?.()}>
+                <span className="prog-badges__title">Emblemas</span>
+                <ChevronRight className="prog-badges__chev" size={18} aria-hidden="true" />
+              </button>
+              <div className="prog-badges__body">
+                <span className="prog-badges__medal" aria-hidden="true">
+                  <Award size={24} />
+                </span>
+                <span className="prog-badges__text">
+                  {badgesEarned > 0
+                    ? `${badgesEarned} emblema${badgesEarned > 1 ? 's' : ''} conquistado${
+                        badgesEarned > 1 ? 's' : ''
+                      }`
+                    : 'Nenhum emblema conquistado ainda'}
+                </span>
               </div>
             </div>
 
@@ -1719,6 +2008,22 @@ export const ProgressoFeature: React.FC = () => {
           </div>
         </div>
       </div>)}
+      {/* ===== Central de Ofensivas (v4.55.0) ===== */}
+      <OfensivasOverlay
+        open={ofensivasOpen}
+        onClose={() => setOfensivasOpen(false)}
+        data={localData}
+        target={weekTarget}
+        onOpenCalendar={focusCalendar}
+        onInvite={() => void inviteFriend()}
+      />
+
+      {/* ===== Métricas corporais (v4.55.0) ===== */}
+      <BodyMetricsOverlay
+        open={bodyMetricsOpen}
+        onClose={() => setBodyMetricsOpen(false)}
+        initialWeightKg={legacy?.profileCustomization?.weightKg ?? null}
+      />
     </div>
   );
 };

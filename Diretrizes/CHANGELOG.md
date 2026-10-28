@@ -2,6 +2,28 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.55.0] - 2026-10-27
+
+**Aba Progresso reformulada com a Central de Ofensivas e as Métricas corporais.**
+
+### Added
+- `src-app/src/features/training/progress-stats.ts` (novo): derivações da aba — ofensiva em SEMANAS (meta semanal de `trainingFrequencyDays`, padrão 3), constância em DIAS, resumo da semana atual, heatmap anual de séries, tendências (treinos/volume/energia/séries contra o período anterior) e pontuação de força (0–100 pelo radar, a partir de 3 treinos concluídos). Passa a concentrar `keysOfDay`, `exerciseVolume`, `seriesOfDay`, `fmtDateLocal` e `formatVolume` (as cópias locais da ProgressoFeature saíram).
+- `src-app/src/features/training/OfensivasOverlay.tsx` + `ofensivas.css` (novos): Central de Ofensivas ("Sequências") em tela cheia — hero de semanas de sequência ("N dias / semana"), cards de Treinos esta semana, Melhor sequência, Sequência de consistência e Melhor consistência (com folha inferior explicativa; a de treinos abre os dias da semana), "Classificação" em abas (Sequência Atual com as últimas 8 semanas | Treinos do mês com seletor de mês) e o card "Compartilhar Atividade" com "Convidar um amigo" (reaproveita o convite do Social: `shareNative` → clipboard + toast).
+- `src-app/src/features/training/BodyMetricsOverlay.tsx` + `body-metrics.ts` + `metricas-corporais.css` (novos): Métricas corporais em tela cheia — peso, fotos de progresso (Frente/Lado/Costas), gordura corporal, cintura, registro de medidas por data (uma por dia, com merge), unidade kg/lb e a tela Comparar métricas (7D/30D/90D/6M/1Y, com "Ainda não há dados suficientes para comparar" quando não há duas datas). Dados em `localStorage` (`academia_body_metrics_v1`); fotos de progresso são reduzidas a 720 px em JPEG antes de gravar.
+
+### Changed
+- `src-app/src/features/training/ProgressoFeature.tsx` + `progresso.css` (novo): a aba ganhou o cabeçalho "Progresso" (o "+" abre as métricas corporais) e as seções Pontuação de Força, Atividade, Séries (heatmap anual com seletor de ano), Tendências (Semana passada/Último mês/Total), Corpo (peso + atalho das fotos) e Conquistas (linha "Emblemas" que abre o Perfil + contagem de emblemas conquistados).
+- O card do MÊS ATUAL em Atividade ("September" na referência é sempre o mês de hoje) leva ao calendário existente: rola até ele e reposiciona o mês corrente, SEM alterar a visão escolhida (Mensal grid / Semanal planner seguem inalterados).
+- Cards legados "Ofensiva (Dias Seguidos)" e "Sua Semana" saíram da aba — a informação passou para os cards de Atividade e para a Central de Ofensivas. Seguem exibidos, sem alteração: Ciclo de Treino Atual, calendário Mensal/Semanal, Total de Treinos, Volume de Carga, Atributos de Performance (radar) e Calculadora de 1RM.
+- `src-app/src/App.tsx`: `<ProgressoFeature onOpenPerfil={…}/>` (linha "Emblemas") e as classes dos overlays novos (`.of-root`, `.bm-root`) entram na lista de alvos que ignoram o swipe de seção.
+- `src-app/src/features/training/progresso.css`: `.calendar-view-toggle` ganha `scroll-margin-top` para a rolagem até o calendário.
+- `Diretrizes/system_map.json` (version `4.54.10` → `4.55.0`) e `Diretrizes/DESIGN.md` (§15/§16.8) atualizados com os arquivos e as classes novas.
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos (mesma linha de base).
+- `npm run lint:docs`: OK.
+
 ## [v4.54.10] - 2026-10-27
 
 **Ajustes finais: cardio/esteira na mesma linha e fonte unificada.**

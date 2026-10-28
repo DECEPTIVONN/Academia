@@ -985,6 +985,16 @@ Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) p
 | `.gs-*` | `features/search/search.css` | Busca global |
 | `.fitid-*` | `features/dashboard/fitid-overlay.css` | Overlay Fit ID |
 | `.sync-*` / `.connected-devices` | `features/sync/sync.css` | Painéis de sync/conta |
+| `.prog-*` | `features/training/progresso.css` | Seções novas da aba Progresso (cabeçalho, pontuação de força, Atividade, heatmap de séries, tendências, corpo, conquistas) |
+| `.of-*` | `features/training/ofensivas.css` | Central de Ofensivas — tela cheia (z-index 900) |
+| `.bm-*` | `features/training/metricas-corporais.css` | Métricas corporais e Comparar métricas — tela cheia (z-index 900) |
+
+### 16.9 Progresso — Ofensivas e Métricas corporais
+- **Componentes:** `features/training/ProgressoFeature.tsx` (aba), `features/training/OfensivasOverlay.tsx` (Central de Ofensivas / "Sequências"), `features/training/BodyMetricsOverlay.tsx` (Métricas corporais + Comparar métricas)
+- **Dados:** `features/training/progress-stats.ts` (ofensiva em semanas, constância em dias, resumo da semana, heatmap anual de séries, tendências e pontuação de força) e `features/training/body-metrics.ts` (localStorage `academia_body_metrics_v1`, evento `academia:body-metrics-changed`)
+- **CSS:** `features/training/progresso.css`, `features/training/ofensivas.css`, `features/training/metricas-corporais.css`
+- **Classes:** `.prog-*` (aba), `.of-*` (ofensivas), `.bm-*` (métricas corporais)
+- **Padrões:** overlays via `createPortal(document.body)` com `z-index: 900` e listados entre os alvos que ignoram o swipe de seção (`App.tsx`); acentos sempre em `rgba(var(--primary-rgb), X)` para acompanhar o tema. O card do mês (seção Atividade) é sempre o mês CORRENTE e leva ao calendário existente sem alterar a visão Mensal/Semanal.
 
 ---
 
@@ -1021,7 +1031,7 @@ Caminhos das colunas **Componente/CSS** relativos à raiz do repositório. CSS d
 | **Hero da Ficha + stats** | `features/workout/FichaFeature.tsx` | `legacy-style/treino/1-core.css` (`.h-stat*`), `legacy-style/treino/secoes/ficha-overlay.css` | `.treino-hero`, `#statTotalEx`, `.h-stat-val`, `.h-stat-fire`, `#globalWorkoutTimer` |
 | **Ficha (tabela / grid / foco)** | `features/workout/FichaFeature.tsx`, `FocusModal.tsx` | `legacy-style/treino/secoes/ficha-overlay.css` | `.view-selector`, `#viewBtnFocus`, `chk-*` / `chk-grid-*` |
 | **Seção Treinos (deck builder)** | `features/workout/treinos/*` (`TreinosFeature.tsx`, `MontarTab.tsx`, `cards.tsx`, `TreinosModals.tsx`, `ExercicioFormModal.tsx`, `CustomizacaoTabs.tsx`) | `legacy-style/treino/secoes/{deck-builder,cards,tabs-subnav}.css` | `#section-treinos`, `.t-tab-btn`, `.deck-card`, `.g-chip` |
-| **Progresso / Radar** | `features/training/ProgressoFeature.tsx`, `features/gamification/{radar.ts,RadarChart.tsx,useRadarFit.ts}` | `legacy-style/treino/4-gamificacao.css` | `#radarChartContainer`, `.cycle-xp-fill` |
+| **Progresso / Radar** | `features/training/{ProgressoFeature,OfensivasOverlay,BodyMetricsOverlay}.tsx`, `features/training/{progress-stats,body-metrics}.ts`, `features/gamification/{radar.ts,RadarChart.tsx,useRadarFit.ts}` | `features/training/{progresso,ofensivas,metricas-corporais}.css` + `legacy-style/treino/4-gamificacao.css` | `#radarChartContainer`, `.cycle-xp-fill`, `.prog-*`, `.of-*`, `.bm-*` |
 | **Gamificação / Share** | `features/gamification/{maestria.ts,maestria-ui.ts,ShareModal.tsx,ColecaoModals.tsx}` | `legacy-style/treino/2-modals.css`, `6-maestria.css` | `#modalShare`, `#modalColecaoExercicios`, `#modalMaestriaEx` |
 | **Perfil / Configurações** | `features/profile/*`, `features/settings/*` | `features/settings/settings.css`, `legacy-style/treino/secoes/perfil-overlay.css` | `#perfil-overlay`, `.set-*`, `.hub-*` |
 | **Músicas / miniplayer** | `features/music/*` (`MusicOverlay.tsx`, `FloatingMiniPlayer.tsx`, `WorkoutNowPlayingBar.tsx`) | `features/music/music.css` | `.mu-*`, `.fmp*`, `.wnp*` |

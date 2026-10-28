@@ -500,6 +500,8 @@ function AppShell() {
         t.closest('.news-overlay') ||
         t.closest('.missions-overlay') ||
         t.closest('.friend-qr-overlay') ||
+        t.closest('.of-root') ||
+        t.closest('.bm-root') ||
         t.closest('.qr-scanner') ||
         t.closest('.set-root') ||
         t.closest('.mdw') ||
@@ -891,7 +893,7 @@ function AppShell() {
                 legado é anulada em shell.css). */}
             <motion.div className="section-strip" data-active={activeSection} style={{ x: stripX }}>
               <div className="section-slide" data-section="progresso">
-                <ProgressoFeature />
+                <ProgressoFeature onOpenPerfil={() => setIsPerfilOverlayOpen(true)} />
               </div>
 
               {/* .section-slide wrapper 1:1 com o legado (treino.html: cada
