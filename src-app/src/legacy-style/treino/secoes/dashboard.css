@@ -1597,12 +1597,18 @@
   height: 112px !important;
   /* v4.56.0 — o avatar/emblema do Início é REDONDO (era rounded-3xl) */
   border-radius: 50% !important;
-  border: 2px solid #eab308 !important; /* border-prestige-gold */
-  box-shadow: 0 0 20px rgba(253, 224, 71, 0.5) !important;
+  /* v4.56.2 — sem moldura escolhida o anel é NEUTRO; antes o ouro fixo ficava
+     sempre visível e dava a impressão de que a moldura da sub-aba Emblema
+     não fazia nada. As cores por tier entram nos seletores [data-frame]. */
+  border: 2px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45) !important;
   padding: 4px !important;
   background: #1c1b1b !important; /* bg-surface-container-low */
   overflow: hidden;
   margin: 0 !important;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .dash-profile-avatar.profile-avatar img {
@@ -1618,41 +1624,36 @@
   height: 100% !important;
 }
 
-/* Molduras do avatar no Início (v4.56.0 — anel redondo acompanhando o avatar) */
-.dash-profile-avatar.profile-avatar[data-frame="bronze"] img,
-.dash-profile-avatar.profile-avatar[data-frame="bronze"] svg,
-.dash-profile-avatar.profile-avatar[data-frame="bronze"] .profile-avatar__emblem-wrapper {
-  outline: 2px solid #f97316 !important;
-  outline-offset: 2px !important;
-  border-radius: 50% !important;
-  box-shadow: 0 0 10px rgba(249,115,22,0.5) !important;
+/* Molduras do avatar no Início (v4.56.2 — o anel é pintado no CONTÊINER,
+   não no img/svg interno: a borda de ouro fixa do contêiner mascarava a
+   escolha da sub-aba Emblema). */
+.dash-profile-avatar.profile-avatar[data-frame="bronze"] {
+  border-color: #f97316 !important;
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.55) !important;
 }
 
-.dash-profile-avatar.profile-avatar[data-frame="prata"] img,
-.dash-profile-avatar.profile-avatar[data-frame="prata"] svg,
-.dash-profile-avatar.profile-avatar[data-frame="prata"] .profile-avatar__emblem-wrapper {
-  outline: 2px solid #94a3b8 !important;
-  outline-offset: 2px !important;
-  border-radius: 50% !important;
-  box-shadow: 0 0 10px rgba(148,163,184,0.5) !important;
+.dash-profile-avatar.profile-avatar[data-frame="prata"] {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 20px rgba(148, 163, 184, 0.55) !important;
 }
 
-.dash-profile-avatar.profile-avatar[data-frame="ouro"] img,
-.dash-profile-avatar.profile-avatar[data-frame="ouro"] svg,
-.dash-profile-avatar.profile-avatar[data-frame="ouro"] .profile-avatar__emblem-wrapper {
-  outline: 2px solid #fbbf24 !important;
-  outline-offset: 2px !important;
-  border-radius: 50% !important;
-  box-shadow: 0 0 14px rgba(251,191,36,0.6) !important;
+.dash-profile-avatar.profile-avatar[data-frame="ouro"] {
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.65) !important;
 }
 
-.dash-profile-avatar.profile-avatar[data-frame="elite"] img,
-.dash-profile-avatar.profile-avatar[data-frame="elite"] svg,
-.dash-profile-avatar.profile-avatar[data-frame="elite"] .profile-avatar__emblem-wrapper {
-  outline: 2px solid transparent !important;
-  outline-offset: 2px !important;
+.dash-profile-avatar.profile-avatar[data-frame="elite"] {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 139, 92, 246), 0.35), 0 0 24px var(--primary) !important;
+}
+
+/* O anel interno do 8-customizacao.css duplicaria o do contêiner no Início. */
+.dash-profile-avatar.profile-avatar[data-frame] img,
+.dash-profile-avatar.profile-avatar[data-frame] svg,
+.dash-profile-avatar.profile-avatar[data-frame] .profile-avatar__emblem-wrapper {
+  outline: none !important;
   border-radius: 50% !important;
-  box-shadow: 0 0 0 2px var(--primary), 0 0 18px var(--primary) !important;
+  box-shadow: none !important;
 }
 
 /* Custom sizes for top buttons */

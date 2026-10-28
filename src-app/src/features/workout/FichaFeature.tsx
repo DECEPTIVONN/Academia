@@ -471,6 +471,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   const { exercises, sheets, history, legacy, loading } = useLocalData();
   const { isActive, startTime, startRestTimer, skipRestTimer } = useWorkoutStore();
   const entry = useTodayEntryStore((s) => s.entry);
+  const entryLoaded = useTodayEntryStore((s) => s.loaded);
   const loadEntry = useTodayEntryStore((s) => s.load);
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -522,6 +523,11 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   const hasAe =
     (exercicios.length > 0 || Boolean(sheet?.aerobic?.tipo)) &&
     sheet?.aerobic?.tipo !== 'Nenhum';
+  /* v4.56.2 — só o cardio CONFIGURADO conta para a conclusão (legado
+     `hasAe = ae && ae.tipo`). O card de cardio padrão (10 min de esteira)
+     continua visível, mas é opcional: marcar todos os exercícios conclui o
+     treino sem exigir esse check extra. */
+  const requiresAe = Boolean(sheet?.aerobic?.tipo) && sheet?.aerobic?.tipo !== 'Nenhum';
   const ae = effectiveAerobic(sheet?.aerobic);
   const aeId = `ae-${treino}`;
 
@@ -533,35 +539,44 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
 
   const checks = entry.checks ?? [];
   const done =
-    checks.filter((c) => fichaIds.includes(c)).length + (hasAe && checks.includes(aeId) ? 1 : 0);
-  const total = exercicios.length + (hasAe ? 1 : 0);
+    checks.filter((c) => fichaIds.includes(c)).length +
+    (requiresAe && checks.includes(aeId) ? 1 : 0);
+  const total = exercicios.length + (requiresAe ? 1 : 0);
   const pct = total ? Math.round((done / total) * 100) : 0;
   const isDone = (total > 0 && done === total) || entry.completed === true;
   const streak = getStreak(history);
 
-  /* Transição para concluído → showConclusao com delay de 400ms
-     (secao-ficha.js L312/L368: setTimeout(() => showConclusao(db), 400)).
-     No Modo Foco o foco é quem conclui (focusCheck L910-915, delay de 1.5s),
-     então o callback de 400ms é suprimido enquanto o modal está aberto —
-     marcamos como já tratado para não re disparar ao fechar. */
-  const wasDoneRef = useRef(isDone);
+  /* v4.56.2 — Transição para concluído → showConclusao (secao-ficha.js
+     L312/L368: `setTimeout(() => showConclusao(db), 400)`).
+
+     O ref guarda o estado da PRIMEIRA carga (para não abrir a conclusão ao
+     reabrir uma ficha já concluída). Antes o efeito saía cedo quando
+     `entry.completed` já vinha true — e como `applyFichaCompletion` grava
+     `completed` no MESMO update do último check, a transição era engolida e
+     o usuário ficava preso na interface de treino. Agora a comparação é com o
+     valor anterior do próprio `isDone`.
+
+     No Modo Foco o foco é quem conclui (focusCheck, delay de 1.5s), então o
+     callback de 400ms é suprimido enquanto o modal está aberto. */
+  const doneBaselineRef = useRef<boolean | null>(null);
   const completedCbRef = useRef(onWorkoutCompleted);
   completedCbRef.current = onWorkoutCompleted;
   useEffect(() => {
-    if (entry?.completed) {
-      wasDoneRef.current = true;
+    if (!entryLoaded || loading) return undefined;
+    if (doneBaselineRef.current === null) {
+      doneBaselineRef.current = isDone;
       return undefined;
     }
-    if (isDone && !wasDoneRef.current) {
-      wasDoneRef.current = true;
+    if (isDone && !doneBaselineRef.current) {
+      doneBaselineRef.current = true;
       if (focusOpen) return undefined;
       const timer = window.setTimeout(() => completedCbRef.current(), 400);
       return () => window.clearTimeout(timer);
     }
-    if (!isDone) wasDoneRef.current = false;
+    doneBaselineRef.current = isDone;
     return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- dispara só na transição
-  }, [isDone, focusOpen]);
+  }, [isDone, entryLoaded, loading, focusOpen]);
 
   /* Sugestão (renderFichaSuggestion): último treino CONCLUÍDO + próximo sugerido */
   const suggestion = useMemo(() => {
@@ -621,7 +636,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
 
   const withCompletion = (mut: FichaMutation): FichaMutation => ({
     ...mut,
-    entry: applyFichaCompletion(mut.entry, treino, fichaIds, hasAe),
+    entry: applyFichaCompletion(mut.entry, treino, fichaIds, requiresAe),
   });
 
   const onToggleCheck = (exId: string) => {

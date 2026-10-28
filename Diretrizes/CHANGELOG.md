@@ -2,6 +2,29 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.2] - 2026-10-28
+
+**Modal de volume com background, conclusão automática do treino, heatmap no mês atual e moldura do avatar seguindo a sub-aba Emblema.**
+
+### Added
+- `src-app/src/features/training/volume-details.css` (novo): painel `.vol-detail*` do modal "Detalhes de Volume" da aba Progresso — fundo escuro em glassmorphism (gradiente + `radial-gradient` no acento do tema), borda/glow, cabeçalho com eyebrow + nome do grupo, cards de Volume total e Tendência, card "Evolução de carga" com a média e a Distribuição por exercício em barras (nome, valor, barra proporcional e "% do grupo"), scroll interno estilizado e breakpoints em 480/360 px. O `.modal-overlay` legado não dava contraste ao conteúdo solto do React; agora o painel tem superfície própria.
+
+### Fixed
+- `src-app/src/features/training/ProgressoFeature.tsx`: o modal `#modalVolumeDetails` foi reescrito com a UI nova (referência `Legacy/componentes/secoes/modais.html` L827–852 + `secao-progresso.js` L589 `openVolumeDetails`): título do grupo muscular, Volume Total, Tendência, gráfico (`buildVolumeLineChartSvg` continua injetando no `#volDetChartContainer`) e lista de exercícios com barra de distribuição. Fecha pelo X, pelo overlay e respeita `aria-labelledby`; antes o conteúdo não tinha background e ficava ilegível sobre a tela.
+- `src-app/src/features/workout/FichaFeature.tsx`: **concluir todos os exercícios agora abre a conclusão**. O efeito usava `entry.completed` como curto-circuito e `applyFichaCompletion` grava `completed` no MESMO update do último check, então a transição era engolida e o usuário ficava preso na interface de treino. A transição passou a comparar `isDone` com um baseline (`doneBaselineRef`) iniciado só depois de `entryLoaded` e do fim do `loading`, mantendo o callback de 400 ms e a supressão no Modo Foco.
+- `src-app/src/features/workout/FichaFeature.tsx`: o cardio padrão (10 min de esteira) segue VISÍVEL, mas só entra na contagem de conclusão quando está realmente configurado (`requiresAe`, espelhando `hasAe = ae && ae.tipo` do legado) — antes marcar todos os exercícios não concluía a ficha sem um check extra no cardio padrão.
+- `src-app/src/features/training/ProgressoFeature.tsx`: o heatmap de séries da aba Progresso abre **centralizado no mês atual** (`.prog-heat__cell--today` via `getBoundingClientRect` em dois `requestAnimationFrame`, com `behavior: 'smooth'`); em anos anteriores a rolagem volta ao início do ano. Antes o heatmap abria sempre no começo (janeiro).
+- `src-app/src/legacy-style/treino/secoes/dashboard.css`: a moldura do avatar do Início agora segue `data-frame`. O contêiner `.dash-profile-avatar.profile-avatar` tinha `border: 2px solid #eab308` fixo, que mascarava a escolha da sub-aba Emblema; sem moldura o anel é neutro (`rgba(255,255,255,.16)`) e `[data-frame="bronze|prata|ouro|elite"]` pinta `border-color` + glow no próprio contêiner. Os outlines internos duplicados (img/svg/wrapper) foram neutralizados.
+
+### Changed
+- `Diretrizes/system_map.json` (version `4.56.1` → `4.56.2`, `last_updated` `2026-10-28`): `volume-details.css` entra em `react_app.styles`, o atalho `progresso` cita o novo CSS/`volume-details.css` e o `purpose` de `FichaFeature.tsx` registra a conclusão corrigida.
+- `Diretrizes/DESIGN.md`: §7.4 atualizada (moldura no contêiner, anel neutro sem moldura) e §16.9 ganha o `.vol-detail*` (CSS, classes e comportamento do auto-scroll do heatmap).
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos (mesma linha de base; nenhum em arquivos alterados).
+- `npm run lint:docs`: OK.
+
 ## [v4.56.1] - 2026-10-27
 
 **Nova logo sem fundo nos ícones e layout da aba Progresso redimensionado.**

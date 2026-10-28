@@ -38,7 +38,7 @@ import {
   type FirstDayOfWeek,
   type WeightUnit,
 } from '@/lib/app-prefs';
-import { Award, ChevronRight, Dumbbell, Flame, Layers, Plus, Weight, Zap } from 'lucide-react';
+import { Award, ChevronRight, Dumbbell, Flame, Layers, Plus, Weight, X, Zap } from 'lucide-react';
 import { getBadgeDefinitions, getProfileStats } from '@/features/profile/profile-data';
 import { buildFriendInviteUrl, getFriendCode } from '@/features/social/friend-invites';
 import { shareNative } from '@/lib/native-share';
@@ -61,6 +61,7 @@ import {
   type TrendPeriod,
 } from './progress-stats';
 import './progresso.css';
+import './volume-details.css';
 
 type CalView = 'monthly' | 'weekly';
 
@@ -215,6 +216,8 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   const volumeChartRef = useRef<HTMLDivElement>(null);
   const monthlyCardRef = useRef<HTMLDivElement>(null);
   const weeklyCardRef = useRef<HTMLDivElement>(null);
+  /* v4.56.2 — rolagem horizontal do heatmap de séries (abre no mês atual) */
+  const heatScrollRef = useRef<HTMLDivElement>(null);
 
   const histMap = useMemo(() => new Map(history.map((h) => [h.date, h])), [history]);
   const exMap = useMemo(() => getExerciseMap(exercises), [exercises]);
@@ -296,6 +299,49 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
       }),
     [heatmap]
   );
+
+  /* v4.56.2 — o heatmap de séries nasce com 12 meses de colunas e rola
+     horizontalmente: ao abrir a aba, centraliza o dia de HOJE (mês atual).
+     Em anos anteriores volta para o início do ano. */
+  useEffect(() => {
+    const container = heatScrollRef.current;
+    if (!container) return undefined;
+    const currentYear = new Date().getFullYear();
+    let innerRaf = 0;
+
+    const scrollToCurrentMonth = () => {
+      if (heatYear !== currentYear) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+        return;
+      }
+      const todayCell = container.querySelector<HTMLElement>('.prog-heat__cell--today');
+      if (!todayCell) {
+        container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+        return;
+      }
+      /* getBoundingClientRect em vez de offsetLeft: a célula pode ter um
+         offsetParent diferente do scroller (grid/flex internos). */
+      const containerRect = container.getBoundingClientRect();
+      const cellRect = todayCell.getBoundingClientRect();
+      const left =
+        container.scrollLeft +
+        (cellRect.left - containerRect.left) -
+        container.clientWidth / 2 +
+        cellRect.width / 2;
+      container.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    };
+
+    /* Dois frames: o primeiro commit do grid (12 meses de colunas) precisa
+       acontecer antes de medir a posição da célula de hoje. */
+    const outerRaf = window.requestAnimationFrame(() => {
+      innerRaf = window.requestAnimationFrame(scrollToCurrentMonth);
+    });
+    return () => {
+      window.cancelAnimationFrame(outerRaf);
+      window.cancelAnimationFrame(innerRaf);
+    };
+  }, [heatYear, heatmap]);
+
   const trends = useMemo(
     () => getTrends(localData, trendPeriod, exMap, sheetMap, t),
     [localData, trendPeriod, exMap, sheetMap, t]
@@ -971,7 +1017,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 </select>
               </div>
 
-              <div className="prog-heat__scroll">
+              <div className="prog-heat__scroll" ref={heatScrollRef}>
                 <div className="prog-heat__body">
                   <div className="prog-heat__days" aria-hidden="true">
                     {getWeekDayLabels(firstDay).map((label) => (
@@ -1630,139 +1676,108 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
       )}
 
       {/* ===== MODAL: DETALHES DE VOLUME (modais.html L829–855) ===== */}
-      {toBody(<div
-        className="modal-overlay"
-        id="modalVolumeDetails"
-        style={{ display: volumeDetail ? 'flex' : 'none' }}
-        role="dialog"
-        aria-modal="true"
-        aria-hidden={!volumeDetail}
-      >
-        <div className="modal-content" style={{ maxWidth: 500 }}>
-          <div className="modal-header">
-            <h2>
-              Volume: <span id="volDetGroup">{volumeDetail?.entry.group ?? ''}</span>
-            </h2>
-            <button
-              type="button"
-              className="close-modal"
-              id="btnFecharVolumeDetails"
-              aria-label="Fechar"
-              onClick={() => setVolumeDetailGroup(null)}
-            >
-              ✕
-            </button>
-          </div>
-          <div className="modal-body">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 15,
-              }}
-            >
+      {toBody(
+        <div
+          className="modal-overlay"
+          id="modalVolumeDetails"
+          style={{ display: volumeDetail ? 'flex' : 'none' }}
+          role="dialog"
+          aria-modal="true"
+          aria-hidden={!volumeDetail}
+          aria-labelledby="volDetGroup"
+          onClick={() => setVolumeDetailGroup(null)}
+        >
+          <div className="vol-detail" onClick={(e) => e.stopPropagation()}>
+            <header className="vol-detail__header">
               <div>
-                <div
-                  style={{
-                    fontSize: '1.5rem',
-                    fontWeight: 800,
-                    fontFamily: "'Rajdhani', sans-serif",
-                  }}
-                  id="volDetTotal"
-                >
-                  {volumeDetail ? formatT(volumeDetail.entry.vol) : `0${weightUnit}`}
+                <span className="vol-detail__eyebrow">Detalhes de volume</span>
+                <h2 className="vol-detail__title" id="volDetGroup">
+                  {volumeDetail?.entry.group ?? ''}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="vol-detail__close"
+                id="btnFecharVolumeDetails"
+                aria-label="Fechar detalhes de volume"
+                onClick={() => setVolumeDetailGroup(null)}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </header>
+
+            <div className="vol-detail__body">
+              <div className="vol-detail__stats">
+                <div className="vol-detail__stat">
+                  <span className="vol-detail__stat-label">Volume total</span>
+                  <span className="vol-detail__stat-value" id="volDetTotal">
+                    {volumeDetail ? formatT(volumeDetail.entry.vol) : `0${weightUnit}`}
+                  </span>
                 </div>
-                <div
-                  style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}
-                  id="volDetAvg"
-                >
-                  Média: {volumeDetail ? formatT(volumeDetail.avgVol) : `0${weightUnit}`}
+                <div className="vol-detail__stat">
+                  <span className="vol-detail__stat-label">Tendência</span>
+                  {volumeDetail?.showTrend ? (
+                    <span
+                      id="volDetTrend"
+                      className="vol-detail__stat-trend"
+                      style={{ color: volumeDetail.trend.color }}
+                      dangerouslySetInnerHTML={{ __html: volumeDetail.trend.label }}
+                    />
+                  ) : (
+                    <span id="volDetTrend" className="vol-detail__stat-empty">
+                      —
+                    </span>
+                  )}
                 </div>
               </div>
-              <div
-                id="volDetTrend"
-                style={{
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  padding: '4px 8px',
-                  borderRadius: 4,
-                  display: volumeDetail?.showTrend ? 'inline-block' : 'none',
-                  color: volumeDetail?.trend.color,
-                }}
-                dangerouslySetInnerHTML={{ __html: volumeDetail?.trend.label ?? '' }}
-              />
-            </div>
 
-            {/* Container do Gráfico (renderVolumeLineChart injeta o SVG) */}
-            <div id="volDetChartContainer" style={{ height: 160, marginBottom: 20 }} />
+              {/* Container do Gráfico (buildVolumeLineChartSvg injeta o SVG) */}
+              <section className="vol-detail__chart-card">
+                <div className="vol-detail__chart-head">
+                  <h3 className="vol-detail__chart-title">Evolução de carga</h3>
+                  <span className="vol-detail__avg" id="volDetAvg">
+                    Média: {volumeDetail ? formatT(volumeDetail.avgVol) : `0${weightUnit}`}
+                  </span>
+                </div>
+                <div id="volDetChartContainer" className="vol-detail__chart" />
+              </section>
 
-            {/* Lista de Exercícios */}
-            <h3
-              style={{
-                marginBottom: 10,
-                fontSize: '1rem',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              Exercícios do Grupo
-            </h3>
-            <div
-              id="volDetList"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-                maxHeight: 200,
-                overflowY: 'auto',
-                paddingRight: 5,
-              }}
-              className="custom-scroll"
-            >
-              {volumeDetail && volumeDetail.exNames.length > 0 ? (
-                volumeDetail.exNames.map((name) => {
-                  const exVol = volumeDetail.entry.breakdown[name];
-                  const pct = ((exVol / volumeDetail.entry.vol) * 100).toFixed(0);
-                  return (
-                    <div
-                      key={name}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: 10,
-                        background: 'rgba(255,255,255,0.03)',
-                        borderRadius: 6,
-                      }}
-                    >
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{name}</span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>
-                          {pct}% do grupo
-                        </span>
+              {/* Lista de Exercícios */}
+              <h3 className="vol-detail__section-title">Distribuição por exercício</h3>
+              <div id="volDetList" className="vol-detail__list custom-scroll">
+                {volumeDetail && volumeDetail.exNames.length > 0 ? (
+                  volumeDetail.exNames.map((name) => {
+                    const exVol = volumeDetail.entry.breakdown[name];
+                    const pct =
+                      volumeDetail.entry.vol > 0
+                        ? Math.round((exVol / volumeDetail.entry.vol) * 100)
+                        : 0;
+                    return (
+                      <div className="vol-detail__ex" key={name}>
+                        <div className="vol-detail__ex-head">
+                          <span className="vol-detail__ex-name">{name}</span>
+                          <span className="vol-detail__ex-value">{formatT(exVol)}</span>
+                        </div>
+                        <div className="vol-detail__ex-bar">
+                          <span
+                            className="vol-detail__ex-fill"
+                            style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
+                          />
+                        </div>
+                        <span className="vol-detail__ex-share">{pct}% do grupo</span>
                       </div>
-                      <span style={{ fontWeight: 'bold', color: 'var(--primary-light)' }}>
-                        {formatT(exVol)}
-                      </span>
-                    </div>
-                  );
-                })
-              ) : (
-                <p
-                  style={{
-                    textAlign: 'center',
-                    padding: 20,
-                    color: 'var(--text-tertiary)',
-                    fontSize: '0.85rem',
-                  }}
-                >
-                  Nenhum exercício registrado neste período.
-                </p>
-              )}
+                    );
+                  })
+                ) : (
+                  <p className="vol-detail__empty">
+                    Nenhum exercício registrado neste período.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>)}
+      )}
 
       {/* ===== MODAL: GUIA DO RADAR (modais.html L649–737) ===== */}
       {toBody(<div

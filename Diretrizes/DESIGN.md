@@ -288,9 +288,9 @@ O modal de maestria por exercício (`.maestria-ex-container`) apresenta uma ins�
 *   **Linha de Evolução Estelar (`.mx-badge-stars`):** Conjunto de três estrelas SVG na base do escudo. Elas se acendem (`.lit`) em cor ouro brilhante com drop-shadow concentrado conforme o atleta avança os níveis do desafio.
 *   **Desafios Deslizantes (`.royale-task-row`):** Linhas de metas com barra de progresso dourada acentuada e abas indicadoras de nível à direita (`.level-tab.active`) que piscam suavemente no nível corrente.
 
-### 7.4 Avatar do Início, molduras e foto de perfil (v4.56.0)
-*   **Avatar/emblema REDONDO:** `legacy-style/treino/secoes/dashboard.css` — `.dash-profile-avatar.profile-avatar` usa `border-radius: 50%` no contêiner, na `<img>` e no `.profile-avatar__emblem-wrapper` (também no breakpoint mobile). O anel `border: 2px solid #eab308` e o glow continuam, agora sobre o círculo.
-*   **Moldura segue a escolha:** o `data-frame` do banner do Início vem de `customization.avatarFrame`, escolhido na sub-aba **Emblema** (antes "Maestrias") da seção Treinos. As molduras são escolha livre (`AVATAR_FRAMES` com `unlock: null`, sem revert) e `[data-frame="bronze|prata|ouro|elite"]` pinta outline + glow na cor do tier, redondos.
+### 7.4 Avatar do Início, molduras e foto de perfil (v4.56.2)
+*   **Avatar/emblema REDONDO:** `legacy-style/treino/secoes/dashboard.css` — `.dash-profile-avatar.profile-avatar` usa `border-radius: 50%` no contêiner, na `<img>` e no `.profile-avatar__emblem-wrapper` (também no breakpoint mobile).
+*   **Moldura segue a escolha:** o `data-frame` do banner do Início vem de `customization.avatarFrame`, escolhido na sub-aba **Emblema** (antes "Maestrias") da seção Treinos. As molduras são escolha livre (`AVATAR_FRAMES` com `unlock: null`, sem revert). O anel é pintado no **contêiner**: sem moldura ele é neutro (`border: 2px solid rgba(255,255,255,.16)` + sombra escura) e `[data-frame="bronze|prata|ouro|elite"]` troca `border-color` e glow no acento do tier (bronze `#f97316`, prata `#94a3b8`, ouro `#fbbf24`, elite `var(--primary)`). Os outlines internos de `img`/`svg`/`.profile-avatar__emblem-wrapper` são zerados para não duplicar o anel.
 *   **Foto de perfil:** a sub-aba Emblema tem upload (`.profile-photo-picker`) que grava `customization.photo` (480 px JPEG) — mesma prioridade sobre o emblema usada por `ProfileEmblem`, avatar do Início, sidebar, drawer e Fit ID; o OAuth do Google só sobrescreve quando a foto ausente ou é do Google. A foto e as métricas de corpo não usam `localStorage`: as métricas estão no banco (ver §16.9).
 
 ---
@@ -993,13 +993,14 @@ Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) p
 | `.prog-*` | `features/training/progresso.css` | Seções novas da aba Progresso (cabeçalho, pontuação de força, Atividade, heatmap de séries, tendências, corpo, conquistas) |
 | `.of-*` | `features/training/ofensivas.css` | Central de Ofensivas — tela cheia (z-index 900) |
 | `.bm-*` | `features/training/metricas-corporais.css` | Métricas corporais e Comparar métricas — tela cheia (z-index 900) |
+| `.vol-detail*` | `features/training/volume-details.css` | Modal "Detalhes de Volume" (grupo muscular) — painel glassmorphism com Volume total, Tendência, Evolução de carga e Distribuição por exercício |
 
-### 16.9 Progresso — Ofensivas e Métricas corporais
+### 16.9 Progresso — Ofensivas, Métricas corporais e Detalhes de Volume
 - **Componentes:** `features/training/ProgressoFeature.tsx` (aba), `features/training/OfensivasOverlay.tsx` (Central de Ofensivas / "Sequências"), `features/training/BodyMetricsOverlay.tsx` (Métricas corporais + Comparar métricas)
 - **Dados:** `features/training/progress-stats.ts` (ofensiva em semanas, constância em dias, resumo da semana, heatmap anual de séries, tendências e pontuação de força) e `features/training/body-metrics.ts` (banco local Dexie `bodyMeasurements`/`bodyPhotos`, hook `useBodyMetrics()`, evento `academia:body-metrics-changed`; a chave antiga `academia_body_metrics_v1` do localStorage é migrada na primeira leitura — v4.56.0)
-- **CSS:** `features/training/progresso.css`, `features/training/ofensivas.css`, `features/training/metricas-corporais.css`
-- **Classes:** `.prog-*` (aba), `.of-*` (ofensivas), `.bm-*` (métricas corporais)
-- **Padrões:** overlays via `createPortal(document.body)` com `z-index: 900` e listados entre os alvos que ignoram o swipe de seção (`App.tsx`); acentos sempre em `rgba(var(--primary-rgb), X)` para acompanhar o tema. O card do mês (seção Atividade) é sempre o mês CORRENTE e leva ao calendário existente sem alterar a visão Mensal/Semanal.
+- **CSS:** `features/training/progresso.css`, `features/training/ofensivas.css`, `features/training/metricas-corporais.css`, `features/training/volume-details.css`
+- **Classes:** `.prog-*` (aba), `.of-*` (ofensivas), `.bm-*` (métricas corporais), `.vol-detail*` (modal de volume)
+- **Padrões:** overlays via `createPortal(document.body)` com `z-index: 900` e listados entre os alvos que ignoram o swipe de seção (`App.tsx`); acentos sempre em `rgba(var(--primary-rgb), X)` para acompanhar o tema. O card do mês (seção Atividade) é sempre o mês CORRENTE e leva ao calendário existente sem alterar a visão Mensal/Semanal. O **modal de volume** é aberto pela legenda do donut de Volume de Carga (`volumeDetailGroup`), fica sobre `.modal-overlay` com painel próprio de fundo escuro, fecha por X/overlay e injeta o SVG em `#volDetChartContainer` (`buildVolumeLineChartSvg`). O **heatmap de séries** (`.prog-heat__scroll`) rola sozinho ao abrir: centraliza `.prog-heat__cell--today` no ano corrente (dois `requestAnimationFrame` + `getBoundingClientRect`) e volta ao início em anos anteriores.
 
 ---
 

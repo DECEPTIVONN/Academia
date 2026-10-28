@@ -1,0 +1,368 @@
+/* ============================================================
+   volume-details.css — Modal "Detalhes de Volume" (aba Progresso)
+   Interface individual de um grupo muscular aberta pela legenda do
+   donut de Volume de Carga. Reproduz o painel premium do legado
+   (cards de Volume Total/Tendência, Evolução de Carga e Distribuição
+   por Exercício) com o background que faltava no React.
+   ============================================================ */
+
+.vol-detail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: min(88vh, 780px);
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.38);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.18), transparent 58%),
+    linear-gradient(180deg, rgba(24, 21, 40, 0.98) 0%, rgba(12, 10, 22, 0.99) 100%);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.82),
+    0 0 46px rgba(var(--primary-rgb, 139, 92, 246), 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  animation: volDetailIn 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+@keyframes volDetailIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vol-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  padding: 20px 22px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+}
+
+.vol-detail__eyebrow {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.vol-detail__title {
+  margin: 4px 0 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  text-shadow: 0 0 18px rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+.vol-detail__close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.vol-detail__close:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.vol-detail__close:active {
+  transform: scale(0.94);
+}
+
+.vol-detail__close svg {
+  display: block;
+  stroke: currentColor;
+  transition: stroke 0.2s ease;
+}
+
+.vol-detail__body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 22px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ── Volume total + tendência ── */
+.vol-detail__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.vol-detail__stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 92px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.015) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.vol-detail__stat-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.vol-detail__stat-value {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--primary-light);
+  text-shadow: 0 0 18px rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+}
+
+.vol-detail__stat-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.vol-detail__stat-trend svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.vol-detail__stat-empty {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+}
+
+/* ── Evolução de carga ── */
+.vol-detail__chart-card {
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.vol-detail__chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.vol-detail__chart-title {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.vol-detail__avg {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: var(--primary-light);
+  white-space: nowrap;
+}
+
+.vol-detail__chart {
+  width: 100%;
+  height: 170px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+}
+
+/* ── Distribuição por exercício ── */
+.vol-detail__section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.vol-detail__section-title::before,
+.vol-detail__section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+}
+
+.vol-detail__section-title::before {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent);
+}
+
+.vol-detail__section-title::after {
+  background: linear-gradient(270deg, rgba(255, 255, 255, 0.18), transparent);
+}
+
+.vol-detail__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.vol-detail__ex {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.vol-detail__ex-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vol-detail__ex-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vol-detail__ex-value {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary-light);
+}
+
+.vol-detail__ex-bar {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.vol-detail__ex-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  box-shadow: 0 0 10px rgba(var(--primary-rgb, 139, 92, 246), 0.6);
+}
+
+.vol-detail__ex-share {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.vol-detail__empty {
+  padding: 24px 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+}
+
+/* Rolagem interna no padrão dos demais painéis */
+.vol-detail__body::-webkit-scrollbar,
+.vol-detail__list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.vol-detail__body::-webkit-scrollbar-thumb,
+.vol-detail__list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+.vol-detail__body::-webkit-scrollbar-track,
+.vol-detail__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (max-width: 480px) {
+  .vol-detail {
+    border-radius: 20px;
+    max-height: 90vh;
+  }
+
+  .vol-detail__header {
+    padding: 16px 16px 14px;
+  }
+
+  .vol-detail__title {
+    font-size: 1.7rem;
+  }
+
+  .vol-detail__body {
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .vol-detail__stat {
+    min-height: 84px;
+    padding: 12px;
+  }
+
+  .vol-detail__stat-value {
+    font-size: 1.65rem;
+  }
+
+  .vol-detail__chart {
+    height: 150px;
+  }
+}
+
+@media (max-width: 360px) {
+  .vol-detail__stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
