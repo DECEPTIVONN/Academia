@@ -2,6 +2,28 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.3] - 2026-10-28
+
+**Volume de carga com a carga sugerida, calendário+ciclo em tela própria, Tendências com radar em tela cheia e volume em modal.**
+
+### Changed
+- `src-app/src/features/training/progress-stats.ts`: `exerciseVolume` passa a considerar a **carga sugerida** (`lib/suggested-load.ts`) quando o exercício ainda não tem `load` salvo — antes o seed (que nunca grava `load`) deixava o donut, as tendências e o modal de volume em 0. A carga salva mantém o parse antigo; a sugerida usa `parseLoadKg` (que já dobra "cada lado") e não reaplica `porLado`.
+- **Calendário + Ciclo em uma interface dedicada** (`ProgressoFeature.tsx` + novo `calendar-overlay.css`): o calendário **Mensal (Grid) / Semanal (Planner)** saiu do fluxo da aba e agora abre em tela cheia pelo card do mês (Atividade) e pelo card **Treinos no Mês**. A tela reúne o resumo do **Ciclo de Treino Atual** (barra 0–30, status, breakdown por ficha) e a **linha do ciclo 0–30** (`getCycleTimeline`, a mesma do modal "Ciclos" do Início, com data/duração/status).
+- **Tendências clicáveis:** o card **Volume** abre o volume de carga em modal (donut + legenda por grupo + seletor 7/30/total; tocar num grupo abre o detalhe individual já existente) e o card **Treinos** abre a nova tela **Tendências de Treino** com o Radar Fit em tela cheia. O alternador de período virou um **segmented control** (Semana / Mês / Ano / Todo o período) no visual da referência enviada, com o resumo **Treinos · Séries · Volume** do recorte; o Radar Fit em si (fórmulas e SVG) não mudou — só o histórico do período é filtrado.
+- O alternador do card **Atributos de Performance** também foi refeito no mesmo estilo segmentado (`Mês` / `Todo o período`), mantendo os ids `btnRadarMensal`/`btnRadarTotal`.
+- `src-app/src/features/training/progresso.css`: estilos do donut/legenda extraídos para `VolumeBreakdown` (usado no card e no modal), cards de tendência clicáveis (`.prog-trend--btn`), `Treinos no Mês` como botão (`.stat-item--btn`) e o segmented control `.radar-seg`.
+- **Heatmap de séries:** a rolagem até o mês atual deixou de ser `smooth` no boot e passou a ser **instantânea** e disparada por `IntersectionObserver` (só quando o heatmap está visível, threshold 0.35) — não disputa mais com a animação de transição entre abas.
+- `src-app/src/App.tsx`: `.cal-ov` (Calendário+Ciclo) e `.tr-overlay` (Tendências/Radar) entraram na lista de alvos que ignoram o swipe de seção, como os demais overlays — arrastar dentro deles não troca de aba. `Esc` fecha as camadas na ordem de abertura (dia do calendário → grupo do volume → volume geral → calendário).
+
+### Added
+- `src-app/src/features/training/calendar-overlay.css` (novo): tela `.cal-ov*` (painel, cabeçalho, ciclo, linha do tempo 0–30 e calendário embutido), fullscreen no mobile.
+- `src-app/src/features/training/TrendRadarOverlay.tsx` + `trend-radar.css` (novos): "Tendências de Treino" — Radar Fit em tela cheia, segmented control de 4 períodos e resumo Treinos/Séries/Volume.
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos (mesma linha de base; nenhum em arquivos alterados).
+- `npm run lint:docs`: OK.
+
 ## [v4.56.2] - 2026-10-28
 
 **Modal de volume com background, conclusão automática do treino, heatmap no mês atual e moldura do avatar seguindo a sub-aba Emblema.**

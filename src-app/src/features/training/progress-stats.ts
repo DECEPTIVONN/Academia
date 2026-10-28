@@ -13,6 +13,7 @@
 
 import { pickExercises, today, type LegacyRaw, type LocalData } from '@/core/db/queries';
 import { computeRadarStats } from '@/features/gamification/radar';
+import { getSuggestedLoad, parseLoadKg } from '@/lib/suggested-load';
 import type { Exercise, WorkoutHistory, WorkoutSheet } from '@/core/db/schema';
 import { convertKgToDisplay, getWeekDayLabels, type FirstDayOfWeek, type WeightUnit } from '@/lib/app-prefs';
 
@@ -73,13 +74,25 @@ export function keysOfDay(row: WorkoutHistory | undefined): string[] {
   return [];
 }
 
-/** Volume de um exercício (séries × reps × carga × por-lado). */
+/** Volume de um exercício (séries × reps × carga × por-lado).
+ *
+ * v4.56.3 — a carga considerada é a EFETIVA: a salva em `load` e, quando o
+ * campo ainda está vazio, a SUGERIDA por nome/grupo (lib/suggested-load.ts).
+ * Sem isso o volume ficava em 0 no seed (que nunca grava `load`), mesmo com a
+ * sugestão aparecendo na ficha e no "volume médio de carga".
+ *
+ * A carga salva mantém o parse antigo (dígitos crus) para não alterar números
+ * já gravados; a sugerida usa `parseLoadKg`, que já dobra "cada lado" — nesse
+ * caso o multiplicador `porLado` não entra de novo.
+ */
 export function exerciseVolume(ex: Exercise): number {
   const s = parseInt(String(ex.sets), 10) || 0;
   const r = parseInt(String(ex.reps), 10) || 0;
-  const c = parseFloat(String(ex.load).replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
-  const multi = ex.porLado ? 2 : 1;
-  return s * r * c * multi;
+  const saved = parseFloat(String(ex.load).replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+  const suggested = saved > 0 ? 0 : parseLoadKg(getSuggestedLoad(ex));
+  const loadKg = saved > 0 ? saved : suggested;
+  const multi = saved > 0 && ex.porLado ? 2 : 1;
+  return s * r * loadKg * multi;
 }
 
 /** Séries efetivamente concluídas no dia (fallback: séries das fichas concluídas). */

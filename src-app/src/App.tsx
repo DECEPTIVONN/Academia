@@ -502,6 +502,8 @@ function AppShell() {
         t.closest('.friend-qr-overlay') ||
         t.closest('.of-root') ||
         t.closest('.bm-root') ||
+        t.closest('.cal-ov') ||
+        t.closest('.tr-overlay') ||
         t.closest('.qr-scanner') ||
         t.closest('.set-root') ||
         t.closest('.mdw') ||

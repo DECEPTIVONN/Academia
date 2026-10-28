@@ -1,0 +1,248 @@
+/* ============================================================
+   trend-radar.css — "Tendências de Treino" (Radar Fit em tela cheia)
+   Aberta pelo card Treinos da seção Tendências (aba Progresso).
+   Alternador de período em segmented control + resumo Treinos/Séries/
+   Volume, no visual da referência enviada (fundo escuro, cartão central).
+   ============================================================ */
+
+.tr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(6px);
+  animation: tr-overlay-in 0.22s ease;
+}
+
+@keyframes tr-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tr-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(720px, 100%);
+  max-height: min(94vh, 980px);
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #07070a;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85);
+  animation: tr-panel-in 0.26s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+@keyframes tr-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tr-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: #07070a;
+}
+
+.tr-back {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.tr-back:hover {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+}
+
+.tr-title {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.tr-head__spacer {
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.tr-body {
+  padding: 18px 20px 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tr-desc {
+  margin: 0 0 22px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.tr-subtitle {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+/* ---------- Segmented control (referência: Semana | Mês | Ano | Todo) ---------- */
+.tr-seg {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: #191a20;
+}
+
+.tr-seg__btn {
+  min-width: 0;
+  padding: 11px 6px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.83rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.tr-seg__btn:hover {
+  color: var(--text);
+}
+
+.tr-seg__btn.is-active {
+  background: var(--primary);
+  color: #0a0a0a;
+  font-weight: 800;
+}
+
+/* ---------- Resumo do período ---------- */
+.tr-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 20px 0 8px;
+}
+
+.tr-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+}
+
+.tr-stat + .tr-stat {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tr-stat__label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.tr-stat__value {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+/* ---------- Radar (mesmo SVG do Radar Fit) ---------- */
+.tr-radar {
+  width: min(460px, 100%);
+  margin: 6px auto 0;
+}
+
+.tr-radar .radar-wrapper {
+  width: 100%;
+}
+
+.tr-foot {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+}
+
+.tr-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tr-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+.tr-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (max-width: 520px) {
+  .tr-overlay {
+    padding: 0;
+  }
+
+  .tr-panel {
+    width: 100%;
+    max-height: 100vh;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .tr-body {
+    padding: 16px 16px 30px;
+  }
+
+  .tr-seg__btn {
+    padding: 10px 2px;
+    font-size: 0.72rem;
+  }
+
+  .tr-title {
+    font-size: 1.05rem;
+  }
+
+  .tr-stat__value {
+    font-size: 1.4rem;
+  }
+}

@@ -2,11 +2,16 @@
  * ProgressoFeature.tsx — Seção Progresso (port 1:1 de `componentes/secoes/progresso.html`
  * + `JS/treino/secao-progresso.js`)
  *
- * Mantém o DOM/classes legados dos cartões preservados — ciclo de treino atual,
- * calendário mensal/semanal (inalterado), stats, volume donut, radar real
- * (Fase 3) e calculadora 1RM — e acrescenta (v4.55.0) o cabeçalho "Progresso",
- * a Pontuação de Força, os cards de Atividade (ofensiva + mês atual), o heatmap
- * anual de séries, Tendências, Corpo (métricas corporais) e Conquistas.
+ * Mantém o DOM/classes legados dos cartões preservados — stats, volume donut,
+ * radar real (Fase 3) e calculadora 1RM — e acrescenta (v4.55.0) o cabeçalho
+ * "Progresso", a Pontuação de Força, os cards de Atividade (ofensiva + mês
+ * atual), o heatmap anual de séries, Tendências, Corpo (métricas corporais) e
+ * Conquistas.
+ *
+ * v4.56.3: o calendário (Mensal/Semanal) e o Ciclo de Treino saíram do fluxo da
+ * aba e vivem no overlay `calendarOpen`; os cards Treinos/Volume das Tendências
+ * abrem, respectivamente, o Radar Fit em tela cheia (TrendRadarOverlay) e o
+ * modal de volume de carga.
  *
  * Calcula tudo a partir de `useLocalData` + `legacyState` (ciclo, cycleEvents);
  * as derivações novas vivem em `progress-stats.ts`.
@@ -19,10 +24,12 @@ import { fadeIn } from '@/lib/animations';
 import {
   SHEET_ORDER,
   formatSeconds,
+  getCycleTimeline,
   getExerciseMap,
   getStreak,
   pickExercises,
   today,
+  type CycleTimelineItem,
   type LocalData,
   type SheetKey,
 } from '@/core/db/queries';
@@ -38,13 +45,14 @@ import {
   type FirstDayOfWeek,
   type WeightUnit,
 } from '@/lib/app-prefs';
-import { Award, ChevronRight, Dumbbell, Flame, Layers, Plus, Weight, X, Zap } from 'lucide-react';
+import { Award, ArrowLeft, ChevronRight, Dumbbell, Flame, Layers, Plus, Weight, X, Zap } from 'lucide-react';
 import { getBadgeDefinitions, getProfileStats } from '@/features/profile/profile-data';
 import { buildFriendInviteUrl, getFriendCode } from '@/features/social/friend-invites';
 import { shareNative } from '@/lib/native-share';
 import { showToast } from '@/lib/toast';
 import { BodyMetricsOverlay } from './BodyMetricsOverlay';
 import { OfensivasOverlay } from './OfensivasOverlay';
+import { TrendRadarOverlay } from './TrendRadarOverlay';
 import { latestMeasurementDate, latestValues, useBodyMetrics } from './body-metrics';
 import {
   exerciseVolume,
@@ -62,6 +70,7 @@ import {
 } from './progress-stats';
 import './progresso.css';
 import './volume-details.css';
+import './calendar-overlay.css';
 
 type CalView = 'monthly' | 'weekly';
 
@@ -169,6 +178,66 @@ function trendInfo(entry: VolumeEntry, mode: string): { label: string; color: st
   return { label: entry.vol === 0 ? '-' : 'Total', color: 'var(--text-tertiary)' };
 }
 
+/* ── Donut + legenda de volume (reaproveitado pelo card e pelo modal) ── */
+
+interface VolumeBreakdownProps {
+  entries: VolumeEntry[];
+  total: number;
+  mode: string;
+  onOpenGroup: (group: string) => void;
+}
+
+function VolumeBreakdown({ entries, total, mode, onOpenGroup }: VolumeBreakdownProps) {
+  return (
+    <div className="volume-chart__inner">
+      <div className="volume-chart__donut-wrap">
+        <div
+          className="volume-chart__donut"
+          style={{
+            background: entries.some((e) => e.vol > 0)
+              ? buildConicGradient(entries, total)
+              : 'rgba(255,255,255,0.1)',
+          }}
+        >
+          <div className="volume-chart__center">
+            <span className="volume-chart__total">{formatT(total)}</span>
+            <span className="volume-chart__caption">TOTAL</span>
+          </div>
+        </div>
+      </div>
+      <div className="volume-chart__legend custom-scroll">
+        {entries.map((entry, i) => {
+          const zero = entry.vol === 0;
+          const color = zero ? 'rgba(255,255,255,0.2)' : VOLUME_COLORS[i % VOLUME_COLORS.length];
+          const trend = trendInfo(entry, mode);
+          return (
+            <button
+              type="button"
+              key={entry.group}
+              className={`volume-chart__row ${zero ? 'is-zero' : ''}`}
+              onClick={() => onOpenGroup(entry.group)}
+              aria-label={`Ver detalhes de volume de ${entry.group}`}
+            >
+              <span className="volume-chart__row-name">
+                <span className="volume-chart__dot" style={{ background: color }} />
+                <span>{entry.group}</span>
+              </span>
+              <span className="volume-chart__row-values">
+                <span className="volume-chart__row-vol">{formatT(entry.vol)}</span>
+                <span
+                  className="volume-chart__row-trend"
+                  style={{ color: trend.color }}
+                  dangerouslySetInnerHTML={{ __html: trend.label }}
+                />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ── Feature ── */
 
 interface ProgressoFeatureProps {
@@ -194,12 +263,15 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   /* v4.55.0 — telas cheias abertas pela aba e filtros das seções novas */
   const [ofensivasOpen, setOfensivasOpen] = useState(false);
   const [bodyMetricsOpen, setBodyMetricsOpen] = useState(false);
+  /* v4.56.3 — novas interfaces abertas pelos cards (calendário+ciclo,
+     volume geral e Radar Fit/Tendências) */
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [volumeOverviewOpen, setVolumeOverviewOpen] = useState(false);
+  const [trendRadarOpen, setTrendRadarOpen] = useState(false);
   const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('week');
   const [heatYear, setHeatYear] = useState(() => new Date().getFullYear());
   /* v4.56.0 — métricas/fotos vêm do banco (IndexedDB) via hook */
   const { metrics: bodyMetrics } = useBodyMetrics();
-  /** Âncora do calendário: o card do mês rola até ele sem alterar a visão. */
-  const calendarAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const syncPrefs = () => {
@@ -270,6 +342,12 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     () => ({ exercises, sheets, history, legacy }),
     [exercises, sheets, history, legacy]
   );
+  /* Linha do tempo 0–30 do ciclo atual (mesma do modal "Ciclos" do Início),
+     exibida na nova interface de calendário. */
+  const cycleTimeline = useMemo<CycleTimelineItem[]>(
+    () => getCycleTimeline(localData),
+    [localData]
+  );
   const weekTarget = weeklyTarget(legacy);
   const weekSummary = useMemo(
     () => getWeekSummary(history, firstDay, weekTarget, exMap, sheetMap, t),
@@ -300,9 +378,13 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     [heatmap]
   );
 
-  /* v4.56.2 — o heatmap de séries nasce com 12 meses de colunas e rola
-     horizontalmente: ao abrir a aba, centraliza o dia de HOJE (mês atual).
-     Em anos anteriores volta para o início do ano. */
+  /* v4.56.3 — o heatmap de séries nasce com 12 meses de colunas e rola
+     horizontalmente: ao abrir a aba, centraliza o dia de HOJE (mês atual). Em
+     anos anteriores volta para o início do ano.
+     A rolagem é INSTANTÂNEA (`scrollLeft`) e só acontece quando o heatmap está
+     de fato visível: o Progresso fica montado dentro do `.section-strip`, então
+     um `scrollTo({behavior:'smooth'})` disparado no boot animava durante a
+     transição entre abas e "brigava" com o swipe. */
   useEffect(() => {
     const container = heatScrollRef.current;
     if (!container) return undefined;
@@ -311,12 +393,12 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
 
     const scrollToCurrentMonth = () => {
       if (heatYear !== currentYear) {
-        container.scrollTo({ left: 0, behavior: 'smooth' });
+        container.scrollLeft = 0;
         return;
       }
       const todayCell = container.querySelector<HTMLElement>('.prog-heat__cell--today');
       if (!todayCell) {
-        container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+        container.scrollLeft = container.scrollWidth;
         return;
       }
       /* getBoundingClientRect em vez de offsetLeft: a célula pode ter um
@@ -328,16 +410,33 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
         (cellRect.left - containerRect.left) -
         container.clientWidth / 2 +
         cellRect.width / 2;
-      container.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+      container.scrollLeft = Math.max(0, left);
     };
 
     /* Dois frames: o primeiro commit do grid (12 meses de colunas) precisa
        acontecer antes de medir a posição da célula de hoje. */
-    const outerRaf = window.requestAnimationFrame(() => {
+    const scheduleScroll = () => {
+      window.cancelAnimationFrame(innerRaf);
       innerRaf = window.requestAnimationFrame(scrollToCurrentMonth);
-    });
+    };
+
+    if (typeof IntersectionObserver === 'undefined') {
+      scheduleScroll();
+      return () => window.cancelAnimationFrame(innerRaf);
+    }
+
+    /* Só rola com o heatmap visível — ou seja, depois que a aba Progresso
+       entrou (evita disputar a animação de troca de seção). */
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        scheduleScroll();
+      },
+      { threshold: 0.35 }
+    );
+    observer.observe(container);
     return () => {
-      window.cancelAnimationFrame(outerRaf);
+      observer.disconnect();
       window.cancelAnimationFrame(innerRaf);
     };
   }, [heatYear, heatmap]);
@@ -615,11 +714,11 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
      renderVolume L586) */
   useEffect(() => {
     fadeIn(monthCalRef.current);
-  }, [monthCells]);
+  }, [monthCells, calendarOpen]);
 
   useEffect(() => {
     fadeIn(plannerRef.current);
-  }, [plannerWeeks]);
+  }, [plannerWeeks, calendarOpen]);
 
   useEffect(() => {
     fadeIn(volumeChartRef.current);
@@ -632,7 +731,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     if (calView === 'weekly') {
       fadeIn(plannerRef.current);
     }
-  }, [calView]);
+  }, [calView, calendarOpen]);
 
   /* ===== Calculadora 1RM (Brzycki) ===== */
   const rmWeight = parseFloat(calcWeight);
@@ -649,7 +748,11 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   /* openModal legado (secao-ficha.js L560–568): trava o scroll do body enquanto
    um modal da seção está aberto e restaura o valor anterior no fechamento. */
   const anyProgressModalOpen =
-    Boolean(selectedDate && dayRow) || Boolean(volumeDetailGroup) || showRadarGuide;
+    Boolean(selectedDate && dayRow) ||
+    Boolean(volumeDetailGroup) ||
+    volumeOverviewOpen ||
+    calendarOpen ||
+    showRadarGuide;
   useEffect(() => {
     if (!anyProgressModalOpen) return undefined;
     const prev = document.body.style.overflow;
@@ -659,16 +762,48 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     };
   }, [anyProgressModalOpen]);
 
-  /* v4.55.0 — o card do mês leva ao calendário da aba EXATAMENTE como ele está
-     (Mensal grid / Semanal planner): retorna o mês para o atual e rola até ele,
-     sem trocar a visão escolhida. */
-  const focusCalendar = () => {
+  /* Esc fecha as camadas na ordem em que foram abertas: dia do calendário →
+     grupo do volume → volume geral → calendário. */
+  useEffect(() => {
+    if (!calendarOpen && !volumeOverviewOpen && !volumeDetailGroup && !selectedDate) {
+      return undefined;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (selectedDate) {
+        setSelectedDate(null);
+        return;
+      }
+      if (volumeDetailGroup) {
+        setVolumeDetailGroup(null);
+        return;
+      }
+      if (volumeOverviewOpen) {
+        setVolumeOverviewOpen(false);
+        return;
+      }
+      setSelectedDate(null);
+      setCalendarOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [calendarOpen, volumeOverviewOpen, volumeDetailGroup, selectedDate]);
+
+  /* v4.56.3 — o card do mês e o card "Treinos no Mês" abrem a nova interface
+     de Calendário (Mensal grid / Semanal planner) + Ciclo de Treino Atual. O
+     calendário saiu do fluxo da aba e vive nessa tela cheia. */
+  const openCalendar = () => {
     setOfensivasOpen(false);
     setBodyMetricsOpen(false);
     setViewDate(new Date());
-    window.requestAnimationFrame(() => {
-      calendarAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    setCalendarOpen(true);
+  };
+
+  /* Fecha o calendário junto com o modal do dia (a célula selecionada não pode
+     ficar aberta sozinha depois que a tela sai). */
+  const closeCalendar = () => {
+    setSelectedDate(null);
+    setCalendarOpen(false);
   };
 
   /* Convite de amigo (fluxo do Social) reaproveitado pelo card de compartilhar. */
@@ -703,54 +838,6 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     <div className="treino-container">
       <div id="section-progresso" className="main-section" role="tabpanel">
         <div id="tab-progresso" className="t-tab active" role="tabpanel">
-          {/* ===== Ciclo de Treino ===== */}
-          <div className="p-card cycle-card">
-            <div className="p-card-header">
-              <h3>Ciclo de Treino Atual</h3>
-              <span className="p-card-meta">Objetivo: 30 Treinos</span>
-            </div>
-            <div className="cycle-progress-wrap">
-              <div className="cycle-info">
-                <div className="cycle-count">
-                  <span id="cycleDone">{cycleDone}</span>
-                  <small>/30</small>
-                </div>
-                <div
-                  className="cycle-status"
-                  id="cycleStatus"
-                  style={{
-                    color: cycleStatus.color,
-                    background: cycleStatus.background,
-                  }}
-                >
-                  {cycleStatus.text}
-                </div>
-              </div>
-              <div className="cycle-xp-bar">
-                <div className="cycle-xp-fill" id="cycleFill" style={{ width: `${cyclePct}%` }} />
-                <div className="cycle-xp-glow" />
-              </div>
-              <div className="cycle-breakdown" id="cycleBreakdown">
-                {breakdownItems.length > 0 ? (
-                  breakdownItems.map((letter) => (
-                    <div className="cb-item" key={letter}>
-                      <span className="cb-label">TREINO {letter}:</span>
-                      <span className="cb-val">{cycleBreakdown[letter] || 0}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
-                    Nenhum treino iniciado neste ciclo.
-                  </p>
-                )}
-              </div>
-              <p className="cycle-msg">
-                Complete 30 treinos para finalizar este ciclo, arquivar sua ficha atual e ganhar
-                uma insígnia de mestre.
-              </p>
-            </div>
-          </div>
-
           <div className="progresso-grid">
             {/* ===== Cabeçalho da aba (v4.55.0) ===== */}
             <div className="prog-head">
@@ -813,11 +900,11 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 </span>
               </button>
 
-              {/* Mês atual — mostra o calendário da aba (Mensal/Semanal) inalterado */}
+              {/* Mês atual — abre a interface de Calendário + Ciclo */}
               <button
                 type="button"
                 className="prog-act"
-                onClick={focusCalendar}
+                onClick={openCalendar}
                 aria-label={`Treinos de ${currentMonthName} — abrir o calendário`}
               >
                 <span
@@ -837,164 +924,8 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 </span>
               </button>
             </div>
-            {/* ===== Toggle calendário ===== */}
-            <div className="calendar-view-toggle" ref={calendarAnchorRef}>
-              <button
-                type="button"
-                className={`cal-toggle-btn ${calView === 'monthly' ? 'active' : ''}`}
-                data-view="monthly"
-                id="btnMonthlyView"
-                onClick={() => setCalView('monthly')}
-              >
-                Mensal (Grid)
-              </button>
-              <button
-                type="button"
-                className={`cal-toggle-btn ${calView === 'weekly' ? 'active' : ''}`}
-                data-view="weekly"
-                id="btnWeeklyView"
-                onClick={() => setCalView('weekly')}
-              >
-                Semanal (Planner)
-              </button>
-            </div>
-
-            {/* ===== Calendário mensal ===== */}
-            <div
-              className="p-card month-calendar-card"
-              ref={monthlyCardRef}
-              id="monthlyCalendarCard"
-              style={{ display: calView === 'monthly' ? 'block' : 'none' }}
-            >
-              <div className="month-header">
-                <button
-                  type="button"
-                  className="cal-nav-btn"
-                  id="prevMonth"
-                  aria-label="Mês anterior"
-                  disabled={prevDisabled}
-                  onClick={() => shiftMonth(-1)}
-                >
-                  ❮
-                </button>
-                <h3 id="calendarMonthName">{monthNameCell}</h3>
-                <button
-                  type="button"
-                  className="cal-nav-btn"
-                  id="nextMonth"
-                  aria-label="Próximo mês"
-                  onClick={() => shiftMonth(1)}
-                >
-                  ❯
-                </button>
-              </div>
-              <div className="month-grid-header">
-                {getWeekDayLabels(firstDay).map((label, i) => (
-                  <span key={i}>{label[0]}</span>
-                ))}
-              </div>
-              <div className="month-grid" id="monthCalendar" ref={monthCalRef}>
-                {monthCells.map((cell, i) =>
-                  cell.levelCls === 'empty' ? (
-                    <div className="month-day empty" key={`e${i}`} />
-                  ) : (
-                    <div
-                      key={cell.dateStr}
-                      className={`month-day ${cell.levelCls} ${cell.isToday ? 'today' : ''} ${
-                        selectedDate === cell.dateStr ? 'selected' : ''
-                      }`}
-                      data-date={cell.dateStr}
-                      style={{ cursor: cell.hasHistory ? 'pointer' : undefined }}
-                      onClick={() => {
-                        if (cell.hasHistory) setSelectedDate(cell.dateStr);
-                      }}
-                    >
-                      <span className="day-num">{cell.day}</span>
-                      {cell.eventLabel && (
-                        <div className="day-event-dot" title={cell.eventLabel} />
-                      )}
-                      {cell.durationMin ? (
-                        <div className="day-duration-chip">{cell.durationMin} min</div>
-                      ) : null}
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-
-            {/* ===== Planner semanal ===== */}
-            <div
-              className="p-card weekly-planner-card"
-              ref={weeklyCardRef}
-              id="weeklyPlannerCard"
-              style={{ display: calView === 'weekly' ? 'block' : 'none' }}
-            >
-              <div className="planner-header">
-                <button
-                  type="button"
-                  className="cal-nav-btn"
-                  id="prevWeekMonth"
-                  aria-label="Mês anterior"
-                  disabled={prevDisabled}
-                  onClick={() => shiftMonth(-1)}
-                >
-                  ❮
-                </button>
-                <h3 id="plannerMonthName">{monthNameCell}</h3>
-                <button
-                  type="button"
-                  className="cal-nav-btn"
-                  id="nextWeekMonth"
-                  aria-label="Próximo mês"
-                  onClick={() => shiftMonth(1)}
-                >
-                  ❯
-                </button>
-              </div>
-              <div className="planner-weeks" id="weeklyPlanner" ref={plannerRef}>
-                {plannerWeeks.map((week, idx) => (
-                  <div className="planner-week" key={idx}>
-                    <div className="planner-week-title">
-                      <span>SEMANA {idx + 1}</span>
-                      <span>
-                        {week[0].dateLabel} - {week[week.length - 1].dateLabel}
-                      </span>
-                    </div>
-                    <div className="planner-week-content">
-                      {week
-                        .filter((d) => d.dayOfWeek !== 0 || d.treinos.length > 0)
-                        .map((d) => (
-                          <div
-                            className={`planner-day-row ${d.isToday ? 'is-today' : ''}`}
-                            key={d.dateStr}
-                          >
-                            <div className="planner-date-box">
-                              <span className="planner-weekday">{d.weekday}</span>
-                              <span className="planner-daynum">{d.dateLabel}</span>
-                            </div>
-                            <div className="planner-workouts">
-                              {d.treinos.length > 0 ? (
-                                d.treinos.map((letter) => (
-                                  <span className="planner-workout-badge" key={letter}>
-                                    {letter}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="planner-workout-badge empty">Descanso</span>
-                              )}
-                              {d.treinos.length > 0 && d.durationMin ? (
-                                <span className="planner-time">
-                                  <i className="fas fa-stopwatch" /> {formatSeconds(d.durationMin * 60)}
-                                </span>
-                              ) : null}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* O calendário (Mensal/Semanal) e o Ciclo agora abrem na interface
+                dedicada `calendarOpen` — ver overlay no fim do componente. */}
 
             {/* ===== Séries — heatmap anual (v4.55.0) ===== */}
             <h3 className="prog-section__title">Séries</h3>
@@ -1085,25 +1016,59 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
               </select>
             </div>
             <div className="prog-trends">
-              {trends.map((metric) => (
-                <div className="prog-trend" key={metric.key}>
-                  <span className="prog-trend__icon" aria-hidden="true">
-                    {TREND_ICONS[metric.key]}
-                  </span>
-                  <div className="prog-trend__row">
-                    <span className="prog-trend__value">{trendDisplay(metric)}</span>
-                    {metric.deltaPct !== null && metric.value > 0 ? (
-                      <span
-                        className={`prog-trend__delta ${metric.deltaPct >= 0 ? 'is-up' : 'is-down'}`}
-                      >
-                        {metric.deltaPct >= 0 ? '+' : '−'}
-                        {Math.abs(Math.round(metric.deltaPct))}%
-                      </span>
+              {trends.map((metric) => {
+                /* v4.56.3 — Treinos abre o Radar Fit/Tendências; Volume abre o
+                   modal do volume de carga. Energia/Séries seguem informativos. */
+                const action =
+                  metric.key === 'treinos'
+                    ? () => setTrendRadarOpen(true)
+                    : metric.key === 'volume'
+                      ? () => setVolumeOverviewOpen(true)
+                      : null;
+                const content = (
+                  <>
+                    <span className="prog-trend__icon" aria-hidden="true">
+                      {TREND_ICONS[metric.key]}
+                    </span>
+                    <div className="prog-trend__row">
+                      <span className="prog-trend__value">{trendDisplay(metric)}</span>
+                      {metric.deltaPct !== null && metric.value > 0 ? (
+                        <span
+                          className={`prog-trend__delta ${
+                            metric.deltaPct >= 0 ? 'is-up' : 'is-down'
+                          }`}
+                        >
+                          {metric.deltaPct >= 0 ? '+' : '−'}
+                          {Math.abs(Math.round(metric.deltaPct))}%
+                        </span>
+                      ) : null}
+                    </div>
+                    <span className="prog-trend__label">{metric.label}</span>
+                    {action ? (
+                      <ChevronRight className="prog-trend__chev" size={15} aria-hidden="true" />
                     ) : null}
+                  </>
+                );
+                return action ? (
+                  <button
+                    type="button"
+                    className="prog-trend prog-trend--btn"
+                    key={metric.key}
+                    onClick={action}
+                    aria-label={
+                      metric.key === 'treinos'
+                        ? 'Abrir tendências de treino (Radar Fit)'
+                        : 'Abrir o volume de carga'
+                    }
+                  >
+                    {content}
+                  </button>
+                ) : (
+                  <div className="prog-trend" key={metric.key}>
+                    {content}
                   </div>
-                  <span className="prog-trend__label">{metric.label}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* ===== Corpo — métricas corporais (v4.55.0) ===== */}
@@ -1163,7 +1128,12 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                   <span id="progTotalTreinos">{completedDates.length}</span>
                 </div>
               </div>
-              <div className="stat-item">
+              <button
+                type="button"
+                className="stat-item stat-item--btn"
+                onClick={openCalendar}
+                aria-label="Abrir o calendário e o ciclo de treino"
+              >
                 <div className="stat-icon">
                   <svg
                     viewBox="0 0 24 24"
@@ -1187,7 +1157,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                     {completedDates.filter((d) => d.startsWith(t.slice(0, 7))).length}
                   </span>
                 </div>
-              </div>
+              </button>
             </div>
 
             {/* ===== Volume de Carga ===== */}
@@ -1253,157 +1223,12 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 </select>
               </div>
               <div className="volume-chart" id="volumeChart" ref={volumeChartRef}>
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 15,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100%',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: 10,
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: 'relative',
-                        width: 160,
-                        height: 160,
-                        borderRadius: '50%',
-                        background:
-                          volume.entries.some((e) => e.vol > 0)
-                            ? buildConicGradient(volume.entries, volume.total)
-                            : 'rgba(255,255,255,0.1)',
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 25,
-                          left: 25,
-                          right: 25,
-                          bottom: 25,
-                          background: '#1e293b',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)',
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: '1.5rem',
-                            fontWeight: 800,
-                            fontFamily: "'Rajdhani', sans-serif",
-                          }}
-                        >
-                          {formatT(volume.total)}
-                        </span>
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>
-                          TOTAL
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 8,
-                      flex: 1,
-                      minWidth: 150,
-                      maxHeight: 250,
-                      overflowY: 'auto',
-                      paddingRight: 5,
-                    }}
-                    className="custom-scroll"
-                  >
-                    {volume.entries.map((entry, i) => {
-                      const zero = entry.vol === 0;
-                      const color = zero
-                        ? 'rgba(255,255,255,0.2)'
-                        : VOLUME_COLORS[i % VOLUME_COLORS.length];
-                      const trend = trendInfo(entry, volumeMode);
-                      return (
-                        <div
-                          key={entry.group}
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => setVolumeDetailGroup(entry.group)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              setVolumeDetailGroup(entry.group);
-                            }
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                          }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '8px 12px',
-                            background: 'rgba(255,255,255,0.03)',
-                            borderRadius: 8,
-                            cursor: 'pointer',
-                            transition: '0.2s',
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div
-                              style={{
-                                width: 12,
-                                height: 12,
-                                borderRadius: '50%',
-                                background: color,
-                              }}
-                            />
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                fontSize: '0.9rem',
-                                ...(zero ? { color: 'var(--text-tertiary)' } : {}),
-                              }}
-                            >
-                              {entry.group}
-                            </span>
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div
-                              style={{
-                                fontWeight: 'bold',
-                                ...(zero
-                                  ? { color: 'var(--text-tertiary)', opacity: 0.5 }
-                                  : {}),
-                              }}
-                            >
-                              {formatT(entry.vol)}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: '0.65rem',
-                                color: trend.color,
-                              }}
-                              dangerouslySetInnerHTML={{ __html: trend.label }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                <VolumeBreakdown
+                  entries={volume.entries}
+                  total={volume.total}
+                  mode={volumeMode}
+                  onOpenGroup={setVolumeDetailGroup}
+                />
               </div>
               <p
                 style={{
@@ -1444,52 +1269,26 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                     ?
                   </button>
                 </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 5,
-                    background: 'rgba(255,255,255,.05)',
-                    padding: 4,
-                    borderRadius: 8,
-                  }}
-                >
+                <div className="radar-seg" role="tablist" aria-label="Intervalo do Radar Fit">
                   <button
                     type="button"
-                    className={`btn btn-sm ${radarMode === 'mensal' ? 'active' : ''}`}
+                    className={`radar-seg__btn ${radarMode === 'mensal' ? 'is-active' : ''}`}
                     id="btnRadarMensal"
                     onClick={() => setRadarMode('mensal')}
-                    style={{
-                      padding: '4px 12px',
-                      fontSize: '.7rem',
-                      borderRadius: 6,
-                      background: radarMode === 'mensal' ? 'var(--primary)' : 'transparent',
-                      color: radarMode === 'mensal' ? '#000' : 'var(--text-secondary)',
-                      border: 'none',
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                      transition: '.3s',
-                    }}
+                    aria-selected={radarMode === 'mensal'}
+                    role="tab"
                   >
-                    MENSAL
+                    Mês
                   </button>
                   <button
                     type="button"
-                    className={`btn btn-sm ${radarMode === 'total' ? 'active' : ''}`}
+                    className={`radar-seg__btn ${radarMode === 'total' ? 'is-active' : ''}`}
                     id="btnRadarTotal"
                     onClick={() => setRadarMode('total')}
-                    style={{
-                      padding: '4px 12px',
-                      fontSize: '.7rem',
-                      borderRadius: 6,
-                      background: radarMode === 'total' ? 'var(--primary)' : 'transparent',
-                      color: radarMode === 'total' ? '#000' : 'var(--text-secondary)',
-                      border: 'none',
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                      transition: '.3s',
-                    }}
+                    aria-selected={radarMode === 'total'}
+                    role="tab"
                   >
-                    TOTAL
+                    Todo o período
                   </button>
                 </div>
               </div>
@@ -2018,7 +1817,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
         onClose={() => setOfensivasOpen(false)}
         data={localData}
         target={weekTarget}
-        onOpenCalendar={focusCalendar}
+        onOpenCalendar={openCalendar}
         onInvite={() => void inviteFriend()}
       />
 
@@ -2028,6 +1827,365 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
         onClose={() => setBodyMetricsOpen(false)}
         initialWeightKg={legacy?.profileCustomization?.weightKg ?? null}
       />
+
+      {/* ===== Calendário + Ciclo (v4.56.3) ===== */}
+      {calendarOpen &&
+        toBody(
+          <div
+            className="cal-ov"
+            id="calendarOverlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="calOvTitle"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeCalendar();
+            }}
+          >
+            <div className="cal-ov__panel">
+              <header className="cal-ov__head">
+                <button
+                  type="button"
+                  className="cal-ov__back"
+                  onClick={closeCalendar}
+                  aria-label="Voltar"
+                >
+                  <ArrowLeft size={22} strokeWidth={2.4} />
+                </button>
+                <div className="cal-ov__head-copy">
+                  <h2 className="cal-ov__title" id="calOvTitle">
+                    Calendário de Treinos
+                  </h2>
+                  <p className="cal-ov__subtitle">
+                    {completedDates.length} treino{completedDates.length === 1 ? '' : 's'}{' '}
+                    concluído{completedDates.length === 1 ? '' : 's'} no total
+                  </p>
+                </div>
+                <span className="cal-ov__spacer" aria-hidden="true" />
+              </header>
+
+              <div className="cal-ov__body">
+                {/* Ciclo de Treino Atual (mesmo painel do modal "Ciclos" do Início) */}
+                <section className="cal-ov__cycle">
+                  <div className="p-card cycle-card">
+                    <div className="p-card-header">
+                      <h3>Ciclo de Treino Atual</h3>
+                      <span className="p-card-meta">Objetivo: 30 Treinos</span>
+                    </div>
+                    <div className="cycle-progress-wrap">
+                      <div className="cycle-info">
+                        <div className="cycle-count">
+                          <span id="cycleDone">{cycleDone}</span>
+                          <small>/30</small>
+                        </div>
+                        <div
+                          className="cycle-status"
+                          id="cycleStatus"
+                          style={{
+                            color: cycleStatus.color,
+                            background: cycleStatus.background,
+                          }}
+                        >
+                          {cycleStatus.text}
+                        </div>
+                      </div>
+                      <div className="cycle-xp-bar">
+                        <div
+                          className="cycle-xp-fill"
+                          id="cycleFill"
+                          style={{ width: `${cyclePct}%` }}
+                        />
+                        <div className="cycle-xp-glow" />
+                      </div>
+                      <div className="cycle-breakdown" id="cycleBreakdown">
+                        {breakdownItems.length > 0 ? (
+                          breakdownItems.map((letter) => (
+                            <div className="cb-item" key={letter}>
+                              <span className="cb-label">TREINO {letter}:</span>
+                              <span className="cb-val">{cycleBreakdown[letter] || 0}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
+                            Nenhum treino iniciado neste ciclo.
+                          </p>
+                        )}
+                      </div>
+                      <p className="cycle-msg">
+                        Complete 30 treinos para finalizar este ciclo, arquivar sua ficha atual e
+                        ganhar uma insígnia de mestre.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="cal-ov__timeline">
+                    <h3 className="cal-ov__section-title">Linha do ciclo</h3>
+                    {cycleTimeline.map((item) => (
+                      <div
+                        className={`cal-ov__tl-row cal-ov__tl-row--${item.status}`}
+                        key={item.index}
+                      >
+                        <span className="cal-ov__tl-index">
+                          {item.status === 'start'
+                            ? 'INÍCIO'
+                            : String(item.index).padStart(2, '0')}
+                        </span>
+                        <div className="cal-ov__tl-copy">
+                          <span className="cal-ov__tl-title">
+                            {item.status === 'start'
+                              ? 'Abertura do ciclo'
+                              : item.status === 'done'
+                                ? `Treino ${item.sheetKey ?? ''}`
+                                : 'Ainda não realizado'}
+                          </span>
+                          <span className="cal-ov__tl-meta">
+                            {item.date
+                              ? new Date(`${item.date}T12:00:00`).toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                })
+                              : '—'}
+                            {item.durationMin
+                              ? ` · ${formatSeconds(item.durationMin * 60)}`
+                              : ''}
+                          </span>
+                        </div>
+                        <span className="cal-ov__tl-badge">
+                          {item.status === 'done'
+                            ? 'FEITO'
+                            : item.status === 'start'
+                              ? 'ABERTURA'
+                              : 'PENDENTE'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Calendário (Mensal grid / Semanal planner) */}
+                <h3 className="cal-ov__section-title">Calendário</h3>
+                <div className="calendar-view-toggle">
+                  <button
+                    type="button"
+                    className={`cal-toggle-btn ${calView === 'monthly' ? 'active' : ''}`}
+                    data-view="monthly"
+                    id="btnMonthlyView"
+                    onClick={() => setCalView('monthly')}
+                  >
+                    Mensal (Grid)
+                  </button>
+                  <button
+                    type="button"
+                    className={`cal-toggle-btn ${calView === 'weekly' ? 'active' : ''}`}
+                    data-view="weekly"
+                    id="btnWeeklyView"
+                    onClick={() => setCalView('weekly')}
+                  >
+                    Semanal (Planner)
+                  </button>
+                </div>
+
+                <div
+                  className="p-card month-calendar-card"
+                  ref={monthlyCardRef}
+                  id="monthlyCalendarCard"
+                  style={{ display: calView === 'monthly' ? 'block' : 'none' }}
+                >
+                  <div className="month-header">
+                    <button
+                      type="button"
+                      className="cal-nav-btn"
+                      id="prevMonth"
+                      aria-label="Mês anterior"
+                      disabled={prevDisabled}
+                      onClick={() => shiftMonth(-1)}
+                    >
+                      ❮
+                    </button>
+                    <h3 id="calendarMonthName">{monthNameCell}</h3>
+                    <button
+                      type="button"
+                      className="cal-nav-btn"
+                      id="nextMonth"
+                      aria-label="Próximo mês"
+                      onClick={() => shiftMonth(1)}
+                    >
+                      ❯
+                    </button>
+                  </div>
+                  <div className="month-grid-header">
+                    {getWeekDayLabels(firstDay).map((label, i) => (
+                      <span key={i}>{label[0]}</span>
+                    ))}
+                  </div>
+                  <div className="month-grid" id="monthCalendar" ref={monthCalRef}>
+                    {monthCells.map((cell, i) =>
+                      cell.levelCls === 'empty' ? (
+                        <div className="month-day empty" key={`e${i}`} />
+                      ) : (
+                        <div
+                          key={cell.dateStr}
+                          className={`month-day ${cell.levelCls} ${
+                            cell.isToday ? 'today' : ''
+                          } ${selectedDate === cell.dateStr ? 'selected' : ''}`}
+                          data-date={cell.dateStr}
+                          style={{ cursor: cell.hasHistory ? 'pointer' : undefined }}
+                          onClick={() => {
+                            if (cell.hasHistory) setSelectedDate(cell.dateStr);
+                          }}
+                        >
+                          <span className="day-num">{cell.day}</span>
+                          {cell.eventLabel && (
+                            <div className="day-event-dot" title={cell.eventLabel} />
+                          )}
+                          {cell.durationMin ? (
+                            <div className="day-duration-chip">{cell.durationMin} min</div>
+                          ) : null}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  className="p-card weekly-planner-card"
+                  ref={weeklyCardRef}
+                  id="weeklyPlannerCard"
+                  style={{ display: calView === 'weekly' ? 'block' : 'none' }}
+                >
+                  <div className="planner-header">
+                    <button
+                      type="button"
+                      className="cal-nav-btn"
+                      id="prevWeekMonth"
+                      aria-label="Mês anterior"
+                      disabled={prevDisabled}
+                      onClick={() => shiftMonth(-1)}
+                    >
+                      ❮
+                    </button>
+                    <h3 id="plannerMonthName">{monthNameCell}</h3>
+                    <button
+                      type="button"
+                      className="cal-nav-btn"
+                      id="nextWeekMonth"
+                      aria-label="Próximo mês"
+                      onClick={() => shiftMonth(1)}
+                    >
+                      ❯
+                    </button>
+                  </div>
+                  <div className="planner-weeks" id="weeklyPlanner" ref={plannerRef}>
+                    {plannerWeeks.map((week, idx) => (
+                      <div className="planner-week" key={idx}>
+                        <div className="planner-week-title">
+                          <span>SEMANA {idx + 1}</span>
+                          <span>
+                            {week[0].dateLabel} - {week[week.length - 1].dateLabel}
+                          </span>
+                        </div>
+                        <div className="planner-week-content">
+                          {week
+                            .filter((d) => d.dayOfWeek !== 0 || d.treinos.length > 0)
+                            .map((d) => (
+                              <div
+                                className={`planner-day-row ${d.isToday ? 'is-today' : ''}`}
+                                key={d.dateStr}
+                              >
+                                <div className="planner-date-box">
+                                  <span className="planner-weekday">{d.weekday}</span>
+                                  <span className="planner-daynum">{d.dateLabel}</span>
+                                </div>
+                                <div className="planner-workouts">
+                                  {d.treinos.length > 0 ? (
+                                    d.treinos.map((letter) => (
+                                      <span className="planner-workout-badge" key={letter}>
+                                        {letter}
+                                      </span>
+                                    ))
+                                  ) : (
+                                    <span className="planner-workout-badge empty">Descanso</span>
+                                  )}
+                                  {d.treinos.length > 0 && d.durationMin ? (
+                                    <span className="planner-time">
+                                      <i className="fas fa-stopwatch" />{' '}
+                                      {formatSeconds(d.durationMin * 60)}
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* ===== Volume de carga geral (v4.56.3) ===== */}
+      {volumeOverviewOpen &&
+        toBody(
+          <div
+            className="modal-overlay"
+            id="modalVolumeOverview"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="volOverviewTitle"
+            style={{ display: 'flex' }}
+            onClick={() => setVolumeOverviewOpen(false)}
+          >
+            <div className="vol-detail vol-detail--overview" onClick={(e) => e.stopPropagation()}>
+              <header className="vol-detail__header">
+                <div>
+                  <span className="vol-detail__eyebrow">Detalhes</span>
+                  <h2 className="vol-detail__title" id="volOverviewTitle">
+                    Volume de Carga
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="vol-detail__close"
+                  onClick={() => setVolumeOverviewOpen(false)}
+                  aria-label="Fechar volume de carga"
+                >
+                  <X size={18} strokeWidth={2} />
+                </button>
+              </header>
+              <div className="vol-detail__body">
+                <div className="vol-detail__chart-head">
+                  <h3 className="vol-detail__chart-title">Distribuição por grupo muscular</h3>
+                  <select
+                    className="prog-select"
+                    aria-label="Período do volume de carga"
+                    value={volumeMode}
+                    onChange={(e) => setVolumeMode(e.target.value)}
+                  >
+                    <option value="7">Últimos 7 dias</option>
+                    <option value="30">Últimos 30 dias</option>
+                    <option value="all">Total da vida</option>
+                  </select>
+                </div>
+                <VolumeBreakdown
+                  entries={volume.entries}
+                  total={volume.total}
+                  mode={volumeMode}
+                  onOpenGroup={(group) => {
+                    setVolumeOverviewOpen(false);
+                    setVolumeDetailGroup(group);
+                  }}
+                />
+                <p className="vol-overview__hint">
+                  Toque em um grupo muscular para ver a evolução de carga e os exercícios.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* ===== Tendências de Treino / Radar Fit (v4.56.3) ===== */}
+      <TrendRadarOverlay open={trendRadarOpen} onClose={() => setTrendRadarOpen(false)} />
     </div>
   );
 };

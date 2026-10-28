@@ -311,6 +311,18 @@
   color: var(--text-tertiary);
 }
 
+/* ---------- Volume geral (modal das Tendências — v4.56.3) ---------- */
+.vol-detail--overview .vol-detail__body {
+  gap: 16px;
+}
+
+.vol-overview__hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
 /* Rolagem interna no padrão dos demais painéis */
 .vol-detail__body::-webkit-scrollbar,
 .vol-detail__list::-webkit-scrollbar {

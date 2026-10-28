@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.56.2",
+  "version": "4.56.3",
   "last_updated": "2026-10-28",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -576,7 +576,7 @@
       },
       {
         "file": "src-app/src/features/training/progress-stats.ts",
-        "purpose": "Derivações da aba Progresso (ofensiva em SEMANAS, constância em DIAS, resumo da semana, heatmap anual de séries, tendências e pontuação de força): módulo puro sobre LocalData, compartilhado por ProgressoFeature e OfensivasOverlay — keysOfDay/exerciseVolume/seriesOfDay/fmtDateLocal/formatVolume vivem aqui."
+        "purpose": "Derivações da aba Progresso (ofensiva em SEMANAS, constância em DIAS, resumo da semana, heatmap anual de séries, tendências e pontuação de força): módulo puro sobre LocalData, compartilhado por ProgressoFeature, TrendRadarOverlay e OfensivasOverlay — keysOfDay/exerciseVolume/seriesOfDay/volumeOfDay/fmtDateLocal/formatVolume vivem aqui. O volume usa a carga EFETIVA do exercício (load salvo ou o sugerido por lib/suggested-load.ts) quando o campo load ainda está vazio."
       },
       {
         "file": "src-app/src/features/training/OfensivasOverlay.tsx",
@@ -585,6 +585,10 @@
       {
         "file": "src-app/src/features/training/BodyMetricsOverlay.tsx",
         "purpose": "Métricas corporais (tela cheia): peso, fotos de progresso (frente/lado/costas), gordura corporal, cintura, registro por data e a tela Comparar métricas (7D/30D/90D/6M/1Y + estado vazio). CSS em features/training/metricas-corporais.css (.bm-*); monta via createPortal(document.body)."
+      },
+      {
+        "file": "src-app/src/features/training/TrendRadarOverlay.tsx",
+        "purpose": "Tendências de Treino (tela cheia aberta pelo card Treinos das Tendências): mantém o Radar Fit (computeRadarStats/buildRadarSvgHtml inalterados) e filtra o histórico por Semana/Mês/Ano/Todo o período num segmented control, com o resumo Treinos · Séries · Volume do recorte. CSS em features/training/trend-radar.css (.tr-*); monta via createPortal(document.body)."
       },
       {
         "file": "src-app/src/features/training/body-metrics.ts",
@@ -857,7 +861,9 @@
       "src-app/src/features/training/progresso.css: seções novas da aba Progresso (.prog-*: cabeçalho, pontuação de força, cards de Atividade, heatmap anual de séries, tendências, corpo, conquistas e o dropdown escuro .prog-select). v4.56.1 — `.progresso-grid > * { min-width: 0 }` para o grid (regra em 2-modals.css, agora com `minmax(0,1fr)`) não ser esticado pelo heatmap, que rola dentro de `.prog-heat__scroll`.",
       "src-app/src/features/training/ofensivas.css: Central de Ofensivas (.of-*) — tela cheia, z-index 900.",
       "src-app/src/features/training/metricas-corporais.css: métricas corporais e comparar métricas (.bm-*) — tela cheia, z-index 900.",
-      "src-app/src/features/training/volume-details.css: modal 'Detalhes de Volume' da aba Progresso (.vol-detail*, .vol-detail__*): painel com background glassmorphism, cards de Volume total/Tendência, card de Evolução de carga e lista de Distribuição por exercício com barra proporcional.",
+      "src-app/src/features/training/volume-details.css: modal 'Detalhes de Volume' da aba Progresso (.vol-detail*, .vol-detail__*): painel com background glassmorphism, cards de Volume total/Tendência, card de Evolução de carga e lista de Distribuição por exercício com barra proporcional. v4.56.3 — também veste o modal do volume geral aberto pelo card Volume das Tendências.",
+      "src-app/src/features/training/calendar-overlay.css: interface Calendário de Treinos (.cal-ov*): painel fullscreen no mobile com o calendário Mensal/Semanal e o resumo + linha do tempo 0–30 do Ciclo de Treino Atual.",
+      "src-app/src/features/training/trend-radar.css: Tendências de Treino (.tr-*): Radar Fit em tela cheia, segmented control de período (Semana/Mês/Ano/Todo o período) e resumo Treinos/Séries/Volume.",
       "src-app/src/legacy-style/treino/ — CSS legado espelhado (não editar); fonte de verdade para paridade visual. Edite o original em Legacy/style/treino/ e rode sync."
     ],
     "desktop_layout_v4_23": "Adaptação DESKTOP das abas Músicas, Missões e Notícias (v4.23.0, 2026-10-15): em @media (min-width:1024px) os overlays viram JANELA CENTRALIZADA com grades multi-coluna; abaixo de 1024px o mobile permanece 100% intacto (todo o código vive dentro da media query, com !important só para vencer estilos inline/utilities). Músicas: features/music/music.css bloco v4.23.0-desktop — .mu-overlay vira janela min(1180px,100vw−96px)×min(880px,100vh−56px) via position:fixed+inset:0+margin:auto (anel box-shadow 100vmax escurece o fundo sem tocar no JS), .mu-quick-grid/.mu-pl-grid em repeat(auto-fill,minmax()), .mu-nav vira abas centralizadas, .mu-fab absolute. Missões: features/dashboard/missions-overlay.css — .ms-shell 1140×844, #ms-content-daily/#ms-content-weekly em grid 3 colunas (cabeçalho :first-child/:last-child em 1/-1), GUIAS mantém flex/card único; único hook TSX novo = className 'ms-shell' no container do MissionsOverlay.tsx. Notícias: features/news/news-overlay.css — #news-main-view vira janela 1180×844 via position:fixed!important+inset:0+margin:auto (vence a classe utility 'relative' e o display:block preso pelo style inline do JSX; height!important por causa da regra base height:auto), header sticky, .tab-content.active#noticias em grid 3 col (hero 1/-1), #atualizacoes em grid 2 col, .detail-view como janela 1180×844 com header sticky. Verificado por CDP probe 32/32 PASS (desktop 1440×900 + mobile 430×932 sem regressão).",
@@ -883,7 +889,7 @@
       "barra_inferior": "[ATUAL] src-app/src/components/BottomNav.tsx + src-app/src/components/nav-section-items.tsx + src-app/src/legacy-style/treino/7-nav-icons.css (.bnav-icon--fill halteres FA solid) + src-app/src/styles/shell.css (.side-hud-icon--fill)",
       "sidebar_e_drawer": "[ATUAL] src-app/src/components/DesktopSidebar.tsx + src-app/src/components/MobileDrawer.tsx + src-app/src/components/ProfileEmblem.tsx + src-app/src/styles/shell.css (.side-hud, .mdw__*)",
       "secao_treinos": "[ATUAL] src-app/src/features/workout/treinos/TreinosFeature.tsx (MontarTab, cards, swipe) + src-app/src/legacy-style/treino/secoes/{deck-builder,cards,tabs-subnav}.css",
-      "progresso": "[ATUAL] src-app/src/features/training/ProgressoFeature.tsx + src-app/src/features/training/progress-stats.ts (derivações) + src-app/src/features/gamification/radar.ts + src-app/src/features/gamification/RadarChart.tsx + src-app/src/features/training/progresso.css (.prog-*) + src-app/src/features/training/volume-details.css (.vol-detail*, modal Detalhes de Volume) + src-app/src/legacy-style/treino/4-gamificacao.css (#radarChartContainer, .cycle-xp-fill)",
+      "progresso": "[ATUAL] src-app/src/features/training/ProgressoFeature.tsx (aba + overlay Calendário/Ciclo em calendar-overlay.css) + src-app/src/features/training/progress-stats.ts (derivações; volume com carga sugerida) + src-app/src/features/training/TrendRadarOverlay.tsx (Tendências de Treino/Radar) + src-app/src/features/gamification/radar.ts + src-app/src/features/gamification/RadarChart.tsx + src-app/src/features/training/progresso.css (.prog-*, .volume-chart__*, .radar-seg) + src-app/src/features/training/volume-details.css (.vol-detail*) + src-app/src/features/training/trend-radar.css (.tr-*) + src-app/src/legacy-style/treino/4-gamificacao.css (#radarChartContainer, .cycle-xp-fill)",
       "ofensivas_e_metricas_corporais": "[ATUAL] src-app/src/features/training/OfensivasOverlay.tsx + src-app/src/features/training/ofensivas.css (.of-*) + src-app/src/features/training/BodyMetricsOverlay.tsx + src-app/src/features/training/metricas-corporais.css (.bm-*) + src-app/src/features/training/body-metrics.ts (banco Dexie bodyMeasurements/bodyPhotos; a chave antiga do localStorage academia_body_metrics_v1 é migrada na primeira leitura)",
       "gamificacao_e_share": "[ATUAL] src-app/src/features/gamification/{maestria.ts,maestria-ui.ts,ShareModal.tsx,ColecaoModals.tsx} + src-app/src/legacy-style/treino/2-modals.css + 6-maestria.css",
       "perfil": "[ATUAL] src-app/src/features/profile/ (ProfileFeature, HubShell, tiles Conta/Segurança/Notificações/Preferências/Cores/Exibição) + src-app/src/features/settings/ (SettingsFeature, theme-colors.ts, ColorPickerModal) + src-app/src/legacy-style/treino/secoes/perfil-overlay.css",
