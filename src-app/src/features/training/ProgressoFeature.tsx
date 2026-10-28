@@ -295,11 +295,9 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   const plannerRef = useRef<HTMLDivElement>(null);
   const monthlyCardRef = useRef<HTMLDivElement>(null);
   const weeklyCardRef = useRef<HTMLDivElement>(null);
-  /* v4.56.2 — rolagem horizontal do heatmap de séries (abre no mês atual) */
-  const heatScrollRef = useRef<HTMLDivElement>(null);
-  /* v4.56.5 — corpo e bloco do calendário, usados para reposicionar a rolagem
-     quando se alterna Mensal ⇄ Semanal. */
-  const calBodyRef = useRef<HTMLDivElement>(null);
+  /* v4.56.5 — scroller do overlay e bloco do calendário, usados para
+     reposicionar a rolagem quando se alterna Mensal ⇄ Semanal. */
+  const calScrollRef = useRef<HTMLDivElement>(null);
   const calendarBlockRef = useRef<HTMLDivElement>(null);
   const prevCalViewRef = useRef<CalView>(calView);
 
@@ -389,69 +387,6 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
       }),
     [heatmap]
   );
-
-  /* v4.56.3 — o heatmap de séries nasce com 12 meses de colunas e rola
-     horizontalmente: ao abrir a aba, centraliza o dia de HOJE (mês atual). Em
-     anos anteriores volta para o início do ano.
-     A rolagem é INSTANTÂNEA (`scrollLeft`) e só acontece quando o heatmap está
-     de fato visível: o Progresso fica montado dentro do `.section-strip`, então
-     um `scrollTo({behavior:'smooth'})` disparado no boot animava durante a
-     transição entre abas e "brigava" com o swipe. */
-  useEffect(() => {
-    const container = heatScrollRef.current;
-    if (!container) return undefined;
-    const currentYear = new Date().getFullYear();
-    let innerRaf = 0;
-
-    const scrollToCurrentMonth = () => {
-      if (heatYear !== currentYear) {
-        container.scrollLeft = 0;
-        return;
-      }
-      const todayCell = container.querySelector<HTMLElement>('.prog-heat__cell--today');
-      if (!todayCell) {
-        container.scrollLeft = container.scrollWidth;
-        return;
-      }
-      /* getBoundingClientRect em vez de offsetLeft: a célula pode ter um
-         offsetParent diferente do scroller (grid/flex internos). */
-      const containerRect = container.getBoundingClientRect();
-      const cellRect = todayCell.getBoundingClientRect();
-      const left =
-        container.scrollLeft +
-        (cellRect.left - containerRect.left) -
-        container.clientWidth / 2 +
-        cellRect.width / 2;
-      container.scrollLeft = Math.max(0, left);
-    };
-
-    /* Dois frames: o primeiro commit do grid (12 meses de colunas) precisa
-       acontecer antes de medir a posição da célula de hoje. */
-    const scheduleScroll = () => {
-      window.cancelAnimationFrame(innerRaf);
-      innerRaf = window.requestAnimationFrame(scrollToCurrentMonth);
-    };
-
-    if (typeof IntersectionObserver === 'undefined') {
-      scheduleScroll();
-      return () => window.cancelAnimationFrame(innerRaf);
-    }
-
-    /* Só rola com o heatmap visível — ou seja, depois que a aba Progresso
-       entrou (evita disputar a animação de troca de seção). */
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        scheduleScroll();
-      },
-      { threshold: 0.35 }
-    );
-    observer.observe(container);
-    return () => {
-      observer.disconnect();
-      window.cancelAnimationFrame(innerRaf);
-    };
-  }, [heatYear, heatmap]);
 
   const trends = useMemo(
     () => getTrends(localData, trendPeriod, exMap, sheetMap, t),
@@ -741,10 +676,10 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     }
   }, [calView, calendarOpen]);
 
-  /* v4.56.5 — ao alternar Mensal ⇄ Semanal, reposiciona o corpo do overlay no
-     topo do bloco "Calendário". Sem isso a rolagem ficava onde estava (o corpo
-     já vinha rolado até o toggle) e o planner longo aparecia ocupando a tela
-     inteira, com o título e o toggle fora da vista. */
+  /* v4.56.5 — ao alternar Mensal ⇄ Semanal, reposiciona a rolagem do overlay no
+     topo do bloco "Calendário" (descontando o cabeçalho sticky). Sem isso a
+     rolagem ficava onde estava (o corpo já vinha rolado até o toggle) e o
+     planner longo aparecia "no meio", com o título e o toggle fora da vista. */
   useEffect(() => {
     if (!calendarOpen) {
       prevCalViewRef.current = calView;
@@ -753,12 +688,17 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     if (prevCalViewRef.current === calView) return;
     prevCalViewRef.current = calView;
 
-    const body = calBodyRef.current;
+    const scroller = calScrollRef.current;
     const block = calendarBlockRef.current;
-    if (!body || !block) return;
+    if (!scroller || !block) return;
+    const head = scroller.querySelector<HTMLElement>('.cal-ov__head');
+    const offset = (head?.offsetHeight ?? 0) + 10;
     const top =
-      block.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - 8;
-    body.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      block.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop -
+      offset;
+    scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }, [calView, calendarOpen]);
 
   /* ===== Calculadora 1RM (Brzycki) ===== */
@@ -995,7 +935,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 </select>
               </div>
 
-              <div className="prog-heat__scroll" ref={heatScrollRef}>
+              <div className="prog-heat__scroll">
                 <div className="prog-heat__body">
                   <div className="prog-heat__days" aria-hidden="true">
                     {getWeekDayLabels(firstDay).map((label) => (
@@ -1691,6 +1631,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
           <div
             className={`cal-ov ${calendarPresence.closing ? 'is-closing' : ''}`}
             id="calendarOverlay"
+            ref={calScrollRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="calOvTitle"
@@ -1720,7 +1661,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 <span className="cal-ov__spacer" aria-hidden="true" />
               </header>
 
-              <div className="cal-ov__body" ref={calBodyRef}>
+              <div className="cal-ov__body">
                 {/* Ciclo de Treino Atual (mesmo painel do modal "Ciclos" do Início) */}
                 <section className="cal-ov__cycle">
                   <div className="p-card cycle-card">
@@ -1829,18 +1770,24 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                                 }`
                               : 'Ainda não realizado';
                           return (
-                            <li
-                              className={`cal-ov__tl-cell cal-ov__tl-cell--${item.status}`}
-                              key={item.index}
-                              title={title}
-                              aria-label={`Treino ${String(item.index).padStart(2, '0')}: ${title}`}
-                            >
-                              <span className="cal-ov__tl-num">
-                                {String(item.index).padStart(2, '0')}
-                              </span>
-                              <span className="cal-ov__tl-letter">
-                                {item.status === 'done' ? (item.sheetKey ?? '✓') : '—'}
-                              </span>
+                            <li key={item.index}>
+                              <button
+                                type="button"
+                                className={`cal-ov__tl-cell cal-ov__tl-cell--${item.status}`}
+                                title={title}
+                                aria-label={`Treino ${String(item.index).padStart(2, '0')}: ${title}`}
+                                disabled={!item.date}
+                                onClick={() => {
+                                  if (item.date) setSelectedDate(item.date);
+                                }}
+                              >
+                                <span className="cal-ov__tl-num">
+                                  {String(item.index).padStart(2, '0')}
+                                </span>
+                                <span className="cal-ov__tl-letter">
+                                  {item.status === 'done' ? (item.sheetKey ?? '✓') : '—'}
+                                </span>
+                              </button>
                             </li>
                           );
                         })}
@@ -1849,6 +1796,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                     <p className="cal-ov__tl-summary">
                       {cycleDone} de 30 treinos concluídos · {Math.max(0, 30 - cycleDone)}{' '}
                       restantes
+                      {cycleDone > 0 ? ' · toque num dia verde para ver o registro' : ''}
                     </p>
                   </div>
                 </section>

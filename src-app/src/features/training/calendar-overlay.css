@@ -10,9 +10,16 @@
   inset: 0;
   z-index: 900;
   display: flex;
-  align-items: center;
+  /* v4.56.5 — o overlay é o único scroller da tela: `safe center` centraliza o
+     painel quando ele cabe e alinha ao topo quando passa da tela, liberando a
+     rolagem vertical do conteúdo inteiro. */
+  align-items: flex-start;
+  align-items: safe center;
   justify-content: center;
   padding: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(6px);
   animation: cal-ov-in 0.22s ease;
@@ -31,8 +38,6 @@
   display: flex;
   flex-direction: column;
   width: min(860px, 100%);
-  max-height: min(94vh, 1000px);
-  overflow: hidden;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: #08080b;
@@ -52,12 +57,17 @@
 }
 
 .cal-ov__head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
   padding: 14px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 24px 24px 0 0;
+  background: #08080b;
 }
 
 .cal-ov__back {
@@ -106,15 +116,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  flex: 1 1 auto;
-  /* Sem `min-height: 0` o filho flex não encolhe abaixo do conteúdo e o painel
-     estoura o `max-height` — o resultado era a linha do ciclo cortada e nenhum
-     scroll vertical. */
-  min-height: 0;
   padding: 16px 18px 26px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
 }
 
 .cal-ov__section-title {
@@ -221,23 +223,49 @@
   list-style: none;
 }
 
+/* O botão é a célula; o <li> só existe para a semântica de lista. */
+.cal-ov__tl-grid > li {
+  display: contents;
+}
+
 .cal-ov__tl-cell {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1px;
+  width: 100%;
   min-height: 46px;
   padding: 6px 2px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  font: inherit;
   cursor: default;
+  appearance: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
 }
 
 .cal-ov__tl-cell--done {
   border-color: rgba(34, 197, 94, 0.35);
   background: rgba(34, 197, 94, 0.12);
+  cursor: pointer;
+}
+
+/* Dias concluídos abrem o registro do dia (mesmo modal das células do
+   calendário mensal). */
+.cal-ov__tl-cell--done:hover,
+.cal-ov__tl-cell--done:focus-visible {
+  border-color: rgba(34, 197, 94, 0.7);
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.cal-ov__tl-cell--done:active {
+  transform: scale(0.95);
 }
 
 .cal-ov__tl-cell--pending {
@@ -283,34 +311,31 @@
   scroll-margin-top: 12px;
 }
 
-.cal-ov__body::-webkit-scrollbar {
-  width: 6px;
+.cal-ov::-webkit-scrollbar {
+  width: 8px;
 }
 
-.cal-ov__body::-webkit-scrollbar-thumb {
+.cal-ov::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.4);
 }
 
-.cal-ov__body::-webkit-scrollbar-track {
+.cal-ov::-webkit-scrollbar-track {
   background: transparent;
 }
 
 @media (max-width: 560px) {
   .cal-ov {
     padding: 8px;
-    /* v4.56.5 — o painel agora cresce para baixo: o topo fica fixo (cabeçalho
-       sempre visível) e a altura acompanha o conteúdo até o limite da tela,
-       em vez de abrir em tela cheia. */
-    align-items: flex-start;
   }
 
   .cal-ov__panel {
     width: 100%;
-    height: auto;
-    max-height: calc(100vh - 16px);
-    max-height: calc(100dvh - 16px);
     border-radius: 18px;
+  }
+
+  .cal-ov__head {
+    border-radius: 18px 18px 0 0;
   }
 
   .cal-ov__body {

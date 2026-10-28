@@ -128,10 +128,9 @@
 }
 
 /* v4.56.1 — redimensionamento horizontal da aba: nenhum filho pode empurrar o
-   track do .progresso-grid (2-modals.css) além da coluna. O heatmap é o único
-   conteúdo mais largo que a coluna (12 meses de células, ~795 px em telas
-   estreitas) — ele rola dentro de .prog-heat__scroll em vez de esticar os
-   cards da aba inteira. */
+   track do .progresso-grid (2-modals.css) além da coluna. O heatmap de séries é
+   o conteúdo mais largo (12 meses); desde a v4.56.5 ele distribui as semanas na
+   largura disponível em vez de rolar horizontalmente. */
 .progresso-grid > * {
   min-width: 0;
 }
@@ -259,9 +258,10 @@
   font-weight: 800;
 }
 
+/* v4.56.5 — o heatmap não rola mais: os 12 meses são distribuídos na largura
+   disponível (colunas 1fr) para ficarem sempre visíveis de uma vez. */
 .prog-heat__scroll {
-  overflow-x: auto;
-  padding-bottom: 4px;
+  min-width: 0;
 }
 
 /* v4.55.0 — o toggle legado ganhou a âncora do card do mês; a rolagem
@@ -271,22 +271,24 @@
 }
 
 .prog-heat__body {
-  display: flex;
-  gap: 8px;
-  min-width: max-content;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
+  min-width: 0;
 }
 
 .prog-heat__days {
   display: grid;
-  grid-auto-flow: row;
-  gap: 3px;
+  grid-template-rows: repeat(7, minmax(0, 1fr));
+  gap: 2px;
   padding-top: 20px;
 }
 
 .prog-heat__day {
-  height: 14px;
-  font-size: 0.6rem;
-  line-height: 14px;
+  display: flex;
+  align-items: center;
+  font-size: 0.55rem;
+  line-height: 1;
   color: var(--text-tertiary);
 }
 
@@ -294,18 +296,20 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .prog-heat__months {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 14px;
-  gap: 3px;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2px;
   height: 16px;
 }
 
 .prog-heat__month {
-  font-size: 0.68rem;
+  overflow: hidden;
+  font-size: clamp(0.44rem, 1.5vw, 0.68rem);
   color: var(--text-tertiary);
   white-space: nowrap;
 }
@@ -313,19 +317,21 @@
 .prog-heat__weeks {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 14px;
-  gap: 3px;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2px;
 }
 
 .prog-heat__week {
   display: grid;
-  gap: 3px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  min-width: 0;
 }
 
 .prog-heat__cell {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -755,6 +761,27 @@
 
 .stat-item--btn:hover h4 {
   color: var(--primary-light);
+}
+
+@media (max-width: 560px) {
+  .prog-heat {
+    padding: 14px;
+  }
+
+  .prog-heat__body {
+    gap: 4px;
+  }
+
+  .prog-heat__months,
+  .prog-heat__weeks,
+  .prog-heat__week,
+  .prog-heat__days {
+    gap: 1px;
+  }
+
+  .prog-heat__cell {
+    border-radius: 2px;
+  }
 }
 
 @media (max-width: 420px) {

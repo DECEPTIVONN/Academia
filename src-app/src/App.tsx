@@ -491,7 +491,6 @@ function AppShell() {
       if (
         t.closest('.table-scroll-wrap') ||
         t.closest('.month-grid') ||
-        t.closest('.prog-heat__scroll') ||
         t.closest('.theme-colors') ||
         t.closest('.treino-selector') ||
         t.closest('.modal-overlay') ||
