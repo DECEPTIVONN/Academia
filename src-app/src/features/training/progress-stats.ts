@@ -326,7 +326,10 @@ export function getSeriesHeatmap(
   const first = `${year}-01-01`;
   const last = `${year}-12-31`;
   const startCursor = startOfWeek(first, firstDay);
-  const endCursor = startOfWeek(year >= currentYear ? todayStr : last, firstDay);
+  /* v4.56.6 — o heatmap sempre cobre o ano INTEIRO (Jan → Dez), inclusive os
+     meses futuros do ano corrente: assim os 12 rótulos de mês aparecem sempre.
+     Antes a grade terminava na semana de hoje e os meses seguintes sumiam. */
+  const endCursor = startOfWeek(last, firstDay);
 
   const weeks: HeatWeek[] = [];
   const monthLabels: { label: string; weekIndex: number }[] = [];

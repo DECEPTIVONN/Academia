@@ -2,6 +2,20 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.6] - 2026-10-28
+
+**Heatmap de séries cobrindo o ano inteiro (12 meses) e linha do cardio alinhada na Ficha.**
+
+### Fixed
+- `src-app/src/features/training/progress-stats.ts` — `getSeriesHeatmap` agora gera as semanas de **janeiro a dezembro** em qualquer ano. Antes a grade terminava na semana de hoje, então no ano corrente os meses seguintes (Nov/Dez, por exemplo) nem existiam no DOM e o seletor de meses ficava incompleto. Os dias futuros aparecem como células vazias e o destaque de hoje continua.
+- `src-app/src/features/training/progresso.css` — `.prog-heat__month` perdeu o `overflow: hidden`: os rótulos dos 12 meses não são mais cortados quando o mês ocupa poucas colunas.
+- `src-app/src/features/workout/FichaFeature.tsx` + `src-app/src/legacy-style/treino/4-gamificacao.css` — **linha do cardio** (grid e tabela): `CARDIO` fica à **esquerda** e o tipo escolhido à **direita**, na **mesma linha** e com a **mesma tipografia** (mesmo tamanho, peso, cor e família). O grid usa o novo `.ae-card-head` (rótulo + `.ae-card-type`) e a tabela o `.ae-table-cardio` (`.ae-table-label` + `.ae-table-type`); `.ae-card-label` ganhou estilo próprio (antes não tinha CSS e ficava com a fonte padrão, acima do nome).
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos (mesma linha de base; nenhum em arquivos alterados).
+- `npm run lint:docs`: OK.
+
 ## [v4.56.5] - 2026-10-28
 
 **Scroll vertical do Calendário, linha do ciclo completa e clicável, e heatmap com os 12 meses sempre visíveis.**

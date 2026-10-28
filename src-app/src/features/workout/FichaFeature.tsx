@@ -349,8 +349,10 @@ const FichaCardioCard: React.FC<CardioProps> = ({
     style={{ '--item-index': index } as React.CSSProperties}
   >
     <div className="ex-card-body">
-      <div className="ae-card-label">CARDIO</div>
-      <div className="ae-card-type">{tipo}</div>
+      <div className="ae-card-head">
+        <span className="ae-card-label">CARDIO</span>
+        <span className="ae-card-type">{tipo}</span>
+      </div>
       <div className="ae-card-stats">
         <div className="ae-stat-box">
           <span className="ae-stat-val">{convertSpeedValue(vel)}</span>
@@ -400,8 +402,10 @@ const FichaCardioRow: React.FC<CardioProps> = ({
       </div>
     </td>
     <td>
-      <span className="ae-table-label">CARDIO</span>{' '}
-      <span className="ae-table-type">{tipo}</span>
+      <div className="ae-table-cardio">
+        <span className="ae-table-label">CARDIO</span>
+        <span className="ae-table-type">{tipo}</span>
+      </div>
     </td>
     <td colSpan={2}>
       <div className="ae-table-stats">

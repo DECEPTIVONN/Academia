@@ -470,13 +470,34 @@
     padding: 4px 12px;
     border-radius: 50px;
 }
+/* v4.56.6 — linha do cardio no card: "CARDIO" à esquerda e o nome escolhido
+   à direita, na MESMA linha e com a MESMA tipografia. */
+.ae-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    margin: 10px 0 16px;
+}
+.ae-card-label,
 .ae-card-type {
+    font-family: inherit;
     font-size: 1.2rem;
     font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0;
     color: #fff;
-    margin-bottom: 16px;
-    text-align: center;
-    margin-top: 10px;
+}
+.ae-card-label {
+    flex-shrink: 0;
+    text-align: left;
+    white-space: nowrap;
+}
+.ae-card-type {
+    margin: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
 }
 .ae-card-stats {
     display: flex;
@@ -528,17 +549,31 @@
 .row-aerobico {
     background: rgba(34, 197, 94, 0.03) !important;
 }
+/* v4.56.6 — linha do cardio na tabela: "CARDIO" à esquerda e o nome escolhido
+   à direita, na MESMA linha e com a MESMA tipografia. */
+.ae-table-cardio {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+}
+.ae-table-label,
 .ae-table-type {
+    font-family: inherit;
     font-size: 0.95rem;
     font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0;
     color: #fff;
-    display: block;
+    white-space: nowrap;
 }
 .ae-table-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: var(--gym-green);
-    letter-spacing: 1px;
+    flex-shrink: 0;
+    text-align: left;
+}
+.ae-table-type {
+    text-align: right;
 }
 .ae-table-stats {
     display: flex;

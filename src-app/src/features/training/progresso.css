@@ -308,7 +308,10 @@
 }
 
 .prog-heat__month {
-  overflow: hidden;
+  /* v4.56.6 — sem `overflow: hidden`: os 12 rótulos sempre aparecem; quando o
+     mês tem poucas semanas o texto pode passar um pouco da própria coluna em
+     vez de ser cortado. */
+  overflow: visible;
   font-size: clamp(0.44rem, 1.5vw, 0.68rem);
   color: var(--text-tertiary);
   white-space: nowrap;
