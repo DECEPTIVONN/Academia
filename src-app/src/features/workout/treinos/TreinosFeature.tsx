@@ -117,7 +117,9 @@ const SUB_NAV: SubNavDef[] = [
   },
   {
     key: 'maestrias',
-    title: 'Maestrias',
+    /* v4.56.0 — a sub-aba reúne foto de perfil, emblema de identificação e
+       moldura do avatar: passa a se chamar Emblema. */
+    title: 'Emblema',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={20} height={20}>
         <path d="M12 2l8 3v6c0 5-3.4 8.4-8 11-4.6-2.6-8-6-8-11V5l8-3z" />

@@ -427,7 +427,11 @@ export const EMBLEMAS: {
   { id: 'prestige-anim', nome: 'Prestígio', icon: '⭐', unlock: { tipo: 'treinos', val: 100 }, animated: true, animationType: 'pulse-glow' },
 ];
 
-/* ── Molduras de avatar (AVATAR_FRAMES — L95–101) ── */
+/* ── Molduras de avatar (AVATAR_FRAMES — L95–101) ──
+   v4.56.0 — as molduras são ESCOLHA LIVRE ('unlock: null'): antes ficavam
+   atrás de tiers de maestria/100 treinos e a escolha na sub-aba Emblema era
+   ignorada (bloqueada ou revertida por `revertLockedCustomizations`), então a
+   moldura do avatar do Início nunca mudava. */
 
 export const AVATAR_FRAMES: {
   key: string | null;
@@ -436,10 +440,10 @@ export const AVATAR_FRAMES: {
   unlock: Unlock | null;
 }[] = [
   { key: null, nome: 'Nenhuma', classe: 'frame-option--none', unlock: null },
-  { key: 'bronze', nome: 'Bronze', classe: 'frame-option--bronze', unlock: { tipo: 'maestria', val: 'bronze' } },
-  { key: 'prata', nome: 'Prata', classe: 'frame-option--prata', unlock: { tipo: 'maestria', val: 'prata' } },
-  { key: 'ouro', nome: 'Ouro', classe: 'frame-option--ouro', unlock: { tipo: 'maestria', val: 'ouro' } },
-  { key: 'elite', nome: 'Elite', classe: 'frame-option--elite', unlock: { tipo: 'treinos', val: 100 } },
+  { key: 'bronze', nome: 'Bronze', classe: 'frame-option--bronze', unlock: null },
+  { key: 'prata', nome: 'Prata', classe: 'frame-option--prata', unlock: null },
+  { key: 'ouro', nome: 'Ouro', classe: 'frame-option--ouro', unlock: null },
+  { key: 'elite', nome: 'Elite', classe: 'frame-option--elite', unlock: null },
 ];
 
 /* ── Emblemas de identidade do avatar (IDENTITY_EMBLEMS — L105–120) ── */
@@ -702,8 +706,7 @@ export function revertLockedCustomizations(
   const titulo = TITULOS.find((x) => x.id === pc.titulo);
   if (titulo && locked(titulo.unlock)) pc.titulo = null;
 
-  const frame = AVATAR_FRAMES.find((x) => x.key === pc.avatarFrame);
-  if (frame && locked(frame.unlock)) pc.avatarFrame = null;
+  /* v4.56.0 — a moldura é escolha livre: não é mais revertida por "bloqueada". */
 
   const bar = BAR_SKINS.find((x) => x.key === pc.barSkin);
   if (bar && locked(bar.unlock)) pc.barSkin = 'default';

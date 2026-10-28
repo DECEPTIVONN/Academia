@@ -5,9 +5,10 @@
  * gordura corporal e cintura, guarda as fotos de progresso (frente/lado/costas)
  * e compara duas datas por janela (7D…1Y).
  *
- * Dados em `features/training/body-metrics.ts` (localStorage + evento
- * `academia:body-metrics-changed`); unidade exibida vem de `lib/app-prefs.ts`.
- * Monta por `createPortal(document.body)` — o `.section-strip` tem
+ * Dados em `features/training/body-metrics.ts` (banco local IndexedDB + evento
+ * `academia:body-metrics-changed`, que o hook `useBodyMetrics()` escuta;
+ * unidade exibida vem de `lib/app-prefs.ts`). Monta por
+ * `createPortal(document.body)` — o `.section-strip` tem
  * `will-change: transform` e vira containing block do `position: fixed`.
  */
 
@@ -27,6 +28,7 @@ import {
 import { useModalPresence } from '@/hooks/useModalPresence';
 import { today } from '@/core/db/queries';
 import { showToast } from '@/lib/toast';
+import { fileToDataUrl } from '@/lib/image';
 import {
   convertKgToDisplay,
   getWeightUnit,
@@ -34,12 +36,10 @@ import {
   type WeightUnit,
 } from '@/lib/app-prefs';
 import {
-  BODY_METRICS_EVENT,
+  BODY_PHOTO_MAX_SIDE,
   COMPARE_RANGES,
   displayToKg,
-  fileToPhotoDataUrl,
   formatDelta,
-  getBodyMetrics,
   latestMeasurementDate,
   latestValues,
   metricUnitLabel,
@@ -47,8 +47,8 @@ import {
   removePhoto,
   setPhoto,
   upsertMeasurement,
+  useBodyMetrics,
   type BodyMetricKey,
-  type BodyMetricsState,
   type PhotoSlot,
 } from './body-metrics';
 import './metricas-corporais.css';
@@ -87,7 +87,7 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
 }) => {
   const { mounted, closing } = useModalPresence(open);
   const [screen, setScreen] = useState<'metrics' | 'compare'>('metrics');
-  const [state, setState] = useState<BodyMetricsState>(() => getBodyMetrics());
+  const { metrics: state } = useBodyMetrics();
   const [unit, setUnit] = useState<WeightUnit>(() => getWeightUnit());
   const [rangeKey, setRangeKey] = useState('7d');
   const [sheet, setSheet] = useState<SheetId | null>(null);
@@ -115,12 +115,9 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
   }
 
   useEffect(() => {
-    const syncMetrics = () => setState(getBodyMetrics());
     const syncPrefs = () => setUnit(getWeightUnit());
-    window.addEventListener(BODY_METRICS_EVENT, syncMetrics);
     window.addEventListener('academia:prefs-changed', syncPrefs);
     return () => {
-      window.removeEventListener(BODY_METRICS_EVENT, syncMetrics);
       window.removeEventListener('academia:prefs-changed', syncPrefs);
     };
   }, []);
@@ -150,8 +147,8 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
   const handleFile = async (slot: PhotoSlot, file: File | null | undefined) => {
     if (!file) return;
     try {
-      const url = await fileToPhotoDataUrl(file);
-      setState(setPhoto(slot, url, today()));
+      const url = await fileToDataUrl(file, { maxSide: BODY_PHOTO_MAX_SIDE });
+      await setPhoto(slot, url, today());
       showToast('Foto de progresso atualizada');
     } catch {
       showToast('Não foi possível carregar essa imagem', 'error');
@@ -170,14 +167,12 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
       showToast('Informe ao menos uma medida', 'error');
       return;
     }
-    setState(
-      upsertMeasurement({
-        date: form.date || today(),
-        weightKg: weight !== undefined ? displayToKg(weight, unit) : undefined,
-        bodyFat: fat,
-        waistCm: waist,
-      })
-    );
+    void upsertMeasurement({
+      date: form.date || today(),
+      weightKg: weight !== undefined ? displayToKg(weight, unit) : undefined,
+      bodyFat: fat,
+      waistCm: waist,
+    });
     setForm({ date: today(), weight: '', bodyFat: '', waist: '' });
     setSheet(null);
     showToast('Medidas registradas');
@@ -300,7 +295,7 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
                           type="button"
                           className="bm-photo__remove"
                           aria-label={`Remover foto ${slot.label}`}
-                          onClick={() => setState(removePhoto(slot.key))}
+                          onClick={() => void removePhoto(slot.key)}
                         >
                           <X size={12} />
                         </button>
@@ -509,9 +504,9 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
                   medição por dia — registrar de novo no mesmo dia atualiza os valores.
                 </p>
                 <p className="bm-sheet__text">
-                  As fotos de progresso ficam salvas só no seu aparelho, reduzidas para caber no
-                  armazenamento local. Use <strong>Comparar métricas</strong> para ver a diferença
-                  entre duas datas.
+                  As fotos de progresso ficam salvas no seu banco local e entram na
+                  sincronização da conta (reduzidas para economizar espaço). Use{' '}
+                  <strong>Comparar métricas</strong> para ver a diferença entre duas datas.
                 </p>
               </>
             )}

@@ -16,6 +16,8 @@ import type {
   MasteryTier,
   LegacyState,
   ProfileState,
+  BodyMeasurement,
+  BodyPhoto,
 } from './schema';
 
 class AcademiaDB extends Dexie {
@@ -28,6 +30,8 @@ class AcademiaDB extends Dexie {
   pendingMutations!: Table<PendingMutation>;
   legacyState!:      Table<LegacyState>;
   profileState!:     Table<ProfileState>;
+  bodyMeasurements!: Table<BodyMeasurement>;
+  bodyPhotos!:       Table<BodyPhoto>;
 
   constructor() {
     super('academia-v4');
@@ -50,6 +54,13 @@ class AcademiaDB extends Dexie {
     // v4.0.4-phase2: perfil/customização derivado da cópia bruta (Fase 2)
     this.version(3).stores({
       profileState: 'key',
+    });
+
+    // v4.56.0 — métricas corporais (peso/gordura/cintura + fotos de progresso)
+    // saem do localStorage e passam a viver no banco (e no snapshot de sync).
+    this.version(4).stores({
+      bodyMeasurements: 'date',
+      bodyPhotos: 'slot',
     });
   }
 }
@@ -200,6 +211,8 @@ export async function clearLocalDB(): Promise<void> {
     idb.userProfiles.clear(),
     idb.trainingCycles.clear(),
     idb.pendingMutations.clear(),
+    idb.bodyMeasurements.clear(),
+    idb.bodyPhotos.clear(),
     // legacyState (cópia bruta do localStorage legado) é mantida de propósito:
     // é a cópia de segurança dos dados da versão offline.
     // idb.exercises também é mantida (seed/exercícios do usuário).

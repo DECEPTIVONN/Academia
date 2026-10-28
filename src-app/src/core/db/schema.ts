@@ -316,6 +316,34 @@ export interface ProfileState {
   conquistas: ProfileConquista[];
 }
 
+/* ── Métricas corporais (Progresso → Corpo / Métricas corporais) ── */
+
+/** Enquadramento das fotos de progresso. */
+export type BodyPhotoSlot = 'front' | 'side' | 'back';
+
+/**
+ * Uma medição por dia (chave primária `date`), na tabela `bodyMeasurements`.
+ * Peso é SEMPRE gravado em kg — a unidade exibida vem de `lib/app-prefs.ts`.
+ */
+export interface BodyMeasurement {
+  date: string;              // YYYY-MM-DD
+  weightKg?: number;
+  bodyFat?: number;
+  waistCm?: number;
+}
+
+/**
+ * Foto de progresso de um enquadramento (chave primária `slot`), na tabela
+ * `bodyPhotos`. `url` é um data-URL JPEG reduzido no cliente (720 px no lado
+ * maior) — o mesmo limite usado antes no `localStorage`, agora no banco (e no
+ * snapshot de sync).
+ */
+export interface BodyPhoto {
+  slot: BodyPhotoSlot;
+  url: string;
+  date: string;              // YYYY-MM-DD
+}
+
 /** Defaults idem `initDB()`/`loadDB()` de JS/treino/db.js (L265–309). */
 export const DEFAULT_PROFILE_CUSTOMIZATION: ProfileCustomization = {
   nome: 'DECEPTIVON',

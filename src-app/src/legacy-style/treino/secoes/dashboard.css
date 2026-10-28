@@ -1595,7 +1595,8 @@
 .dash-profile-avatar.profile-avatar {
   width: 112px !important;
   height: 112px !important;
-  border-radius: 1.25rem !important; /* rounded-3xl */
+  /* v4.56.0 — o avatar/emblema do Início é REDONDO (era rounded-3xl) */
+  border-radius: 50% !important;
   border: 2px solid #eab308 !important; /* border-prestige-gold */
   box-shadow: 0 0 20px rgba(253, 224, 71, 0.5) !important;
   padding: 4px !important;
@@ -1608,22 +1609,22 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
-  border-radius: 14px !important;
+  border-radius: 50% !important;
 }
 
 .dash-profile-avatar.profile-avatar .profile-avatar__emblem-wrapper {
-  border-radius: 14px !important;
+  border-radius: 50% !important;
   width: 100% !important;
   height: 100% !important;
 }
 
-/* Avatar Frame Squircles for Dashboard */
+/* Molduras do avatar no Início (v4.56.0 — anel redondo acompanhando o avatar) */
 .dash-profile-avatar.profile-avatar[data-frame="bronze"] img,
 .dash-profile-avatar.profile-avatar[data-frame="bronze"] svg,
 .dash-profile-avatar.profile-avatar[data-frame="bronze"] .profile-avatar__emblem-wrapper {
   outline: 2px solid #f97316 !important;
   outline-offset: 2px !important;
-  border-radius: 14px !important;
+  border-radius: 50% !important;
   box-shadow: 0 0 10px rgba(249,115,22,0.5) !important;
 }
 
@@ -1632,7 +1633,7 @@
 .dash-profile-avatar.profile-avatar[data-frame="prata"] .profile-avatar__emblem-wrapper {
   outline: 2px solid #94a3b8 !important;
   outline-offset: 2px !important;
-  border-radius: 14px !important;
+  border-radius: 50% !important;
   box-shadow: 0 0 10px rgba(148,163,184,0.5) !important;
 }
 
@@ -1641,7 +1642,7 @@
 .dash-profile-avatar.profile-avatar[data-frame="ouro"] .profile-avatar__emblem-wrapper {
   outline: 2px solid #fbbf24 !important;
   outline-offset: 2px !important;
-  border-radius: 14px !important;
+  border-radius: 50% !important;
   box-shadow: 0 0 14px rgba(251,191,36,0.6) !important;
 }
 
@@ -1650,7 +1651,7 @@
 .dash-profile-avatar.profile-avatar[data-frame="elite"] .profile-avatar__emblem-wrapper {
   outline: 2px solid transparent !important;
   outline-offset: 2px !important;
-  border-radius: 14px !important;
+  border-radius: 50% !important;
   box-shadow: 0 0 0 2px var(--primary), 0 0 18px var(--primary) !important;
 }
 
@@ -1703,15 +1704,15 @@
   .dash-profile-avatar.profile-avatar {
     width: 96px !important;
     height: 96px !important;
-    border-radius: 1rem !important; /* rounded-2xl */
+    border-radius: 50% !important;
   }
 
   .dash-profile-avatar.profile-avatar img {
-    border-radius: 12px !important;
+    border-radius: 50% !important;
   }
 
   .dash-profile-avatar.profile-avatar .profile-avatar__emblem-wrapper {
-    border-radius: 12px !important;
+    border-radius: 50% !important;
   }
 
   /* Shrink frames on mobile */
@@ -1727,7 +1728,7 @@
   .dash-profile-avatar.profile-avatar[data-frame="elite"] img,
   .dash-profile-avatar.profile-avatar[data-frame="elite"] svg,
   .dash-profile-avatar.profile-avatar[data-frame="elite"] .profile-avatar__emblem-wrapper {
-    border-radius: 12px !important;
+    border-radius: 50% !important;
   }
 
   /* Shrink top buttons on mobile */

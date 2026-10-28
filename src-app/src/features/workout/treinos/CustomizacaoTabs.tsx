@@ -8,10 +8,12 @@
  * Persistência: `useProfileState().update` (profileState) + `applyCustomizationGlobals`.
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_PROFILE_CUSTOMIZATION } from '@/core/db/schema';
 import { useLocalData } from '@/hooks/useLocalData';
 import { useProfileState } from '@/features/profile/useProfileState';
+import { ProfileEmblem } from '@/components/ProfileEmblem';
+import { fileToDataUrl } from '@/lib/image';
 import {
   AVATAR_FRAMES,
   BANNERS,
@@ -30,6 +32,7 @@ import {
   writeLS,
 } from '@/features/profile/profile-data';
 import { showToast } from '@/lib/toast';
+import './emblema-tab.css';
 
 export type CustomSubTab = 'itens-magicos' | 'emotes' | 'torres' | 'estandartes' | 'maestrias';
 
@@ -408,6 +411,36 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
     showToast('Moldura atualizada!', 'success');
   };
 
+  /* ── Emblema: foto de perfil customizada (v4.56.0) ──
+     É o mesmo campo `customization.photo` usado pelo avatar do Início, da
+     sidebar e do Fit ID — aqui o usuário escolhe a imagem no lugar de depender
+     só do avatar do Google ou do emblema equipado. */
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+
+  const pickProfilePhoto = async (file: File | null | undefined) => {
+    if (!file) return;
+    setPhotoBusy(true);
+    try {
+      const url = await fileToDataUrl(file, { maxSide: 480, quality: 0.85 });
+      await update((d) => {
+        d.customization = { ...d.customization, photo: url };
+      });
+      showToast('Foto de perfil atualizada!', 'success');
+    } catch {
+      showToast('Não foi possível carregar essa imagem', 'error');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const removeProfilePhoto = () => {
+    void update((d) => {
+      d.customization = { ...d.customization, photo: '' };
+    });
+    showToast('Foto de perfil removida — voltando ao emblema', 'info');
+  };
+
   /* Grupos de banner (idem L613–615) */
   const classicos = BANNERS.filter((b) => !EXTRA_KEYS.test(b.key));
   const extras = BANNERS.filter((b) => !b.master && EXTRA_KEYS.test(b.key));
@@ -581,11 +614,65 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
         </div>
       </SubTabContent>
 
-      {/* ── Maestrias: identidade + moldura ── */}
+      {/* ── Emblema: foto de perfil + emblema de identificação + moldura ── */}
       <SubTabContent id="maestrias" active={subtab === 'maestrias'}>
         <div className="theme-section theme-cinza-castelo">
           <div className="theme-bg" />
           <div className="theme-content">
+            <div className="profile-section-title">Foto de Perfil</div>
+
+            <div className="profile-photo-picker" id="identityPhotoPicker">
+              <div
+                className="profile-photo-picker__preview"
+                id="identityPhotoPreview"
+                data-frame={pc.avatarFrame ?? ''}
+              >
+                <ProfileEmblem customization={pc} />
+              </div>
+
+              <div className="profile-photo-picker__body">
+                <div className="profile-photo-picker__text">
+                  {pc.photo ? 'Foto personalizada aplicada' : 'Sem foto personalizada'}
+                </div>
+                <p className="profile-photo-picker__hint">
+                  {pc.photo
+                    ? 'Ela substitui o emblema no avatar do Início, da sidebar e do Fit ID.'
+                    : 'Envie uma imagem para usar no lugar do emblema equipado.'}
+                </p>
+                <div className="profile-photo-picker__actions">
+                  <button
+                    type="button"
+                    className="btn-profile-photo"
+                    id="btnAvatarPhotoUpload"
+                    disabled={photoBusy}
+                    onClick={() => photoInputRef.current?.click()}
+                  >
+                    {photoBusy ? 'Carregando…' : 'Carregar foto'}
+                  </button>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      void pickProfilePhoto(e.target.files?.[0]);
+                      e.target.value = '';
+                    }}
+                  />
+                  {pc.photo && (
+                    <button
+                      type="button"
+                      className="btn-profile-photo-remove"
+                      id="btnAvatarPhotoRemove"
+                      onClick={removeProfilePhoto}
+                    >
+                      Remover foto
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="profile-section-title">Emblema de Identificação</div>
 
             <div className="emblem-picker-container">

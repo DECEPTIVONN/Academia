@@ -1,21 +1,28 @@
 /**
  * body-metrics.ts — métricas corporais (peso, gordura, cintura e fotos)
  *
- * Persistência local (offline-first) em `localStorage`, na mesma linha de
- * `lib/app-prefs.ts`: leitura síncrona no primeiro render, gravação disparando
- * `academia:body-metrics-changed` para as telas se atualizarem sem prop drilling.
+ * Persistência no BANCO local (IndexedDB/Dexie: tabelas `bodyMeasurements` e
+ * `bodyPhotos`, schema v4) — as telas leem pelo hook `useBodyMetrics()` e as
+ * gravações disparam `academia:body-metrics-changed`, que recarrega o hook e
+ * entra no snapshot de sync (`core/sync/sync-manager.ts`). O dado antigo em
+ * `localStorage.academia_body_metrics_v1` é migrado na primeira leitura.
  *
  * Regras de dados adotadas (ver CHANGELOG):
  *   • peso é SEMPRE guardado em kg (a unidade exibida vem de `getWeightUnit()`);
  *   • uma medição por dia — registrar de novo no mesmo dia faz merge;
- *   • fotos de progresso são reduzidas a 720 px no lado maior (JPEG) antes de
- *     serem gravadas, para não estourar a cota do armazenamento.
+ *   • fotos de progresso são reduzidas a 720 px no lado maior (JPEG — helper
+ *     `lib/image.ts`) antes de serem gravadas, para manter o banco e o
+ *     snapshot de sincronização num tamanho aceitável.
  */
 
+import { useEffect, useState } from 'react';
+import { idb } from '@/core/db/idb';
+import type { BodyMeasurement, BodyPhoto, BodyPhotoSlot } from '@/core/db/schema';
 import type { WeightUnit } from '@/lib/app-prefs';
 import { convertKgToDisplay } from '@/lib/app-prefs';
 
-export type PhotoSlot = 'front' | 'side' | 'back';
+export type { BodyMeasurement, BodyPhoto };
+export type PhotoSlot = BodyPhotoSlot;
 
 export const PHOTO_SLOTS: { key: PhotoSlot; label: string }[] = [
   { key: 'front', label: 'Frente' },
@@ -23,22 +30,13 @@ export const PHOTO_SLOTS: { key: PhotoSlot; label: string }[] = [
   { key: 'back', label: 'Costas' },
 ];
 
-export interface BodyMeasurement {
-  date: string;
-  weightKg?: number;
-  bodyFat?: number;
-  waistCm?: number;
-}
-
-export interface BodyPhoto {
-  url: string;
-  date: string;
-}
-
 export interface BodyMetricsState {
   measurements: BodyMeasurement[];
-  photos: Partial<Record<PhotoSlot, BodyPhoto>>;
+  photos: Partial<Record<BodyPhotoSlot, BodyPhoto>>;
 }
+
+/** Limite de resolução das fotos de progresso gravadas no banco. */
+export const BODY_PHOTO_MAX_SIDE = 720;
 
 export type BodyMetricKey = 'weightKg' | 'bodyFat' | 'waistCm';
 
@@ -48,23 +46,23 @@ export const BODY_METRIC_LABELS: Record<BodyMetricKey, string> = {
   waistCm: 'Cintura',
 };
 
-const STORAGE_KEY = 'academia_body_metrics_v1';
+/** Chave antiga (localStorage) — lida uma vez na migração para o banco. */
+const LEGACY_STORAGE_KEY = 'academia_body_metrics_v1';
 
 export const BODY_METRICS_EVENT = 'academia:body-metrics-changed';
 
 export const EMPTY_BODY_METRICS: BodyMetricsState = { measurements: [], photos: {} };
-
-let memoryFallback: BodyMetricsState | null = null;
 
 function parseNumber(value: unknown): number | undefined {
   const n = typeof value === 'number' ? value : parseFloat(String(value ?? '').replace(',', '.'));
   return Number.isFinite(n) && n >= 0 ? n : undefined;
 }
 
+/** Normaliza/organiza o estado (datas válidas, uma entrada por dia, sem lixo). */
 function sanitize(raw: unknown): BodyMetricsState {
-  if (!raw || typeof raw !== 'object') return { ...EMPTY_BODY_METRICS };
+  if (!raw || typeof raw !== 'object') return { measurements: [], photos: {} };
   const source = raw as Partial<BodyMetricsState>;
-  const measurements: BodyMeasurement[] = [];
+  const byDate = new Map<string, BodyMeasurement>();
 
   for (const item of source.measurements ?? []) {
     if (!item || typeof item.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(item.date)) continue;
@@ -78,50 +76,117 @@ function sanitize(raw: unknown): BodyMetricsState {
     if (entry.weightKg === undefined && entry.bodyFat === undefined && entry.waistCm === undefined) {
       continue;
     }
-    measurements.push(entry);
+    byDate.set(entry.date, { ...byDate.get(entry.date), ...entry });
   }
-  measurements.sort((a, b) => a.date.localeCompare(b.date));
+  const measurements = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 
-  const photos: Partial<Record<PhotoSlot, BodyPhoto>> = {};
+  const photos: Partial<Record<BodyPhotoSlot, BodyPhoto>> = {};
   for (const slot of PHOTO_SLOTS) {
     const photo = source.photos?.[slot.key];
     if (photo && typeof photo.url === 'string' && photo.url) {
-      photos[slot.key] = { url: photo.url, date: typeof photo.date === 'string' ? photo.date : '' };
+      photos[slot.key] = {
+        slot: slot.key,
+        url: photo.url,
+        date: typeof photo.date === 'string' ? photo.date : '',
+      };
     }
   }
 
   return { measurements, photos };
 }
 
-export function getBodyMetrics(): BodyMetricsState {
+/* ── Migração do localStorage (uma vez) ── */
+
+let legacyMigrated = false;
+
+function migrateLegacyStorage(): void {
+  if (legacyMigrated) return;
+  legacyMigrated = true;
+  let raw: string | null = null;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...EMPTY_BODY_METRICS, photos: {} };
-    return sanitize(JSON.parse(raw));
+    raw = localStorage.getItem(LEGACY_STORAGE_KEY);
   } catch {
-    return memoryFallback ? sanitize(memoryFallback) : { ...EMPTY_BODY_METRICS, photos: {} };
+    return;
   }
+  if (!raw) return;
+  let parsed: BodyMetricsState;
+  try {
+    parsed = sanitize(JSON.parse(raw));
+  } catch {
+    /* JSON inválido: a chave fica para inspeção manual */
+    return;
+  }
+  const photos = Object.values(parsed.photos);
+  if (parsed.measurements.length === 0 && photos.length === 0) {
+    try {
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+    } catch {
+      /* best-effort */
+    }
+    return;
+  }
+  void idb
+    .transaction('rw', [idb.bodyMeasurements, idb.bodyPhotos], async () => {
+      await idb.bodyMeasurements.bulkPut(parsed.measurements);
+      await idb.bodyPhotos.bulkPut(photos);
+    })
+    .then(() => {
+      try {
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+      } catch {
+        /* best-effort */
+      }
+      emitChange();
+    })
+    .catch((err) => {
+      /* falhou: a chave permanece e a próxima sessão tenta de novo */
+      legacyMigrated = false;
+      console.warn('[body-metrics] migração do localStorage:', err);
+    });
 }
 
-export function saveBodyMetrics(next: BodyMetricsState): BodyMetricsState {
-  const clean = sanitize(next);
-  memoryFallback = clean;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
-  } catch {
-    /* cota/armazenamento indisponível — segue em memória na sessão */
-  }
+/* ── Leitura / gravação (banco) ── */
+
+function emitChange(): void {
   try {
     window.dispatchEvent(new CustomEvent(BODY_METRICS_EVENT));
   } catch {
     /* SSR/testes */
   }
+}
+
+/** Estado completo lido do banco (ordena as datas na leitura). */
+export async function readBodyMetrics(): Promise<BodyMetricsState> {
+  migrateLegacyStorage();
+  const [measurements, photoRows] = await Promise.all([
+    idb.bodyMeasurements.toArray(),
+    idb.bodyPhotos.toArray(),
+  ]);
+  const photos: Partial<Record<BodyPhotoSlot, BodyPhoto>> = {};
+  for (const row of photoRows) photos[row.slot] = row;
+  return {
+    measurements: measurements.sort((a, b) => a.date.localeCompare(b.date)),
+    photos,
+  };
+}
+
+/** Regrava o estado inteiro (conjunto pequeno: ≤ 3 fotos + medições por dia). */
+async function writeAll(next: BodyMetricsState): Promise<BodyMetricsState> {
+  const clean = sanitize(next);
+  const photos = Object.values(clean.photos);
+  await idb.transaction('rw', [idb.bodyMeasurements, idb.bodyPhotos], async () => {
+    await idb.bodyMeasurements.clear();
+    if (clean.measurements.length) await idb.bodyMeasurements.bulkPut(clean.measurements);
+    await idb.bodyPhotos.clear();
+    if (photos.length) await idb.bodyPhotos.bulkPut(photos);
+  });
+  emitChange();
   return clean;
 }
 
 /** Registra (ou completa) a medição de uma data — merge por dia. */
-export function upsertMeasurement(input: BodyMeasurement): BodyMetricsState {
-  const state = getBodyMetrics();
+export async function upsertMeasurement(input: BodyMeasurement): Promise<BodyMetricsState> {
+  const state = await readBodyMetrics();
   const entry: BodyMeasurement = { date: input.date };
   const weight = parseNumber(input.weightKg);
   const fat = parseNumber(input.bodyFat);
@@ -132,23 +197,60 @@ export function upsertMeasurement(input: BodyMeasurement): BodyMetricsState {
 
   const others = state.measurements.filter((m) => m.date !== entry.date);
   const existing = state.measurements.find((m) => m.date === entry.date);
-  const merged: BodyMeasurement = { ...existing, ...entry };
-  return saveBodyMetrics({
-    measurements: [...others, merged].sort((a, b) => a.date.localeCompare(b.date)),
+  return writeAll({
+    measurements: [...others, { ...existing, ...entry }],
     photos: state.photos,
   });
 }
 
-export function setPhoto(slot: PhotoSlot, url: string, date: string): BodyMetricsState {
-  const state = getBodyMetrics();
-  return saveBodyMetrics({ ...state, photos: { ...state.photos, [slot]: { url, date } } });
+export async function setPhoto(slot: PhotoSlot, url: string, date: string): Promise<BodyMetricsState> {
+  const state = await readBodyMetrics();
+  return writeAll({ ...state, photos: { ...state.photos, [slot]: { slot, url, date } } });
 }
 
-export function removePhoto(slot: PhotoSlot): BodyMetricsState {
-  const state = getBodyMetrics();
+export async function removePhoto(slot: PhotoSlot): Promise<BodyMetricsState> {
+  const state = await readBodyMetrics();
   const photos = { ...state.photos };
   delete photos[slot];
-  return saveBodyMetrics({ ...state, photos });
+  return writeAll({ ...state, photos });
+}
+
+/**
+ * Hook das telas: lê o banco, recarrega quando uma gravação dispara
+ * `academia:body-metrics-changed` e quando o bootstrap/sync termina
+ * (`academia:db-ready` — inclusive após um pull da nuvem).
+ */
+export function useBodyMetrics(): { metrics: BodyMetricsState; loading: boolean } {
+  const [metrics, setMetrics] = useState<BodyMetricsState>(EMPTY_BODY_METRICS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+
+    const load = () => {
+      readBodyMetrics()
+        .then((next) => {
+          if (!alive) return;
+          setMetrics(next);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.warn('[useBodyMetrics] falha ao carregar métricas corporais:', err);
+          if (alive) setLoading(false);
+        });
+    };
+
+    load();
+    window.addEventListener(BODY_METRICS_EVENT, load);
+    document.addEventListener('academia:db-ready', load);
+    return () => {
+      alive = false;
+      window.removeEventListener(BODY_METRICS_EVENT, load);
+      document.removeEventListener('academia:db-ready', load);
+    };
+  }, []);
+
+  return { metrics, loading };
 }
 
 /* ── Leituras derivadas ── */
@@ -184,7 +286,7 @@ export function valueAtOrBefore(
   return found;
 }
 
-/** Medição mais recente (qualquer data) de uma métrica. */
+/** Medição mais recente (qualquer data) de uma métrica a partir da data dada. */
 export function valueAtOrAfter(
   state: BodyMetricsState,
   key: BodyMetricKey,
@@ -295,49 +397,4 @@ export function formatDelta(
   const abs = Math.abs(value).toFixed(digits).replace('.', ',');
   const sign = value > 0 ? '+' : value < 0 ? '−' : '';
   return `${sign}${abs} ${metricUnitLabel(key, unit)}`;
-}
-
-/* ── Fotos ── */
-
-/**
- * Lê o arquivo escolhido e devolve um data URL JPEG reduzido (720 px no lado
- * maior por padrão) — mesma abordagem das fotos de exercício do app, mas com
- * limite de resolução para caber no armazenamento local.
- */
-export function fileToPhotoDataUrl(
-  file: File,
-  maxSide = 720,
-  quality = 0.72
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (typeof document === 'undefined') {
-      reject(new Error('sem DOM'));
-      return;
-    }
-    const objectUrl = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-        const width = Math.max(1, Math.round(img.width * scale));
-        const height = Math.max(1, Math.round(img.height * scale));
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('canvas 2d indisponível');
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      } catch (err) {
-        reject(err instanceof Error ? err : new Error(String(err)));
-      } finally {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('imagem inválida'));
-    };
-    img.src = objectUrl;
-  });
 }

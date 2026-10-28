@@ -127,6 +127,15 @@
   color: var(--text-secondary);
 }
 
+/* v4.56.1 — redimensionamento horizontal da aba: nenhum filho pode empurrar o
+   track do .progresso-grid (2-modals.css) além da coluna. O heatmap é o único
+   conteúdo mais largo que a coluna (12 meses de células, ~795 px em telas
+   estreitas) — ele rola dentro de .prog-heat__scroll em vez de esticar os
+   cards da aba inteira. */
+.progresso-grid > * {
+  min-width: 0;
+}
+
 /* ---------- Atividade (ofensiva + mês) ---------- */
 .prog-activity {
   display: grid;

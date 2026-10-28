@@ -45,12 +45,7 @@ import { shareNative } from '@/lib/native-share';
 import { showToast } from '@/lib/toast';
 import { BodyMetricsOverlay } from './BodyMetricsOverlay';
 import { OfensivasOverlay } from './OfensivasOverlay';
-import {
-  BODY_METRICS_EVENT,
-  getBodyMetrics,
-  latestMeasurementDate,
-  latestValues,
-} from './body-metrics';
+import { latestMeasurementDate, latestValues, useBodyMetrics } from './body-metrics';
 import {
   exerciseVolume,
   fmtDateLocal as fmtDate,
@@ -200,7 +195,8 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   const [bodyMetricsOpen, setBodyMetricsOpen] = useState(false);
   const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>('week');
   const [heatYear, setHeatYear] = useState(() => new Date().getFullYear());
-  const [bodyMetrics, setBodyMetrics] = useState(() => getBodyMetrics());
+  /* v4.56.0 — métricas/fotos vêm do banco (IndexedDB) via hook */
+  const { metrics: bodyMetrics } = useBodyMetrics();
   /** Âncora do calendário: o card do mês rola até ele sem alterar a visão. */
   const calendarAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -211,13 +207,6 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     };
     window.addEventListener('academia:prefs-changed', syncPrefs);
     return () => window.removeEventListener('academia:prefs-changed', syncPrefs);
-  }, []);
-
-  /* Métricas corporais: refletem as gravações feitas na tela de medidas. */
-  useEffect(() => {
-    const syncMetrics = () => setBodyMetrics(getBodyMetrics());
-    window.addEventListener(BODY_METRICS_EVENT, syncMetrics);
-    return () => window.removeEventListener(BODY_METRICS_EVENT, syncMetrics);
   }, []);
 
   /* Containers animados com fadeIn (secao-progresso.js L115/L258/L402/L586) */

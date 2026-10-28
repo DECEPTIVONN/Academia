@@ -2,6 +2,42 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.1] - 2026-10-27
+
+**Nova logo sem fundo nos ícones e layout da aba Progresso redimensionado.**
+
+### Changed
+- `src-app/public/assets/icons/` regerados a partir do novo `src-app/src/assets/Logo.png` (arte nova, SEM fundo): `logo-32.png` e `logo-48.png` (ícone da aba no desktop), `logo-180.png` (apple-touch-icon), `logo-192.png` e `logo-512.png` (ícones `purpose: any` do manifesto PWA + `og:image`) agora têm fundo TRANSPARENTE; `logo-maskable-512.png` (`purpose: maskable`) mantém fundo preto com o logo a ~68% — dentro da safe zone, mesmo enquadramento do ícone anterior. Nenhuma referência muda: `index.html` e o `manifest` do `vite-plugin-pwa` apontam para os mesmos caminhos.
+- `src-app/src/legacy-style/treino/2-modals.css`: `.progresso-grid` usa `grid-template-columns: minmax(0, 1fr)` — com `1fr` puro o track crescia até o min-content dos filhos e TODOS os cards da aba Progresso viravam 795 px dentro de uma coluna de ~338 px (cortados na horizontal em telas estreitas).
+- `src-app/src/features/training/progresso.css`: `.progresso-grid > * { min-width: 0 }` — nenhum filho força o track a esticar. O heatmap (12 meses de células, ~795 px) é o único conteúdo mais largo que a coluna e passa a rolar dentro de `.prog-heat__scroll`, que já tem `overflow-x: auto`.
+
+### Verificado
+- `npm --prefix src-app run build`: OK — `dist/` com os 6 ícones novos e `manifest.webmanifest` apontando para `logo-192/512` e `logo-maskable-512`.
+- No navegador: track do `.progresso-grid` em 338 px (= largura da coluna), nenhum filho acima da coluna, heatmap com rolagem interna (conteúdo 757 px em 300 px visíveis) e `document.scrollWidth` igual à viewport (sem estouro lateral).
+
+## [v4.56.0] - 2026-10-27
+
+**Métricas corporais no banco local, sub-aba "Emblema" com foto de perfil e moldura que segue a escolha.**
+
+### Added
+- `src-app/src/lib/image.ts` (novo): `fileToDataUrl(file, { maxSide, quality })` — redimensiona no canvas (lado maior limitado) e devolve data-URL JPEG; usado pela foto de perfil (480 px) e pelas fotos de progresso (720 px).
+- `src-app/src/features/workout/treinos/emblema-tab.css` (novo): estilos do seletor de foto de perfil (`.profile-photo-picker`, `.btn-profile-photo`, `.btn-profile-photo-remove`).
+- **Upload de foto de perfil na sub-aba Emblema** (`CustomizacaoTabs.tsx`): antes a foto só vinha do Google OAuth ou do emblema equipado; agora "Carregar foto" grava `customization.photo` (mesmo campo, prioridade sobre o emblema em `ProfileEmblem`, avatar do Início, sidebar, drawer e Fit ID) e "Remover foto" volta ao emblema. O OAuth do Google só sobrescreve quando não há foto ou quando a foto atual é do Google (`App.tsx`), então a escolha manual permanece.
+
+### Changed
+- `features/training/body-metrics.ts` + `core/db/schema.ts` + `core/db/idb.ts` + `core/sync/sync-manager.ts`: **fotos e medições passam do `localStorage` para o BANCO local** — tabelas Dexie `bodyMeasurements` (uma medição por dia, peso em kg, gordura, cintura) e `bodyPhotos` (front/side/back, JPEG 720 px). A chave antiga `academia_body_metrics_v1` é migrada na primeira leitura e removida; gravações disparam `academia:body-metrics-changed`, recarregam o hook `useBodyMetrics()` e entram no snapshot de sync (`buildSnapshot`/`applySnapshot` + auto-push do sync-manager).
+- `features/training/ProgressoFeature.tsx` e `BodyMetricsOverlay.tsx` leem pelo hook `useBodyMetrics()` (carregamento, evento de mudança e `academia:db-ready` após um pull da nuvem).
+- Sub-aba **"Maestrias" passa a se chamar "Emblema"** (rótulo em `TreinosFeature.tsx`; o id interno `maestrias` segue o mesmo).
+- `features/profile/profile-data.ts`: as molduras de avatar (`AVATAR_FRAMES`) viram escolha LIVRE (`unlock: null`) e `revertLockedCustomizations` deixou de zerá-las — antes ficavam atrás de tiers de maestria/100 treinos e a seleção na sub-aba era ignorada, então a moldura do Início nunca mudava.
+- `legacy-style/treino/secoes/dashboard.css`: o avatar/emblema do Início passa a ser REDONDO (`border-radius: 50%` no contêiner, na `<img>` e no wrapper do emblema, também no breakpoint mobile) e as molduras `[data-frame]` (bronze/prata/ouro/elite) ganham anel redondo acompanhando o círculo.
+- `Diretrizes/system_map.json` (version `4.55.0` → `4.56.0`) e `Diretrizes/DESIGN.md` (§16.9) atualizados.
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros, 73 avisos (mesma linha de base; nenhum em arquivos alterados).
+- `npm run lint:docs`: OK.
+- No navegador (dev server `http://localhost:5173`): a chave `academia_body_metrics_v1` migrou para o banco e saiu do `localStorage`; nova medição gravou em `bodyMeasurements` (merge por dia) e o card Corpo atualizou sem reload; o overlay de métricas abriu com os dados; a moldura escolhida na sub-aba Emblema apareceu no Início com `data-frame` + anel (ex.: ouro `#fbbf24`, elite `var(--primary)`), tudo em `border-radius: 50%`. Dados de teste removidos ao final.
+
 ## [v4.55.0] - 2026-10-27
 
 **Aba Progresso reformulada com a Central de Ofensivas e as Métricas corporais.**

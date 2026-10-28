@@ -23,6 +23,8 @@ import type {
   WorkoutHistory,
   ExerciseMastery,
   ProfileState,
+  BodyMeasurement,
+  BodyPhoto,
 } from '@/core/db/schema';
 import {
   getSyncSupabaseClient,
@@ -55,6 +57,9 @@ export interface AppSnapshot {
   history: WorkoutHistory[];
   mastery: ExerciseMastery[];
   profileState?: ProfileState;
+  /** v4.56.0 — métricas corporais (peso/gordura/cintura) e fotos de progresso. */
+  bodyMeasurements?: BodyMeasurement[];
+  bodyPhotos?: BodyPhoto[];
   legacy?: Record<string, unknown>;
   /** Biblioteca de músicas (playlists/metadados), sem blobs de áudio. */
   musicLibrary?: unknown;
@@ -148,7 +153,7 @@ function emitDevicesUpdated(): void {
 /* ── Construção e aplicação de snapshots ── */
 
 export async function buildSnapshot(): Promise<AppSnapshot> {
-  const [exercises, sheets, history, mastery, profileState, legacyRow] =
+  const [exercises, sheets, history, mastery, profileState, legacyRow, bodyMeasurements, bodyPhotos] =
     await Promise.all([
       idb.exercises.toArray(),
       idb.workoutSheets.where('userId').equals(LOCAL_USER_ID).toArray(),
@@ -156,6 +161,8 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
       idb.exerciseMastery.where('userId').equals(LOCAL_USER_ID).toArray(),
       idb.profileState.get('local'),
       idb.legacyState.get('academia_treino'),
+      idb.bodyMeasurements.toArray(),
+      idb.bodyPhotos.toArray(),
     ]);
 
   let musicLibrary: unknown;
@@ -213,6 +220,8 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     history,
     mastery,
     profileState,
+    bodyMeasurements,
+    bodyPhotos,
     legacy: (legacyRow?.value as Record<string, unknown>) ?? undefined,
     musicLibrary,
     friends,
@@ -227,7 +236,16 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
   try {
     await idb.transaction(
       'rw',
-      [idb.exercises, idb.workoutSheets, idb.workoutHistory, idb.exerciseMastery, idb.profileState, idb.legacyState],
+      [
+        idb.exercises,
+        idb.workoutSheets,
+        idb.workoutHistory,
+        idb.exerciseMastery,
+        idb.profileState,
+        idb.legacyState,
+        idb.bodyMeasurements,
+        idb.bodyPhotos,
+      ],
       async () => {
         if (snapshot.exercises?.length) {
           await idb.exercises.bulkPut(snapshot.exercises);
@@ -243,6 +261,16 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
 
         if (snapshot.profileState) {
           await idb.profileState.put({ ...snapshot.profileState, key: 'local' });
+        }
+
+        /* v4.56.0 — métricas corporais e fotos de progresso */
+        await idb.bodyMeasurements.clear();
+        if (snapshot.bodyMeasurements?.length) {
+          await idb.bodyMeasurements.bulkPut(snapshot.bodyMeasurements);
+        }
+        await idb.bodyPhotos.clear();
+        if (snapshot.bodyPhotos?.length) {
+          await idb.bodyPhotos.bulkPut(snapshot.bodyPhotos);
         }
         if (snapshot.legacy) {
           await idb.legacyState.put({
@@ -727,6 +755,8 @@ export function startSyncEngine(): void {
   document.addEventListener('academia:navbar-shape-changed', onLocalDataChanged);
   document.addEventListener('academia:auto-fullscreen-changed', onLocalDataChanged);
   document.addEventListener('academia:prefs-changed', onLocalDataChanged);
+  /* v4.56.0 — métricas corporais/fotos de progresso entram no auto-push */
+  document.addEventListener('academia:body-metrics-changed', onLocalDataChanged);
   /* v4.44.1 — perfil/onboarding também entram no auto-push (antes só existiam
      no IndexedDB local e o snapshot remoto ficava sem `onboarded`). */
   document.addEventListener('academia:profile-updated', onLocalDataChanged);

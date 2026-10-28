@@ -787,13 +787,14 @@
   overflow: hidden;
 }
 
-/* Avatar/emblema dentro do banner menor. */
+/* Avatar/emblema dentro do banner menor.
+   v4.56.0 — REDONDO (era 16px/squircle) acompanhando as molduras do avatar. */
 .section-slide[data-section='dashboard']
   .dash-top-left
   .dash-profile-avatar.profile-avatar {
   width: clamp(56px, 16vw, 74px) !important;
   height: clamp(56px, 16vw, 74px) !important;
-  border-radius: 16px !important;
+  border-radius: 50% !important;
   padding: 3px !important;
   margin: 0 !important;
   z-index: 2;
