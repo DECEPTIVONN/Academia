@@ -2,6 +2,26 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.12] - 2026-10-29
+
+**Saída do site com o diálogo da guilda, Amigos separados em on-line/classificação, popover de membro com último acesso/ofensiva e chat sem troféus nem mensagens rápidas.**
+
+### Added
+- `src-app/src/components/ExitConfirmDialog.tsx` — **confirmação de saída do site** no mesmo desenho do diálogo de sair da guilda: overlay `guild-overlay--nested guild-overlay--dialog` via `createPortal(document.body)`, título “Sair do app?”, “Quer mesmo sair?”, texto de apoio e ações **Cancelar** (neutro) / **Sair** (vermelho), com `Esc` e clique no backdrop fechando. O `App.tsx` passou a renderizar esse componente no lugar do modal Tailwind que existia na interceptação do histórico (botão voltar/gesto do celular). O browser não permite UI personalizada no `beforeunload`; a confirmação cobre a saída interceptada pelo histórico.
+- `src-app/src/features/social/GuildPanel.tsx` — **popover do membro** (`GuildMemberDialog`) aberto ao tocar em qualquer membro da lista de detalhes da guilda: avatar com a imagem fixa do emblema de prestígio, nome, função, país e nível, além das métricas **Último acesso** (`Agora`, `Há X h`, `Há X dias`) e **Ofensiva** (`X dias`, com chama laranja). O rodapé tem **Ver perfil** como placeholder (toast “O perfil de … estará disponível em breve.”).
+- `src-app/src/features/social/guild-data.ts` — `GuildMember` ganhou `lastSeenHours` e `streak`, gerados de forma determinística nos membros das guildas iniciais, normalizados na leitura e preenchidos no jogador (`0` / `1`).
+
+### Changed
+- `src-app/src/features/social/GuildPanel.tsx` + `guild.css` — a lista de membros agora usa **linhas clicáveis** (`li.guild-member-item` + `button.guild-member`) com chevron, hover e foco do tema; a prévia de guilda continua com linhas estáticas. O `GuildDetail` passou a usar **`useModalPresence`** e o `OverlayShell` ganhou a prop **`closing`**: ao fechar os detalhes o overlay fica montado por 220 ms com `.is-closing` (fade do backdrop + painel descendo levemente), em vez de sumir de imediato.
+- `src-app/src/features/social/LigasFeature.tsx` + `social.css` — a sub-aba **Amigos** agora tem duas seções no mesmo estilo das linhas existentes: **Amigos on-line** (somente quem está on-line, com ponto verde pulsante no lugar do número da posição e contador) e **Classificação** (todos os amigos com posição, ordenados pelo filtro atual). A lista base `INITIAL_FRIENDS` passou a ser combinada com os amigos adicionados por QR/link (`mergeFriends`), então a aba já abre populada. Os avatares seguem usando a **imagem fixa** do emblema de prestígio. A sub-aba **Membros da Guilda** mantém a lista única de ranking.
+- `src-app/src/features/social/LigasFeature.tsx` — **chat da guilda sem troféus e sem mensagens rápidas**: saiu o `(troféus)` ao lado do nome/função e saiu o bloco “Rápido:” com os atalhos (`QUICK_REPLIES`), incluindo o handler `handleQuickReplyClick` e o ícone `Smile`; o campo de digitação e o envio continuam iguais.
+- `Diretrizes/system_map.json` (versão **4.56.12**), `Diretrizes/DESIGN.md` (§16.2 e §16.8) e este CHANGELOG — registram o diálogo de saída, as seções de amigos, o popover do membro e o chat limpo.
+
+### Verificado
+- `npm --prefix src-app run build` (`tsc -b` + `vite build`): OK.
+- `npm --prefix src-app run lint`: 0 erros, 72 avisos (linha de base; o aviso de `INITIAL_FRIENDS` sem uso em `LigasFeature.tsx` deixou de existir).
+- `npm run lint:docs`: OK.
+
 ## [v4.56.11] - 2026-10-29
 
 **Heatmap de séries mais alto, resumo de treinos dentro do Calendário e cabeçalho do Progresso sem o botão “+”.**

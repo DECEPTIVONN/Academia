@@ -29,6 +29,10 @@ export interface GuildMember {
   glyph: AvatarGlyphKey;
   flag: FlagKey;
   isSelf?: boolean;
+  /** Horas desde o último acesso (0 = agora). Usado no popover do membro. */
+  lastSeenHours?: number;
+  /** Dias consecutivos de treino (ofensiva). Usado no popover do membro. */
+  streak?: number;
 }
 
 export interface Guild {
@@ -318,6 +322,8 @@ function buildSeedMembers(guild: SeedGuild): GuildMember[] {
       level: 3 + ((i * 5) % 17),
       glyph: MEMBER_GLYPHS[(nameIndex + i) % MEMBER_GLYPHS.length],
       flag: MEMBER_FLAGS[(base + i) % MEMBER_FLAGS.length],
+      lastSeenHours: i === 0 ? 0 : 1 + ((base + i * 11) % 95),
+      streak: 1 + ((base + i * 7) % 30),
     });
   }
   return members;
@@ -376,6 +382,10 @@ function normalizeGuild(guild: Guild): Guild {
         glyph: m.glyph || 'crown',
         flag: m.flag || 'BR',
         isSelf: m.isSelf === true,
+        lastSeenHours: Number.isFinite(m.lastSeenHours)
+          ? Math.max(0, Math.floor(m.lastSeenHours as number))
+          : 0,
+        streak: Number.isFinite(m.streak) ? Math.max(0, Math.floor(m.streak as number)) : 0,
       })),
   };
 }
@@ -420,6 +430,8 @@ function selfMember(player: GuildPlayer, role: GuildRole): GuildMember {
     glyph: player.glyph,
     flag: player.flag,
     isSelf: true,
+    lastSeenHours: 0,
+    streak: 1,
   };
 }
 

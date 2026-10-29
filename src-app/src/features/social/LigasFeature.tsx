@@ -20,7 +20,6 @@ import {
   Shield,
   Trophy,
   Plus,
-  Smile,
   ArrowUpDown,
   SlidersHorizontal,
   Camera,
@@ -56,7 +55,6 @@ import {
   INITIAL_CLAN_MESSAGES,
   INITIAL_FRIENDS,
   LEAGUE_DIVISIONS,
-  QUICK_REPLIES,
   saveLeagueState,
   saveMonthlyLeagueState,
   standaloneSound,
@@ -805,13 +803,15 @@ function FriendRow({
   item,
   rank,
   isSelf,
+  showRank = true,
 }: {
   item: FriendItem;
   rank: number;
   isSelf: boolean;
+  showRank?: boolean;
 }) {
-  const isTop3 = rank <= 3;
-  const isBot3 = rank >= 8;
+  const isTop3 = showRank && rank <= 3;
+  const isBot3 = showRank && rank >= 8;
   const glyph = item.avatarGlyph || 'crown';
   const flag = item.flag || 'BR';
   const level = item.level || 1;
@@ -819,11 +819,21 @@ function FriendRow({
   return (
     <div className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${rowTone(isSelf, isTop3, isBot3)}`}>
       <div className="flex items-center gap-3">
-        <div
-          className={`w-6 h-6 rounded-full border-2 font-mono font-black text-xs flex items-center justify-center shrink-0 ${rankBadgeClass(rank)}`}
-        >
-          {rank}
-        </div>
+        {showRank ? (
+          <div
+            className={`w-6 h-6 rounded-full border-2 font-mono font-black text-xs flex items-center justify-center shrink-0 ${rankBadgeClass(rank)}`}
+          >
+            {rank}
+          </div>
+        ) : (
+          <div
+            className="w-6 h-6 rounded-full border border-emerald-500/40 bg-emerald-500/15 flex items-center justify-center shrink-0"
+            title="On-line"
+            aria-label="On-line"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
+          </div>
+        )}
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-slate-950/40 shadow-inner relative overflow-hidden bg-slate-900"
         >
@@ -958,9 +968,11 @@ export function LigasFeature({
   const [communityTab, setCommunityTab] = useState<'amigos' | 'membros'>('amigos');
   const [sortBy, setSortBy] = useState<'posicao' | 'trofeus' | 'nome'>('posicao');
   const [showFilters, setShowFilters] = useState(false);
-  const [friends, setFriends] = useState<FriendItem[]>(() => loadAddedFriends());
+  const [friends, setFriends] = useState<FriendItem[]>(() =>
+    mergeFriends(loadAddedFriends(), INITIAL_FRIENDS),
+  );
   useEffect(() => {
-    const reload = () => setFriends(loadAddedFriends());
+    const reload = () => setFriends(mergeFriends(loadAddedFriends(), INITIAL_FRIENDS));
     document.addEventListener('academia:db-ready', reload);
     document.addEventListener('academia:friends-updated', reload);
     document.addEventListener('academia:friends-changed', reload);
@@ -1192,11 +1204,6 @@ export function LigasFeature({
     standaloneSound.playHold();
   };
 
-  const handleQuickReplyClick = (reply: string) => {
-    dispatchChatMessage(reply);
-    standaloneSound.playHold();
-  };
-
   /* ── Amigos ── */
 
   const applyInvite = useCallback(
@@ -1254,8 +1261,15 @@ export function LigasFeature({
     return copy.sort((a, b) => b.trophies - a.trophies);
   };
 
-  const currentList = communityTab === 'amigos' ? friends : guildMembers;
-  const sortedList = getSortedList(currentList);
+  const sortedFriends = getSortedList(friends);
+  const sortedMembers = getSortedList(guildMembers);
+  const onlineFriends = useMemo(
+    () => [...friends].filter((friend) => friend.online).sort((a, b) => b.trophies - a.trophies),
+    [friends],
+  );
+  const isSelfFriend = (item: FriendItem) =>
+    item.id === 'self' ||
+    (item.friendCode ? item.friendCode === friendCode : item.name === profile.username);
 
   /* ── Portais ── */
 
@@ -1521,33 +1535,77 @@ export function LigasFeature({
         </div>
 
         <div className="space-y-2.5 max-h-[calc(100vh-420px)] overflow-y-auto pr-1 z-10">
-          {communityTab === 'membros' && !myGuild ? (
-            <div className="flex flex-col items-center gap-3 py-8 px-4 text-center rounded-2xl border border-dashed border-slate-700/70">
-              <Shield size={22} className="text-slate-500" />
-              <p className="text-xs font-bold text-slate-400 leading-relaxed">
-                Você ainda não faz parte de uma guilda. Entre ou crie a sua para ver os membros
-                do time aqui.
-              </p>
-              <button
-                onClick={() => {
-                  standaloneSound.playMove();
-                  goSubTab('bate-papo');
-                }}
-                className="px-4 py-2 ligas-btn-primary rounded-xl font-black text-[10px] uppercase tracking-wider cursor-pointer active:scale-95"
-              >
-                Ir para Guilda
-              </button>
-            </div>
+          {communityTab === 'membros' ? (
+            !myGuild ? (
+              <div className="flex flex-col items-center gap-3 py-8 px-4 text-center rounded-2xl border border-dashed border-slate-700/70">
+                <Shield size={22} className="text-slate-500" />
+                <p className="text-xs font-bold text-slate-400 leading-relaxed">
+                  Você ainda não faz parte de uma guilda. Entre ou crie a sua para ver os membros
+                  do time aqui.
+                </p>
+                <button
+                  onClick={() => {
+                    standaloneSound.playMove();
+                    goSubTab('bate-papo');
+                  }}
+                  className="px-4 py-2 ligas-btn-primary rounded-xl font-black text-[10px] uppercase tracking-wider cursor-pointer active:scale-95"
+                >
+                  Ir para Guilda
+                </button>
+              </div>
+            ) : (
+              sortedMembers.map((item, index) => (
+                <FriendRow
+                  key={item.id}
+                  item={item}
+                  rank={index + 1}
+                  isSelf={isSelfFriend(item)}
+                />
+              ))
+            )
           ) : (
-            sortedList.map((item, index) => {
-              const rank = index + 1;
-              const isSelf =
-                item.id === 'self' ||
-                (item.friendCode
-                  ? item.friendCode === friendCode
-                  : item.name === profile.username);
-              return <FriendRow key={item.id} item={item} rank={rank} isSelf={isSelf} />;
-            })
+            <>
+              <section className="soc-friend-group" aria-label="Amigos on-line">
+                <div className="soc-friend-group__head">
+                  <span className="soc-friend-group__title">
+                    <span className="soc-friend-group__pulse" aria-hidden="true" />
+                    Amigos on-line
+                  </span>
+                  <span className="soc-friend-group__count">{onlineFriends.length}</span>
+                </div>
+                {onlineFriends.length > 0 ? (
+                  onlineFriends.map((item) => (
+                    <FriendRow
+                      key={`online-${item.id}`}
+                      item={item}
+                      rank={0}
+                      isSelf={isSelfFriend(item)}
+                      showRank={false}
+                    />
+                  ))
+                ) : (
+                  <p className="soc-friend-group__empty">Nenhum amigo on-line agora.</p>
+                )}
+              </section>
+
+              <section className="soc-friend-group" aria-label="Classificação dos amigos">
+                <div className="soc-friend-group__head">
+                  <span className="soc-friend-group__title">
+                    <Trophy size={12} className="text-amber-400" aria-hidden="true" />
+                    Classificação
+                  </span>
+                  <span className="soc-friend-group__count">{sortedFriends.length}</span>
+                </div>
+                {sortedFriends.map((item, index) => (
+                  <FriendRow
+                    key={item.id}
+                    item={item}
+                    rank={index + 1}
+                    isSelf={isSelfFriend(item)}
+                  />
+                ))}
+              </section>
+            </>
           )}
         </div>
 
@@ -1647,7 +1705,6 @@ export function LigasFeature({
               <span className="px-1 py-0.5 rounded text-[9px] ligas-role-pill font-black">
                 {msg.role}
               </span>
-              <span className="text-[10px] text-slate-500 font-mono">({msg.trophies})</span>
             </div>
             <div
               className={`px-3.5 py-2.5 rounded-2xl text-[15px] font-medium leading-relaxed ${
@@ -1660,21 +1717,6 @@ export function LigasFeature({
             </div>
             <span className="text-[10px] text-slate-500 select-none font-medium">{msg.time}</span>
           </div>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
-          <Smile className="w-4 h-4 ligas-text-accent" /> Rápido:
-        </span>
-        {QUICK_REPLIES.map((reply) => (
-          <button
-            key={reply}
-            onClick={() => handleQuickReplyClick(reply)}
-            className="px-[14px] py-[7px] bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-700 text-[14px] font-medium text-slate-200 rounded-full transition-all active:scale-95 shrink-0 cursor-pointer"
-          >
-            {reply}
-          </button>
         ))}
       </div>
 

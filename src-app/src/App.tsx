@@ -35,6 +35,7 @@ import { ShareModal } from '@/features/gamification/ShareModal';
 import { MusicOverlay } from '@/features/music/MusicOverlay';
 import { FloatingMiniPlayer } from '@/features/music/FloatingMiniPlayer';
 import { RestTimerWidget } from '@/features/workout/RestTimerWidget';
+import { ExitConfirmDialog } from '@/components/ExitConfirmDialog';
 /* v4.21.0-music — barra de música no rodapé da Ficha (treino) */
 import { WorkoutNowPlayingBar } from '@/features/music/WorkoutNowPlayingBar';
 import { useShareStore } from '@/features/gamification/share-store';
@@ -1124,30 +1125,15 @@ function AppShell() {
               AuthModal renderiza a AuthScreen full-screen (z-index 1150,
               abaixo do LockScreen 1200). */}
           <AuthModal />
-          {exitConfirmOpen && (
-            <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-4">
-              <div className="w-full max-w-sm rounded-2xl bg-[#0b0b10] border border-white/10 p-6 space-y-4">
-                <h2 className="text-lg font-bold text-white">Sair do app?</h2>
-                <p className="text-sm text-white/60">Deseja realmente fechar o EVO FIT?</p>
-                <div className="flex gap-3">
-                  <button type="button" className="flex-1 rounded-lg bg-white/10 px-4 py-2 text-white" onClick={() => setExitConfirmOpen(false)}>
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-1 rounded-lg bg-red-500 px-4 py-2 text-white"
-                    onClick={() => {
-                      allowExit.current = true;
-                      setExitConfirmOpen(false);
-                      window.history.back();
-                    }}
-                  >
-                    Sair
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          <ExitConfirmDialog
+            open={exitConfirmOpen}
+            onCancel={() => setExitConfirmOpen(false)}
+            onConfirm={() => {
+              allowExit.current = true;
+              setExitConfirmOpen(false);
+              window.history.back();
+            }}
+          />
           <OnboardingGate />
           <RemoteSyncToast />
            <OfflineSyncBanner />

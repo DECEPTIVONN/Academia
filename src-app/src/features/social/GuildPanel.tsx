@@ -19,7 +19,9 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Copy,
+  Flame,
   Lock,
   LogOut,
   Search,
@@ -30,6 +32,7 @@ import {
   X,
 } from 'lucide-react';
 import { IDENTITY_EMBLEMS } from '@/features/profile/profile-data';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { showToast } from '@/lib/toast';
 import { AvatarGlyph, FlagIcon } from './ligas-icons';
 import { standaloneSound } from './ligas-data';
@@ -56,6 +59,15 @@ import {
 import './guild.css';
 
 const NUM = (value: number) => value.toLocaleString('pt-BR');
+
+/** Último acesso do membro (horas → texto curto, no padrão da referência). */
+function formatLastSeen(hours: number | undefined): string {
+  const value = Number.isFinite(hours) ? Math.max(0, Math.floor(hours as number)) : 0;
+  if (value <= 0) return 'Agora';
+  if (value < 24) return `Há ${value} h`;
+  const days = Math.floor(value / 24);
+  return days === 1 ? 'Há 1 dia' : `Há ${days} dias`;
+}
 
 /* ── Emblema (usa os emblemas de identidade já existentes no site) ── */
 
@@ -96,9 +108,17 @@ function GuildTypeChip({ type }: { type: GuildType }) {
   );
 }
 
-function MemberRow({ member, rank }: { member: GuildMember; rank: number }) {
-  return (
-    <li className={`guild-member${member.isSelf ? ' guild-member--self' : ''}`}>
+function MemberRow({
+  member,
+  rank,
+  onSelect,
+}: {
+  member: GuildMember;
+  rank: number;
+  onSelect?: (member: GuildMember) => void;
+}) {
+  const content = (
+    <>
       <span className="guild-member__rank">{rank}</span>
       <span className="guild-member__avatar">
         <AvatarGlyph glyph={member.glyph} size={16} />
@@ -120,6 +140,27 @@ function MemberRow({ member, rank }: { member: GuildMember; rank: number }) {
         <Trophy size={12} />
         {NUM(member.trophies)}
       </span>
+      {onSelect && (
+        <span className="guild-member__chevron" aria-hidden="true">
+          <ChevronRight size={14} />
+        </span>
+      )}
+    </>
+  );
+
+  return (
+    <li className="guild-member-item">
+      {onSelect ? (
+        <button
+          type="button"
+          className={`guild-member guild-member--button${member.isSelf ? ' guild-member--self' : ''}`}
+          onClick={() => onSelect(member)}
+        >
+          {content}
+        </button>
+      ) : (
+        <div className={`guild-member${member.isSelf ? ' guild-member--self' : ''}`}>{content}</div>
+      )}
     </li>
   );
 }
@@ -146,6 +187,8 @@ interface OverlayShellProps {
   footer?: React.ReactNode;
   nested?: boolean;
   dialog?: boolean;
+  /** Animação de saída (o pai mantém o overlay montado até o fim). */
+  closing?: boolean;
   /** Clique no backdrop fecha o overlay. Padrão: true (só vale para `nested`). */
   backdropClose?: boolean;
   children: React.ReactNode;
@@ -159,16 +202,18 @@ function OverlayShell({
   footer,
   nested,
   dialog,
+  closing,
   backdropClose = true,
   children,
 }: OverlayShellProps) {
   return createPortal(
     <div
-      className={`guild-overlay${nested ? ' guild-overlay--nested' : ''}${dialog ? ' guild-overlay--dialog' : ''}`}
+      className={`guild-overlay${nested ? ' guild-overlay--nested' : ''}${dialog ? ' guild-overlay--dialog' : ''}${closing ? ' is-closing' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      onClick={nested && backdropClose ? onClose : undefined}
+      aria-hidden={closing || undefined}
+      onClick={nested && backdropClose && !closing ? onClose : undefined}
     >
       <div className="guild-overlay__panel" onClick={(event) => event.stopPropagation()}>
         <div className="guild-overlay__head">
@@ -485,85 +530,189 @@ function GuildCreate({
   );
 }
 
+/* ── Popover do membro (último acesso + ofensiva + Ver perfil) ── */
+
+function GuildMemberDialog({
+  member,
+  onClose,
+}: {
+  member: GuildMember;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation();
+      onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const streak = Number.isFinite(member.streak) ? Math.max(0, Math.floor(member.streak ?? 0)) : 0;
+
+  return (
+    <OverlayShell
+      title="Membro"
+      subtitle={member.role}
+      nested
+      onClose={onClose}
+      footer={
+        <button
+          type="button"
+          className="guild-btn guild-btn--primary guild-btn--wide"
+          onClick={() => {
+            standaloneSound.playMove();
+            showToast(`O perfil de ${member.name} estará disponível em breve.`, 'info');
+          }}
+        >
+          Ver perfil
+        </button>
+      }
+    >
+      <div className="guild-profile">
+        <GuildEmblem
+          emblemId="prestigio-1"
+          size={78}
+          className="guild-profile__avatar"
+        />
+        <div className="guild-profile__identity">
+          <span className="guild-profile__name">{member.name}</span>
+          <span className="guild-profile__meta">
+            <span
+              className={`guild-member__role guild-member__role--${member.role === 'Líder' ? 'leader' : member.role === 'Ancião' ? 'elder' : 'member'}`}
+            >
+              {member.role}
+            </span>
+            <FlagIcon flag={member.flag} size={12} />
+            <span>Nível {member.level}</span>
+            {member.isSelf && <span className="guild-member__you">VOCÊ</span>}
+          </span>
+        </div>
+      </div>
+
+      <div className="guild-profile__stats">
+        <div className="guild-profile__stat">
+          <Clock size={14} className="guild-profile__icon" />
+          <span className="guild-profile__label">Último acesso</span>
+          <strong className="guild-profile__value">{formatLastSeen(member.lastSeenHours)}</strong>
+        </div>
+        <div className="guild-profile__stat">
+          <Flame size={14} className="guild-profile__icon guild-profile__icon--fire" />
+          <span className="guild-profile__label">Ofensiva</span>
+          <strong className="guild-profile__value">
+            {streak} {streak === 1 ? 'dia' : 'dias'}
+          </strong>
+        </div>
+      </div>
+    </OverlayShell>
+  );
+}
+
 /* ── Detalhes da guilda (modal aberto pelo banner do cabeçalho) ── */
 
 function GuildDetail({
   guild,
+  open,
   onClose,
   onLeave,
 }: {
   guild: Guild;
+  open: boolean;
   onClose: () => void;
   onLeave: () => void;
 }) {
+  const { mounted, closing } = useModalPresence(open);
+  const [selectedMember, setSelectedMember] = useState<GuildMember | null>(null);
+  const [wasOpen, setWasOpen] = useState(open);
+
+  /* Fecha o popover do membro junto com os detalhes (mesmo padrão de ajuste
+     de estado durante o render usado em useModalPresence). */
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (!open) setSelectedMember(null);
+  }
+
   const members = useMemo(
     () => [...guild.members].sort((a, b) => b.trophies - a.trophies),
     [guild.members],
   );
 
+  if (!mounted) return null;
+
   return (
-    <OverlayShell title="Guilda" onClose={onClose}>
-      <div className="guild-detail">
-        <div className="guild-detail__head">
-          <GuildEmblem emblemId={guild.emblemId} size={72} />
-          <div className="guild-detail__identity">
-            <h3 className="guild-detail__name">{guild.name}</h3>
+    <>
+      <OverlayShell title="Guilda" closing={closing} onClose={onClose}>
+        <div className="guild-detail">
+          <div className="guild-detail__head">
+            <GuildEmblem emblemId={guild.emblemId} size={72} />
+            <div className="guild-detail__identity">
+              <h3 className="guild-detail__name">{guild.name}</h3>
+              <button
+                type="button"
+                className="guild-tag"
+                onClick={() => copyGuildTag(guild)}
+                title="Copiar tag da guilda"
+              >
+                #{guild.tag}
+                <Copy size={11} />
+              </button>
+            </div>
+          </div>
+
+          <p className="guild-detail__desc">{guild.description || 'Sem descrição.'}</p>
+
+          <div className="guild-stats">
+            <div className="guild-stat">
+              <span className="guild-stat__label">Localização</span>
+              <span className="guild-stat__value">{guild.location}</span>
+            </div>
+            <div className="guild-stat">
+              <span className="guild-stat__label">Troféus necessários</span>
+              <span className="guild-stat__value">{NUM(guild.requiredTrophies)}</span>
+            </div>
+            <div className="guild-stat">
+              <span className="guild-stat__label">Tipo</span>
+              <span className="guild-stat__value">
+                <GuildTypeChip type={guild.type} />
+              </span>
+            </div>
+          </div>
+
+          <div className="guild-members-head">
+            <span className="guild-members-head__count">
+              <Users size={14} />
+              Membros {guild.members.length}/{GUILD_MAX_MEMBERS}
+            </span>
             <button
               type="button"
-              className="guild-tag"
-              onClick={() => copyGuildTag(guild)}
-              title="Copiar tag da guilda"
+              className="guild-leave"
+              onClick={() => {
+                standaloneSound.playMove();
+                onLeave();
+              }}
             >
-              #{guild.tag}
-              <Copy size={11} />
+              <LogOut size={13} />
+              Sair
             </button>
           </div>
+
+          <ul className="guild-members guild-members--detail">
+            {members.map((member, index) => (
+              <MemberRow
+                key={member.id}
+                member={member}
+                rank={index + 1}
+                onSelect={setSelectedMember}
+              />
+            ))}
+          </ul>
         </div>
-
-        <p className="guild-detail__desc">{guild.description || 'Sem descrição.'}</p>
-
-        <div className="guild-stats">
-          <div className="guild-stat">
-            <span className="guild-stat__label">Localização</span>
-            <span className="guild-stat__value">{guild.location}</span>
-          </div>
-          <div className="guild-stat">
-            <span className="guild-stat__label">Troféus necessários</span>
-            <span className="guild-stat__value">{NUM(guild.requiredTrophies)}</span>
-          </div>
-          <div className="guild-stat">
-            <span className="guild-stat__label">Tipo</span>
-            <span className="guild-stat__value">
-              <GuildTypeChip type={guild.type} />
-            </span>
-          </div>
-        </div>
-
-        <div className="guild-members-head">
-          <span className="guild-members-head__count">
-            <Users size={14} />
-            Membros {guild.members.length}/{GUILD_MAX_MEMBERS}
-          </span>
-          <button
-            type="button"
-            className="guild-leave"
-            onClick={() => {
-              standaloneSound.playMove();
-              onLeave();
-            }}
-          >
-            <LogOut size={13} />
-            Sair
-          </button>
-        </div>
-
-        <ul className="guild-members guild-members--detail">
-          {members.map((member, index) => (
-            <MemberRow key={member.id} member={member} rank={index + 1} />
-          ))}
-        </ul>
-      </div>
-    </OverlayShell>
+      </OverlayShell>
+      {selectedMember && !closing && (
+        <GuildMemberDialog member={selectedMember} onClose={() => setSelectedMember(null)} />
+      )}
+    </>
   );
 }
 
@@ -983,9 +1132,10 @@ export function GuildPanel({
           onCreated={() => setCreateOpen(false)}
         />
       )}
-      {guild && detailsOpen && (
+      {guild && (
         <GuildDetail
           guild={guild}
+          open={detailsOpen}
           onClose={closeDetails}
           onLeave={() => setLeaveOpen(true)}
         />

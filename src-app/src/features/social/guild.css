@@ -250,14 +250,46 @@
   overflow: visible;
 }
 
+.guild-member-item {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .guild-member {
   display: flex;
   align-items: center;
   gap: 9px;
+  width: 100%;
   padding: 8px 10px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.035);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+}
+
+.guild-member--button {
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.guild-member--button:hover {
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.4);
+}
+
+.guild-member--button:active {
+  transform: scale(0.995);
+}
+
+.guild-member__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.35);
 }
 
 .guild-member--self {
@@ -364,6 +396,98 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- Popover do membro (último acesso / ofensiva) ---------- */
+
+.guild-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0 2px;
+  text-align: center;
+}
+
+.guild-profile__avatar.guild-emblem {
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 0 -6px 14px rgba(0, 0, 0, 0.55),
+    0 10px 22px rgba(0, 0, 0, 0.5);
+}
+
+.guild-profile__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.guild-profile__name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 1.02rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.guild-profile__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.guild-profile__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.guild-profile__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  text-align: center;
+}
+
+.guild-profile__icon {
+  color: var(--primary-light, #c084fc);
+}
+
+.guild-profile__icon--fire {
+  color: #fb923c;
+}
+
+.guild-profile__label {
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.guild-profile__value {
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 0.86rem;
+  font-weight: 900;
+  color: #fff;
+}
+
 /* Chat: é o conteúdo da sub-aba (os detalhes vivem no modal do banner) */
 .guild-chat {
   margin: 0;
@@ -433,6 +557,36 @@
     opacity: 1;
     transform: none;
   }
+}
+
+@keyframes guildOverlayOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes guildPanelOut {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+}
+
+/* Saída suave (o pai mantém o overlay montado até o fim da animação) */
+.guild-overlay.is-closing {
+  pointer-events: none;
+  animation: guildOverlayOut 0.22s ease both;
+}
+
+.guild-overlay.is-closing .guild-overlay__panel {
+  animation: guildPanelOut 0.22s ease-in both;
 }
 
 .guild-overlay__panel {
