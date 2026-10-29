@@ -2,6 +2,30 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.14] - 2026-10-29
+
+**Banner do Início abre o perfil, "Último treino" igual à prévia do Início, formulário em linhas, timer animado, Modo Foco por duplo clique com cardio e tabela com colunas alinhadas.**
+
+### Added
+- `src-app/src/App.tsx` — o **banner da aba Início** ("TREINO DE HOJE"/nome do jogador) agora abre o **PlayerProfileModal do jogador local** (`LocalPlayerProfileShortcut`) em vez do hub de configurações; acessibilidade com `aria-label="Abrir perfil do usuário"`.
+- `src-app/src/features/social/PlayerProfileModal.tsx` + `player-profile.css` — a seção **Último treino** passa a reusar o **mesmo `FichaDeck` da prévia do Início** (`bodyRow="sheet"`, `showSheetTag={false}`): linha "TREINO A", grid de 4 colunas e rodapé de métricas idênticos, só sem a etiqueta "FICHA DO DIA" (que cabe ao último treino, não ao de hoje).
+- `src-app/src/features/workout/treinos/ExercicioFormModal.tsx` + `legacy-style/treino/2-modals.css` — formulário novo/editar exercício em **linhas fixas**: `.form-row--2` (Nome do Exercício + Grupo Muscular na mesma linha) e `.form-row--3` (Séries + Repetições + Carga na mesma linha); descanso foi para a linha abaixo. As regras `.modal-form .form-row--N` vencem o `@media(max-width:600px)` que empilhava tudo em 1 coluna.
+- `src-app/src/features/workout/FichaFeature.tsx` — **animação suave do cronômetro global**: `useModalPresence(isActive, 240)` mantém o `.global-timer` montado no fade-out (classe `.is-closing`), com `timerIn` (fade + deslize, substitui o bounce antigo) na entrada e `timerOut` na saída. **Modo Foco por DOIS CLIQUES num cartão do grid** (`onGridDoubleClick` em `#workoutGrid`, ignorando botões/inputs do cartão) — o botão FOCO saiu do seletor de visualização (agora exatamente 2 slots: tabela/grid).
+- `src-app/src/features/workout/FocusModal.tsx` — **cardio como última etapa do Modo Foco**, no mesmo desenho do card do grid (badge CARDIO + tipo + velocidade/tempo + checkbox de concluído) e entrando na conclusão atômica do dia; a carga vazia passa a exibir a **sugerida**; ícone do cardio virou **SVG de traço (ECG)** do padrão de ícones do site (o emoji 🏃 saiu, é proibido pelo guia).
+- `src-app/src/features/workout/FichaFeature.tsx` + `legacy-style/treino/4-gamificacao.css` — **linha de cardio da tabela na MESMA grade de 5 colunas** das linhas de exercício (nº · cardio/tipo · imagem · volume · check): antes usava `colSpan` + selo "CONCLUÍDO", o que empurrava o checkbox para fora da coluna do ✓. Agora ela tem o **ícone de cardio ECG** (padrão do site), a **engrenagem movida para baixo das estatísticas** (mesmo lugar do botão de nota das linhas) e o **checkbox de concluído igual aos demais exercícios**.
+
+### Changed
+- `src-app/src/legacy-style/treino/2-modals.css` — no `@media(max-width:600px)` saiu a regra `.workout-table .col-img{display:none}`: ela escondia **só o `<th> Imagem`** (o `<td>` não tem a classe), então "Volume" e "✓" do cabeçalho ficavam uma coluna à esquerda do corpo. Header e corpo agora têm as mesmas 5 colunas, com `#` já renomeado para **`N°`**.
+- `src-app/src/legacy-style/treino/3-foco-badges.css` — GIFs do Modo Foco com `object-fit: contain` + `max-height: 52vh` (a figura não aparece mais cortada), CSS do `timerIn`/`timerOut` e `.focus-cardio-icon` adaptado para o SVG (cor `currentColor` verde do aeróbico).
+- `Diretrizes/system_map.json` (versão **4.56.14**) e este CHANGELOG — registram o banner→perfil, o deck do último treino, o duplo clique do foco, o timer animado e o alinhamento da tabela.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros, 72 avisos (linha de base).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+- Sonda manual (dev server + browser): cabeçalho e corpo da tabela com colunas idênticas (N°/Exercício/Imagem/Volume/✓ nas mesmas posições dos `<td>`), linha de cardio alinhada com checkbox na coluna do ✓; seletor com só 2 botões; duplo clique no grid abre o Modo Foco (etapa 1 mostra "Peso inicial sugerido: 30 kg" e a última etapa é o CARDIO com SVG, sem emoji); imagem do foco com `object-fit: contain`; banner do Início abre `.player-profile` (sem "FICHA DO DIA" dentro do modal); formulário com 2 colunas (Nome+Grupo) e 3 colunas (Séries/Reps/Carga) mesmo no viewport de 397 px.
+
 ## [v4.56.13] - 2026-10-29
 
 **Perfil do jogador no desenho do Clash Royale, popover do jogador também na sub-aba Amigos (amigos e membros da guilda) e último acesso “On-line”.**

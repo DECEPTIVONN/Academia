@@ -12,7 +12,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Clock, Crown, Droplet, Flame, Trophy, X } from 'lucide-react';
+import { ChevronDown, Clock, Crown, Flame, Trophy, X } from 'lucide-react';
+import { FichaDeck } from '@/features/dashboard/FichaDeck';
 import { IDENTITY_EMBLEMS } from '@/features/profile/profile-data';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { useLocalData } from '@/hooks/useLocalData';
@@ -22,7 +23,7 @@ import { AvatarGlyph, DivisionIcon, FlagIcon } from './ligas-icons';
 import { DIVISION_COLORS } from './ligas-data';
 import {
   buildPlayerProfile,
-  type LastWorkoutExerciseView,
+  selfPlayerSummary,
   type PlayerProfileView,
   type PlayerSummaryInput,
 } from './player-profile-data';
@@ -34,11 +35,6 @@ function decimal(value: number): string {
   return value.toLocaleString('pt-BR', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
 }
 
-function shortDate(date: string): string {
-  const [year, month, day] = date.split('-');
-  return year && month && day ? `${day}/${month}` : date;
-}
-
 function SectionHead({ title }: { title: string }) {
   return (
     <div className="player-profile__section-head">
@@ -46,21 +42,6 @@ function SectionHead({ title }: { title: string }) {
       <Crown size={14} className="player-profile__head-crown" aria-hidden="true" />
       <span className="player-profile__head-line" aria-hidden="true" />
       <h3 className="player-profile__section-title">{title}</h3>
-    </div>
-  );
-}
-
-function WorkoutCard({ exercise }: { exercise: LastWorkoutExerciseView }) {
-  return (
-    <div className="player-profile__card" title={exercise.name}>
-      <div className="player-profile__card-art">
-        {exercise.imageUrl ? (
-          <img src={exercise.imageUrl} alt="" loading="lazy" draggable={false} />
-        ) : (
-          <span>{exercise.name.charAt(0).toUpperCase()}</span>
-        )}
-      </div>
-      <span className="player-profile__card-name">{exercise.name}</span>
     </div>
   );
 }
@@ -130,16 +111,31 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
       close();
     };
     window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
-    };
+    return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [closing]);
+
+  /* v4.56.14 — o timer de SAÍDA vive fora do efeito acima: com `closing` nas
+     dependências, a limpeza do efeito cancelava o próprio `setTimeout` de
+     200ms e o modal ficava preso em `.is-closing` (nunca desmontava). */
+  useEffect(
+    () => () => {
+      if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
+    },
+    [],
+  );
 
   const badgeEmblems = view.emblems.slice(0, 3);
   const emblemSlots = Array.from({ length: 8 }, (_, index) => view.emblems[index] ?? null);
   const lastWorkout = view.lastWorkout;
+  /* Ficha do último treino (define o aeróbico mostrado no rodapé do deck). */
+  const lastWorkoutSheet = useMemo(
+    () =>
+      lastWorkout
+        ? local.sheets.find((sheet) => sheet.sheetKey === lastWorkout.sheetKey)
+        : undefined,
+    [lastWorkout, local.sheets],
+  );
 
   return createPortal(
     <div
@@ -301,21 +297,19 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
             <SectionHead title="Último treino" />
             {lastWorkout ? (
               <>
-                <div className="player-profile__deck-head">
-                  <span className="player-profile__deck-title">Ficha {lastWorkout.sheetKey}</span>
-                  <span className="player-profile__deck-date">{shortDate(lastWorkout.date)}</span>
-                </div>
-                <div className="player-profile__deck">
-                  {lastWorkout.exercises.map((exercise) => (
-                    <WorkoutCard key={exercise.id} exercise={exercise} />
-                  ))}
-                </div>
-                <div className="player-profile__load">
-                  <Droplet size={14} className="player-profile__load-icon" aria-hidden="true" />
-                  <span className="player-profile__load-label">Custo médio de carga:</span>
-                  <strong className="player-profile__load-value">
-                    {decimal(lastWorkout.averageLoad)} kg
-                  </strong>
+                {/* v4.56.14 — mesmo deck Royale da prévia do Início (FichaDeck):
+                    linha "TREINO A" + grid de 4 colunas + rodapé de métricas
+                    (volume médio de carga · cardio). Só a etiqueta "FICHA DO
+                    DIA" fica de fora, porque aqui é o ÚLTIMO treino. */}
+                <div className="dash-arena-card dash-ficha-card player-profile__deck-block">
+                  <FichaDeck
+                    sheet={lastWorkoutSheet}
+                    exercises={lastWorkout.exercises}
+                    legacy={local.legacy}
+                    showMaestria={false}
+                    bodyRow="sheet"
+                    showSheetTag={false}
+                  />
                 </div>
               </>
             ) : (
@@ -353,4 +347,27 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
     </div>,
     document.body,
   );
+}
+
+/**
+ * Atalho para o JOGADOR LOCAL: o banner do Início abre este perfil (v4.56.14)
+ * em vez do hub de configurações. Resolve nome/XP/nível pelos dados do app.
+ */
+export function SelfPlayerProfileModal({ onClose }: { onClose: () => void }) {
+  const local = useLocalData();
+  const { state: profileState } = useProfileState();
+
+  const data = useMemo<LocalData>(
+    () => ({
+      exercises: local.exercises,
+      sheets: local.sheets,
+      history: local.history,
+      legacy: local.legacy,
+    }),
+    [local.exercises, local.sheets, local.history, local.legacy],
+  );
+
+  const player = useMemo(() => selfPlayerSummary(data, profileState), [data, profileState]);
+
+  return <PlayerProfileModal player={player} onClose={onClose} />;
 }

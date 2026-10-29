@@ -12,7 +12,7 @@
  * demonstrativo e não tem perfil remoto (ver contexto em guild-data.ts).
  */
 
-import type { LocalData } from '@/core/db/queries';
+import { getLevel, getXp, type LocalData } from '@/core/db/queries';
 import type { Exercise, ProfileState } from '@/core/db/schema';
 import type { Guild, GuildMember } from './guild-data';
 import { EMBLEMAS, IDENTITY_EMBLEMS, getProfileStats } from '@/features/profile/profile-data';
@@ -56,16 +56,11 @@ export interface PlayerEmblemView {
   icon: string;
 }
 
-export interface LastWorkoutExerciseView {
-  id: string;
-  name: string;
-  imageUrl: string | null;
-}
-
 export interface PlayerLastWorkoutView {
   sheetKey: string;
   date: string;
-  exercises: LastWorkoutExerciseView[];
+  /** Exercícios COMPLETOS, para o mesmo deck Royale da prévia do Início. */
+  exercises: Exercise[];
   /** Custo médio de carga em kg (equivalente ao custo médio de elixir). */
   averageLoad: number;
 }
@@ -105,6 +100,31 @@ export interface PlayerProfileView {
   leagues: { current: LeagueDivision; previous: LeagueDivision; best: LeagueDivision };
   lastWorkout: PlayerLastWorkoutView | null;
   stats: PlayerStatsView;
+}
+
+/**
+ * Resumo do JOGADOR LOCAL — usado pelo banner do Início, que abre direto o
+ * perfil completo (v4.56.14) em vez do hub de configurações.
+ */
+export function selfPlayerSummary(
+  data: LocalData,
+  profileState?: ProfileState | null,
+): PlayerSummaryInput {
+  const name = profileState?.customization?.nome?.trim() || 'Atleta';
+  const trophies = getXp(data.history);
+  return {
+    id: 'self',
+    name,
+    kind: 'membro',
+    isSelf: true,
+    trophies,
+    level: getLevel(trophies),
+    online: true,
+    lastSeenHours: 0,
+    streak: 0,
+    flag: 'BR',
+    glyph: 'crown',
+  };
 }
 
 /** Converte um membro da guilda no resumo usado pelo popover do jogador. */
@@ -223,7 +243,7 @@ function selfLastWorkout(data: LocalData): PlayerLastWorkoutView | null {
   return {
     sheetKey: latest.sheetKey,
     date: latest.date,
-    exercises: deck.map((ex) => ({ id: ex.id, name: ex.name, imageUrl: ex.imageUrl })),
+    exercises: deck,
     averageLoad: Math.round(averageLoadKg(deck) * 10) / 10,
   };
 }
@@ -351,7 +371,7 @@ export function buildPlayerProfile(
             date: new Date(Date.now() - Math.floor(rnd() * 5) * 86400000)
               .toISOString()
               .slice(0, 10),
-            exercises: deck.map((ex) => ({ id: ex.id, name: ex.name, imageUrl: ex.imageUrl })),
+            exercises: deck,
             averageLoad: Math.round(averageLoadKg(deck) * 10) / 10,
           }
         : null;

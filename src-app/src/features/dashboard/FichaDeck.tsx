@@ -73,6 +73,8 @@ interface FichaDeckProps {
    *  `sheet` (nome do treino — "TREINO A" — usado na prévia do Início,
    *  v4.31.1: o antigo destaque verde de cardio dá lugar ao nome do treino). */
   bodyRow?: 'cardio' | 'sheet';
+  /** `false` esconde a etiqueta "FICHA DO DIA" (perfil do jogador). */
+  showSheetTag?: boolean;
   emptyMessage?: React.ReactNode;
 }
 
@@ -82,6 +84,7 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
   legacy,
   showMaestria = true,
   bodyRow = 'cardio',
+  showSheetTag = true,
   emptyMessage,
 }) => {
   /* v4.31.0 — todo treino tem cardio POR PADRÃO (10 min de esteira a 3 km/h):
@@ -144,7 +147,9 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
                   <path d="M12 6.5v10" strokeWidth="1.6" />
                 </svg>
                 <span>TREINO {sheet?.sheetKey ?? '—'}</span>
-                <span className="dash-mini-deck__sheet-row-tag">FICHA DO DIA</span>
+                {showSheetTag && (
+                  <span className="dash-mini-deck__sheet-row-tag">FICHA DO DIA</span>
+                )}
               </div>
             )}
             <div className="dash-mini-deck__grid">

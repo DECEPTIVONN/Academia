@@ -694,108 +694,29 @@
   color: #fff;
 }
 
-/* ---------- Último treino (deck) ---------- */
-
-.player-profile__deck-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.player-profile__deck-title {
-  font-size: 0.66rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.player-profile__deck-date {
-  font-family: var(--font-mono, 'Rajdhani', monospace);
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.player-profile__deck {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.player-profile__card {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 5px;
-  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.35);
-  border-radius: 10px;
-  background: linear-gradient(160deg, rgba(40, 32, 66, 0.95), rgba(10, 8, 18, 0.95));
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-}
-
-.player-profile__card-art {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
+/* ---------- Último treino: MESMO deck da prévia do Início ----------
+   v4.56.14 — o bloco reusa `<FichaDeck bodyRow="sheet" showSheetTag={false}>`
+   dentro do cartão `.dash-arena-card.dash-ficha-card` do Início. Aqui só o
+   necessário para caber no painel estreito do perfil: raio/padding e o corpo
+   sem rolagem interna (o painel já rola). */
+.player-profile__deck-block {
+  margin-top: 0;
+  border-radius: 18px;
   overflow: hidden;
-  border-radius: 7px;
-  background: rgba(0, 0, 0, 0.35);
-  color: rgba(255, 255, 255, 0.6);
-  font-family: var(--font-primary, 'Rajdhani', sans-serif);
-  font-size: 1rem;
-  font-weight: 900;
 }
 
-.player-profile__card-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.player-profile__deck-block .dash-mini-deck__body {
+  max-height: none;
+  overflow: visible;
+  padding: 10px;
 }
 
-.player-profile__card-name {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  font-size: 0.5rem;
-  font-weight: 800;
-  line-height: 1.2;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.player-profile__load {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 8px;
+.player-profile__deck-block .dash-mini-deck__footer {
   padding: 8px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
 }
 
-.player-profile__load-icon {
-  color: #f472b6;
-}
-
-.player-profile__load-label {
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.player-profile__load-value {
-  font-family: var(--font-primary, 'Rajdhani', sans-serif);
-  font-size: 0.82rem;
-  font-weight: 900;
-  color: #fff;
+.player-profile__deck-block .dash-mini-deck__stat-label {
+  font-size: 0.5rem;
 }
 
 .player-profile__empty {
@@ -873,7 +794,4 @@
     font-size: 1.15rem;
   }
 
-  .player-profile__card-name {
-    font-size: 0.46rem;
-  }
 }

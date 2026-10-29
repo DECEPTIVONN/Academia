@@ -171,12 +171,28 @@
     align-items: center;
     gap: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    transition: all 0.3s ease;
-    animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: background 0.3s ease, transform 0.3s ease;
+    /* v4.56.14 — entrada SUAVE: fade + deslize curto (antes era um bounce de
+       0.5s com overshoot). A saída usa `.is-closing` + timerOut. */
+    animation: timerIn 0.26s ease-out both;
 }
 .global-timer:hover {
     background: rgba(20, 20, 20, 0.95);
     transform: scale(1.05);
+}
+/* Saída: o componente segue montado por 240ms (FichaFeature usa
+   useModalPresence), então o fade roda antes do display:none. */
+.global-timer.is-closing {
+    animation: timerOut 0.24s ease-in forwards;
+    pointer-events: none;
+}
+@keyframes timerIn {
+    from { opacity: 0; transform: translateX(-18px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes timerOut {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to   { opacity: 0; transform: translateX(-14px) scale(0.96); }
 }
 .gt-icon {
     font-size: 1.4rem;
@@ -716,11 +732,42 @@
     gap: 30px;
     align-items: center;
 }
+.focus-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* v4.56.14 — os GIFs de execução têm fundo branco e proporção própria: com
+   `object-fit: cover` a figura aparecia CORTADA nas laterais. Agora o gif
+   inteiro é mostrado (contain), limitado pela altura da tela. */
 .focus-visual img {
     width: 100%;
+    max-height: 52vh;
+    object-fit: contain;
+    background: #fff;
     border-radius: 20px;
     box-shadow: 0 15px 40px rgba(0,0,0,0.5);
     border: 1px solid rgba(255,255,255,0.1);
+}
+/* Cardio no Modo Foco (v4.56.14): mesma linguagem do card do grid — verde do
+   aeróbico, ícone de corrida e badge CARDIO. */
+.focus-visual--cardio {
+    min-height: 180px;
+    border-radius: 20px;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    background: radial-gradient(circle at 50% 45%, rgba(34, 197, 94, 0.18), transparent 70%);
+}
+.focus-cardio-icon {
+    /* v4.56.14 — SVG de traço (ECG) no lugar do emoji 🏃: a cor vem do
+       currentColor do guia de ícones, o tamanho é do próprio svg. */
+    color: #22c55e;
+    display: flex;
+    filter: drop-shadow(0 0 18px rgba(34, 197, 94, 0.45));
+}
+.focus-ex-badge--cardio {
+    background: rgba(34, 197, 94, 0.16);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: var(--gym-green);
 }
 .focus-info {
     display: flex;
@@ -812,7 +859,7 @@
 @media (max-width: 768px) {
     .focus-main { grid-template-columns: 1fr; gap: 20px; }
     .focus-ex-name { font-size: 1.8rem; }
-    .focus-visual img { max-height: 200px; object-fit: cover; }
+    .focus-visual img { max-height: 240px; object-fit: contain; }
     .focus-container { overflow-y: auto; }
 }
 

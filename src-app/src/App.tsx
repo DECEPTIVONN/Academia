@@ -12,6 +12,7 @@ import { TreinosFeature } from '@/features/workout/treinos/TreinosFeature';
 import { FichaFeature } from '@/features/workout/FichaFeature';
 import { ProgressoFeature } from '@/features/training/ProgressoFeature';
 import { SocialFeature } from '@/features/social/SocialFeature';
+import { SelfPlayerProfileModal } from '@/features/social/PlayerProfileModal';
 import { ConclusaoModal } from '@/features/workout/ConclusaoModal';
 import { ProfileFeature } from '@/features/profile/ProfileFeature';
 import { applySavedTheme } from '@/features/settings/theme-colors';
@@ -220,6 +221,9 @@ function AppShell() {
   }, []);
   const [isPerfilOverlayOpen, setIsPerfilOverlayOpen] = useState(false);
   const [isPerfilClosing, setIsPerfilClosing] = useState(false);
+  /* v4.56.14 — o banner do Início abre o PERFIL DO JOGADOR (modal estilo
+     Clash Royale), não o hub de configurações do Perfil. */
+  const [isSelfProfileOpen, setIsSelfProfileOpen] = useState(false);
   const [isConclusaoOpen, setIsConclusaoOpen] = useState(false);
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const skipHistoryPush = useRef(false);
@@ -912,7 +916,7 @@ function AppShell() {
               <DashboardFeature
                 onNavigate={(sec) => navigateSection(sec as SectionType)}
                 onOpenFicha={handleOpenFicha}
-                onOpenPerfil={() => setIsPerfilOverlayOpen(true)}
+                onOpenPerfil={() => setIsSelfProfileOpen(true)}
                 onOpenSettings={openProfileSettings}
                 overlay={dashOverlay}
                 onOverlayChange={setDashOverlay}
@@ -979,6 +983,14 @@ function AppShell() {
               <ProfileFeature />
             </div>
           </div>
+
+          {/* ====== PERFIL DO JOGADOR (v4.56.14) ======
+              Aberto pelo banner do Início: modal estilo Clash Royale com os
+              números reais do jogador local (o hub de perfil/settings segue
+              acessível pela barra lateral). */}
+          {isSelfProfileOpen && (
+            <SelfPlayerProfileModal onClose={() => setIsSelfProfileOpen(false)} />
+          )}
 
           {/* ====== FICHA OVERLAY ======
               Estrutura 1:1 com o legado (ficha-overlay.css):

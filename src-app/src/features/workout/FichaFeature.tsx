@@ -10,7 +10,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
-import { useModalExit } from '@/hooks/useModalPresence';
+import { useModalExit, useModalPresence } from '@/hooks/useModalPresence';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
 import { idb } from '@/core/db/idb';
@@ -382,6 +382,43 @@ const FichaCardioCard: React.FC<CardioProps> = ({
   </div>
 );
 
+/* v4.56.14 — ícones em SVG de traço (guia de ícones do app; emoji é
+   proibido como ícone de UI): ECG para o cardio e engrenagem para o editar. */
+const CardioGlyph: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2.5}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    width={size}
+    height={size}
+  >
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+  </svg>
+);
+
+const GearGlyph: React.FC<{ size?: number }> = ({ size = 14 }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    width={size}
+    height={size}
+  >
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </svg>
+);
+
+/* v4.56.14 — linha de cardio com a MESMA grade (5 colunas) das linhas de
+   exercício: nº · cardio/tipo · imagem · volume · check. Antes ela usava
+   `colSpan={2}` + uma coluna extra do selo CONCLUÍDO, o que empurrava o
+   checkbox para fora da coluna do ✓ e desalinhava volume/séries. */
 const FichaCardioRow: React.FC<CardioProps> = ({
   tipo,
   vel,
@@ -397,8 +434,8 @@ const FichaCardioRow: React.FC<CardioProps> = ({
     style={{ '--item-index': index } as React.CSSProperties}
   >
     <td>
-      <div className="row-num" style={{ background: 'var(--gym-green)' }}>
-        🏃
+      <div className="row-num row-num--cardio">
+        <CardioGlyph size={15} />
       </div>
     </td>
     <td>
@@ -407,7 +444,12 @@ const FichaCardioRow: React.FC<CardioProps> = ({
         <span className="ae-table-type">{tipo}</span>
       </div>
     </td>
-    <td colSpan={2}>
+    <td>
+      <div className="img-placeholder img-placeholder--cardio" aria-hidden="true">
+        <CardioGlyph size={22} />
+      </div>
+    </td>
+    <td>
       <div className="ae-table-stats">
         <div className="ae-t-stat">
           <span>Vel:</span> <strong>{formatSpeed(vel)}</strong>
@@ -415,28 +457,18 @@ const FichaCardioRow: React.FC<CardioProps> = ({
         <div className="ae-t-stat">
           <span>Tempo:</span> <strong>{tempo || '--'} min</strong>
         </div>
+      </div>
+      {/* Engrenagem migrou para baixo das estatísticas, no mesmo lugar do
+          botão de nota das linhas de exercício. */}
+      <div className="ae-table-tools">
         <button
           type="button"
-          className="btn-edit-ae-ficha"
+          className="btn-note-toggle-table btn-edit-ae-ficha"
           data-treino={aeId.replace('ae-', '')}
           title="Editar Cardio"
-          style={{
-            marginLeft: 'auto',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--text-secondary)',
-            padding: 4,
-          }}
         >
-          <span>⚙️</span>
+          <GearGlyph />
         </button>
-      </div>
-    </td>
-    <td>
-      <div className="ae-progress-pill">
-        <div className="ae-progress-fill" style={{ width: checked ? '100%' : '0%' }} />
-        <span className="ae-progress-text">{checked ? 'CONCLUÍDO' : 'PENDENTE'}</span>
       </div>
     </td>
     <td>
@@ -474,6 +506,9 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
 }) => {
   const { exercises, sheets, history, legacy, loading } = useLocalData();
   const { isActive, startTime, startRestTimer, skipRestTimer } = useWorkoutStore();
+  /* v4.56.14 — o cronômetro entra e sai do DOM com animação: `useModalPresence`
+     mantém o bloco montado durante o fade-out (classe `.is-closing`). */
+  const timerPresence = useModalPresence(isActive, 240);
   const entry = useTodayEntryStore((s) => s.entry);
   const entryLoaded = useTodayEntryStore((s) => s.loaded);
   const loadEntry = useTodayEntryStore((s) => s.load);
@@ -672,6 +707,17 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
       sessionStorage.setItem('focusStartTime', String(Date.now()));
     }
     setFocusOpen(true);
+  };
+
+  /* v4.56.14 — duplo clique num cartão do GRID abre o Modo Foco. Ignora
+     cliques em controles do próprio cartão (séries, check, nota). Os cartões
+     de exercício do grid são `.deck-card`; `.ex-card` é o cartão de cardio. */
+  const onGridDoubleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest('button, input, label, textarea, select, a')) return;
+    if (!target.closest('.ex-card, .deck-card')) return;
+    onStartFocus();
   };
 
   /* v4.44.0 — pref "Modo Foco por padrão": ao iniciar um treino, abre o foco. */
@@ -914,27 +960,8 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
                       <rect x={14} y={14} width={7} height={7} rx={1} />
                     </svg>
                   </button>
-                  {/* v4.22.0 — o slot da "Coleção" virou o botão FOCO */}
-                  <button
-                    type="button"
-                    className="view-btn view-btn--focus"
-                    id="viewBtnFocus"
-                    title="Iniciar Treino Foco"
-                    onClick={onStartFocus}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      width={18}
-                      height={18}
-                    >
-                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                    </svg>
-                  </button>
+                  {/* v4.56.14 — o botão FOCO saiu do seletor de visualização:
+                      o Modo Foco agora abre com DOIS CLIQUES no grid. */}
                 </div>
                 <div className="v-divider" />
                 <span className="switch-label">Treino:</span>
@@ -964,9 +991,9 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
 
             {/* ===== CRONÔMETRO GLOBAL ===== */}
             <div
-              className="global-timer"
+              className={`global-timer${timerPresence.closing ? ' is-closing' : ''}`}
               id="globalWorkoutTimer"
-              style={{ display: isActive ? 'flex' : 'none' }}
+              style={{ display: timerPresence.mounted ? 'flex' : 'none' }}
             >
               <div className="gt-icon">
                 <i className="fas fa-stopwatch" />
@@ -1025,7 +1052,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
               <table className="workout-table" id="workoutTable">
                 <thead>
                   <tr>
-                    <th className="col-n">#</th>
+                    <th className="col-n">N°</th>
                     <th className="col-ex">Exercício / Aparelho</th>
                     <th className="col-img">Imagem</th>
                     <th className="col-vol">Volume</th>
@@ -1053,11 +1080,15 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
             </div>
 
             {/* ===== GRID ===== */}
+            {/* v4.56.14 — duplo clique no grid abre o Modo Foco (o antigo botão
+                de foco saiu). Duplo clique em controles (check, séries, nota)
+                fica com eles — a ativação exige tocar no cartão. */}
             <div
               ref={gridViewRef}
               id="workoutGrid"
               className="workout-deck-grid"
               style={{ display: showGrid ? 'grid' : 'none' }}
+              onDoubleClick={onGridDoubleClick}
             >
               {exercicios.map((ex, i) => (
                 <FichaCard key={ex.id} mode="grid" {...cardProps(ex, i)} />
