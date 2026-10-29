@@ -80,6 +80,8 @@ export interface LeagueState {
   playerXp: number;
   daysRemaining: number;
   opponents: LeagueParticipant[];
+  /** Melhor divisão já alcançada (usado nas ligas do perfil do jogador). */
+  bestDivision?: LeagueDivision;
   lastResult?: {
     type: 'promotion' | 'demotion' | 'stay';
     oldDivision: LeagueDivision;
@@ -105,6 +107,12 @@ export interface FriendItem {
   friendCode?: string;
   /** Timestamp de quando o amigo foi adicionado por QR/link. */
   addedAt?: number;
+  /** Função na guilda (só nas linhas de "Membros da Guilda"). */
+  role?: string;
+  /** Horas desde o último acesso (0 = agora) — alimenta o popover do jogador. */
+  lastSeenHours?: number;
+  /** Dias consecutivos de treino (ofensiva) — alimenta o popover do jogador. */
+  streak?: number;
 }
 
 export type SubTab = 'amigos' | 'bate-papo' | 'guerra-de-clas';
@@ -311,9 +319,17 @@ export function getMonthlyLeagueState(): LeagueState {
 
 export function saveMonthlyLeagueState(state: LeagueState): void {
   if (typeof window === 'undefined') return;
+  /* `bestDivision` guarda a melhor liga mensal alcançada (perfil do jogador). */
+  const reached = [state.bestDivision, state.division, state.lastResult?.newDivision];
+  const bestDivision = reached.reduce<LeagueDivision>(
+    (best, item) =>
+      item && LEAGUE_DIVISIONS.indexOf(item) > LEAGUE_DIVISIONS.indexOf(best) ? item : best,
+    'Bronze',
+  );
+  const next: LeagueState = { ...state, bestDivision };
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY_MONTHLY, JSON.stringify(state));
-    window.dispatchEvent(new CustomEvent('tetris-clash-monthly-league-update', { detail: state }));
+    localStorage.setItem(LOCAL_STORAGE_KEY_MONTHLY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('tetris-clash-monthly-league-update', { detail: next }));
   } catch (e) {
     console.error('Erro ao salvar estado da liga mensal:', e);
   }

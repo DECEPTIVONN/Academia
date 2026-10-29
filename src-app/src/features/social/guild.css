@@ -446,6 +446,25 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
+.guild-profile__tag {
+  padding: 2px 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-mono, 'Rajdhani', monospace);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.guild-profile__tag:hover {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.6);
+  color: #fff;
+}
+
 .guild-profile__stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -473,6 +492,10 @@
   color: #fb923c;
 }
 
+.guild-profile__icon--online {
+  color: #34d399;
+}
+
 .guild-profile__label {
   font-size: 0.56rem;
   font-weight: 900;
@@ -486,6 +509,32 @@
   font-size: 0.86rem;
   font-weight: 900;
   color: #fff;
+}
+
+.guild-profile__value--online {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #6ee7b7;
+}
+
+.guild-profile__online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.9);
+  animation: guildOnlinePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes guildOnlinePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 /* Chat: é o conteúdo da sub-aba (os detalhes vivem no modal do banner) */

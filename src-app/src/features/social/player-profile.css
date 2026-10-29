@@ -1,0 +1,879 @@
+/**
+ * player-profile.css — modal de perfil do jogador (aba Social)
+ *
+ * Anatomia inspirada no perfil de Clash Royale (imagens de referência),
+ * re-colorida com os tokens do site: painéis escuros glass, acento do tema
+ * (`--primary`/`--primary-rgb`), banner do próprio perfil
+ * (`profile-banner[data-banner]`) e tipografia Rajdhani em caixa alta.
+ *
+ * O overlay monta via createPortal(document.body) com z-index acima do
+ * popover do jogador (guild-overlay--nested = 1001).
+ */
+
+.player-profile {
+  position: fixed;
+  inset: 0;
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(4, 4, 8, 0.82);
+  backdrop-filter: blur(7px);
+  animation: playerProfileFade 0.18s ease both;
+}
+
+.player-profile.is-closing {
+  animation: playerProfileFadeOut 0.2s ease forwards;
+}
+
+@keyframes playerProfileFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes playerProfileFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.player-profile__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 460px);
+  max-height: min(92vh, 860px);
+  overflow: hidden;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.4);
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.18), transparent 62%),
+    linear-gradient(180deg, #16121f 0%, #0a0812 100%);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(0, 0, 0, 0.5) inset;
+  animation: playerProfilePop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+.player-profile.is-closing .player-profile__panel {
+  animation: playerProfileOut 0.2s ease forwards;
+}
+
+@keyframes playerProfilePop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes playerProfileOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+/* ---------- Barra superior (faixa do tema, coroa central) ---------- */
+
+.player-profile__topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  height: 46px;
+  background: linear-gradient(180deg, var(--primary-light, #c084fc) 0%, var(--primary, #8b5cf6) 55%, var(--primary-dark, #6d28d9) 100%);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+.player-profile__topbar-gem {
+  display: none;
+}
+
+.player-profile__topbar-title {
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.player-profile__close {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  background: rgba(10, 8, 18, 0.55);
+  color: #fff;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.player-profile__close:hover {
+  background: rgba(10, 8, 18, 0.8);
+}
+
+.player-profile__close:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+/* ---------- Scroll ---------- */
+
+.player-profile__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 14px 14px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.player-profile__scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.player-profile__scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+}
+
+/* ---------- Banner + emblemas sobrepostos ---------- */
+
+.player-profile__header {
+  position: relative;
+}
+
+.player-profile__banner {
+  position: relative;
+  height: 126px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: inset 0 -24px 40px rgba(0, 0, 0, 0.45);
+}
+
+.player-profile__badges {
+  position: absolute;
+  bottom: -16px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+
+.player-profile__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #0b0812;
+  border-radius: 50%;
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.55), rgba(8, 6, 16, 0.96) 72%);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+/* ---------- Herói: avatar + nome/tag + troféus ---------- */
+
+.player-profile__hero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.player-profile__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border: 2px solid var(--primary-light, #c084fc);
+  border-radius: 50%;
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.45), rgba(8, 6, 16, 0.96) 75%);
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.55),
+    0 8px 20px rgba(0, 0, 0, 0.5);
+  flex: 0 0 auto;
+}
+
+.player-profile__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.player-profile__avatar[data-frame='bronze'] {
+  border-color: #f97316;
+}
+
+.player-profile__avatar[data-frame='prata'] {
+  border-color: #94a3b8;
+}
+
+.player-profile__avatar[data-frame='ouro'] {
+  border-color: #fbbf24;
+}
+
+.player-profile__avatar[data-frame='elite'] {
+  border-color: var(--primary-light, #c084fc);
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(var(--primary-rgb, 139, 92, 246), 0.75);
+}
+
+.player-profile__ident {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.player-profile__name {
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.player-profile__tag {
+  font-family: var(--font-mono, 'Rajdhani', monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.player-profile__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.player-profile__online {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+}
+
+.player-profile__online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.9);
+  animation: playerProfilePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes playerProfilePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.player-profile__trophy-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 1rem;
+  font-weight: 900;
+  color: #fbbf24;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Guilda ---------- */
+
+.player-profile__clan {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.32);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(var(--primary-rgb, 139, 92, 246), 0.2), rgba(10, 8, 18, 0.6));
+}
+
+.player-profile__clan-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.player-profile__clan-name {
+  overflow: hidden;
+  font-size: 0.86rem;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.player-profile__clan-role {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- Treinos / ofensiva ---------- */
+
+.player-profile__duo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.player-profile__duo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.045);
+  text-align: center;
+}
+
+.player-profile__duo-icon {
+  color: #fb923c;
+}
+
+.player-profile__duo-label {
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.player-profile__duo-value {
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 1rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+/* ---------- Seções ---------- */
+
+.player-profile__section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.player-profile__section-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.player-profile__head-line {
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--primary, #8b5cf6));
+}
+
+.player-profile__head-line:last-of-type {
+  background: linear-gradient(90deg, var(--primary, #8b5cf6), transparent);
+}
+
+.player-profile__head-crown {
+  color: var(--primary-light, #c084fc);
+  filter: drop-shadow(0 0 6px rgba(var(--primary-rgb, 139, 92, 246), 0.7));
+}
+
+.player-profile__section-title {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 0.94rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #fff;
+}
+
+/* ---------- Troféus (placeholder) ---------- */
+
+.player-profile__trophy-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.14), rgba(10, 8, 18, 0.55));
+}
+
+.player-profile__trophy-big {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fbbf24;
+}
+
+.player-profile__trophy-value {
+  flex: 1 1 auto;
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fde68a;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-profile__arena {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- Emblemas ---------- */
+
+.player-profile__emblem-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.player-profile__emblem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.28), rgba(10, 8, 18, 0.72) 72%);
+  font-size: 1.5rem;
+  line-height: 1;
+  box-shadow: inset 0 -6px 14px rgba(0, 0, 0, 0.45);
+}
+
+.player-profile__emblem--empty {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: none;
+}
+
+.player-profile__collection-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 14px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--primary, #8b5cf6), var(--primary-dark, #6d28d9));
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.player-profile__collection-btn:active {
+  transform: scale(0.98);
+}
+
+.player-profile__collection-chevron {
+  transition: transform 0.18s ease;
+}
+
+.player-profile__collection-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.player-profile__collection {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  animation: playerProfileFade 0.2s ease both;
+}
+
+.player-profile__collection-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.player-profile__collection-name {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 0.54rem;
+  font-weight: 800;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Ligas (mensais) ---------- */
+
+.player-profile__section--league {
+  position: relative;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  border-radius: 18px;
+  background:
+    radial-gradient(110% 80% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.28), transparent 70%),
+    linear-gradient(180deg, rgba(28, 20, 46, 0.85), rgba(10, 8, 18, 0.9));
+}
+
+.player-profile__section--league .player-profile__section-head {
+  margin-bottom: 4px;
+}
+
+.player-profile__season {
+  margin: 0 0 10px;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #fbbf24;
+}
+
+.player-profile__league-current {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-profile__league-shield {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.player-profile__league-name {
+  padding: 5px 22px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 0.92rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.player-profile__league-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin: 10px 0;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.player-profile__league-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.player-profile__league-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.player-profile__league-label {
+  font-size: 0.54rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.player-profile__league-value {
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+/* ---------- Último treino (deck) ---------- */
+
+.player-profile__deck-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.player-profile__deck-title {
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.player-profile__deck-date {
+  font-family: var(--font-mono, 'Rajdhani', monospace);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.player-profile__deck {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.player-profile__card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  border-radius: 10px;
+  background: linear-gradient(160deg, rgba(40, 32, 66, 0.95), rgba(10, 8, 18, 0.95));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.player-profile__card-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.player-profile__card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.player-profile__card-name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.player-profile__load {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.player-profile__load-icon {
+  color: #f472b6;
+}
+
+.player-profile__load-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.player-profile__load-value {
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.player-profile__empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- Estatísticas ---------- */
+
+.player-profile__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.player-profile__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.player-profile__stat-label {
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.player-profile__stat-value {
+  overflow: hidden;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.32);
+  font-family: var(--font-primary, 'Rajdhani', sans-serif);
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #fff;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Telas estreitas ---------- */
+
+@media (max-width: 400px) {
+  .player-profile {
+    padding: 10px;
+  }
+
+  .player-profile__scroll {
+    padding: 12px 10px 16px;
+  }
+
+  .player-profile__banner {
+    height: 108px;
+  }
+
+  .player-profile__avatar {
+    width: 62px;
+    height: 62px;
+  }
+
+  .player-profile__name {
+    font-size: 1.15rem;
+  }
+
+  .player-profile__card-name {
+    font-size: 0.46rem;
+  }
+}

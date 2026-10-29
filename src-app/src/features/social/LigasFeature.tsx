@@ -72,9 +72,16 @@ import { useProfileState } from '@/features/profile/useProfileState';
 import { FriendQrModal } from './FriendQrModal';
 import { QrScannerModal } from './QrScannerModal';
 import { GuildEmblem, GuildPanel } from './GuildPanel';
+import { MemberPopover } from './MemberPopover';
 import { getGuild, useGuildState, type GuildPlayer } from './guild-data';
 import { getLevel, getXp } from '@/core/db/queries';
 import { useLocalData } from '@/hooks/useLocalData';
+import {
+  fallbackLastSeenHours,
+  fallbackStreak,
+  type PlayerKind,
+  type PlayerSummaryInput,
+} from './player-profile-data';
 import {
   acceptFriendInvite,
   buildFriendInviteUrl,
@@ -804,20 +811,24 @@ function FriendRow({
   rank,
   isSelf,
   showRank = true,
+  onSelect,
 }: {
   item: FriendItem;
   rank: number;
   isSelf: boolean;
   showRank?: boolean;
+  /** Abre o popover do jogador (último acesso/ofensiva + Ver perfil). */
+  onSelect?: (item: FriendItem) => void;
 }) {
   const isTop3 = showRank && rank <= 3;
   const isBot3 = showRank && rank >= 8;
   const glyph = item.avatarGlyph || 'crown';
   const flag = item.flag || 'BR';
   const level = item.level || 1;
+  const className = `w-full items-center justify-between p-2.5 rounded-xl border transition-all text-left ${rowTone(isSelf, isTop3, isBot3)}${onSelect ? ' cursor-pointer hover:border-[var(--primary-light)] active:scale-[0.99]' : ''}`;
 
-  return (
-    <div className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${rowTone(isSelf, isTop3, isBot3)}`}>
+  const row = (
+    <>
       <div className="flex items-center gap-3">
         {showRank ? (
           <div
@@ -875,8 +886,18 @@ function FriendRow({
           {item.trophies.toLocaleString()}
         </span>
       </div>
-    </div>
+    </>
   );
+
+  if (onSelect) {
+    return (
+      <button type="button" className={`flex ${className}`} onClick={() => onSelect(item)}>
+        {row}
+      </button>
+    );
+  }
+
+  return <div className={`flex ${className}`}>{row}</div>;
 }
 
 /* ── Diamantes de navegação (Amigos / Guilda / Liga) ── */
@@ -1002,6 +1023,8 @@ export function LigasFeature({
   const messages = externalMessages !== undefined ? externalMessages : internalMessages;
   const [typedMessage, setTypedMessage] = useState('');
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  /* Jogador do popover (amigos e membros da guilda usam o mesmo desenho). */
+  const [selectedPlayer, setSelectedPlayer] = useState<PlayerSummaryInput | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [leagueViewType, setLeagueViewType] = useState<'semanal' | 'mensal'>('semanal');
 
@@ -1039,6 +1062,7 @@ export function LigasFeature({
   const goSubTab = useCallback(
     (tab: SubTab) => {
       setGuildDetailsOpen(false);
+      setSelectedPlayer(null);
       setActiveSubTab(tab);
     },
     [setActiveSubTab],
@@ -1054,13 +1078,16 @@ export function LigasFeature({
         name: member.name,
         trophies: member.trophies,
         clan: myGuild.name,
-        online: false,
+        online: (member.lastSeenHours ?? 0) <= 0,
         avatarColor: 'from-slate-600 to-slate-800',
         avatarInitial: member.name.charAt(0).toUpperCase(),
         rank: index + 1,
         avatarGlyph: member.glyph,
         flag: member.flag,
         level: member.level,
+        role: member.role,
+        lastSeenHours: member.lastSeenHours,
+        streak: member.streak,
       }));
   }, [myGuild]);
   const friendCode = useMemo(() => getFriendCode(user?.id ?? null), [user?.id]);
@@ -1270,6 +1297,28 @@ export function LigasFeature({
   const isSelfFriend = (item: FriendItem) =>
     item.id === 'self' ||
     (item.friendCode ? item.friendCode === friendCode : item.name === profile.username);
+
+  /* Abre o popover do jogador (último acesso/ofensiva + Ver perfil). */
+  const openPlayer = (item: FriendItem, kind: PlayerKind) => {
+    standaloneSound.playMove();
+    setSelectedPlayer({
+      id: item.id,
+      name: item.name,
+      kind,
+      isSelf: isSelfFriend(item),
+      role: kind === 'membro' ? item.role : undefined,
+      clan: kind === 'membro' ? myGuild?.name ?? item.clan : item.clan,
+      clanEmblemId: myGuild?.emblemId,
+      trophies: item.trophies,
+      level: item.level,
+      flag: item.flag,
+      glyph: item.avatarGlyph,
+      online: item.online,
+      lastSeenHours:
+        item.lastSeenHours ?? fallbackLastSeenHours(`${item.id}:${item.name}`, item.online),
+      streak: item.streak ?? fallbackStreak(`${item.id}:${item.name}`),
+    });
+  };
 
   /* ── Portais ── */
 
@@ -1510,6 +1559,7 @@ export function LigasFeature({
             <button
               onClick={() => {
                 standaloneSound.playMove();
+                setSelectedPlayer(null);
                 setCommunityTab('amigos');
               }}
               className={`pb-2 transition-all relative cursor-pointer ${communityTab === 'amigos' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
@@ -1522,6 +1572,7 @@ export function LigasFeature({
             <button
               onClick={() => {
                 standaloneSound.playMove();
+                setSelectedPlayer(null);
                 setCommunityTab('membros');
               }}
               className={`pb-2 transition-all relative cursor-pointer ${communityTab === 'membros' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
@@ -1560,6 +1611,7 @@ export function LigasFeature({
                   item={item}
                   rank={index + 1}
                   isSelf={isSelfFriend(item)}
+                  onSelect={(selected) => openPlayer(selected, 'membro')}
                 />
               ))
             )
@@ -1581,6 +1633,7 @@ export function LigasFeature({
                       rank={0}
                       isSelf={isSelfFriend(item)}
                       showRank={false}
+                      onSelect={(selected) => openPlayer(selected, 'amigo')}
                     />
                   ))
                 ) : (
@@ -1602,6 +1655,7 @@ export function LigasFeature({
                     item={item}
                     rank={index + 1}
                     isSelf={isSelfFriend(item)}
+                    onSelect={(selected) => openPlayer(selected, 'amigo')}
                   />
                 ))}
               </section>
@@ -1630,6 +1684,10 @@ export function LigasFeature({
           </button>
         </div>
       </div>
+
+      {selectedPlayer && (
+        <MemberPopover player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
+      )}
 
       {showAddFriendModal && (
         <FriendQrModal

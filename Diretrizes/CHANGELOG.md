@@ -2,6 +2,30 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.13] - 2026-10-29
+
+**Perfil do jogador no desenho do Clash Royale, popover do jogador também na sub-aba Amigos (amigos e membros da guilda) e último acesso “On-line”.**
+
+### Added
+- `src-app/src/features/social/PlayerProfileModal.tsx` + `player-profile.css` — **perfil do jogador em modal**, inspirado nas imagens de referência do Clash Royale e re-colorido com os tokens do site (banner `profile-banner[data-banner]`, painéis escuros, acento `--primary`). Ordem: barra superior com coroa e X, **banner**, 3 **emblemas sobrepostos** na base do banner, **avatar com moldura** + nome + tag + país/nível/On-line + troféus, **faixa da guilda** (emblema, nome e função), **Total de treinos** e **Ofensiva**, **Caminho de troféus** (placeholder: total + arena), **Emblemas** (8 slots + botão “Mostrar coleção” com `IDENTITY_EMBLEMS`), **Liga mensal** (atual, temporada anterior e melhor temporada), **Último treino** (cards dos exercícios + “Custo médio de carga” em kg, equivalente ao custo médio de elixir) e **Estatísticas** (treinos, total de horas treinadas, exercícios feitos pelo menos uma vez e treino favorito dos últimos 7 dias). Portal em `document.body`, `Esc`/backdrop fecham e há animação de entrada/saída.
+- `src-app/src/features/social/player-profile-data.ts` — monta os números do perfil: o jogador local usa dados reais (`LocalData` + perfil + liga mensal — treinos concluídos, ofensiva, horas por `durationMin`, exercícios vistos em `checks`, ficha mais repetida nos últimos 7 dias e último treino concluído com `averageLoadKg`); amigos/membros usam valores determinísticos por id/nome. Também concentra `playerTag` (#XXXXXXXX estável), `formatLastSeen` (com **On-line**), `fallbackLastSeenHours` e `memberToPlayer`.
+- `src-app/src/features/social/MemberPopover.tsx` — **popover do jogador** extraído do painel da guilda e generalizado: atende membros da guilda **e** amigos, com avatar, nome/tag copiável, função/país/nível, **Último acesso** e **Ofensiva**. **Ver perfil** agora abre o perfil completo (antes era um toast “em breve”).
+- `src-app/src/features/social/OverlayShell.tsx` e `GuildEmblem.tsx` — casca de overlay e emblema extraídos para módulos próprios, compartilhados por `GuildPanel`, `MemberPopover` e `PlayerProfileModal` (evita ciclo de imports). `GuildPanel` continua re-exportando `GuildEmblem`.
+
+### Changed
+- `src-app/src/features/social/LigasFeature.tsx` — na sub-aba **Amigos**, tocar em um amigo (em **Amigos on-line** ou **Classificação**) ou em um **membro da guilda** abre o popover do jogador; a lista de membros passou a carregar função, último acesso e ofensiva reais. O popover fecha ao trocar de aba/sub-aba e ao trocar entre Amigos/Membros.
+- `src-app/src/features/social/GuildPanel.tsx` — `GuildMemberDialog` removido em favor do `MemberPopover`; os detalhes da guilda continuam usando `useModalPresence`/`.is-closing`.
+- `src-app/src/features/social/guild.css` — tag copiável do jogador no popover e estado **On-line** (valor verde + ponto pulsante) no Último acesso.
+- `src-app/src/features/social/ligas-data.ts` — `LeagueState` ganhou `bestDivision` (melhor liga mensal alcançada, atualizada em `saveMonthlyLeagueState`) para a seção de ligas do perfil; `FriendItem` ganhou `role`, `lastSeenHours` e `streak` (dados do popover).
+- `Diretrizes/system_map.json` (versão **4.56.13**), `Diretrizes/DESIGN.md` (§16.2 e §16.8) e este CHANGELOG — registram o perfil do jogador, o popover compartilhado e o estado On-line.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros, 72 avisos (linha de base; nenhum novo nos arquivos alterados).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+- Sonda manual (dev server + CDP): popover de amigo com “On-line”/“Há X dias”, popover de membro da guilda com “On-line”, perfil de amigo e perfil do jogador local (dados reais) sem overflow horizontal no painel de 377×621.
+
 ## [v4.56.12] - 2026-10-29
 
 **Saída do site com o diálogo da guilda, Amigos separados em on-line/classificação, popover de membro com último acesso/ofensiva e chat sem troféus nem mensagens rápidas.**
