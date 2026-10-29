@@ -128,6 +128,17 @@
   color: var(--text-tertiary);
 }
 
+/* Resumo movido da aba Progresso: Total de Treinos / Treinos no Mês */
+.cal-ov__stats {
+  padding: 14px;
+  gap: 12px;
+}
+
+.cal-ov__stats .stat-item {
+  gap: 12px;
+  padding: 12px;
+}
+
 .cal-ov__cycle {
   display: flex;
   flex-direction: column;

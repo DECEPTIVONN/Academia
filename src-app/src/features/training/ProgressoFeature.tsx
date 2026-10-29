@@ -46,7 +46,7 @@ import {
   type FirstDayOfWeek,
   type WeightUnit,
 } from '@/lib/app-prefs';
-import { Award, ArrowLeft, ChevronRight, Dumbbell, Flame, Layers, Plus, Weight, X, Zap } from 'lucide-react';
+import { Award, ArrowLeft, ChevronRight, Dumbbell, Flame, Layers, Weight, X, Zap } from 'lucide-react';
 import { getBadgeDefinitions, getProfileStats } from '@/features/profile/profile-data';
 import { buildFriendInviteUrl, getFriendCode } from '@/features/social/friend-invites';
 import { shareNative } from '@/lib/native-share';
@@ -829,14 +829,6 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
             {/* ===== Cabeçalho da aba (v4.55.0) ===== */}
             <div className="prog-head">
               <h2 className="prog-head__title">Progresso</h2>
-              <button
-                type="button"
-                className="prog-head__btn"
-                aria-label="Registrar medidas corporais"
-                onClick={() => setBodyMetricsOpen(true)}
-              >
-                <Plus size={20} />
-              </button>
             </div>
 
             {/* ===== Pontuação de Força (v4.55.0) ===== */}
@@ -1089,62 +1081,6 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                     : 'Nenhum emblema conquistado ainda'}
                 </span>
               </div>
-            </div>
-
-            {/* ===== Stats ===== */}
-            <div className="p-card stats-card">
-              <div className="stat-item">
-                <div className="stat-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    width={20}
-                    height={20}
-                  >
-                    <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11" />
-                    <circle cx={4} cy={12} r={1.5} />
-                    <circle cx={20} cy={12} r={1.5} />
-                  </svg>
-                </div>
-                <div className="stat-texts">
-                  <h4>Total de Treinos</h4>
-                  <span id="progTotalTreinos">{completedDates.length}</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="stat-item stat-item--btn"
-                onClick={openCalendar}
-                aria-label="Abrir o calendário e o ciclo de treino"
-              >
-                <div className="stat-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    width={20}
-                    height={20}
-                  >
-                    <rect x={3} y={4} width={18} height={18} rx={2} ry={2} />
-                    <line x1={16} y1={2} x2={16} y2={6} />
-                    <line x1={8} y1={2} x2={8} y2={6} />
-                    <line x1={3} y1={10} x2={21} y2={10} />
-                  </svg>
-                </div>
-                <div className="stat-texts">
-                  <h4>Treinos no Mês</h4>
-                  <span id="progMesTreinos">
-                    {completedDates.filter((d) => d.startsWith(t.slice(0, 7))).length}
-                  </span>
-                </div>
-              </button>
             </div>
 
             {/* Volume de Carga e Radar Fit saíram da aba: agora abrem pelas
@@ -1653,15 +1589,63 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                   <h2 className="cal-ov__title" id="calOvTitle">
                     Calendário de Treinos
                   </h2>
-                  <p className="cal-ov__subtitle">
-                    {completedDates.length} treino{completedDates.length === 1 ? '' : 's'}{' '}
-                    concluído{completedDates.length === 1 ? '' : 's'} no total
-                  </p>
+                  <p className="cal-ov__subtitle">Ciclo atual, calendário e histórico de treinos</p>
                 </div>
                 <span className="cal-ov__spacer" aria-hidden="true" />
               </header>
 
               <div className="cal-ov__body">
+                {/* Resumo movido da aba Progresso: total de treinos e treinos do mês */}
+                <div className="p-card stats-card cal-ov__stats">
+                  <div className="stat-item">
+                    <div className="stat-icon">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        width={20}
+                        height={20}
+                      >
+                        <path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11" />
+                        <circle cx={4} cy={12} r={1.5} />
+                        <circle cx={20} cy={12} r={1.5} />
+                      </svg>
+                    </div>
+                    <div className="stat-texts">
+                      <h4>Total de Treinos</h4>
+                      <span id="progTotalTreinos">{completedDates.length}</span>
+                    </div>
+                  </div>
+                  <div className="stat-item">
+                    <div className="stat-icon">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        width={20}
+                        height={20}
+                      >
+                        <rect x={3} y={4} width={18} height={18} rx={2} ry={2} />
+                        <line x1={16} y1={2} x2={16} y2={6} />
+                        <line x1={8} y1={2} x2={8} y2={6} />
+                        <line x1={3} y1={10} x2={21} y2={10} />
+                      </svg>
+                    </div>
+                    <div className="stat-texts">
+                      <h4>Treinos no Mês</h4>
+                      <span id="progMesTreinos">
+                        {completedDates.filter((d) => d.startsWith(t.slice(0, 7))).length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Ciclo de Treino Atual (mesmo painel do modal "Ciclos" do Início) */}
                 <section className="cal-ov__cycle">
                   <div className="p-card cycle-card">

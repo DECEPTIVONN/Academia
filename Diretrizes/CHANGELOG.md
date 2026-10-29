@@ -2,6 +2,22 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.11] - 2026-10-29
+
+**Heatmap de séries mais alto, resumo de treinos dentro do Calendário e cabeçalho do Progresso sem o botão “+”.**
+
+### Changed
+- `src-app/src/features/training/progresso.css` — **heatmap de séries mais alto verticalmente**: as células passaram de `aspect-ratio: 1` (quadradas) para **`aspect-ratio: 1 / 1.5`** com `min-height: 7px`, mantendo a grade de 53 semanas e os 12 meses sempre visíveis. A linha de dias (`.prog-heat__days`) continua alinhada às semanas.
+- `src-app/src/features/training/ProgressoFeature.tsx` — o bloco **`stats-card`** com **Total de Treinos** e **Treinos no Mês** saiu da aba Progresso e foi para o topo da interface **Calendário de Treinos** (`.cal-ov__body`), reutilizando o mesmo desenho e os mesmos ids (`#progTotalTreinos`/`#progMesTreinos`). O subtítulo do calendário virou “Ciclo atual, calendário e histórico de treinos”.
+- `src-app/src/features/training/calendar-overlay.css` — novo ajuste `.cal-ov__stats` (padding 14px, gap 12px e `stat-item` compacto) para o resumo recém-movido respirar bem dentro do painel.
+- `src-app/src/features/training/ProgressoFeature.tsx` + `progresso.css` — **botão “+” removido** da mesma linha do título “Progresso” (e o CSS órfão `.prog-head__btn` + `.stat-item--btn` removido). As métricas corporais continuam acessíveis pelo card **Corpo**.
+- `Diretrizes/system_map.json` (versão **4.56.11**), `Diretrizes/DESIGN.md` (§16.9) e este CHANGELOG — registram o novo heatmap, a migração do resumo e a remoção do “+”.
+
+### Verificado
+- `npx tsc -b` + `vite build`: OK.
+- `npx oxlint src`: 0 erros, 73 avisos (linha de base).
+- `npm run lint:docs`: OK.
+
 ## [v4.56.10] - 2026-10-29
 
 **Criação de guilda em modal centrado (só fecha no X), busca sem sobreposição e linha do cardio centralizada com as pontas alinhadas.**
