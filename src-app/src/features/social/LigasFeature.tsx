@@ -1642,36 +1642,36 @@ export function LigasFeature({
             key={msg.id}
             className={`flex flex-col gap-1 max-w-[85%] ${msg.isSelf ? 'ml-auto items-end' : 'mr-auto items-start'}`}
           >
-            <div className="flex items-center gap-1.5 select-none text-[10px] font-bold">
+            <div className="flex items-center gap-1.5 select-none text-[11px] font-bold">
               <span className={msg.isSelf ? 'ligas-text-accent' : 'text-slate-300'}>{msg.sender}</span>
-              <span className="px-1 py-0.2 rounded text-[8px] ligas-role-pill font-black">
+              <span className="px-1 py-0.5 rounded text-[9px] ligas-role-pill font-black">
                 {msg.role}
               </span>
-              <span className="text-[9px] text-slate-500 font-mono">({msg.trophies})</span>
+              <span className="text-[10px] text-slate-500 font-mono">({msg.trophies})</span>
             </div>
             <div
-              className={`px-3 py-2 rounded-2xl text-xs font-medium ${
+              className={`px-3.5 py-2.5 rounded-2xl text-[15px] font-medium leading-relaxed ${
                 msg.isSelf
                   ? 'ligas-bubble-self text-white rounded-tr-none'
-                  : 'bg-slate-900/80 text-slate-200 rounded-tl-none border border-slate-800'
+                  : 'bg-slate-900/80 text-slate-100 rounded-tl-none border border-slate-800'
               }`}
             >
               {msg.text}
             </div>
-            <span className="text-[9px] text-slate-600 select-none font-medium">{msg.time}</span>
+            <span className="text-[10px] text-slate-500 select-none font-medium">{msg.time}</span>
           </div>
         ))}
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 flex items-center gap-0.5">
-          <Smile className="w-3.5 h-3.5 ligas-text-accent" /> Rápido:
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
+          <Smile className="w-4 h-4 ligas-text-accent" /> Rápido:
         </span>
         {QUICK_REPLIES.map((reply) => (
           <button
             key={reply}
             onClick={() => handleQuickReplyClick(reply)}
-            className="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-700 text-xs text-slate-300 rounded-full transition-all active:scale-95 shrink-0 cursor-pointer"
+            className="px-[14px] py-[7px] bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-700 text-[14px] font-medium text-slate-200 rounded-full transition-all active:scale-95 shrink-0 cursor-pointer"
           >
             {reply}
           </button>
@@ -1685,7 +1685,7 @@ export function LigasFeature({
           placeholder="Digite sua mensagem para a guilda..."
           value={typedMessage}
           onChange={(e) => setTypedMessage(e.target.value)}
-          className="ligas-input flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder:text-slate-600"
+          className="ligas-input flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[15px] text-white placeholder:text-slate-500"
         />
         <button
           type="submit"

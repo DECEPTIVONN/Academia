@@ -2,6 +2,23 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.9] - 2026-10-28
+
+**Cardio centralizado, gradiente do Detalhes de Volume no formulário de exercício e chat da guilda mais legível.**
+
+### Changed
+- `src-app/src/legacy-style/treino/4-gamificacao.css` — **linha do cardio** (card `.ae-card-head` e tabela `.ae-table-cardio`): o rótulo **CARDIO** e o tipo escolhido continuam na mesma linha, um à esquerda do outro e com a mesma tipografia, mas o par agora fica **centralizado** (`justify-content: center`, `align-items: center`, gap de 14px/10px), como os valores de km e minutos logo abaixo. Antes o `space-between` esticava os dois até as bordas do card — no desktop o card chega a ~1.200px e “CARDIO”/“Esteira” ficavam a mais de 1.000px de distância. `flex-wrap` mantém nomes longos legíveis, e a tabela segue a mesma regra.
+- `src-app/src/legacy-style/treino/2-modals.css` — **Novo Exercício / Editar Exercício** (`#modalExercicio .modal-form`) passaram a usar o mesmo fundo do modal **Detalhes de Volume** (`volume-details.css`): radial do acento no topo direito + vertical escura, borda e brilho do tema no lugar do `#111` chapado.
+- `src-app/src/features/social/LigasFeature.tsx` — **chat da guilda mais legível**: o texto das mensagens subiu de `text-xs` (que, herdando os 13px do container, renderizava ~11px) para **15px** com `leading-relaxed` e cor mais clara (`text-slate-100`); nome do remetente, função, troféus e horário ganharam 1px. Os **comentários rápidos** ("Rápido:") passaram a **14px** com padding de 14×7px e `font-medium`, e o campo de mensagem acompanhou os 15px.
+- `Diretrizes/system_map.json` (versão **4.56.9**), `Diretrizes/DESIGN.md` (§6.4) e este CHANGELOG — registram a centralização do cardio e o gradiente do formulário.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros, 73 avisos (linha de base).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+- Navegador (390×844 e 1280×900): card do cardio com o par centralizado no eixo do card (label 141–189, gap 14, tipo 203–249 no mobile; 577–634 / 648–703 no desktop, centro 640 = centro do card), ao lado dos valores centralizados de km/min; `#modalExercicio .modal-form` com `radial-gradient(…) + linear-gradient(rgba(24,21,40,.98), rgba(12,10,22,.99))` e borda `rgba(139,92,246,.38)` tanto em **Novo** quanto em **Editar Exercício**; chat com bolha de **15px**/linha 24,4px, campo de 15px e rápido de **14px** (padding 7×14).
+
 ## [v4.56.8] - 2026-10-28
 
 **Guilda: banner no topo com emblema/nome/membros, detalhes e saída em modal e criação em linhas com seletores ◀ ▶.**

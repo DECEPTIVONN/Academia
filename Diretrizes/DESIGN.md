@@ -256,7 +256,7 @@ Quando o atleta clica sobre o cartão, ele exibe um menu de opções acoplado na
 *   **Visual de Pista de Corrida:** O cartão de aeróbico (`.ex-card-aerobico`) tem visual refinado com gradiente verde suave (`#22c55e`).
 *   **Ícone Animado:** O `.ae-icon` (tênis de corrida ou coração) tem animação de balanço contínuo (`aeRun`) para incitar movimento.
 *   **Metas de Desempenho:** Caixas estatísticas separadas por divisores cinza finos contendo valores em destaque verde contendo velocidade (`km/h`), tempo (`min`) e distância (`km`).
-*   **Linha do cardio:** no card (`.ae-card-head`) e na tabela (`.ae-table-cardio`) o rótulo **CARDIO** fica à esquerda e o tipo escolhido à direita, na mesma linha e com a mesma tipografia (tamanho, peso, cor e família herdada) — o nome do cardio é o destaque, não o rótulo.
+*   **Linha do cardio:** no card (`.ae-card-head`) e na tabela (`.ae-table-cardio`) o rótulo **CARDIO** fica à esquerda e o tipo escolhido à direita, na mesma linha e com a mesma tipografia (tamanho, peso, cor e família herdada) — o nome do cardio é o destaque, não o rótulo. O par é **centralizado** no card (`justify-content: center`, `align-items: center`, gap de 14px), como os valores de velocidade e minutos: o `space-between` esticava os dois textos até as bordas (no desktop, o card chega a ~1.200px e eles ficavam a mais de 1.000px de distância).
 
 ---
 
