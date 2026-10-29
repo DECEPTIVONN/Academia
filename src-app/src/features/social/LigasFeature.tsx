@@ -33,6 +33,8 @@ import {
   Share2,
   Clock,
   Rocket,
+  Users,
+  ChevronRight,
 } from 'lucide-react';
 import {
   AvatarGlyph,
@@ -1017,6 +1019,18 @@ export function LigasFeature({
   );
   const guildState = useGuildState(guildPlayer);
   const myGuild = getGuild(guildState);
+  /* O detalhe da guilda (localização, troféus, tipo e membros) abre no modal
+     do banner do cabeçalho — a sub-aba Guilda mostra o chat. */
+  const [guildDetailsOpen, setGuildDetailsOpen] = useState(false);
+
+  /* Trocar de sub-aba fecha o modal de detalhes, para ele não reabrir sozinho. */
+  const goSubTab = useCallback(
+    (tab: SubTab) => {
+      setGuildDetailsOpen(false);
+      setActiveSubTab(tab);
+    },
+    [setActiveSubTab],
+  );
 
   /* Lista de "Membros da Guilda" da sub-aba Amigos = membros reais da guilda. */
   const guildMembers = useMemo<FriendItem[]>(() => {
@@ -1319,7 +1333,44 @@ export function LigasFeature({
           </div>
         </div>
       ) : activeSubTab === 'bate-papo' ? (
-        <div className="flex-1" />
+        myGuild ? (
+          <button
+            type="button"
+            onClick={() => {
+              standaloneSound.playMove();
+              setGuildDetailsOpen(true);
+            }}
+            className="flex-1 min-w-0 p-3 bg-gradient-to-r from-[rgba(var(--primary-rgb,139,92,246),0.25)] via-slate-900/60 to-slate-950/70 backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.3)] rounded-2xl flex items-center gap-3 select-none shadow-md cursor-pointer transition-transform active:scale-[0.99]"
+            title="Ver detalhes da guilda"
+            aria-label={`Ver detalhes da guilda ${myGuild.name}`}
+          >
+            <GuildEmblem emblemId={myGuild.emblemId} size={44} />
+            <div className="min-w-0 flex-1 text-left">
+              <h4 className="text-base font-black text-white uppercase tracking-tight leading-none truncate">
+                {myGuild.name}
+              </h4>
+              <p className="text-[10px] ligas-text-accent font-semibold mt-1 uppercase tracking-wide flex items-center gap-1">
+                <Users size={10} />
+                {myGuild.members.length}/50 Membros
+              </p>
+            </div>
+            <ChevronRight size={16} className="text-slate-500 shrink-0" />
+          </button>
+        ) : (
+          <div className="flex-1 min-w-0 p-4 bg-gradient-to-r from-[rgba(var(--primary-rgb,139,92,246),0.18)] via-slate-900/60 to-slate-950/70 backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.24)] rounded-2xl flex items-center gap-3 select-none shadow-md">
+            <div className="w-11 h-11 rounded-2xl border border-slate-700 bg-slate-900/70 flex items-center justify-center shrink-0 text-slate-500">
+              <Shield size={20} />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-base font-black text-white uppercase tracking-tight leading-none">
+                Sem guilda
+              </h4>
+              <p className="text-[10px] text-slate-400 font-semibold mt-1 uppercase tracking-wide">
+                Nenhuma guilda ainda
+              </p>
+            </div>
+          </div>
+        )
       ) : (
         <div className="flex-1 p-4 bg-gradient-to-r from-[rgba(var(--primary-rgb,139,92,246),0.25)] via-slate-900/60 to-slate-950/70 backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.3)] rounded-2xl flex items-center justify-between select-none shadow-md">
           {myGuild ? (
@@ -1363,7 +1414,7 @@ export function LigasFeature({
               <button
                 onClick={() => {
                   standaloneSound.playMove();
-                  setActiveSubTab('bate-papo');
+                  goSubTab('bate-papo');
                 }}
                 className="px-3.5 py-2 ligas-btn-primary rounded-xl font-black text-[10px] uppercase tracking-wider cursor-pointer shrink-0"
               >
@@ -1378,7 +1429,7 @@ export function LigasFeature({
         <button
           onClick={() => {
             standaloneSound.playMove();
-            setActiveSubTab('amigos');
+            goSubTab('amigos');
           }}
           className="soc-close-btn p-3.5 bg-slate-900 hover:bg-rose-950/40 border-2 border-slate-700 hover:border-rose-900/45 text-slate-400 hover:text-rose-400 rounded-2xl transition-all cursor-pointer flex items-center justify-center shrink-0 active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
           style={{ outline: 'none', boxShadow: 'none', border: '2px solid #1e293b' }}
@@ -1394,7 +1445,7 @@ export function LigasFeature({
 
   const amigosContent = (
     <div className="space-y-4">
-      <DiamondNav active={activeSubTab} onGo={setActiveSubTab} />
+      <DiamondNav active={activeSubTab} onGo={goSubTab} />
 
       <div className="w-full bg-[rgba(24,20,40,0.65)] backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.18)] rounded-[2rem] p-5 shadow-2xl relative overflow-hidden flex flex-col gap-4">
         <div className="absolute inset-0 bg-gradient-to-b from-[rgba(var(--primary-rgb,139,92,246),0.06)] to-transparent pointer-events-none" />
@@ -1480,7 +1531,7 @@ export function LigasFeature({
               <button
                 onClick={() => {
                   standaloneSound.playMove();
-                  setActiveSubTab('bate-papo');
+                  goSubTab('bate-papo');
                 }}
                 className="px-4 py-2 ligas-btn-primary rounded-xl font-black text-[10px] uppercase tracking-wider cursor-pointer active:scale-95"
               >
@@ -1758,7 +1809,12 @@ export function LigasFeature({
             {activeSubTab === 'amigos' ? (
               amigosContent
             ) : activeSubTab === 'bate-papo' ? (
-              <GuildPanel player={guildPlayer} chat={batePapoContent} />
+              <GuildPanel
+                player={guildPlayer}
+                chat={batePapoContent}
+                detailsOpen={guildDetailsOpen}
+                onCloseDetails={() => setGuildDetailsOpen(false)}
+              />
             ) : (
               ligaContent
             )}

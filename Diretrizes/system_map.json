@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.56.7",
+  "version": "4.56.8",
   "last_updated": "2026-10-28",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -648,7 +648,7 @@
       },
       {
         "file": "src-app/src/features/social/",
-        "purpose": "Aba SOCIAL (React): SocialFeature.tsx (re-exporta LigasFeature) + LigasFeature.tsx (3 sub-abas Amigos/Guilda/Liga, ligas semanal/mensal, banner de temporada, ranking filtrável, banner de guilda, chat e modais) + ligas-data.ts + ligas-icons.tsx + social.css. A sub-aba Guilda usa o módulo guild-* (estado local em localStorage academia_guilds_v1; sem doações e sem pontuação de clã). Amigos: convite permanente por QR/link em friend-invites.ts, FriendQrModal.tsx e QrScannerModal.tsx — código = user.id do Supabase ou UUID local persistido, link ?amigo=&nome=, amigos adicionados em localStorage e leitor de câmera com jsQR (QR invertido/baixo contraste). O FriendQrModal tem duas abas (QR Code e Buscar jogador); a busca consulta public.profiles (username/display_name) em friend-search.ts e adiciona o jogador pelo id da conta. Estado de ligas/guilda é local; não há tabela de amizades no backend."
+        "purpose": "Aba SOCIAL (React): SocialFeature.tsx (re-exporta LigasFeature) + LigasFeature.tsx (3 sub-abas Amigos/Guilda/Liga, ligas semanal/mensal, banner de temporada, ranking filtrável, banner de guilda, chat e modais) + ligas-data.ts + ligas-icons.tsx + social.css. A sub-aba Guilda usa o módulo guild-* (estado local em localStorage academia_guilds_v1; sem doações e sem pontuação de clã): banner no cabeçalho (emblema/nome/membros) abre os detalhes em modal e a sub-aba mostra só o chat. Amigos: convite permanente por QR/link em friend-invites.ts, FriendQrModal.tsx e QrScannerModal.tsx — código = user.id do Supabase ou UUID local persistido, link ?amigo=&nome=, amigos adicionados em localStorage e leitor de câmera com jsQR (QR invertido/baixo contraste). O FriendQrModal tem duas abas (QR Code e Buscar jogador); a busca consulta public.profiles (username/display_name) em friend-search.ts e adiciona o jogador pelo id da conta. Estado de ligas/guilda é local; não há tabela de amizades no backend."
       },
       {
         "file": "src-app/src/features/social/guild-data.ts",
@@ -656,11 +656,11 @@
       },
       {
         "file": "src-app/src/features/social/GuildPanel.tsx",
-        "purpose": "UI da sub-aba Guilda: estado vazio + barra 'Procure ou forme uma nova guilda!', cabeçalho da guilda (emblema, tag, descrição, localização/troféus necessários/tipo), lista de membros com funções, sair, chat; overlays em createPortal (pesquisa de guilda com filtros, prévia/entrar, criação e seleção de emblema usando IDENTITY_EMBLEMS)."
+        "purpose": "UI da sub-aba Guilda: estado vazio + barra 'Procure ou forme uma nova guilda!' e, com guilda, apenas o chat (o banner no cabeçalho, em LigasFeature, mostra emblema/nome/membros). O banner abre `GuildDetail` em modal (emblema, tag copiável, descrição, localização/troféus necessários/tipo, membros com funções e botão Sair). Saída em modal de confirmação (GuildLeaveDialog). Overlays em createPortal: pesquisa de guilda com filtros, prévia/entrar, criação em linhas com seletores ◀ valor ▶ para tipo e troféus e seletor de emblema usando IDENTITY_EMBLEMS."
       },
       {
         "file": "src-app/src/features/social/guild.css",
-        "purpose": "Estilos do sistema de guildas (.guild-*): estado vazio, cabeçalho/faixa de informações, membros, emblema, overlays full-screen (desktop em janela central), busca/filtros, linhas da lista, botões chunky e formulário de criação."
+        "purpose": "Estilos do sistema de guildas (.guild-*): estado vazio, faixa de informações, membros, emblema, overlays full-screen (desktop em janela central), diálogo de confirmação (.guild-overlay--dialog), busca/filtros, linhas da lista, botões chunky, formulário em linhas (.guild-form) e seletores ◀ valor ▶ (.guild-step)."
       },
       {
         "file": "src-app/src/features/settings/",

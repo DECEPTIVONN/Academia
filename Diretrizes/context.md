@@ -24,7 +24,7 @@
 
 - **Migração React v4 — Fases 0 a 5 concluídas**: paridade de Dashboard/Ficha/Progresso, Perfil/temas, gamificação (radar, maestria, share), seção Treinos + swipe e overlays de Notícias/Missões.
 - **Além da paridade:** música e playlists (motor de áudio multi-contexto + miniplayer), sincronização multi-dispositivo (Supabase), conta/auth, bloqueio por senha, Fit ID, busca global (Ctrl/Cmd+K), casca desktop (Sidebar + Drawer + overlays em janela central) e PWA/Android (Capacitor).
-- **Guildas (aba Social):** sistema funcional em `features/social/guild-{data.ts,Panel.tsx,css}` — entrar/criar guilda, emblemas do site, membros com funções. Estado em localStorage (`academia_guilds_v1`); **sem doações semanais e sem pontuação do clã** (decisão de produto).
+- **Guildas (aba Social):** sistema funcional em `features/social/guild-{data.ts,Panel.tsx,css}` — entrar/criar guilda, emblemas do site, membros com funções. Estado em localStorage (`academia_guilds_v1`); **sem doações semanais e sem pontuação do clã** (decisão de produto). Na sub-aba Guilda, o banner do cabeçalho (emblema, nome, membros) abre os detalhes em modal e abaixo fica só o chat; sair e criar guilda também são modais (criação em linhas com seletores ◀ ▶).
 - **Detalhe por arquivo:** `system_map.json → react_app.entry_points` (~55 entradas) + `react_app.core_db` + `react_app.styles`.
 
 ## 3. Como verificar (rodar ao fim de qualquer mudança)

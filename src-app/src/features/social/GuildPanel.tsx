@@ -5,8 +5,10 @@
  *  • sem guilda → estado vazio + barra "Procure ou forme uma nova guilda!";
  *  • busca → lista de guildas, pesquisa avançada e prévia da guilda (entrar);
  *  • criação → nome, emblema (os mesmos emblemas de identidade do site),
- *    descrição, tipo (Aberto/Fechado), troféus necessários e localização;
- *  • com guilda → cabeçalho, membros (funções e troféus), sair e o chat.
+ *    descrição, tipo (Aberto/Fechado), troféus necessários e localização,
+ *    no formato de linhas "rótulo à esquerda / controle à direita";
+ *  • com guilda → o chat fica na sub-aba e o banner do cabeçalho (emblema,
+ *    nome e membros) abre os detalhes em modal; a saída também é um modal.
  *
  * Não há doações semanais nem pontuação do clã (cada membro tem seus troféus).
  */
@@ -104,7 +106,9 @@ function MemberRow({ member, rank }: { member: GuildMember; rank: number }) {
       <span className="guild-member__id">
         <span className="guild-member__name">{member.name}</span>
         <span className="guild-member__meta">
-          <span className={`guild-member__role guild-member__role--${member.role === 'Líder' ? 'leader' : member.role === 'Ancião' ? 'elder' : 'member'}`}>
+          <span
+            className={`guild-member__role guild-member__role--${member.role === 'Líder' ? 'leader' : member.role === 'Ancião' ? 'elder' : 'member'}`}
+          >
             {member.role}
           </span>
           <FlagIcon flag={member.flag} size={11} />
@@ -120,6 +124,18 @@ function MemberRow({ member, rank }: { member: GuildMember; rank: number }) {
   );
 }
 
+function copyGuildTag(target: Guild) {
+  const tag = `#${target.tag}`;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(tag).then(
+      () => showToast(`Tag ${tag} copiada!`, 'success'),
+      () => showToast('Não foi possível copiar a tag.', 'error'),
+    );
+  } else {
+    showToast(`Tag da guilda: ${tag}`, 'info');
+  }
+}
+
 /* ── Casca dos overlays (portal — o .section-strip é containing block) ── */
 
 interface OverlayShellProps {
@@ -129,13 +145,23 @@ interface OverlayShellProps {
   onBack?: () => void;
   footer?: React.ReactNode;
   nested?: boolean;
+  dialog?: boolean;
   children: React.ReactNode;
 }
 
-function OverlayShell({ title, subtitle, onClose, onBack, footer, nested, children }: OverlayShellProps) {
+function OverlayShell({
+  title,
+  subtitle,
+  onClose,
+  onBack,
+  footer,
+  nested,
+  dialog,
+  children,
+}: OverlayShellProps) {
   return createPortal(
     <div
-      className={`guild-overlay${nested ? ' guild-overlay--nested' : ''}`}
+      className={`guild-overlay${nested ? ' guild-overlay--nested' : ''}${dialog ? ' guild-overlay--dialog' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -173,6 +199,54 @@ function OverlayShell({ title, subtitle, onClose, onBack, footer, nested, childr
       </div>
     </div>,
     document.body,
+  );
+}
+
+/* ── Seletor de valor (◀ valor ▶), como na referência dos clãs ── */
+
+function GuildStepper({
+  label,
+  children,
+  onPrev,
+  onNext,
+  prevDisabled,
+  nextDisabled,
+}: {
+  label: string;
+  children: React.ReactNode;
+  onPrev: () => void;
+  onNext: () => void;
+  prevDisabled?: boolean;
+  nextDisabled?: boolean;
+}) {
+  return (
+    <div className="guild-step">
+      <button
+        type="button"
+        className="guild-step__btn"
+        aria-label={`${label}: opção anterior`}
+        disabled={prevDisabled}
+        onClick={() => {
+          standaloneSound.playMove();
+          onPrev();
+        }}
+      >
+        <ChevronLeft size={16} />
+      </button>
+      <span className="guild-step__value">{children}</span>
+      <button
+        type="button"
+        className="guild-step__btn"
+        aria-label={`${label}: próxima opção`}
+        disabled={nextDisabled}
+        onClick={() => {
+          standaloneSound.playMove();
+          onNext();
+        }}
+      >
+        <ChevronRight size={16} />
+      </button>
+    </div>
   );
 }
 
@@ -272,6 +346,7 @@ function GuildCreate({
     <>
       <OverlayShell
         title="Crie a sua própria guilda"
+        subtitle="Defina quem entra e lidere o time junto com os seus amigos."
         onClose={onClose}
         footer={
           <div className="guild-create__footer">
@@ -287,129 +362,107 @@ function GuildCreate({
           </div>
         }
       >
-        <p className="guild-create__lead">
-          Monte o seu time, defina quem entra e lidere a guilda junto com os seus amigos.
-        </p>
-
-        <div className="guild-field">
-          <label className="guild-field__label" htmlFor="guildName">
-            Nome
-          </label>
-          <input
-            id="guildName"
-            type="text"
-            className="guild-input"
-            value={name}
-            maxLength={20}
-            placeholder="Nome da guilda"
-            onChange={(event) => {
-              setName(event.target.value);
-              setError(null);
-            }}
-          />
-        </div>
-
-        <div className="guild-field">
-          <span className="guild-field__label">Emblema</span>
-          <div className="guild-field__row">
-            <GuildEmblem emblemId={emblemId} size={54} />
-            <button
-              type="button"
-              className="guild-btn guild-btn--blue guild-btn--sm"
-              onClick={() => {
-                standaloneSound.playMove();
-                setEmblemOpen(true);
+        <div className="guild-form">
+          <div className="guild-form__row">
+            <label className="guild-form__label" htmlFor="guildName">
+              Nome
+            </label>
+            <input
+              id="guildName"
+              type="text"
+              className="guild-input"
+              value={name}
+              maxLength={20}
+              placeholder="Nome da guilda"
+              onChange={(event) => {
+                setName(event.target.value);
+                setError(null);
               }}
-            >
-              Procurar
-            </button>
-          </div>
-        </div>
-
-        <div className="guild-field">
-          <label className="guild-field__label" htmlFor="guildDescription">
-            Descrição
-          </label>
-          <div className="guild-field__col">
-            <textarea
-              id="guildDescription"
-              className="guild-input guild-textarea"
-              value={description}
-              maxLength={80}
-              rows={3}
-              placeholder="Conte como a sua guilda treina"
-              onChange={(event) => setDescription(event.target.value)}
             />
-            <span className="guild-field__hint">{description.length}/80</span>
           </div>
-        </div>
 
-        <div className="guild-field">
-          <span className="guild-field__label">Tipo</span>
-          <div className="guild-segment">
-            {(['Aberto', 'Fechado'] as GuildType[]).map((option) => (
+          <div className="guild-form__row">
+            <span className="guild-form__label">Emblema</span>
+            <div className="guild-form__control guild-form__control--row">
+              <GuildEmblem emblemId={emblemId} size={46} />
               <button
-                key={option}
                 type="button"
-                className={`guild-segment__btn${type === option ? ' is-active' : ''}`}
+                className="guild-btn guild-btn--blue guild-btn--sm"
                 onClick={() => {
                   standaloneSound.playMove();
-                  setType(option);
+                  setEmblemOpen(true);
                 }}
               >
-                {option === 'Aberto' ? <Shield size={12} /> : <Lock size={12} />}
-                {option}
+                Procurar
               </button>
-            ))}
+            </div>
           </div>
-        </div>
 
-        <div className="guild-field">
-          <span className="guild-field__label">Troféus necessários</span>
-          <div className="guild-stepper">
-            <button
-              type="button"
-              className="guild-stepper__btn"
-              aria-label="Diminuir troféus necessários"
-              disabled={requiredIndex === 0}
-              onClick={() => setRequiredIndex((index) => Math.max(0, index - 1))}
+          <div className="guild-form__row guild-form__row--top">
+            <label className="guild-form__label" htmlFor="guildDescription">
+              Descrição
+            </label>
+            <div className="guild-form__control">
+              <textarea
+                id="guildDescription"
+                className="guild-input guild-textarea"
+                value={description}
+                maxLength={80}
+                rows={3}
+                placeholder="Conte como a sua guilda treina"
+                onChange={(event) => setDescription(event.target.value)}
+              />
+              <span className="guild-form__hint">{description.length}/80</span>
+            </div>
+          </div>
+
+          <div className="guild-form__row">
+            <span className="guild-form__label">Tipo</span>
+            <GuildStepper
+              label="Tipo"
+              onPrev={() => setType('Aberto')}
+              onNext={() => setType('Fechado')}
+              prevDisabled={type === 'Aberto'}
+              nextDisabled={type === 'Fechado'}
             >
-              <ChevronLeft size={14} />
-            </button>
-            <span className="guild-stepper__value">
-              <Trophy size={11} />
-              {NUM(GUILD_TROPHY_STEPS[requiredIndex])}
-            </span>
-            <button
-              type="button"
-              className="guild-stepper__btn"
-              aria-label="Aumentar troféus necessários"
-              disabled={requiredIndex === GUILD_TROPHY_STEPS.length - 1}
-              onClick={() =>
+              {type === 'Aberto' ? <Shield size={12} /> : <Lock size={12} />}
+              {type}
+            </GuildStepper>
+          </div>
+
+          <div className="guild-form__row">
+            <span className="guild-form__label">Troféus necessários</span>
+            <GuildStepper
+              label="Troféus necessários"
+              onPrev={() => setRequiredIndex((index) => Math.max(0, index - 1))}
+              onNext={() =>
                 setRequiredIndex((index) => Math.min(GUILD_TROPHY_STEPS.length - 1, index + 1))
               }
+              prevDisabled={requiredIndex === 0}
+              nextDisabled={requiredIndex === GUILD_TROPHY_STEPS.length - 1}
             >
-              <ChevronRight size={14} />
-            </button>
+              <Trophy size={11} />
+              {NUM(GUILD_TROPHY_STEPS[requiredIndex])}
+            </GuildStepper>
           </div>
-        </div>
 
-        <div className="guild-field">
-          <label className="guild-field__label" htmlFor="guildLocation">
-            Localização
-          </label>
-          <select
-            id="guildLocation"
-            className="guild-input guild-select"
-            value={location}
-            onChange={(event) => setLocation(event.target.value)}
-          >
-            {GUILD_LOCATIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <div className="guild-form__row">
+            <label className="guild-form__label" htmlFor="guildLocation">
+              Localização
+            </label>
+            <select
+              id="guildLocation"
+              className="guild-input guild-select"
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+            >
+              {GUILD_LOCATIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </OverlayShell>
 
@@ -424,6 +477,131 @@ function GuildCreate({
         />
       )}
     </>
+  );
+}
+
+/* ── Detalhes da guilda (modal aberto pelo banner do cabeçalho) ── */
+
+function GuildDetail({
+  guild,
+  onClose,
+  onLeave,
+}: {
+  guild: Guild;
+  onClose: () => void;
+  onLeave: () => void;
+}) {
+  const members = useMemo(
+    () => [...guild.members].sort((a, b) => b.trophies - a.trophies),
+    [guild.members],
+  );
+
+  return (
+    <OverlayShell title="Guilda" onClose={onClose}>
+      <div className="guild-detail">
+        <div className="guild-detail__head">
+          <GuildEmblem emblemId={guild.emblemId} size={72} />
+          <div className="guild-detail__identity">
+            <h3 className="guild-detail__name">{guild.name}</h3>
+            <button
+              type="button"
+              className="guild-tag"
+              onClick={() => copyGuildTag(guild)}
+              title="Copiar tag da guilda"
+            >
+              #{guild.tag}
+              <Copy size={11} />
+            </button>
+          </div>
+        </div>
+
+        <p className="guild-detail__desc">{guild.description || 'Sem descrição.'}</p>
+
+        <div className="guild-stats">
+          <div className="guild-stat">
+            <span className="guild-stat__label">Localização</span>
+            <span className="guild-stat__value">{guild.location}</span>
+          </div>
+          <div className="guild-stat">
+            <span className="guild-stat__label">Troféus necessários</span>
+            <span className="guild-stat__value">{NUM(guild.requiredTrophies)}</span>
+          </div>
+          <div className="guild-stat">
+            <span className="guild-stat__label">Tipo</span>
+            <span className="guild-stat__value">
+              <GuildTypeChip type={guild.type} />
+            </span>
+          </div>
+        </div>
+
+        <div className="guild-members-head">
+          <span className="guild-members-head__count">
+            <Users size={14} />
+            Membros {guild.members.length}/{GUILD_MAX_MEMBERS}
+          </span>
+          <button
+            type="button"
+            className="guild-leave"
+            onClick={() => {
+              standaloneSound.playMove();
+              onLeave();
+            }}
+          >
+            <LogOut size={13} />
+            Sair
+          </button>
+        </div>
+
+        <ul className="guild-members guild-members--detail">
+          {members.map((member, index) => (
+            <MemberRow key={member.id} member={member} rank={index + 1} />
+          ))}
+        </ul>
+      </div>
+    </OverlayShell>
+  );
+}
+
+/* ── Confirmação de saída (modal pequeno, como na referência) ── */
+
+function GuildLeaveDialog({
+  guild,
+  onClose,
+  onConfirm,
+}: {
+  guild: Guild;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <OverlayShell
+      title="Sair da guilda?"
+      nested
+      dialog
+      onClose={onClose}
+      footer={
+        <div className="guild-confirm__actions">
+          <button type="button" className="guild-btn guild-btn--ghost" onClick={onClose}>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="guild-btn guild-btn--danger"
+            onClick={() => {
+              standaloneSound.playMove();
+              onConfirm();
+            }}
+          >
+            Sair
+          </button>
+        </div>
+      }
+    >
+      <p className="guild-confirm__question">Quer mesmo sair?</p>
+      <p className="guild-confirm__text">
+        Você vai sair de <strong>{guild.name}</strong>. Pode entrar em outra guilda quando quiser.
+      </p>
+    </OverlayShell>
   );
 }
 
@@ -760,29 +938,24 @@ function GuildBrowser({
 
 /* ── Painel da guilda (conteúdo da sub-aba Guilda) ── */
 
-export function GuildPanel({ player, chat }: { player: GuildPlayer; chat?: React.ReactNode }) {
+export function GuildPanel({
+  player,
+  chat,
+  detailsOpen = false,
+  onCloseDetails,
+}: {
+  player: GuildPlayer;
+  chat?: React.ReactNode;
+  detailsOpen?: boolean;
+  onCloseDetails?: () => void;
+}) {
   const state = useGuildState(player);
   const guild = getGuild(state);
   const [browserOpen, setBrowserOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
 
-  const members = useMemo(
-    () => (guild ? [...guild.members].sort((a, b) => b.trophies - a.trophies) : []),
-    [guild],
-  );
-
-  const copyTag = (target: Guild) => {
-    const tag = `#${target.tag}`;
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(tag).then(
-        () => showToast(`Tag ${tag} copiada!`, 'success'),
-        () => showToast('Não foi possível copiar a tag.', 'error'),
-      );
-    } else {
-      showToast(`Tag da guilda: ${tag}`, 'info');
-    }
-  };
+  const closeDetails = onCloseDetails ?? (() => {});
 
   const overlays = (
     <>
@@ -805,40 +978,24 @@ export function GuildPanel({ player, chat }: { player: GuildPlayer; chat?: React
           onCreated={() => setCreateOpen(false)}
         />
       )}
-      {leaveOpen && guild && (
-        <OverlayShell
-          title="Sair da guilda"
+      {guild && detailsOpen && (
+        <GuildDetail
+          guild={guild}
+          onClose={closeDetails}
+          onLeave={() => setLeaveOpen(true)}
+        />
+      )}
+      {guild && leaveOpen && (
+        <GuildLeaveDialog
+          guild={guild}
           onClose={() => setLeaveOpen(false)}
-          footer={
-            <div className="guild-confirm__actions">
-              <button
-                type="button"
-                className="guild-btn guild-btn--ghost"
-                onClick={() => setLeaveOpen(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="guild-btn guild-btn--danger"
-                onClick={() => {
-                  standaloneSound.playMove();
-                  leaveGuild();
-                  showToast(`Você saiu da guilda ${guild.name}.`, 'info');
-                  setLeaveOpen(false);
-                }}
-              >
-                <LogOut size={14} />
-                Sair
-              </button>
-            </div>
-          }
-        >
-          <p className="guild-confirm__text">
-            Você vai sair de <strong>{guild.name}</strong>. Pode entrar em outra guilda quando
-            quiser.
-          </p>
-        </OverlayShell>
+          onConfirm={() => {
+            leaveGuild();
+            showToast(`Você saiu da guilda ${guild.name}.`, 'info');
+            setLeaveOpen(false);
+            closeDetails();
+          }}
+        />
       )}
     </>
   );
@@ -875,66 +1032,7 @@ export function GuildPanel({ player, chat }: { player: GuildPlayer; chat?: React
 
   return (
     <div className="guild-panel">
-      <div className="guild-hero">
-        <GuildEmblem emblemId={guild.emblemId} size={66} />
-        <div className="guild-hero__main">
-          <h3 className="guild-hero__name">{guild.name}</h3>
-          <button
-            type="button"
-            className="guild-tag"
-            onClick={() => copyTag(guild)}
-            title="Copiar tag da guilda"
-          >
-            #{guild.tag}
-            <Copy size={11} />
-          </button>
-          <p className="guild-hero__desc">{guild.description || 'Sem descrição.'}</p>
-        </div>
-      </div>
-
-      <div className="guild-stats">
-        <div className="guild-stat">
-          <span className="guild-stat__label">Localização</span>
-          <span className="guild-stat__value">{guild.location}</span>
-        </div>
-        <div className="guild-stat">
-          <span className="guild-stat__label">Troféus necessários</span>
-          <span className="guild-stat__value">{NUM(guild.requiredTrophies)}</span>
-        </div>
-        <div className="guild-stat">
-          <span className="guild-stat__label">Tipo</span>
-          <span className="guild-stat__value">
-            <GuildTypeChip type={guild.type} />
-          </span>
-        </div>
-      </div>
-
-      <div className="guild-members-head">
-        <span className="guild-members-head__count">
-          <Users size={14} />
-          Membros {guild.members.length}/{GUILD_MAX_MEMBERS}
-        </span>
-        <button
-          type="button"
-          className="guild-leave"
-          onClick={() => {
-            standaloneSound.playMove();
-            setLeaveOpen(true);
-          }}
-        >
-          <LogOut size={13} />
-          Sair
-        </button>
-      </div>
-
-      <ul className="guild-members">
-        {members.map((member, index) => (
-          <MemberRow key={member.id} member={member} rank={index + 1} />
-        ))}
-      </ul>
-
       {chat && <div className="guild-chat">{chat}</div>}
-
       {overlays}
     </div>
   );

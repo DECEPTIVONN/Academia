@@ -2,6 +2,25 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.8] - 2026-10-28
+
+**Guilda: banner no topo com emblema/nome/membros, detalhes e saída em modal e criação em linhas com seletores ◀ ▶.**
+
+### Changed
+- `src-app/src/features/social/LigasFeature.tsx` — a sub-aba **Guilda** voltou a ter o **banner da guilda no topo, na mesma linha do botão de fechar**: emblema, nome e “X/50 Membros”, com um chevron indicando que abre os detalhes; sem guilda, o banner mostra **“Sem guilda / Nenhuma guilda ainda”**. Tocar no banner abre os detalhes em modal e o corpo da sub-aba passa a ser **apenas o chat**. O novo `goSubTab` fecha o modal ao trocar de sub-aba (o estado não fica preso nem reabre sozinho) e `guildDetailsOpen` é repassado ao `GuildPanel`.
+- `src-app/src/features/social/GuildPanel.tsx` — **detalhes da guilda em modal** (`GuildDetail`, aberto pelo banner): emblema grande, nome, tag copiável, descrição, faixa Localização / Troféus necessários / Tipo, “Membros X/50” com o botão **Sair** e a lista de membros com função, nível, país e troféus. Com guilda, a sub-aba não repete mais essas informações: mostra só o chat.
+- **Saída em modal de confirmação** (`GuildLeaveDialog`, no formato da referência dos clãs): diálogo pequeno e centralizado com o título **“Sair da guilda?”**, “Quer mesmo sair?” e o nome da guilda, com **Cancelar** (neutro) e **Sair** (vermelho). Cancelar fecha só o diálogo; Sair fecha os dois modais, mostra toast e volta ao estado vazio.
+- **Criação de guilda** (`GuildCreate`) no formato de linhas da referência: rótulo à **esquerda** e controle à direita (`.guild-form`, grid 96px + 1fr, com separadores) em vez de campos empilhados. **Tipo** e **Troféus necessários** passaram a usar o seletor **◀ valor ▶** (`.guild-step`): Aberto ⇄ Fechado e os passos 0 → 100 → 250 → 500 → 1.000 → 2.000 → 4.000. Emblema segue com o botão Procurar (os mesmos `IDENTITY_EMBLEMS` do site), descrição com contador 0/80 e localização em select.
+- `src-app/src/features/social/guild.css` — novos `.guild-form*`, `.guild-step*` e `.guild-overlay--dialog` (diálogo central de 360px, corpo centralizado); `.guild-chat` perdeu borda/margem superior (agora é o conteúdo da sub-aba); removidos os estilos órfãos do antigo cabeçalho inline (`.guild-hero*`) e dos campos empilhados (`.guild-field*`, `.guild-create__lead`).
+- `Diretrizes/system_map.json` (versão **4.56.8**), `Diretrizes/DESIGN.md` (§16.2 e §16.8) e `Diretrizes/context.md` — registram o fluxo banner → modal, o diálogo de saída e o formulário em linhas.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros, 73 avisos (linha de base; o único aviso em `LigasFeature.tsx` — `INITIAL_FRIENDS` importado sem uso — já existia no HEAD).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+- Teste funcional (dev server, modo teste, 390×844): sem guilda → banner “Sem guilda” + estado vazio → **Mostrar** → pesquisa → prévia → **Entrar** → banner “ACADEMIA MASTERS BR · 49/50 MEMBROS” com o chat abaixo → tocar no banner abre os detalhes (localização, troféus, tipo, membros 49/50, Sair) → **Sair** abre “Sair da guilda? / Quer mesmo sair?”; **Cancelar** mantém os detalhes, **Sair** fecha os dois e volta ao estado vazio → criar guilda com tipo **Fechado** e **250** troféus pelos seletores ◀ ▶ (emblema Lobo Alfa) → banner “TIME TESTE MODAL · 1/50” e modal com descrição, 250, Fechado e o jogador como **Líder/VOCÊ** → Sair remove a guilda criada. Sem erros de console da feature.
+
 ## [v4.56.7] - 2026-10-28
 
 **Sistema de guildas funcional na aba Social: entrar, criar, emblemas e membros (sem doações e sem pontuação do clã).**

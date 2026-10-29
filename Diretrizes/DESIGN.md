@@ -945,7 +945,7 @@ Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) p
 - **Componentes:** `features/social/SocialFeature.tsx`, `features/social/LigasFeature.tsx`, `features/social/GuildPanel.tsx`, `features/social/guild-data.ts`
 - **CSS:** `features/social/social.css`, `features/social/guild.css`
 - **Classes:** `.soc-*` (amigos/perfil), `.ligas-*` (ligas/banner), `.guild-*` (guildas)
-- **Padrões:** overlays fullscreen via `createPortal(document.body)`; ligas semanal/mensal em localStorage; guilda com estado local (`academia_guilds_v1`, evento `academia:guild-changed`) — entrar/criar guilda, emblemas = `IDENTITY_EMBLEMS`, membros com funções e troféus. **Sem doações semanais e sem pontuação do clã** (decisão de produto).
+- **Padrões:** overlays fullscreen via `createPortal(document.body)`; ligas semanal/mensal em localStorage; guilda com estado local (`academia_guilds_v1`, evento `academia:guild-changed`) — entrar/criar guilda, emblemas = `IDENTITY_EMBLEMS`, membros com funções e troféus. Na sub-aba Guilda o **banner do cabeçalho** (emblema, nome, “X/50 Membros”, na mesma linha do fechar) abre os **detalhes em modal** (`.guild-detail`) e a sub-aba mostra só o chat; sair usa um **diálogo de confirmação** central (`.guild-overlay--dialog`). O formulário de criação segue o padrão de **linhas rótulo à esquerda / controle à direita** (`.guild-form`) com seletores **◀ valor ▶** (`.guild-step`) para tipo e troféus. **Sem doações semanais e sem pontuação do clã** (decisão de produto).
 
 ### 16.3 Bloqueio (Lock)
 - **Componentes:** `features/lock/LockScreen.tsx`
@@ -997,7 +997,7 @@ Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) p
 | `.vol-detail*` | `features/training/volume-details.css` | Modal "Detalhes de Volume" (grupo muscular) e volume geral — painel glassmorphism com Volume total, Tendência, Evolução de carga e Distribuição por exercício |
 | `.cal-ov*` | `features/training/calendar-overlay.css` | Calendário de Treinos (Mensal/Semanal) + Ciclo de Treino Atual e linha do ciclo 0–30 em grade compacta; overlay com scroll vertical e cabeçalho sticky |
 | `.tr-*` | `features/training/trend-radar.css` | Tendências de Treino — Radar Fit em tela cheia com segmented control (Semana/Mês/Ano/Todo o período), guia de cálculo e Compartilhar Radar |
-| `.guild-*` | `features/social/guild.css` | Sistema de guildas: estado vazio + CTA, cabeçalho/tag/faixa de informações, membros com funções, overlays de pesquisa/criação/emblema (z-index 1000; 1001 no seletor de emblema) |
+| `.guild-*` | `features/social/guild.css` | Sistema de guildas: estado vazio + CTA, tag/faixa de informações, membros com funções, chat, overlays de detalhes/pesquisa/criação/emblema (z-index 1000; 1001 no seletor de emblema) e diálogo de confirmação de saída (`.guild-overlay--dialog`), formulário em linhas (`.guild-form`) e seletores ◀ valor ▶ (`.guild-step`) |
 
 ### 16.9 Progresso — Ofensivas, Métricas corporais e Detalhes de Volume
 - **Componentes:** `features/training/ProgressoFeature.tsx` (aba + overlays de Calendário/Ciclo e Volume geral), `features/training/OfensivasOverlay.tsx` (Central de Ofensivas / "Sequências"), `features/training/BodyMetricsOverlay.tsx` (Métricas corporais + Comparar métricas), `features/training/TrendRadarOverlay.tsx` (Tendências de Treino/Radar)
