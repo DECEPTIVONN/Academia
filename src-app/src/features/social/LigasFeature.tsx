@@ -53,7 +53,6 @@ import {
   getMonthlyLeagueState,
   INITIAL_CLAN_MESSAGES,
   INITIAL_FRIENDS,
-  INITIAL_MEMBERS,
   LEAGUE_DIVISIONS,
   QUICK_REPLIES,
   saveLeagueState,
@@ -72,6 +71,10 @@ import { useAuth } from '@/core/auth/use-auth';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { FriendQrModal } from './FriendQrModal';
 import { QrScannerModal } from './QrScannerModal';
+import { GuildEmblem, GuildPanel } from './GuildPanel';
+import { getGuild, useGuildState, type GuildPlayer } from './guild-data';
+import { getLevel, getXp } from '@/core/db/queries';
+import { useLocalData } from '@/hooks/useLocalData';
 import {
   acceptFriendInvite,
   buildFriendInviteUrl,
@@ -877,7 +880,7 @@ function DiamondNav({ active, onGo }: { active: SubTab; onGo: (t: SubTab) => voi
 
   const items: { tab: SubTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { tab: 'amigos', label: 'Amigos', icon: <Shield size={20} /> },
-    { tab: 'bate-papo', label: 'Guilda', icon: <MessageSquare size={18} />, badge: 11 },
+    { tab: 'bate-papo', label: 'Guilda', icon: <MessageSquare size={18} /> },
     { tab: 'guerra-de-clas', label: 'Liga', icon: <Swords size={20} /> },
   ];
 
@@ -965,7 +968,6 @@ export function LigasFeature({
       document.removeEventListener('academia:friends-changed', reload);
     };
   }, []);
-  const [members] = useState<FriendItem[]>(INITIAL_MEMBERS);
   const [internalMessages, setInternalMessages] = useState<ClanMessage[]>(INITIAL_CLAN_MESSAGES);
 
   /* Fichas compartilhadas na guilda (enviadas pela aba Minha Ficha). */
@@ -997,6 +999,44 @@ export function LigasFeature({
     return name.slice(0, 24) || 'Atleta';
   }, [profileState?.customization?.nome, profile.username]);
 
+  /* ── Guilda (sistema real, ver guild-data.ts) ──
+     Os "troféus" do jogador são o XP de treinos do app (mesma pontuação do
+     Fit ID); a guilda NÃO tem pontuação própria nem doações semanais. */
+  const { history } = useLocalData();
+  const playerTrophies = useMemo(() => getXp(history), [history]);
+  const playerLevel = useMemo(() => getLevel(playerTrophies), [playerTrophies]);
+  const guildPlayer = useMemo<GuildPlayer>(
+    () => ({
+      name: displayName,
+      trophies: playerTrophies,
+      level: playerLevel,
+      glyph: 'crown',
+      flag: 'BR',
+    }),
+    [displayName, playerTrophies, playerLevel],
+  );
+  const guildState = useGuildState(guildPlayer);
+  const myGuild = getGuild(guildState);
+
+  /* Lista de "Membros da Guilda" da sub-aba Amigos = membros reais da guilda. */
+  const guildMembers = useMemo<FriendItem[]>(() => {
+    if (!myGuild) return [];
+    return [...myGuild.members]
+      .sort((a, b) => b.trophies - a.trophies)
+      .map((member, index) => ({
+        id: member.id,
+        name: member.name,
+        trophies: member.trophies,
+        clan: myGuild.name,
+        online: false,
+        avatarColor: 'from-slate-600 to-slate-800',
+        avatarInitial: member.name.charAt(0).toUpperCase(),
+        rank: index + 1,
+        avatarGlyph: member.glyph,
+        flag: member.flag,
+        level: member.level,
+      }));
+  }, [myGuild]);
   const friendCode = useMemo(() => getFriendCode(user?.id ?? null), [user?.id]);
   const inviteUrl = useMemo(
     () => buildFriendInviteUrl(friendCode, displayName),
@@ -1200,7 +1240,7 @@ export function LigasFeature({
     return copy.sort((a, b) => b.trophies - a.trophies);
   };
 
-  const currentList = communityTab === 'amigos' ? friends : members;
+  const currentList = communityTab === 'amigos' ? friends : guildMembers;
   const sortedList = getSortedList(currentList);
 
   /* ── Portais ── */
@@ -1278,38 +1318,59 @@ export function LigasFeature({
             </button>
           </div>
         </div>
+      ) : activeSubTab === 'bate-papo' ? (
+        <div className="flex-1" />
       ) : (
         <div className="flex-1 p-4 bg-gradient-to-r from-[rgba(var(--primary-rgb,139,92,246),0.25)] via-slate-900/60 to-slate-950/70 backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.3)] rounded-2xl flex items-center justify-between select-none shadow-md">
-          <div className="flex items-center gap-3">
-            <div
-              className="relative w-12 h-12 flex items-center justify-center shrink-0"
-              style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 85%, 50% 100%, 0% 85%)' }}
-            >
-              {PRESTIGIO_1?.type === 'image' && PRESTIGIO_1.url ? (
-                <img
-                  src={PRESTIGIO_1.url}
-                  alt={PRESTIGIO_1.nome}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-emerald-600" />
-              )}
-            </div>
-            <div>
-              <h4 className="text-base font-black text-white uppercase tracking-tight leading-none">
-                {profile.clanName || 'Great Warriors'}
-              </h4>
-              <p className="text-[10px] ligas-text-accent font-semibold mt-1 uppercase tracking-wide">
-                18/50 Membros
-              </p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-[9px] text-slate-500 font-bold uppercase leading-none">Min. Copas</div>
-            <div className="text-xs font-black text-yellow-400 leading-none mt-1 font-mono flex items-center justify-end gap-1">
-              <Trophy className="w-3.5 h-3.5" /> 4.000
-            </div>
-          </div>
+          {myGuild ? (
+            <>
+              <div className="flex items-center gap-3">
+                <GuildEmblem emblemId={myGuild.emblemId} size={48} />
+                <div>
+                  <h4 className="text-base font-black text-white uppercase tracking-tight leading-none">
+                    {myGuild.name}
+                  </h4>
+                  <p className="text-[10px] ligas-text-accent font-semibold mt-1 uppercase tracking-wide">
+                    {myGuild.members.length}/50 membros · {myGuild.type}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[9px] text-slate-500 font-bold uppercase leading-none">
+                  Troféus necessários
+                </div>
+                <div className="text-xs font-black text-yellow-400 leading-none mt-1 font-mono flex items-center justify-end gap-1">
+                  <Trophy className="w-3.5 h-3.5" />
+                  {myGuild.requiredTrophies.toLocaleString('pt-BR')}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl border border-slate-700 bg-slate-900/70 flex items-center justify-center shrink-0 text-slate-500">
+                  <Shield size={20} />
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-white uppercase tracking-tight leading-none">
+                    Sem guilda
+                  </h4>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-1 uppercase tracking-wide">
+                    Entre ou crie a sua para treinar com o time
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  standaloneSound.playMove();
+                  setActiveSubTab('bate-papo');
+                }}
+                className="px-3.5 py-2 ligas-btn-primary rounded-xl font-black text-[10px] uppercase tracking-wider cursor-pointer shrink-0"
+              >
+                Guilda
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -1400,7 +1461,7 @@ export function LigasFeature({
               }}
               className={`pb-2 transition-all relative cursor-pointer ${communityTab === 'membros' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
             >
-              Membros do Clã
+              Membros da Guilda
               {communityTab === 'membros' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] rounded-full" />
               )}
@@ -1409,13 +1470,34 @@ export function LigasFeature({
         </div>
 
         <div className="space-y-2.5 max-h-[calc(100vh-420px)] overflow-y-auto pr-1 z-10">
-          {sortedList.map((item, index) => {
-            const rank = index + 1;
-            const isSelf = item.friendCode
-              ? item.friendCode === friendCode
-              : item.name === 'GABRIEL GS' || item.name === profile.username;
-            return <FriendRow key={item.id} item={item} rank={rank} isSelf={isSelf} />;
-          })}
+          {communityTab === 'membros' && !myGuild ? (
+            <div className="flex flex-col items-center gap-3 py-8 px-4 text-center rounded-2xl border border-dashed border-slate-700/70">
+              <Shield size={22} className="text-slate-500" />
+              <p className="text-xs font-bold text-slate-400 leading-relaxed">
+                Você ainda não faz parte de uma guilda. Entre ou crie a sua para ver os membros
+                do time aqui.
+              </p>
+              <button
+                onClick={() => {
+                  standaloneSound.playMove();
+                  setActiveSubTab('bate-papo');
+                }}
+                className="px-4 py-2 ligas-btn-primary rounded-xl font-black text-[10px] uppercase tracking-wider cursor-pointer active:scale-95"
+              >
+                Ir para Guilda
+              </button>
+            </div>
+          ) : (
+            sortedList.map((item, index) => {
+              const rank = index + 1;
+              const isSelf =
+                item.id === 'self' ||
+                (item.friendCode
+                  ? item.friendCode === friendCode
+                  : item.name === profile.username);
+              return <FriendRow key={item.id} item={item} rank={rank} isSelf={isSelf} />;
+            })
+          )}
         </div>
 
         <div className="flex gap-2.5 mt-2 z-10 shrink-0">
@@ -1471,7 +1553,7 @@ export function LigasFeature({
     <div className="flex flex-col gap-4">
       {sharedSheets.length > 0 && (
         <div className="bg-[rgba(24,20,40,0.65)] backdrop-blur border border-[rgba(var(--primary-rgb,139,92,246),0.18)] rounded-2xl p-4 space-y-2">
-          <h3 className="text-sm font-black text-white uppercase tracking-tight">Fichas Compartilhadas no Clã</h3>
+          <h3 className="text-sm font-black text-white uppercase tracking-tight">Fichas Compartilhadas na Guilda</h3>
           <div className="space-y-2">
             {sharedSheets.map((s) => (
               <div
@@ -1549,7 +1631,7 @@ export function LigasFeature({
         <input
           type="text"
           maxLength={60}
-          placeholder="Digite sua mensagem para o clã..."
+          placeholder="Digite sua mensagem para a guilda..."
           value={typedMessage}
           onChange={(e) => setTypedMessage(e.target.value)}
           className="ligas-input flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder:text-slate-600"
@@ -1673,7 +1755,13 @@ export function LigasFeature({
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="min-h-0"
           >
-            {activeSubTab === 'amigos' ? amigosContent : activeSubTab === 'bate-papo' ? batePapoContent : ligaContent}
+            {activeSubTab === 'amigos' ? (
+              amigosContent
+            ) : activeSubTab === 'bate-papo' ? (
+              <GuildPanel player={guildPlayer} chat={batePapoContent} />
+            ) : (
+              ligaContent
+            )}
           </motion.div>
         </AnimatePresence>
 

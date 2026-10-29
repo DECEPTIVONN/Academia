@@ -2,6 +2,31 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.7] - 2026-10-28
+
+**Sistema de guildas funcional na aba Social: entrar, criar, emblemas e membros (sem doações e sem pontuação do clã).**
+
+### Added
+- `src-app/src/features/social/guild-data.ts` — módulo de dados/regras das guildas: tipos `Guild/GuildMember/GuildPlayer/GuildFilters`, 6 guildas iniciais com elenco determinístico (Academia Masters BR, Iron Forge SP, Titan Fitness, Academia Prime, Red Star Lift, Nordic Kings), persistência em localStorage (`academia_guilds_v1`), `joinGuild`/`leaveGuild`/`createGuild`/`validateGuildDraft`, `canJoinGuild` (fechada/cheia/troféus) e `filterGuilds` (nome ou tag sem acento, membros, troféus necessários, tipo, localização, “apenas guildas que posso entrar”). O hook `useGuildState` lê o estado e reage ao evento `academia:guild-changed`, mantendo nome/troféus/nível do jogador sincronizados. **Não existem doações semanais nem pontuação do clã** — cada membro tem os seus troféus (XP de treinos do app, a mesma pontuação do Fit ID).
+- `src-app/src/features/social/GuildPanel.tsx` — UI da sub-aba Guilda: estado vazio com emblema e a barra “Procure ou forme uma nova guilda!”; guilda com cabeçalho (emblema, nome, tag copiável, descrição), faixa Localização / Troféus necessários / Tipo, contagem de membros, lista com função (Líder/Ancião/Membro), nível, país e troféus, botão Sair (com confirmação) e o chat existente abaixo dos membros. Overlays em `createPortal(document.body)`: Pesquisa de guilda (busca + pesquisa avançada + lista + Criar novo), prévia da guilda com **Entrar** (bloqueado quando fechada/cheia/sem troféus), criação (nome, emblema, descrição, tipo, troféus necessários, localização) e seletor de emblema — usando os **mesmos emblemas de identidade já existentes no site** (`IDENTITY_EMBLEMS`).
+- `src-app/src/features/social/guild.css` — estilos `.guild-*` no padrão do app (painéis escuros com acento do tema, títulos Rajdhani em caixa alta, botões chunky): estado vazio, cabeçalho, faixa de informações, membros, emblema, overlays (tela cheia no mobile, janela central no desktop ≥1024px), busca/filtros, linhas da lista, chips e formulário.
+
+### Changed
+- `src-app/src/features/social/LigasFeature.tsx` — a sub-aba **Guilda** deixou de ser um placeholder: renderiza o `GuildPanel` (com o chat existente como conteúdo interno). O banner do topo das sub-abas Amigos/Liga passou a refletir a guilda real (emblema, nome, membros, tipo e troféus necessários) ou **“Sem guilda”** com atalho para a aba Guilda; na própria aba Guilda o banner apenas cede lugar ao botão de voltar. A lista **“Membros do Clã”** da sub-aba Amigos agora mostra os membros da guilda real (ou um estado vazio com atalho para entrar/criar). A bolinha de notificação falsa (11) do diamante Guilda foi removida. O jogador da guilda é montado com o nome do perfil, o XP de treinos (`getXp`) e o nível (`getLevel`).
+- `src-app/src/App.tsx` — `.guild-overlay` entrou na lista de alvos que ignoram o swipe de seção (arrastar dentro dos overlays de guilda não troca de aba).
+- `Diretrizes/system_map.json` (versão **4.56.7**) — entradas de `guild-data.ts`, `GuildPanel.tsx` e `guild.css` e propósito da pasta `features/social/` atualizado.
+- `Diretrizes/DESIGN.md` — §16.2 agora documenta Social/Ligas/Guildas (arquivos e classes reais) e a §16.8 ganhou a linha `.guild-*`.
+
+### Fixed
+- `src-app/src/features/social/GuildPanel.tsx` — os overlays usavam as tags semânticas `<header>`/`<footer>`, que o CSS legado global estiliza (`footer { padding: 80px 20px 40px; position: relative }` + `footer::before` em `z-index: 0`): o `::before` ficava ACIMA dos botões e o rodapé não recebia clique (HIT test devolvia o `footer`). As três tags viraram `<div>` com as mesmas classes (mesma solução já adotada no OnboardingScreen).
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros, 73 avisos (mesma linha de base; nenhum nos arquivos novos).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+- Teste funcional no navegador (dev server, modo teste, viewport 390×844): estado vazio → **Mostrar** → pesquisa com 6 guildas → prévia (faixa sem doações/pontuação) → **Entrar** (49/50, membro “VOCÊ” com função Membro, chat visível, banner atualizado) → **Sair** com confirmação (volta a 48/50 e ao estado vazio) → **Criar novo** (nome, emblema Lobo Alfa, descrição, tipo Fechado, 100 troféus) → guilda criada com o jogador como **Líder** (1/50) → **Sair** remove a guilda criada. Aba Amigos → **Membros do Clã** mostra o membro real. Sem erros de console da feature.
+
 ## [v4.56.6] - 2026-10-28
 
 **Heatmap de séries cobrindo o ano inteiro (12 meses) e linha do cardio alinhada na Ficha.**

@@ -500,6 +500,7 @@ function AppShell() {
         t.closest('.news-overlay') ||
         t.closest('.missions-overlay') ||
         t.closest('.friend-qr-overlay') ||
+        t.closest('.guild-overlay') ||
         t.closest('.of-root') ||
         t.closest('.bm-root') ||
         t.closest('.cal-ov') ||

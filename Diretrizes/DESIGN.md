@@ -941,11 +941,11 @@ Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) p
 - **Classes:** `.mu-*` (overlay), `.fmp*` (miniplayer flutuante), `.wnp*` (barra now-playing no treino)
 - **Padrões:** player Flexível (painel arrastável) / Fixo (pastilha contador), 6 posições (`PLAYER_POSITIONS`), visibilidade Sempre ativo / Só após trocar, slider de segundos (3–30s), persistência via `player-prefs.ts` + evento `academia:player-prefs-changed`. Contextos de áudio: main (MAIN.mp3 loop) / workout (Black Panther loop) / result (RESULT.mp3 1x) / missions (Revenger Phoenix loop) / workout-user (playlist do usuário).
 
-### 16.2 Social / Ligas
-- **Componentes:** `features/social/SocialFeature.tsx`, `features/social/LigasOverlay.tsx`
-- **CSS:** `features/social/social.css`
-- **Classes:** `#social-*`, `.sl-*`
-- **Padrões:** overlay fullscreen via `createPortal(document.body)`, integração com Supabase (sync multi-dispositivo), ranking de ligas, desafios.
+### 16.2 Social / Ligas / Guildas
+- **Componentes:** `features/social/SocialFeature.tsx`, `features/social/LigasFeature.tsx`, `features/social/GuildPanel.tsx`, `features/social/guild-data.ts`
+- **CSS:** `features/social/social.css`, `features/social/guild.css`
+- **Classes:** `.soc-*` (amigos/perfil), `.ligas-*` (ligas/banner), `.guild-*` (guildas)
+- **Padrões:** overlays fullscreen via `createPortal(document.body)`; ligas semanal/mensal em localStorage; guilda com estado local (`academia_guilds_v1`, evento `academia:guild-changed`) — entrar/criar guilda, emblemas = `IDENTITY_EMBLEMS`, membros com funções e troféus. **Sem doações semanais e sem pontuação do clã** (decisão de produto).
 
 ### 16.3 Bloqueio (Lock)
 - **Componentes:** `features/lock/LockScreen.tsx`
@@ -997,6 +997,7 @@ Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) p
 | `.vol-detail*` | `features/training/volume-details.css` | Modal "Detalhes de Volume" (grupo muscular) e volume geral — painel glassmorphism com Volume total, Tendência, Evolução de carga e Distribuição por exercício |
 | `.cal-ov*` | `features/training/calendar-overlay.css` | Calendário de Treinos (Mensal/Semanal) + Ciclo de Treino Atual e linha do ciclo 0–30 em grade compacta; overlay com scroll vertical e cabeçalho sticky |
 | `.tr-*` | `features/training/trend-radar.css` | Tendências de Treino — Radar Fit em tela cheia com segmented control (Semana/Mês/Ano/Todo o período), guia de cálculo e Compartilhar Radar |
+| `.guild-*` | `features/social/guild.css` | Sistema de guildas: estado vazio + CTA, cabeçalho/tag/faixa de informações, membros com funções, overlays de pesquisa/criação/emblema (z-index 1000; 1001 no seletor de emblema) |
 
 ### 16.9 Progresso — Ofensivas, Métricas corporais e Detalhes de Volume
 - **Componentes:** `features/training/ProgressoFeature.tsx` (aba + overlays de Calendário/Ciclo e Volume geral), `features/training/OfensivasOverlay.tsx` (Central de Ofensivas / "Sequências"), `features/training/BodyMetricsOverlay.tsx` (Métricas corporais + Comparar métricas), `features/training/TrendRadarOverlay.tsx` (Tendências de Treino/Radar)

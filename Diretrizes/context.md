@@ -8,8 +8,8 @@
 | :-- | :-- |
 | App atual (roda/deploya) | `src-app/` — React v4 + Vite + Tailwind v4; offline-first (Dexie/IndexedDB + fila de sync Supabase) |
 | Legado (congelado) | `Legacy/` — Vanilla JS, só consulta/paridade; espelho em `www/` (entrada do Capacitor) |
-| Versão atual | **v4.34.2-docs** |
-| `system_map.json` | **3.5.83** |
+| Versão atual | **v4.56.7** |
+| `system_map.json` | **4.56.7** |
 | Último commit | `8289adb` (v4.34.0) — o que ainda não está commitado: `git status --short` |
 
 ---
@@ -24,6 +24,7 @@
 
 - **Migração React v4 — Fases 0 a 5 concluídas**: paridade de Dashboard/Ficha/Progresso, Perfil/temas, gamificação (radar, maestria, share), seção Treinos + swipe e overlays de Notícias/Missões.
 - **Além da paridade:** música e playlists (motor de áudio multi-contexto + miniplayer), sincronização multi-dispositivo (Supabase), conta/auth, bloqueio por senha, Fit ID, busca global (Ctrl/Cmd+K), casca desktop (Sidebar + Drawer + overlays em janela central) e PWA/Android (Capacitor).
+- **Guildas (aba Social):** sistema funcional em `features/social/guild-{data.ts,Panel.tsx,css}` — entrar/criar guilda, emblemas do site, membros com funções. Estado em localStorage (`academia_guilds_v1`); **sem doações semanais e sem pontuação do clã** (decisão de produto).
 - **Detalhe por arquivo:** `system_map.json → react_app.entry_points` (~55 entradas) + `react_app.core_db` + `react_app.styles`.
 
 ## 3. Como verificar (rodar ao fim de qualquer mudança)
