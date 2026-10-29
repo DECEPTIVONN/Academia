@@ -5,10 +5,12 @@
 /* Premium glass (Exercício form + modais de formulário) */
 .modal-form{background:#111;backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid var(--card-border);box-shadow:0 24px 64px rgba(0,0,0,0.6);position:relative;overflow-y:auto;max-height:90vh;}
 .modal-form::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--primary-light),transparent);pointer-events:none;}
-/* v4.56.9 — Novo/Editar Exercício usam o mesmo gradiente do "Detalhes de
-   volume" (volume-details.css): radial do acento no topo direito + vertical
-   escura, borda e brilho do tema em vez do fundo chapado #111. */
-#modalExercicio .modal-form{background:radial-gradient(120% 90% at 100% 0%,rgba(var(--primary-rgb,139,92,246),0.18),transparent 58%),linear-gradient(180deg,rgba(24,21,40,0.98) 0%,rgba(12,10,22,0.99) 100%);border-color:rgba(var(--primary-rgb,139,92,246),0.38);box-shadow:0 28px 80px rgba(0,0,0,0.82),0 0 46px rgba(var(--primary-rgb,139,92,246),0.12),inset 0 1px 0 rgba(255,255,255,0.07);}
+/* Novo/Editar Exercício usam o mesmo gradiente do "Detalhes de volume"
+   (volume-details.css): radial do acento no topo direito + vertical escura,
+   borda e brilho do tema em vez do fundo chapado #111. A classe
+   `.modal-form--exercicio` garante o fundo mesmo se o id do overlay mudar. */
+#modalExercicio .modal-form,
+.modal-form--exercicio{background:radial-gradient(120% 90% at 100% 0%,rgba(var(--primary-rgb,139,92,246),0.18),transparent 58%),linear-gradient(180deg,rgba(24,21,40,0.98) 0%,rgba(12,10,22,0.99) 100%);border-color:rgba(var(--primary-rgb,139,92,246),0.38);box-shadow:0 28px 80px rgba(0,0,0,0.82),0 0 46px rgba(var(--primary-rgb,139,92,246),0.12),inset 0 1px 0 rgba(255,255,255,0.07);}
 .modal-form-header h3{font-size:1.25rem;font-weight:800;letter-spacing:.5px;background:linear-gradient(135deg,#fff,var(--primary-light));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
 @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
 .modal-form-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}

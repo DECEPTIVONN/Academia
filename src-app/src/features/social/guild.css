@@ -592,9 +592,11 @@
   pointer-events: none;
 }
 
-.guild-search__input {
+/* Especificidade acima de `.guild-input` (definido depois neste arquivo):
+   sem isso o padding-left de 12px voltava a vencer e o texto ficava sob o ícone. */
+.guild-search .guild-search__input {
   width: 100%;
-  padding-left: 38px;
+  padding-left: 40px;
 }
 
 .guild-adv-btn {

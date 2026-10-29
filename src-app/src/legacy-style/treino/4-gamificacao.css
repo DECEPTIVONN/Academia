@@ -470,19 +470,18 @@
     padding: 4px 12px;
     border-radius: 50px;
 }
-/* v4.56.9 — linha do cardio no card: "CARDIO" e o nome escolhido continuam
-   na MESMA linha (um à esquerda do outro) e com a MESMA tipografia, mas o par
-   fica CENTRALIZADO no card, como os valores de km e minutos abaixo — antes o
-   space-between jogava o nome para a borda oposta e, no desktop, os dois
-   ficavam a mais de 1000px de distância. */
+/* Linha do cardio no card: "CARDIO" e o nome escolhido continuam na MESMA
+   linha e com a MESMA tipografia, um à esquerda e outro à direita, mas dentro
+   de um bloco compacto CENTRALIZADO no card (como km e minutos) — sem o
+   space-between de largura total, que no desktop separava os dois por mais de
+   1000px. */
 .ae-card-head {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 2px 14px;
-    width: 100%;
-    margin: 10px 0 16px;
+    justify-content: space-between;
+    gap: 10px;
+    width: min(100%, 15rem);
+    margin: 10px auto 16px;
 }
 .ae-card-label,
 .ae-card-type {
@@ -492,15 +491,17 @@
     line-height: 1.2;
     letter-spacing: 0;
     color: #fff;
-    text-align: center;
 }
 .ae-card-label {
     flex-shrink: 0;
     white-space: nowrap;
+    text-align: left;
 }
 .ae-card-type {
+    min-width: 0;
     margin: 0;
     overflow-wrap: anywhere;
+    text-align: right;
 }
 .ae-card-stats {
     display: flex;
@@ -552,15 +553,15 @@
 .row-aerobico {
     background: rgba(34, 197, 94, 0.03) !important;
 }
-/* v4.56.9 — linha do cardio na tabela: mesma regra do card (par centralizado,
-   um à esquerda do outro, mesma tipografia). */
+/* Linha do cardio na tabela: mesma regra do card — rótulo à esquerda e tipo à
+   direita dentro de um bloco compacto centralizado na célula. */
 .ae-table-cardio {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 2px 10px;
-    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    width: min(100%, 15rem);
+    margin: 0 auto;
 }
 .ae-table-label,
 .ae-table-type {
@@ -571,13 +572,13 @@
     letter-spacing: 0;
     color: #fff;
     white-space: nowrap;
-    text-align: center;
 }
 .ae-table-label {
     flex-shrink: 0;
+    text-align: left;
 }
 .ae-table-type {
-    text-align: center;
+    text-align: right;
 }
 .ae-table-stats {
     display: flex;

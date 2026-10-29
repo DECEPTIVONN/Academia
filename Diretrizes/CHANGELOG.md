@@ -2,6 +2,23 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.10] - 2026-10-29
+
+**Criação de guilda em modal centrado (só fecha no X), busca sem sobreposição e linha do cardio centralizada com as pontas alinhadas.**
+
+### Changed
+- `src-app/src/features/social/GuildPanel.tsx` — o `OverlayShell` ganhou a prop **`backdropClose`** (padrão `true`, só vale para overlays `nested`). O **formulário de criação de guilda** passou a ser um **modal centrado** (`nested`, painel de até 440px e altura automática) como o diálogo de saída, com **`backdropClose={false}`**: clique fora da área do modal **não fecha** — a saída é o botão **X** do cabeçalho (ou `Esc`). O seletor de emblema continua abrindo por cima e fechando pelo backdrop.
+- `src-app/src/features/social/guild.css` — **ícone de pesquisa sem sobrepor o texto**: o seletor do campo virou `.guild-search .guild-search__input` (`padding-left: 40px`). A regra antiga tinha a mesma especificidade de `.guild-input` (definido depois no arquivo), então o padding de 12px vencia e o texto ficava sob a lupa.
+- `src-app/src/legacy-style/treino/4-gamificacao.css` — **linha do cardio** (card `.ae-card-head` e tabela `.ae-table-cardio`): o rótulo **CARDIO** e o tipo continuam na mesma linha, um à **esquerda** e outro à **direita** e com a mesma tipografia, mas agora dentro de um **bloco compacto centralizado** (`width: min(100%, 15rem)`, `margin-inline: auto`, `justify-content: space-between`), como os valores de km/min. Antes o `space-between` de largura total esticava o par até as bordas do card (no desktop, ~1.200px de distância) e a centralização simples os deixava colados no meio.
+- `src-app/src/features/workout/treinos/ExercicioFormModal.tsx` + `src-app/src/legacy-style/treino/2-modals.css` — o modal **Novo/Editar Exercício** recebeu a classe **`.modal-form--exercicio`**, que aplica o **mesmo gradiente do Detalhes de Volume** (radial do acento no topo direito + vertical escura, borda e brilho do tema) junto com a regra `#modalExercicio .modal-form` já existente — o fundo chapado `#111` não volta nem se o id do overlay mudar.
+- `Diretrizes/system_map.json` (versão **4.56.10**), `Diretrizes/DESIGN.md` (§6.4, §16.2 e §16.8) e este CHANGELOG — registram o modal de criação, o ícone da busca e a linha do cardio.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros, 73 avisos (linha de base; nenhum introduzido pelos arquivos alterados).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+
 ## [v4.56.9] - 2026-10-28
 
 **Cardio centralizado, gradiente do Detalhes de Volume no formulário de exercício e chat da guilda mais legível.**

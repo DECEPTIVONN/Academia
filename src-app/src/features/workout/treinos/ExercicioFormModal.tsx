@@ -274,7 +274,7 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="modal-form">
+      <div className="modal-form modal-form--exercicio">
         <div className="modal-form-header">
           <h3 id="modalExTitulo">{editEx ? 'Editar Exercício' : 'Novo Exercício'}</h3>
           <button type="button" className="modal-close-btn" id="btnFecharExercicio" aria-label="Fechar" onClick={onClose}>

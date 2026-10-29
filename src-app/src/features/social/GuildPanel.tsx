@@ -146,6 +146,8 @@ interface OverlayShellProps {
   footer?: React.ReactNode;
   nested?: boolean;
   dialog?: boolean;
+  /** Clique no backdrop fecha o overlay. Padrão: true (só vale para `nested`). */
+  backdropClose?: boolean;
   children: React.ReactNode;
 }
 
@@ -157,6 +159,7 @@ function OverlayShell({
   footer,
   nested,
   dialog,
+  backdropClose = true,
   children,
 }: OverlayShellProps) {
   return createPortal(
@@ -165,7 +168,7 @@ function OverlayShell({
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      onClick={nested ? onClose : undefined}
+      onClick={nested && backdropClose ? onClose : undefined}
     >
       <div className="guild-overlay__panel" onClick={(event) => event.stopPropagation()}>
         <div className="guild-overlay__head">
@@ -347,6 +350,8 @@ function GuildCreate({
       <OverlayShell
         title="Crie a sua própria guilda"
         subtitle="Defina quem entra e lidere o time junto com os seus amigos."
+        nested
+        backdropClose={false}
         onClose={onClose}
         footer={
           <div className="guild-create__footer">

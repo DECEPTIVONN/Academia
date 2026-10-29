@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.56.9",
-  "last_updated": "2026-10-28",
+  "version": "4.56.10",
+  "last_updated": "2026-10-29",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
   "entry_points": {
@@ -352,7 +352,7 @@
       },
       {
         "file": "style/treino/2-modals.css",
-        "purpose": "Especificações visuais para popups de conclusão, compartilhamento e edição. O `#modalExercicio` (Novo/Editar Exercício) usa o mesmo gradiente do modal Detalhes de Volume (volume-details.css)."
+        "purpose": "Especificações visuais para popups de conclusão, compartilhamento e edição. O `#modalExercicio` (Novo/Editar Exercício) usa o mesmo gradiente do modal Detalhes de Volume (volume-details.css) via `#modalExercicio .modal-form` e `.modal-form--exercicio`."
       },
       {
         "file": "style/treino/3-foco-badges.css",
@@ -360,7 +360,7 @@
       },
       {
         "file": "style/treino/4-gamificacao.css",
-        "purpose": "Métricas visuais, calendário mensal, planner semanal, XP Bars do Ciclo e a linha do cardio da Ficha (card `.ae-card-head` e tabela `.ae-table-cardio`: rótulo à esquerda e tipo à direita, mesma tipografia, par centralizado como os valores de km/min)."
+        "purpose": "Métricas visuais, calendário mensal, planner semanal, XP Bars do Ciclo e a linha do cardio da Ficha (card `.ae-card-head` e tabela `.ae-table-cardio`: rótulo à esquerda e tipo à direita, mesma tipografia, dentro de um bloco compacto centralizado de 15rem como os valores de km/min)."
       },
       {
         "file": "style/treino/5-premium-design.css",
@@ -656,11 +656,11 @@
       },
       {
         "file": "src-app/src/features/social/GuildPanel.tsx",
-        "purpose": "UI da sub-aba Guilda: estado vazio + barra 'Procure ou forme uma nova guilda!' e, com guilda, apenas o chat (o banner no cabeçalho, em LigasFeature, mostra emblema/nome/membros). O banner abre `GuildDetail` em modal (emblema, tag copiável, descrição, localização/troféus necessários/tipo, membros com funções e botão Sair). Saída em modal de confirmação (GuildLeaveDialog). Overlays em createPortal: pesquisa de guilda com filtros, prévia/entrar, criação em linhas com seletores ◀ valor ▶ para tipo e troféus e seletor de emblema usando IDENTITY_EMBLEMS."
+        "purpose": "UI da sub-aba Guilda: estado vazio + barra 'Procure ou forme uma nova guilda!' e, com guilda, apenas o chat (o banner no cabeçalho, em LigasFeature, mostra emblema/nome/membros). O banner abre `GuildDetail` em modal (emblema, tag copiável, descrição, localização/troféus necessários/tipo, membros com funções e botão Sair). Saída em modal de confirmação (GuildLeaveDialog). Criação também em modal centrado (OverlayShell `nested` + `backdropClose={false}`): clique fora não fecha, só o X (ou Esc). Overlays em createPortal: pesquisa de guilda com filtros, prévia/entrar, criação em linhas com seletores ◀ valor ▶ para tipo e troféus e seletor de emblema usando IDENTITY_EMBLEMS."
       },
       {
         "file": "src-app/src/features/social/guild.css",
-        "purpose": "Estilos do sistema de guildas (.guild-*): estado vazio, faixa de informações, membros, emblema, overlays full-screen (desktop em janela central), diálogo de confirmação (.guild-overlay--dialog), busca/filtros, linhas da lista, botões chunky, formulário em linhas (.guild-form) e seletores ◀ valor ▶ (.guild-step)."
+        "purpose": "Estilos do sistema de guildas (.guild-*): estado vazio, faixa de informações, membros, emblema, overlays full-screen (desktop em janela central), modal centrado de criação (.guild-overlay--nested), diálogo de confirmação (.guild-overlay--dialog), busca com ícone sem sobrepor o texto (padding-left de 40px com especificidade sobre .guild-input), linhas da lista, botões chunky, formulário em linhas (.guild-form) e seletores ◀ valor ▶ (.guild-step)."
       },
       {
         "file": "src-app/src/features/settings/",
