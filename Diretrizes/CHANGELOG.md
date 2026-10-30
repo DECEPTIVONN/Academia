@@ -2,6 +2,27 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.16] - 2026-10-30
+
+**Saídas animadas nos menus/modais, cardio em duas colunas, filtro que fecha ao escolher, rótulo "SELECIONE SUA FICHA" e "Registro de Treinos" abrindo os Ciclos de Treino.**
+
+### Changed
+- `src-app/src/features/workout/treinos/MontarMenuModal.tsx` — o menu da aba **Minha Ficha** passa a usar `useModalPresence` e a classe `.is-closing`; as opções permanecem montadas durante o fade de saída (`inicioMenuFadeOut`/`inicioMenuOut`) em vez de sumirem de imediato.
+- `src-app/src/features/workout/treinos/TreinosModals.tsx` — **Configurar Cardio**: "Duração (min)" e "Velocidade Média" dividem a mesma `.form-row.form-row--2` (duas colunas também no mobile); `MaestriaGeralModal` troca o fade inline por `useModalPresence` + `.is-closing`.
+- `src-app/src/features/gamification/ColecaoModals.tsx` — o modal de **maestria individual** (`#modalMaestriaEx`) usa `useModalPresence` + `.is-closing`, mantendo o último exercício montado até o fim da animação de saída.
+- `src-app/src/features/workout/treinos/TreinosFeature.tsx` — **detalhes do exercício** ganham presença animada (`crExOpen` + `useModalPresence`), com o overlay recebendo `.is-closing`; o filtro do **Personalizar** fecha ao escolher um grupo (`filterDismissed`), aproveitando a transição já existente do `.cr-dropdown-menu`.
+- `src-app/src/features/workout/treinos/DetalhesPecaModal.tsx` — o contêiner raiz recebe `.dp-details-shell` para participar da animação de saída.
+- `src-app/src/features/workout/treinos/MontarTab.tsx` — o título **"SELECIONE SUA CLASSE"** vira **"SELECIONE SUA FICHA"**.
+- `src-app/src/features/dashboard/InicioMenuModal.tsx` + `DashboardFeature.tsx` — **"Registro de Treinos"** deixa o toast "em breve" e abre o `CycleModal` (mesmo modal do card CICLO), após o fade de saída do menu (`MODAL_EXIT_MS`).
+- `src-app/src/legacy-style/treino/secoes/toolbar-busca.css` — nova regra `.filter-dropdown-container.is-dismissed .cr-dropdown-menu` para fechar o popover mesmo com o botão ainda focado.
+- `src-app/src/styles/modal-motion.css` — `.maestria-geral-container`, `.maestria-ex-container` e `.dp-details-shell` entram na animação `modalPanelOut` (e no bloco de `prefers-reduced-motion`).
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros, 72 avisos (linha de base).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+
 ## [v4.56.15] - 2026-10-30
 
 **Avatares reais no Social, estandartes circulares, busca por tag, cardio simplificado, formulário em linha e heatmap mais alto.**

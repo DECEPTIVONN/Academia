@@ -8,11 +8,12 @@
  *    btnNovoExercicio L152, confirmDeleteExercicio L242–262.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { flushSync } from 'react-dom';
 import type { AerobicConfig, Exercise } from '@/core/db/schema';
 import { useLocalData } from '@/hooks/useLocalData';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { fadeIn, fadeSwap } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
@@ -219,8 +220,19 @@ export const TreinosFeature: React.FC = () => {
   const [confirmEx, setConfirmEx] = useState<Exercise | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crEx, setCrEx] = useState<Exercise | null>(null);
+  /* v4.56.16 — saída animada dos detalhes: `crExOpen` controla a presença e o
+     exercício fica retido até o fade de 220 ms terminar (mounted = false). */
+  const [crExOpen, setCrExOpen] = useState(false);
+  const { mounted: crExMounted, closing: crExClosing } = useModalPresence(crExOpen);
+  const openCrEx = useCallback((ex: Exercise) => {
+    setCrEx(ex);
+    setCrExOpen(true);
+  }, []);
+  const closeCrEx = useCallback(() => setCrExOpen(false), []);
   const [mgOpen, setMgOpen] = useState(false);
   const [aeOpen, setAeOpen] = useState(false);
+  /* v4.56.16 — filtro do Personalizar: ao escolher, o menu fecha com fade. */
+  const [filterDismissed, setFilterDismissed] = useState(false);
 
   /* ── Busca expansível (app.js L197–246) ── */
   const [expanded, setExpanded] = useState(false);
@@ -339,13 +351,13 @@ export const TreinosFeature: React.FC = () => {
       if (imageSrc) setImageSrc(null);
       else if (confirmEx) setConfirmEx(null);
       else if (formOpen) setFormOpen(false);
-      else if (crEx) setCrEx(null);
+      else if (crExMounted) closeCrEx();
       else if (mgOpen) setMgOpen(false);
       else if (aeOpen) setAeOpen(false);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [imageSrc, confirmEx, formOpen, crEx, mgOpen, aeOpen]);
+  }, [imageSrc, confirmEx, formOpen, crExMounted, mgOpen, aeOpen, closeCrEx]);
 
   /* ── Cardio (openAerobicoModal L1070–1096) ── */
   const saveAerobico = async (ae: AerobicConfig) => {
@@ -434,8 +446,8 @@ export const TreinosFeature: React.FC = () => {
               </div>
 
               <div className="toolbar-actions">
-                <div className="filter-dropdown-container" tabIndex={0}>
-                  <button type="button" className="icon-btn" title="Filtros">
+                <div className={`filter-dropdown-container${filterDismissed ? ' is-dismissed' : ''}`} tabIndex={0}>
+                  <button type="button" className="icon-btn" title="Filtros" onClick={() => setFilterDismissed(false)} onFocus={() => setFilterDismissed(false)}>
                     {FILTER_ICON}
                   </button>
                   <div className="cr-dropdown-menu">
@@ -446,7 +458,13 @@ export const TreinosFeature: React.FC = () => {
                           key={g}
                           className={`g-chip cr-dropdown-item${filter === g ? ' active' : ''}`}
                           data-grupo={g}
-                          onClick={() => setFilter(g)}
+                          onClick={() => {
+                            setFilter(g);
+                            /* v4.56.16 — escolhido o filtro, o menu fecha com o
+                               fade já existente (.cr-dropdown-menu transition). */
+                            setFilterDismissed(true);
+                            (document.activeElement as HTMLElement | null)?.blur();
+                          }}
                         >
                           <div className="cr-checkbox" />
                           <span className="cr-label">{FILTER_LABELS[g] ?? g}</span>
@@ -497,7 +515,7 @@ export const TreinosFeature: React.FC = () => {
             >
               {list.map((ex) =>
                 effectiveExView === 'grid' ? (
-                  <TreinosGridCard key={ex.id} ex={ex} onEdit={openEdit} onDel={askDelete} onDetails={setCrEx} />
+                  <TreinosGridCard key={ex.id} ex={ex} onEdit={openEdit} onDel={askDelete} onDetails={openCrEx} />
                 ) : (
                   <TreinosCollectionCard
                     key={ex.id}
@@ -506,7 +524,7 @@ export const TreinosFeature: React.FC = () => {
                     menuActive={menuId === ex.id}
                     onEdit={openEdit}
                     onDel={askDelete}
-                    onDetails={setCrEx}
+                    onDetails={openCrEx}
                     onCardClick={(e) => setMenuId((cur) => (cur === e.id ? null : e.id))}
                   />
                 )
@@ -532,7 +550,7 @@ export const TreinosFeature: React.FC = () => {
           <MontarTab
             onEdit={openEdit}
             onDelete={askDelete}
-            onOpenCR={setCrEx}
+            onOpenCR={openCrEx}
             onOpenMaestriaGeral={() => setMgOpen(true)}
             onOpenAerobico={() => {
               setAeSession((n) => n + 1);
@@ -558,10 +576,10 @@ export const TreinosFeature: React.FC = () => {
         onNo={() => setConfirmEx(null)}
       />
       <ImageModal open={imageSrc !== null} src={imageSrc ?? ''} onClose={() => setImageSrc(null)} />
-      {crEx !== null &&
+      {crExMounted && crEx !== null &&
         createPortal(
           <div
-            className="modal-overlay"
+            className={`modal-overlay${crExClosing ? ' is-closing' : ''}`}
             style={{
               position: 'fixed',
               inset: 0,
@@ -576,10 +594,10 @@ export const TreinosFeature: React.FC = () => {
           >
             <DetalhesPecaModal
               isOpen={true}
-              onClose={() => setCrEx(null)}
+              onClose={closeCrEx}
               exercise={crEx}
               legacy={data.legacy}
-              description={crEx ? (crEx.notes || getExerciseDescription(crEx.name) || `Um exercício focado em fortalecer o ${crEx.muscleGroup}. Mantenha a postura correta para melhores resultados!`) : ''}
+              description={crEx.notes || getExerciseDescription(crEx.name) || `Um exercício focado em fortalecer o ${crEx.muscleGroup}. Mantenha a postura correta para melhores resultados!`}
               onMaestria={(id) => useMaestriaUi.getState().openMaestriaEx(id)}
               onEdit={openEdit}
             />

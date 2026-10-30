@@ -844,7 +844,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
             opacity: 0.8,
           }}
         >
-          SELECIONE SUA CLASSE
+          SELECIONE SUA FICHA
         </h3>
         <div className="templates-grid" id="templatesGrid">
           {TEMPLATE_BTNS.map((t) => (

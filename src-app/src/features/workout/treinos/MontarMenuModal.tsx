@@ -4,6 +4,7 @@
  */
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import '../../dashboard/inicio-menu.css';
 
 const toBody = (node: React.ReactNode) => createPortal(node, document.body);
@@ -96,6 +97,8 @@ export const MontarMenuModal: React.FC<MontarMenuModalProps> = ({
   hasClipboard,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  /* v4.56.16 — mantém o painel montado durante o fade de saída (.is-closing). */
+  const { mounted, closing } = useModalPresence(open);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -136,7 +139,7 @@ export const MontarMenuModal: React.FC<MontarMenuModalProps> = ({
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   const groups: MenuItem[][] = [
     [
@@ -163,7 +166,7 @@ export const MontarMenuModal: React.FC<MontarMenuModalProps> = ({
 
   return toBody(
     <div
-      className="inicio-menu-overlay"
+      className={`inicio-menu-overlay${closing ? ' is-closing' : ''}`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

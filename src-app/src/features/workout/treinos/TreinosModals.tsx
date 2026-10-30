@@ -176,7 +176,7 @@ export const AerobicoModal: React.FC<{
             ))}
           </select>
         </div>
-        <div className="form-row" style={{ marginTop: 15 }}>
+        <div className="form-row form-row--2" style={{ marginTop: 15 }}>
           <div className="form-group">
             <label htmlFor="inputAeTempo">Duração (min) *</label>
             <input
@@ -230,18 +230,16 @@ export const MaestriaGeralModal: React.FC<{
   onOpenEx: (exId: string) => void;
 }> = ({ open, exercises, legacy, onClose, onOpenEx }) => {
   const { totalXP, rank, pct } = computeMasteryTotals(exercises, legacy);
+  /* v4.56.16 — mantém montado durante o fade de saída (.is-closing). */
+  const { mounted, closing } = useModalPresence(open);
+
+  if (!mounted) return null;
 
   return toBody(
     <div
-      className="modal-overlay"
+      className={`modal-overlay${closing ? ' is-closing' : ''}`}
       id="modalMaestriaGeral"
-      style={{
-        display: 'flex',
-        opacity: open ? 1 : 0,
-        visibility: open ? 'visible' : 'hidden',
-        pointerEvents: open ? 'auto' : 'none',
-        transition: 'opacity 0.2s ease, visibility 0.2s ease',
-      }}
+      style={{ display: 'flex' }}
       role="dialog"
       aria-modal="true"
       onClick={(e) => {

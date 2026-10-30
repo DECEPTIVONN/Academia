@@ -11,6 +11,7 @@
 
 import { useMemo, useRef } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import {
   MAESTRIA_CHALLENGES,
   computeMasteryTotals,
@@ -118,6 +119,8 @@ export function ColecaoModals() {
   const state = (stateRaw ?? lastStateRef.current)!;
 
   const isOpen = maestriaExId !== null;
+  /* v4.56.16 — mantém montado durante o fade de saída (.is-closing). */
+  const { mounted: maestriaMounted, closing: maestriaClosing } = useModalPresence(isOpen);
   const tiers = ['none', 'bronze', 'prata', 'ouro'] as const;
 
   return (
@@ -232,17 +235,11 @@ export function ColecaoModals() {
         </div>
 
       {/* ===== MODAL: MAESTRIA INDIVIDUAL (modais.html L857–911) ===== */}
-      {displayId && ex && state && (
+      {maestriaMounted && displayId && ex && state && (
         <div
-          className="modal-overlay"
+          className={`modal-overlay${maestriaClosing ? ' is-closing' : ''}`}
           id="modalMaestriaEx"
-          style={{
-            display: 'flex',
-            opacity: isOpen ? 1 : 0,
-            visibility: isOpen ? 'visible' : 'hidden',
-            pointerEvents: isOpen ? 'auto' : 'none',
-            transition: 'opacity 0.2s ease, visibility 0.2s ease',
-          }}
+          style={{ display: 'flex' }}
         >
           <div className="maestria-ex-container">
             {/* Decoração superior (Ícone Elite Premium) */}

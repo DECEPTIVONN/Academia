@@ -21,6 +21,9 @@
 .modal-overlay.is-closing .modal-confirm,
 .modal-overlay.is-closing .modal-conclusao,
 .modal-overlay.is-closing .modal-image-container,
+.modal-overlay.is-closing .maestria-geral-container,
+.modal-overlay.is-closing .maestria-ex-container,
+.modal-overlay.is-closing .dp-details-shell,
 .modal-overlay.is-closing .dash-mini-deck {
   animation: modalPanelOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
@@ -52,6 +55,9 @@
   .modal-overlay.is-closing .modal-confirm,
   .modal-overlay.is-closing .modal-conclusao,
   .modal-overlay.is-closing .modal-image-container,
+  .modal-overlay.is-closing .maestria-geral-container,
+  .modal-overlay.is-closing .maestria-ex-container,
+  .modal-overlay.is-closing .dp-details-shell,
   .modal-overlay.is-closing .dash-mini-deck {
     animation-duration: 0.01ms;
   }

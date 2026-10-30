@@ -27,7 +27,7 @@
 
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useModalPresence } from '@/hooks/useModalPresence';
+import { MODAL_EXIT_MS, useModalPresence } from '@/hooks/useModalPresence';
 import { showToast } from '@/lib/toast';
 import { useCrossBrowserFullscreen } from '@/lib/fullscreen';
 import './inicio-menu.css';
@@ -131,6 +131,8 @@ interface InicioMenuModalProps {
   onOpenSettings: () => void;
   /** Tela de identidade Fit ID. */
   onOpenFitId: () => void;
+  /** Modal "Ciclos de Treino" (mesmo do card CICLO do Início). */
+  onOpenCycles: () => void;
 }
 
 export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
@@ -139,6 +141,7 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
   onOpenMessages,
   onOpenSettings,
   onOpenFitId,
+  onOpenCycles,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -194,11 +197,19 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
 
   if (!mounted) return null;
 
-  /* Registro de Treinos / Rankings / Ajuda ainda não existem: avisam (só no
-     TOQUE — v4.32.0) e fecham. */
+  /* Rankings / Ajuda ainda não existem: avisam (só no TOQUE — v4.32.0) e
+     fecham. */
   const soon = (label: string) => {
     onClose();
     showToast(`${label} — em breve.`, 'info');
+  };
+
+  /* v4.56.16 — "Registro de Treinos" abre o modal de Ciclos de Treino (o mesmo
+     do card CICLO). Espera o fade de saída do menu (MODAL_EXIT_MS) para o
+     overlay do menu não cobrir o modal que tem z-index menor. */
+  const openCycles = () => {
+    onClose();
+    window.setTimeout(onOpenCycles, MODAL_EXIT_MS);
   };
 
   const groups: MenuItem[][] = [
@@ -223,7 +234,7 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
       },
     ],
     [
-      { key: 'registro', label: 'Registro de Treinos', icon: IcoRegistro, action: () => soon('Registro de Treinos') },
+      { key: 'registro', label: 'Registro de Treinos', icon: IcoRegistro, action: openCycles },
       { key: 'rankings', label: 'Rankings', icon: IcoRankings, action: () => soon('Rankings') },
     ],
     [

@@ -157,6 +157,14 @@
     pointer-events: auto;
     transform: translateY(0);
 }
+/* v4.56.16 — depois de escolher um filtro o menu fecha (o :focus-within
+   manteria aberto porque o botão segue focado). O override usa o mesmo
+   transition para desaparecer suavemente. */
+.filter-dropdown-container.is-dismissed .cr-dropdown-menu {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+}
 .cr-dropdown-header {
     background: rgba(0, 0, 0, 0.4);
     color: var(--primary-light);

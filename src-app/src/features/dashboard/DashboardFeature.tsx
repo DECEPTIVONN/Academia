@@ -502,6 +502,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
         onOpenMessages={() => onNavigate('social')}
         onOpenSettings={onOpenSettings}
         onOpenFitId={() => setFitIdOpen(true)}
+        onOpenCycles={() => setCycleModalOpen(true)}
       />
       <FitIdOverlay
         open={fitIdOpen}

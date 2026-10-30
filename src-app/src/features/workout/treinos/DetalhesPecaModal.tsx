@@ -1083,7 +1083,7 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
     };
 
     return (
-        <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 text-white relative font-sans select-none overflow-x-hidden" onClick={handleBackdropClick}>
+        <div className="dp-details-shell min-h-screen bg-transparent flex flex-col items-center justify-center p-4 text-white relative font-sans select-none overflow-x-hidden" onClick={handleBackdropClick}>
 
             {/* (Test bar removida — exibição direta da interface de detalhes) */}
 
