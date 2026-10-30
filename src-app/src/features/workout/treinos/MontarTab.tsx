@@ -257,6 +257,11 @@ export const MontarTab: React.FC<MontarTabProps> = ({
 
   /* ── Header: paginação + letras (renderMontar L278–301) ── */
   const onSwitchPage = () => setDeckPage(deckPage === 1 ? 2 : 1);
+  /* v4.56.17 — o botão de páginas só aparece com 5+ fichas e quando existe
+     pelo menos uma ficha na página 2 (senão a troca abriria uma página vazia). */
+  const page2Sheets = unlockedSheets.filter((letra) => !PAGE_1.includes(letra));
+  const canSwitchPage = unlockedSheets.length >= 5 && page2Sheets.length > 0;
+  const activeDeckPage = canSwitchPage ? deckPage : 1;
 
   const onClickGridView = () => {
     if (deckView === 'grid') setDeckView('royale');
@@ -668,7 +673,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
               <div className="treino-selector" id="deckLetterTabs">
                 {LETTERS.filter((l) => unlockedSheets.includes(l)).map((letra) => {
                   const isPage1 = PAGE_1.includes(letra);
-                  const visible = deckPage === 1 ? isPage1 : !isPage1;
+                  const visible = activeDeckPage === 1 ? isPage1 : !isPage1;
                   return (
                     <button
                       type="button"
@@ -687,9 +692,11 @@ export const MontarTab: React.FC<MontarTabProps> = ({
 
             <div className="header-right">
               <div className="treino-selector-actions">
-                <button type="button" className="sel-btn-switch" id="btnSwitchDeckPage" title="Alternar Páginas" onClick={onSwitchPage}>
-                  {SWITCH_PAGE_ICON}
-                </button>
+                {canSwitchPage && (
+                  <button type="button" className="sel-btn-switch" id="btnSwitchDeckPage" title="Alternar Páginas" onClick={onSwitchPage}>
+                    {SWITCH_PAGE_ICON}
+                  </button>
+                )}
               </div>
               <span className="switch-label" />
               <div className="view-selector">

@@ -2,6 +2,26 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.17] - 2026-10-30
+
+**Identidade dentro do banner do perfil, transições suaves no Social/Aliança e nos Ciclos de Treino, botão de páginas condicional e correção de checks/cardio no detalhe do ciclo.**
+
+### Changed
+- `src-app/src/features/social/PlayerProfileModal.tsx` + `player-profile.css` — imagem, nome, tag, nível, troféus e status on-line passam para dentro do `.player-profile__banner`; o banner vira contêiner flex com `min-height`/padding, o hero fica acima das decorações (`z-index: 1`) e os emblemas sobem para o canto superior esquerdo para não cobrir o avatar.
+- `src-app/src/features/social/FriendQrModal.tsx` — a alternância **Meu QR Code ↔ Buscar jogador** usa `AnimatePresence`/`motion` (fade + slide) no painel e no rodapé; o painel inativo desmonta, então não fica focável.
+- `src-app/src/features/social/LigasFeature.tsx` — a lista **Amigos ↔ Membros da Guilda** (sub-aba Aliança) entra/sai com fade + slide via `AnimatePresence mode="wait"`, mantendo o contêiner de scroll.
+- `src-app/src/features/dashboard/CycleModal.tsx` + `cycle-modal.css` — a troca lista↔detalhe e o retorno usam `AnimatePresence`/`motion` (fade + slide), preservando a saída do modal via `useModalPresence`/`.is-closing`; o keyframe `cycleViewIn` saiu do CSS.
+- `src-app/src/features/workout/treinos/MontarTab.tsx` — `#btnSwitchDeckPage` só é renderizado com 5+ fichas desbloqueadas e quando há ao menos uma ficha na página 2 (evita alternar para uma página vazia).
+
+### Fixed
+- `src-app/src/features/dashboard/CycleModal.tsx` — o detalhe do ciclo passa a listar **todos** os exercícios da ficha (não só os IDs de `item.checks`), marca o check a partir de `item.checks` e inclui a linha de **cardio** (`ae-<ficha>` + `effectiveAerobic`) com tipo/velocidade/tempo; registros legados sem `checks` (ou com IDs que não batem mais com a ficha) marcam todas as etapas do treino concluído.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros, 72 avisos (linha de base).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+
 ## [v4.56.16] - 2026-10-30
 
 **Saídas animadas nos menus/modais, cardio em duas colunas, filtro que fecha ao escolher, rótulo "SELECIONE SUA FICHA" e "Registro de Treinos" abrindo os Ciclos de Treino.**

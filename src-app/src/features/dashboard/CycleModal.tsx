@@ -7,8 +7,9 @@
  *   • vazios → treinos ainda por realizar.
  *
  * Ao clicar em um item, o modal troca para o CICLO INDIVIDUAL selecionado
- * (data, ficha, duração e exercícios concluídos). A lista e o detalhe são o
- * mesmo painel; a troca usa a animação `cycle-view-in`.
+ * (data, ficha, duração, exercícios e cardio). A lista e o detalhe são o mesmo
+ * painel; a troca usa `AnimatePresence`/`motion` (fade + slide), inclusive na
+ * volta para a lista.
  *
  * Entrada/saída: `useModalPresence` mantém o modal montado durante o fade de
  * saída (`is-closing`), com a mesma duração do modal-motion.css.
@@ -16,9 +17,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { effectiveAerobic } from '@/core/db/schema';
 import type { Exercise, WorkoutSheet } from '@/core/db/schema';
 import type { CycleTimelineItem } from '@/core/db/queries';
 import { MODAL_EXIT_MS, useModalPresence } from '@/hooks/useModalPresence';
+import { formatSpeed } from '@/lib/app-prefs';
 import './cycle-modal.css';
 
 interface CycleStats {
@@ -116,6 +120,7 @@ export const CycleModal: React.FC<CycleModalProps> = ({
   sheets,
 }) => {
   const { mounted, closing } = useModalPresence(open);
+  const reduceMotion = useReducedMotion() ?? false;
   const [selected, setSelected] = useState<number | null>(null);
 
   /* Fecha mantendo o detalhe na tela durante a animação e só volta para a
@@ -157,17 +162,32 @@ export const CycleModal: React.FC<CycleModalProps> = ({
   if (!mounted) return null;
 
   const item = selected !== null ? timeline.find((i) => i.index === selected) ?? null : null;
-  const detailExercises = item
-    ? (item.checks.length > 0
-        ? item.checks
-        : item.sheetKey
-          ? (sheetMap.get(item.sheetKey)?.exerciseIds ?? [])
-          : []
-      )
-        .map((id) => exerciseMap.get(id))
-        .filter((ex): ex is Exercise => Boolean(ex))
-    : [];
+  const detailSheet = item?.sheetKey ? sheetMap.get(item.sheetKey) : undefined;
   const detailChecks = new Set(item?.checks ?? []);
+  /* Lista completa da ficha (não só os checks): assim exercícios ainda não
+     marcados aparecem. Sem ficha (registro antigo/apagada), cai nos IDs que
+     foram realmente marcados. */
+  const checkedExerciseIds = (item?.checks ?? []).filter((id) => !id.startsWith('ae-'));
+  const detailExerciseIds = detailSheet ? detailSheet.exerciseIds : checkedExerciseIds;
+  const detailExercises = detailExerciseIds
+    .map((id) => exerciseMap.get(id))
+    .filter((ex): ex is Exercise => Boolean(ex));
+  const detailAerobic = item?.status === 'done' ? effectiveAerobic(detailSheet?.aerobic) : null;
+  const detailAerobicId = item?.sheetKey ? `ae-${item.sheetKey}` : null;
+  const showDetailAerobic =
+    Boolean(detailAerobic) &&
+    Boolean(detailSheet) &&
+    (detailExercises.length > 0 || Boolean(detailSheet?.aerobic?.tipo));
+  const detailTotal = detailExercises.length + (showDetailAerobic ? 1 : 0);
+  /* Histórico antigo (legado) pode ter só `treinos`/`completedKeys`, sem
+     `checks` por exercício — ou com IDs que não batem mais com a ficha atual.
+     Nesse caso o treino concluído marca todas as etapas, em vez de aparecer
+     inteiro desmarcado. */
+  const detailChecksMatch =
+    detailExerciseIds.some((id) => detailChecks.has(id)) ||
+    Boolean(showDetailAerobic && detailAerobicId && detailChecks.has(detailAerobicId));
+  const legacyChecksUnknown = item?.status === 'done' && !detailChecksMatch;
+  const isDetailDone = (id: string) => detailChecks.has(id) || legacyChecksUnknown;
 
   return createPortal(
     <div
@@ -219,136 +239,166 @@ export const CycleModal: React.FC<CycleModalProps> = ({
           </button>
         </header>
 
-        {item ? (
-          <div className="cycle-modal__view cycle-modal__detail" key={`detail-${item.index}`}>
-            <div className={`cycle-modal__hero cycle-modal__hero--${item.status}`}>
-              <span className="cycle-modal__hero-index">
-                {item.status === 'start' ? '0' : String(item.index).padStart(2, '0')}
-              </span>
-              <span className="cycle-modal__hero-label">
-                {item.status === 'start'
-                  ? 'ABERTURA DO CICLO'
-                  : item.status === 'done'
-                    ? 'TREINO CONCLUÍDO'
-                    : 'TREINO A REALIZAR'}
-              </span>
-            </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={item ? `detail-${item.index}` : 'list'}
+            className={`cycle-modal__view ${item ? 'cycle-modal__detail' : 'cycle-modal__list'}`}
+            initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
+            transition={{ duration: reduceMotion ? 0 : 0.2, ease: 'easeOut' }}
+          >
+            {item ? (
+              <>
+                <div className={`cycle-modal__hero cycle-modal__hero--${item.status}`}>
+                  <span className="cycle-modal__hero-index">
+                    {item.status === 'start' ? '0' : String(item.index).padStart(2, '0')}
+                  </span>
+                  <span className="cycle-modal__hero-label">
+                    {item.status === 'start'
+                      ? 'ABERTURA DO CICLO'
+                      : item.status === 'done'
+                        ? 'TREINO CONCLUÍDO'
+                        : 'TREINO A REALIZAR'}
+                  </span>
+                </div>
 
-            <div className="cycle-modal__meta">
-              <div className="cycle-modal__meta-card">
-                <span className="cycle-modal__meta-label">{CalendarIco} DATA</span>
-                <strong>{shortDate(item.date)}</strong>
-              </div>
-              <div className="cycle-modal__meta-card">
-                <span className="cycle-modal__meta-label">{TrophyIco} FICHA</span>
-                <strong>{item.sheetKey ? `TREINO ${item.sheetKey}` : '—'}</strong>
-              </div>
-              <div className="cycle-modal__meta-card">
-                <span className="cycle-modal__meta-label">{ClockIco} DURAÇÃO</span>
-                <strong>{item.durationMin ? `${item.durationMin} min` : '—'}</strong>
-              </div>
-              <div className="cycle-modal__meta-card">
-                <span className="cycle-modal__meta-label">{CheckIco} EXERCÍCIOS</span>
-                <strong>{detailExercises.length || '—'}</strong>
-              </div>
-            </div>
+                <div className="cycle-modal__meta">
+                  <div className="cycle-modal__meta-card">
+                    <span className="cycle-modal__meta-label">{CalendarIco} DATA</span>
+                    <strong>{shortDate(item.date)}</strong>
+                  </div>
+                  <div className="cycle-modal__meta-card">
+                    <span className="cycle-modal__meta-label">{TrophyIco} FICHA</span>
+                    <strong>{item.sheetKey ? `TREINO ${item.sheetKey}` : '—'}</strong>
+                  </div>
+                  <div className="cycle-modal__meta-card">
+                    <span className="cycle-modal__meta-label">{ClockIco} DURAÇÃO</span>
+                    <strong>{item.durationMin ? `${item.durationMin} min` : '—'}</strong>
+                  </div>
+                  <div className="cycle-modal__meta-card">
+                    <span className="cycle-modal__meta-label">{CheckIco} EXERCÍCIOS</span>
+                    <strong>{detailTotal || '—'}</strong>
+                  </div>
+                </div>
 
-            {item.status === 'start' ? (
-              <p className="cycle-modal__empty">
-                Este é o marco zero do ciclo atual. A partir daqui contam os 30 treinos
-                que completam a barra de progresso do Início.
-              </p>
-            ) : item.status === 'pending' ? (
-              <p className="cycle-modal__empty">
-                Este treino do ciclo ainda não foi concluído. Ele será preenchido
-                automaticamente quando você finalizar a próxima ficha.
-              </p>
-            ) : detailExercises.length > 0 ? (
-              <ul className="cycle-modal__exercises">
-                {detailExercises.map((ex) => (
-                  <li
-                    className={`cycle-modal__exercise${detailChecks.has(ex.id) ? ' is-done' : ''}`}
-                    key={ex.id}
-                  >
-                    <span className="cycle-modal__exercise-check">
-                      {detailChecks.has(ex.id) ? CheckIco : null}
-                    </span>
-                    <span className="cycle-modal__exercise-name">{ex.name}</span>
-                    <span className="cycle-modal__exercise-meta">
-                      {ex.sets} × {ex.reps}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                {item.status === 'start' ? (
+                  <p className="cycle-modal__empty">
+                    Este é o marco zero do ciclo atual. A partir daqui contam os 30 treinos
+                    que completam a barra de progresso do Início.
+                  </p>
+                ) : item.status === 'pending' ? (
+                  <p className="cycle-modal__empty">
+                    Este treino do ciclo ainda não foi concluído. Ele será preenchido
+                    automaticamente quando você finalizar a próxima ficha.
+                  </p>
+                ) : detailExercises.length > 0 || showDetailAerobic ? (
+                  <ul className="cycle-modal__exercises">
+                    {detailExercises.map((ex) => (
+                      <li
+                        className={`cycle-modal__exercise${isDetailDone(ex.id) ? ' is-done' : ''}`}
+                        key={ex.id}
+                      >
+                        <span className="cycle-modal__exercise-check">
+                          {isDetailDone(ex.id) ? CheckIco : null}
+                        </span>
+                        <span className="cycle-modal__exercise-name">{ex.name}</span>
+                        <span className="cycle-modal__exercise-meta">
+                          {ex.sets} × {ex.reps}
+                        </span>
+                      </li>
+                    ))}
+
+                    {showDetailAerobic && detailAerobic && detailAerobicId && (
+                      <li
+                        className={`cycle-modal__exercise cycle-modal__exercise--cardio${
+                          isDetailDone(detailAerobicId) ? ' is-done' : ''
+                        }`}
+                        key={detailAerobicId}
+                      >
+                        <span className="cycle-modal__exercise-check">
+                          {isDetailDone(detailAerobicId) ? CheckIco : null}
+                        </span>
+                        <span className="cycle-modal__exercise-name">
+                          Cardio · {detailAerobic.tipo}
+                        </span>
+                        <span className="cycle-modal__exercise-meta">
+                          {formatSpeed(detailAerobic.vel)} · {detailAerobic.tempo || '--'} min
+                        </span>
+                      </li>
+                    )}
+                  </ul>
+                ) : (
+                  <p className="cycle-modal__empty">
+                    Nenhum exercício registrado neste treino.
+                  </p>
+                )}
+              </>
             ) : (
-              <p className="cycle-modal__empty">
-                Nenhum exercício registrado neste treino.
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="cycle-modal__view cycle-modal__list" key="list">
-            <div className="cycle-modal__progress">
-              <div className="cycle-modal__progress-head">
-                <span>CICLO ATUAL</span>
-                <strong>
-                  {cycle.done}/{cycle.total}
-                </strong>
-              </div>
-              <div className="cycle-modal__progress-track">
-                <div
-                  className="cycle-modal__progress-fill"
-                  style={{ width: `${cycle.percent}%` }}
-                />
-              </div>
-              <div className="cycle-modal__breakdown">
-                {Object.entries(cycle.breakdown)
-                  .filter(([, count]) => count > 0)
-                  .map(([key, count]) => (
-                    <span className="cycle-modal__breakdown-pill" key={key}>
-                      {key} · {count}
-                    </span>
-                  ))}
-              </div>
-            </div>
+              <>
+                <div className="cycle-modal__progress">
+                  <div className="cycle-modal__progress-head">
+                    <span>CICLO ATUAL</span>
+                    <strong>
+                      {cycle.done}/{cycle.total}
+                    </strong>
+                  </div>
+                  <div className="cycle-modal__progress-track">
+                    <div
+                      className="cycle-modal__progress-fill"
+                      style={{ width: `${cycle.percent}%` }}
+                    />
+                  </div>
+                  <div className="cycle-modal__breakdown">
+                    {Object.entries(cycle.breakdown)
+                      .filter(([, count]) => count > 0)
+                      .map(([key, count]) => (
+                        <span className="cycle-modal__breakdown-pill" key={key}>
+                          {key} · {count}
+                        </span>
+                      ))}
+                  </div>
+                </div>
 
-            <ul className="cycle-modal__items">
-              {timeline.map((entry) => (
-                <li key={entry.index}>
-                  <button
-                    type="button"
-                    className={`cycle-modal__item cycle-modal__item--${entry.status}`}
-                    onClick={() => setSelected(entry.index)}
-                    aria-label={`Abrir ciclo ${entry.index}`}
-                  >
-                    <span className="cycle-modal__item-index">
-                      {entry.status === 'start' ? '0' : String(entry.index).padStart(2, '0')}
-                    </span>
-                    <span className="cycle-modal__item-copy">
-                      <strong>
-                        {entry.status === 'start'
-                          ? 'Início do Ciclo'
-                          : entry.status === 'done'
-                            ? `Treino ${entry.sheetKey}`
-                            : 'Treino a realizar'}
-                      </strong>
-                      <span>{shortDate(entry.date)}</span>
-                    </span>
-                    {entry.status === 'done' && (
-                      <span className="cycle-modal__item-tag is-done">{CheckIco}</span>
-                    )}
-                    {entry.status === 'start' && (
-                      <span className="cycle-modal__item-tag is-start">INÍCIO</span>
-                    )}
-                    {entry.status === 'pending' && (
-                      <span className="cycle-modal__item-tag is-pending">—</span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+                <ul className="cycle-modal__items">
+                  {timeline.map((entry) => (
+                    <li key={entry.index}>
+                      <button
+                        type="button"
+                        className={`cycle-modal__item cycle-modal__item--${entry.status}`}
+                        onClick={() => setSelected(entry.index)}
+                        aria-label={`Abrir ciclo ${entry.index}`}
+                      >
+                        <span className="cycle-modal__item-index">
+                          {entry.status === 'start' ? '0' : String(entry.index).padStart(2, '0')}
+                        </span>
+                        <span className="cycle-modal__item-copy">
+                          <strong>
+                            {entry.status === 'start'
+                              ? 'Início do Ciclo'
+                              : entry.status === 'done'
+                                ? `Treino ${entry.sheetKey}`
+                                : 'Treino a realizar'}
+                          </strong>
+                          <span>{shortDate(entry.date)}</span>
+                        </span>
+                        {entry.status === 'done' && (
+                          <span className="cycle-modal__item-tag is-done">{CheckIco}</span>
+                        )}
+                        {entry.status === 'start' && (
+                          <span className="cycle-modal__item-tag is-start">INÍCIO</span>
+                        )}
+                        {entry.status === 'pending' && (
+                          <span className="cycle-modal__item-tag is-pending">—</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>,
     document.body

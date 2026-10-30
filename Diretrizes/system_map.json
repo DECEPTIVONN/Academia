@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.56.16",
+  "version": "4.56.17",
   "last_updated": "2026-10-30",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -628,11 +628,11 @@
       },
       {
         "file": "src-app/src/features/dashboard/CycleModal.tsx",
-        "purpose": "Modal do card CICLO do Início: lista a linha do tempo 0–30 do ciclo atual (getCycleTimeline) e o detalhe do treino selecionado (data, ficha, duração e exercícios concluídos), em createPortal(document.body) com Esc/backdrop, body-lock e saída animada via useModalPresence. Estilos em cycle-modal.css."
+        "purpose": "Modal do card CICLO do Início: lista a linha do tempo 0–30 do ciclo atual (getCycleTimeline) e o detalhe do treino selecionado (data, ficha, duração, exercícios da ficha e cardio configurado, com o check vindo de item.checks), em createPortal(document.body) com Esc/backdrop, body-lock e saída animada via useModalPresence. A troca lista↔detalhe usa AnimatePresence/motion (fade + slide). Estilos em cycle-modal.css."
       },
       {
         "file": "src-app/src/features/dashboard/cycle-modal.css",
-        "purpose": "Estilos do CycleModal (.cycle-modal*): painel #0b0b10 com hairline e acento var(--primary), entrada fade/pop, troca lista↔detalhe (cycle-view-in) e saída .is-closing em 220 ms; inclui prefers-reduced-motion."
+        "purpose": "Estilos do CycleModal (.cycle-modal*): painel #0b0b10 com hairline e acento var(--primary), entrada fade/pop, troca lista↔detalhe animada por motion e saída .is-closing em 220 ms; inclui prefers-reduced-motion."
       },
       {
         "file": "src-app/src/features/dashboard/InicioMenuModal.tsx",
@@ -652,7 +652,7 @@
       },
       {
         "file": "src-app/src/features/social/",
-        "purpose": "Aba SOCIAL (React): SocialFeature.tsx (re-exporta LigasFeature) + LigasFeature.tsx (3 sub-abas Amigos/Guilda/Liga, ligas semanal/mensal, banner de temporada, ranking filtrável, banner de guilda, chat e modais) + ligas-data.ts + ligas-icons.tsx + social.css. A sub-aba Amigos separa Amigos on-line (ponto verde, sem posição) e Classificação (ranking completo), combinando INITIAL_FRIENDS com os amigos adicionados. A sub-aba Guilda usa o módulo guild-* (estado local em localStorage academia_guilds_v1; sem doações e sem pontuação de clã): banner no cabeçalho (emblema/nome/membros) abre os detalhes em modal e a sub-aba mostra só o chat, sem troféus nas mensagens e sem atalhos 'Rápido:'. Tocar num amigo OU num membro da guilda (nas duas listas da sub-aba Amigos) abre o mesmo popover (`MemberPopover.tsx`) e o perfil completo (`PlayerProfileModal.tsx`). Avatares usam `PlayerAvatar` (foto → emblema de identidade → glifo), então amigos/membros mostram a imagem real de cada jogador. Amigos: convite permanente por QR/link em friend-invites.ts, FriendQrModal.tsx e QrScannerModal.tsx — código = user.id do Supabase ou UUID local persistido, link ?amigo=&nome=, amigos adicionados em localStorage e leitor de câmera com jsQR (QR invertido/baixo contraste). O FriendQrModal tem duas abas (QR Code e Buscar jogador); a busca consulta public.profiles (username/display_name) em friend-search.ts, aceita @username/#tag e adiciona o jogador pelo id da conta. Estado de ligas/guilda é local; não há tabela de amizades no backend."
+        "purpose": "Aba SOCIAL (React): SocialFeature.tsx (re-exporta LigasFeature) + LigasFeature.tsx (3 sub-abas Amigos/Guilda/Liga, ligas semanal/mensal, banner de temporada, ranking filtrável, banner de guilda, chat e modais) + ligas-data.ts + ligas-icons.tsx + social.css. A sub-aba Amigos separa Amigos on-line (ponto verde, sem posição) e Classificação (ranking completo), combinando INITIAL_FRIENDS com os amigos adicionados. A sub-aba Guilda usa o módulo guild-* (estado local em localStorage academia_guilds_v1; sem doações e sem pontuação de clã): banner no cabeçalho (emblema/nome/membros) abre os detalhes em modal e a sub-aba mostra só o chat, sem troféus nas mensagens e sem atalhos 'Rápido:'. Tocar num amigo OU num membro da guilda (nas duas listas da sub-aba Amigos) abre o mesmo popover (`MemberPopover.tsx`) e o perfil completo (`PlayerProfileModal.tsx`). Avatares usam `PlayerAvatar` (foto → emblema de identidade → glifo), então amigos/membros mostram a imagem real de cada jogador. Amigos: convite permanente por QR/link em friend-invites.ts, FriendQrModal.tsx e QrScannerModal.tsx — código = user.id do Supabase ou UUID local persistido, link ?amigo=&nome=, amigos adicionados em localStorage e leitor de câmera com jsQR (QR invertido/baixo contraste). O FriendQrModal tem duas abas (QR Code e Buscar jogador), com transição fade+slide entre os painéis; a busca consulta public.profiles (username/display_name) em friend-search.ts, aceita @username/#tag e adiciona o jogador pelo id da conta. A lista Amigos↔Membros da Guilda também anima com fade+slide. Estado de ligas/guilda é local; não há tabela de amizades no backend."
       },
       {
         "file": "src-app/src/features/social/guild-data.ts",
@@ -676,7 +676,7 @@
       },
       {
         "file": "src-app/src/features/social/PlayerProfileModal.tsx",
-        "purpose": "Perfil do jogador no desenho do Clash Royale com as cores do site: banner do perfil, emblemas sobrepostos, avatar/nome/tag, guilda, total de treinos/ofensiva, caminho de troféus (placeholder), emblemas (+ Mostrar coleção), ligas mensais (atual/anterior/melhor), último treino e estatísticas (treinos, horas, exercícios feitos, treino favorito). O ÚLTIMO TREINO reusa o FichaDeck da prévia do Início (bodyRow='sheet', showSheetTag=false — sem a etiqueta FICHA DO DIA). O banner da aba Início abre este modal para o jogador local (LocalPlayerProfileShortcut em App.tsx), não as configurações. O avatar usa PlayerAvatarMedia e os emblemas do banner/grade são badges circulares no estilo do emblema da guilda (`.player-profile__emblem-icon`). Portal + saída animada; números em player-profile-data.ts, CSS em player-profile.css."
+        "purpose": "Perfil do jogador no desenho do Clash Royale com as cores do site: banner do perfil com avatar/nome/tag/nível/troféus/status on-line dentro dele, emblemas sobrepostos, guilda, total de treinos/ofensiva, caminho de troféus (placeholder), emblemas (+ Mostrar coleção), ligas mensais (atual/anterior/melhor), último treino e estatísticas (treinos, horas, exercícios feitos, treino favorito). O ÚLTIMO TREINO reusa o FichaDeck da prévia do Início (bodyRow='sheet', showSheetTag=false — sem a etiqueta FICHA DO DIA). O banner da aba Início abre este modal para o jogador local (LocalPlayerProfileShortcut em App.tsx), não as configurações. O avatar usa PlayerAvatarMedia e os emblemas do banner/grade são badges circulares no estilo do emblema da guilda (`.player-profile__emblem-icon`). Portal + saída animada; números em player-profile-data.ts, CSS em player-profile.css."
       },
       {
         "file": "src-app/src/features/social/player-profile-data.ts",

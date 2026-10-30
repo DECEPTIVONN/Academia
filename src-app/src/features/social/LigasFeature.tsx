@@ -1605,81 +1605,92 @@ export function LigasFeature({
         </div>
 
         <div className="space-y-2.5 max-h-[calc(100vh-420px)] overflow-y-auto pr-1 z-10">
-          {communityTab === 'membros' ? (
-            !myGuild ? (
-              <div className="flex flex-col items-center gap-3 py-8 px-4 text-center rounded-2xl border border-dashed border-slate-700/70">
-                <Shield size={22} className="text-slate-500" />
-                <p className="text-xs font-bold text-slate-400 leading-relaxed">
-                  Você ainda não faz parte de uma guilda. Entre ou crie a sua para ver os membros
-                  do time aqui.
-                </p>
-                <button
-                  onClick={() => {
-                    standaloneSound.playMove();
-                    goSubTab('bate-papo');
-                  }}
-                  className="px-4 py-2 ligas-btn-primary rounded-xl font-black text-[10px] uppercase tracking-wider cursor-pointer active:scale-95"
-                >
-                  Ir para Guilda
-                </button>
-              </div>
-            ) : (
-              sortedMembers.map((item, index) => (
-                <FriendRow
-                  key={item.id}
-                  item={item}
-                  rank={index + 1}
-                  isSelf={isSelfFriend(item)}
-                  onSelect={(selected) => openPlayer(selected, 'membro')}
-                />
-              ))
-            )
-          ) : (
-            <>
-              <section className="soc-friend-group" aria-label="Amigos on-line">
-                <div className="soc-friend-group__head">
-                  <span className="soc-friend-group__title">
-                    <span className="soc-friend-group__pulse" aria-hidden="true" />
-                    Amigos on-line
-                  </span>
-                  <span className="soc-friend-group__count">{onlineFriends.length}</span>
-                </div>
-                {onlineFriends.length > 0 ? (
-                  onlineFriends.map((item) => (
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={communityTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="space-y-2.5"
+            >
+              {communityTab === 'membros' ? (
+                !myGuild ? (
+                  <div className="flex flex-col items-center gap-3 py-8 px-4 text-center rounded-2xl border border-dashed border-slate-700/70">
+                    <Shield size={22} className="text-slate-500" />
+                    <p className="text-xs font-bold text-slate-400 leading-relaxed">
+                      Você ainda não faz parte de uma guilda. Entre ou crie a sua para ver os membros
+                      do time aqui.
+                    </p>
+                    <button
+                      onClick={() => {
+                        standaloneSound.playMove();
+                        goSubTab('bate-papo');
+                      }}
+                      className="px-4 py-2 ligas-btn-primary rounded-xl font-black text-[10px] uppercase tracking-wider cursor-pointer active:scale-95"
+                    >
+                      Ir para Guilda
+                    </button>
+                  </div>
+                ) : (
+                  sortedMembers.map((item, index) => (
                     <FriendRow
-                      key={`online-${item.id}`}
+                      key={item.id}
                       item={item}
-                      rank={0}
+                      rank={index + 1}
                       isSelf={isSelfFriend(item)}
-                      showRank={false}
-                      onSelect={(selected) => openPlayer(selected, 'amigo')}
+                      onSelect={(selected) => openPlayer(selected, 'membro')}
                     />
                   ))
-                ) : (
-                  <p className="soc-friend-group__empty">Nenhum amigo on-line agora.</p>
-                )}
-              </section>
+                )
+              ) : (
+                <>
+                  <section className="soc-friend-group" aria-label="Amigos on-line">
+                    <div className="soc-friend-group__head">
+                      <span className="soc-friend-group__title">
+                        <span className="soc-friend-group__pulse" aria-hidden="true" />
+                        Amigos on-line
+                      </span>
+                      <span className="soc-friend-group__count">{onlineFriends.length}</span>
+                    </div>
+                    {onlineFriends.length > 0 ? (
+                      onlineFriends.map((item) => (
+                        <FriendRow
+                          key={`online-${item.id}`}
+                          item={item}
+                          rank={0}
+                          isSelf={isSelfFriend(item)}
+                          showRank={false}
+                          onSelect={(selected) => openPlayer(selected, 'amigo')}
+                        />
+                      ))
+                    ) : (
+                      <p className="soc-friend-group__empty">Nenhum amigo on-line agora.</p>
+                    )}
+                  </section>
 
-              <section className="soc-friend-group" aria-label="Classificação dos amigos">
-                <div className="soc-friend-group__head">
-                  <span className="soc-friend-group__title">
-                    <Trophy size={12} className="text-amber-400" aria-hidden="true" />
-                    Classificação
-                  </span>
-                  <span className="soc-friend-group__count">{sortedFriends.length}</span>
-                </div>
-                {sortedFriends.map((item, index) => (
-                  <FriendRow
-                    key={item.id}
-                    item={item}
-                    rank={index + 1}
-                    isSelf={isSelfFriend(item)}
-                    onSelect={(selected) => openPlayer(selected, 'amigo')}
-                  />
-                ))}
-              </section>
-            </>
-          )}
+                  <section className="soc-friend-group" aria-label="Classificação dos amigos">
+                    <div className="soc-friend-group__head">
+                      <span className="soc-friend-group__title">
+                        <Trophy size={12} className="text-amber-400" aria-hidden="true" />
+                        Classificação
+                      </span>
+                      <span className="soc-friend-group__count">{sortedFriends.length}</span>
+                    </div>
+                    {sortedFriends.map((item, index) => (
+                      <FriendRow
+                        key={item.id}
+                        item={item}
+                        rank={index + 1}
+                        isSelf={isSelfFriend(item)}
+                        onSelect={(selected) => openPlayer(selected, 'amigo')}
+                      />
+                    ))}
+                  </section>
+                </>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         <div className="flex gap-2.5 mt-2 z-10 shrink-0">

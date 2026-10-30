@@ -13,6 +13,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import QRCode from 'qrcode';
 import {
   CheckIcon,
@@ -110,6 +111,8 @@ export function FriendQrModal({
   const [addedCodes, setAddedCodes] = useState<Set<string>>(addedFriendCodes);
   /* v4.53.0 — anima a saída antes de o pai desmontar o modal. */
   const { closing, requestClose } = useModalExit(onClose);
+  /* v4.56.17 — transição entre "Meu QR Code" e "Buscar jogador". */
+  const reduceMotion = useReducedMotion() ?? false;
 
   /* Gera o QR branco sobre fundo transparente (o verde do cartão aparece). */
   useEffect(() => {
@@ -341,105 +344,124 @@ export function FriendQrModal({
         </div>
 
         <div className="friend-qr__body">
-          {panel === 'qr' ? (
-            <div className="friend-qr__panel friend-qr__panel--qr">
-              <div className="friend-qr__code-frame">
-                <span className="friend-qr__corner friend-qr__corner--tl" aria-hidden="true" />
-                <span className="friend-qr__corner friend-qr__corner--tr" aria-hidden="true" />
-                <span className="friend-qr__corner friend-qr__corner--bl" aria-hidden="true" />
-                <span className="friend-qr__corner friend-qr__corner--br" aria-hidden="true" />
-                <div className="friend-qr__code">
-                  {qrDataUrl ? (
-                    <img src={qrDataUrl} alt={`QR Code de convite de ${name}`} draggable={false} />
-                  ) : (
-                    <div className="friend-qr__placeholder">
-                      {qrError ? 'Não foi possível gerar o QR.' : 'Gerando QR…'}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={panel}
+              className={`friend-qr__panel friend-qr__panel--${panel === 'qr' ? 'qr' : 'search'}`}
+              initial={reduceMotion ? false : { opacity: 0, x: panel === 'qr' ? -14 : 14 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={reduceMotion ? { opacity: 1 } : { opacity: 0, x: panel === 'qr' ? 14 : -14 }}
+              transition={{ duration: reduceMotion ? 0 : 0.18, ease: 'easeOut' }}
+            >
+              {panel === 'qr' ? (
+                <>
+                  <div className="friend-qr__code-frame">
+                    <span className="friend-qr__corner friend-qr__corner--tl" aria-hidden="true" />
+                    <span className="friend-qr__corner friend-qr__corner--tr" aria-hidden="true" />
+                    <span className="friend-qr__corner friend-qr__corner--bl" aria-hidden="true" />
+                    <span className="friend-qr__corner friend-qr__corner--br" aria-hidden="true" />
+                    <div className="friend-qr__code">
+                      {qrDataUrl ? (
+                        <img src={qrDataUrl} alt={`QR Code de convite de ${name}`} draggable={false} />
+                      ) : (
+                        <div className="friend-qr__placeholder">
+                          {qrError ? 'Não foi possível gerar o QR.' : 'Gerando QR…'}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
 
-              <div className="friend-qr__nameplate">
-                <span className="friend-qr__name">{name}</span>
-                <span className="friend-qr__code-label">Código de amigo</span>
-              </div>
+                  <div className="friend-qr__nameplate">
+                    <span className="friend-qr__name">{name}</span>
+                    <span className="friend-qr__code-label">Código de amigo</span>
+                  </div>
 
-              <p className="friend-qr__hint">
-                Quem escanear este código será adicionado imediatamente à sua lista de amigos.
-              </p>
-            </div>
-          ) : (
-            <div className="friend-qr__panel friend-qr__panel--search">
-              <div className="friend-qr__search">
-                <SearchIcon size={16} />
-                <input
-                  id="friend-qr-search"
-                  type="search"
-                  placeholder="Pesquisar por nome, @username ou tag"
-                  value={query}
-                  maxLength={32}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  onChange={(event) => handleQueryChange(event.target.value)}
-                  aria-label="Pesquisar jogador por nome, username ou tag"
-                />
-                {query.length > 0 && (
-                  <button
-                    type="button"
-                    className="friend-qr__search-clear"
-                    onClick={() => handleQueryChange('')}
-                    aria-label="Limpar busca"
-                  >
-                    <XIcon size={14} />
-                  </button>
-                )}
-              </div>
+                  <p className="friend-qr__hint">
+                    Quem escanear este código será adicionado imediatamente à sua lista de amigos.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="friend-qr__search">
+                    <SearchIcon size={16} />
+                    <input
+                      id="friend-qr-search"
+                      type="search"
+                      placeholder="Pesquisar por nome, @username ou tag"
+                      value={query}
+                      maxLength={32}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      onChange={(event) => handleQueryChange(event.target.value)}
+                      aria-label="Pesquisar jogador por nome, username ou tag"
+                    />
+                    {query.length > 0 && (
+                      <button
+                        type="button"
+                        className="friend-qr__search-clear"
+                        onClick={() => handleQueryChange('')}
+                        aria-label="Limpar busca"
+                      >
+                        <XIcon size={14} />
+                      </button>
+                    )}
+                  </div>
 
-              <div className="friend-qr__results" role="list" aria-live="polite">
-                {resultsContent}
-              </div>
-            </div>
-          )}
+                  <div className="friend-qr__results" role="list" aria-live="polite">
+                    {resultsContent}
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {panel === 'qr' && (
-          <div className="friend-qr__footer">
-            <div className="friend-qr__actions">
-              <button
-                type="button"
-                className="friend-qr__action"
-                onClick={handleSendLink}
-                disabled={sending}
-              >
-                {sending ? 'Enviando…' : 'Enviar Link'}
-              </button>
-              <button
-                type="button"
-                className="friend-qr__action"
-                onClick={() => {
-                  standaloneSound.playMove();
-                  requestClose(onScan);
-                }}
-              >
-                Escanear
-              </button>
-            </div>
-
-            {manualLink && (
-              <div className="friend-qr__manual">
-                <label htmlFor="friend-qr-link">Link de convite</label>
-                <input
-                  id="friend-qr-link"
-                  type="text"
-                  readOnly
-                  value={manualLink}
-                  onFocus={(event) => event.currentTarget.select()}
-                />
+        <AnimatePresence initial={false}>
+          {panel === 'qr' && (
+            <motion.div
+              className="friend-qr__footer"
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
+              transition={{ duration: reduceMotion ? 0 : 0.18, ease: 'easeOut' }}
+            >
+              <div className="friend-qr__actions">
+                <button
+                  type="button"
+                  className="friend-qr__action"
+                  onClick={handleSendLink}
+                  disabled={sending}
+                >
+                  {sending ? 'Enviando…' : 'Enviar Link'}
+                </button>
+                <button
+                  type="button"
+                  className="friend-qr__action"
+                  onClick={() => {
+                    standaloneSound.playMove();
+                    requestClose(onScan);
+                  }}
+                >
+                  Escanear
+                </button>
               </div>
-            )}
-          </div>
-        )}
+
+              {manualLink && (
+                <div className="friend-qr__manual">
+                  <label htmlFor="friend-qr-link">Link de convite</label>
+                  <input
+                    id="friend-qr-link"
+                    type="text"
+                    readOnly
+                    value={manualLink}
+                    onFocus={(event) => event.currentTarget.select()}
+                  />
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>,
     document.body,

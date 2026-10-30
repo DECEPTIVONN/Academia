@@ -119,7 +119,6 @@
   padding: 14px 16px 18px;
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5) transparent;
-  animation: cycleViewIn 0.24s ease both;
 }
 
 .cycle-modal__view::-webkit-scrollbar {
@@ -477,17 +476,6 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes cycleViewIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 

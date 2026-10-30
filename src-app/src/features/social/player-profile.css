@@ -161,7 +161,7 @@
   background: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
 }
 
-/* ---------- Banner + emblemas sobrepostos ---------- */
+/* ---------- Banner (identidade dentro) + emblemas sobrepostos ---------- */
 
 .player-profile__header {
   position: relative;
@@ -169,7 +169,11 @@
 
 .player-profile__banner {
   position: relative;
-  height: 126px;
+  display: flex;
+  align-items: flex-end;
+  min-height: 148px;
+  height: auto;
+  padding: 18px 14px 14px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
   overflow: hidden;
@@ -178,8 +182,9 @@
 
 .player-profile__badges {
   position: absolute;
-  bottom: -16px;
+  top: 10px;
   left: 12px;
+  bottom: auto;
   z-index: 2;
   display: flex;
   gap: 6px;
@@ -210,11 +215,14 @@
 /* ---------- Herói: avatar + nome/tag + troféus ---------- */
 
 .player-profile__hero {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  margin-top: 22px;
+  width: 100%;
+  margin-top: 0;
 }
 
 .player-profile__avatar {
@@ -809,7 +817,9 @@
   }
 
   .player-profile__banner {
-    height: 108px;
+    min-height: 136px;
+    height: auto;
+    padding: 16px 11px 12px;
   }
 
   .player-profile__avatar {

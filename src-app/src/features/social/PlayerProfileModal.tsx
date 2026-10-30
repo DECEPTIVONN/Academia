@@ -1,8 +1,9 @@
 /**
  * PlayerProfileModal.tsx — perfil do jogador no estilo Clash Royale (aba Social)
  *
- * Layout da referência (banner → emblemas → avatar/nome/tag → guilda →
- * treinos/ofensiva → troféus → emblemas → ligas → último treino → estatísticas)
+ * Layout da referência (banner com avatar/nome/tag/nível/troféus/status +
+ * emblemas → guilda → treinos/ofensiva → troféus → emblemas → ligas → último
+ * treino → estatísticas)
  * com as cores do site: painéis escuros glass, acento `--primary` e o banner
  * do próprio perfil (`profile-banner[data-banner]`).
  *
@@ -155,7 +156,29 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
 
         <div className="player-profile__scroll">
           <div className="player-profile__header">
-            <div className="profile-banner player-profile__banner" data-banner={view.banner} />
+            <div className="profile-banner player-profile__banner" data-banner={view.banner}>
+              <div className="player-profile__hero">
+                <Avatar view={view} />
+                <div className="player-profile__ident">
+                  <h2 className="player-profile__name">{view.name}</h2>
+                  <span className="player-profile__tag">{view.tag}</span>
+                  <span className="player-profile__meta">
+                    <FlagIcon flag={view.flag} size={12} />
+                    <span>Nível {view.level}</span>
+                    {view.online && (
+                      <span className="player-profile__online">
+                        <span className="player-profile__online-dot" aria-hidden="true" />
+                        On-line
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <span className="player-profile__trophy-pill">
+                  <Trophy size={16} />
+                  {NUM(view.trophies)}
+                </span>
+              </div>
+            </div>
             {badgeEmblems.length > 0 && (
               <div className="player-profile__badges">
                 {badgeEmblems.map((emblem) => (
@@ -167,28 +190,6 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="player-profile__hero">
-            <Avatar view={view} />
-            <div className="player-profile__ident">
-              <h2 className="player-profile__name">{view.name}</h2>
-              <span className="player-profile__tag">{view.tag}</span>
-              <span className="player-profile__meta">
-                <FlagIcon flag={view.flag} size={12} />
-                <span>Nível {view.level}</span>
-                {view.online && (
-                  <span className="player-profile__online">
-                    <span className="player-profile__online-dot" aria-hidden="true" />
-                    On-line
-                  </span>
-                )}
-              </span>
-            </div>
-            <span className="player-profile__trophy-pill">
-              <Trophy size={16} />
-              {NUM(view.trophies)}
-            </span>
           </div>
 
           {view.clan && (
