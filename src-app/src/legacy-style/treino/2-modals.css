@@ -88,6 +88,45 @@ input[type=number] {
     -moz-appearance: textfield;
 }
 .form-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+
+/* v4.56.15 — checkbox "Esta carga é por lado": o controle nativo fica com
+   fundo branco quando desmarcado. Aqui ele vira um quadrado preto e só recebe
+   o acento do tema quando marcado (id vence `.form-group input`). */
+#inputPorLado {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  background: #000;
+  box-shadow: none;
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+#inputPorLado:checked {
+  background: var(--primary);
+  border-color: var(--primary-light, #c084fc);
+}
+
+#inputPorLado:checked::after {
+  content: '';
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+#inputPorLado:focus-visible {
+  outline: 2px solid var(--primary-light, #c084fc);
+  outline-offset: 2px;
+}
 /* v4.56.14 — linhas fixas do formulário de exercício: nome + grupo em 2
    colunas e séries/reps/carga em 3, inclusive no mobile (antes o @media
    de 600px empilhava tudo em 1 coluna). */

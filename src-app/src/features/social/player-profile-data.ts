@@ -15,7 +15,7 @@
 import { getLevel, getXp, type LocalData } from '@/core/db/queries';
 import type { Exercise, ProfileState } from '@/core/db/schema';
 import type { Guild, GuildMember } from './guild-data';
-import { EMBLEMAS, IDENTITY_EMBLEMS, getProfileStats } from '@/features/profile/profile-data';
+import { EMBLEMAS, getProfileStats } from '@/features/profile/profile-data';
 import { averageLoadKg } from '@/lib/suggested-load';
 import {
   getMonthlyLeagueState,
@@ -42,6 +42,10 @@ export interface PlayerSummaryInput {
   level?: number;
   flag?: FlagKey;
   glyph?: AvatarGlyphKey;
+  /** Foto de perfil real (customization.photo / OAuth), quando houver. */
+  photo?: string;
+  /** Emblema de identidade equipado — vira a imagem de perfil sem foto. */
+  avatarEmblemId?: string;
   online?: boolean;
   /** Horas desde o último acesso (0 = agora). */
   lastSeenHours?: number;
@@ -86,7 +90,7 @@ export interface PlayerProfileView {
   banner: string;
   photo?: string;
   avatarSeed?: string;
-  avatarEmblemUrl?: string;
+  avatarEmblemId?: string;
   avatarFrame?: string | null;
   glyph: AvatarGlyphKey;
   flag: FlagKey;
@@ -124,6 +128,8 @@ export function selfPlayerSummary(
     streak: 0,
     flag: 'BR',
     glyph: 'crown',
+    photo: profileState?.customization?.photo,
+    avatarEmblemId: profileState?.customization?.mainEmblem,
   };
 }
 
@@ -144,6 +150,8 @@ export function memberToPlayer(
     level: member.level,
     flag: member.flag,
     glyph: member.glyph,
+    photo: member.photo,
+    avatarEmblemId: member.avatarEmblemId,
     online: (member.lastSeenHours ?? 0) <= 0,
     lastSeenHours: member.lastSeenHours,
     streak: member.streak,
@@ -297,9 +305,7 @@ export function buildPlayerProfile(
     : Math.max(0, Math.round(input.streak ?? Math.floor(rnd() * 30)));
 
   const catalogSize = data.exercises.length;
-  const centerEmblem = pc?.mainEmblem
-    ? IDENTITY_EMBLEMS.find((emblem) => emblem.id === pc.mainEmblem)
-    : undefined;
+  const avatarEmblemId = input.avatarEmblemId ?? (isSelf ? pc?.mainEmblem : undefined);
 
   let stats: PlayerStatsView;
   let emblems: PlayerEmblemView[];
@@ -395,9 +401,9 @@ export function buildPlayerProfile(
     lastSeenHours: Math.max(0, Math.floor(input.lastSeenHours ?? 0)),
     streak,
     banner: pc?.banner || BANNER_KEYS[seed % BANNER_KEYS.length],
-    photo: pc?.photo,
+    photo: pc?.photo ?? input.photo,
     avatarSeed: pc?.avatarSeed,
-    avatarEmblemUrl: centerEmblem?.url,
+    avatarEmblemId,
     avatarFrame: pc?.avatarFrame ?? null,
     glyph: input.glyph ?? 'crown',
     flag: input.flag ?? 'BR',

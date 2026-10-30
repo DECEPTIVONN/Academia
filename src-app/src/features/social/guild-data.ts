@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { IDENTITY_EMBLEMS } from '@/features/profile/profile-data';
 import type { AvatarGlyphKey, FlagKey } from './ligas-data';
 
 /* ── Tipos ── */
@@ -28,6 +29,10 @@ export interface GuildMember {
   level: number;
   glyph: AvatarGlyphKey;
   flag: FlagKey;
+  /** Foto de perfil real do jogador (customization.photo / OAuth). */
+  photo?: string;
+  /** Emblema de identidade equipado (vira a imagem de perfil sem foto). */
+  avatarEmblemId?: string;
   isSelf?: boolean;
   /** Horas desde o último acesso (0 = agora). Usado no popover do membro. */
   lastSeenHours?: number;
@@ -62,6 +67,8 @@ export interface GuildPlayer {
   level: number;
   glyph: AvatarGlyphKey;
   flag: FlagKey;
+  photo?: string;
+  avatarEmblemId?: string;
 }
 
 export interface GuildFilters {
@@ -322,6 +329,7 @@ function buildSeedMembers(guild: SeedGuild): GuildMember[] {
       level: 3 + ((i * 5) % 17),
       glyph: MEMBER_GLYPHS[(nameIndex + i) % MEMBER_GLYPHS.length],
       flag: MEMBER_FLAGS[(base + i) % MEMBER_FLAGS.length],
+      avatarEmblemId: IDENTITY_EMBLEMS[(base + i) % IDENTITY_EMBLEMS.length]?.id,
       lastSeenHours: i === 0 ? 0 : 1 + ((base + i * 11) % 95),
       streak: 1 + ((base + i * 7) % 30),
     });
@@ -381,6 +389,11 @@ function normalizeGuild(guild: Guild): Guild {
         level: Number.isFinite(m.level) ? Math.max(1, Math.floor(m.level)) : 1,
         glyph: m.glyph || 'crown',
         flag: m.flag || 'BR',
+        photo: typeof m.photo === 'string' && m.photo ? m.photo : undefined,
+        avatarEmblemId:
+          typeof m.avatarEmblemId === 'string' && m.avatarEmblemId
+            ? m.avatarEmblemId
+            : IDENTITY_EMBLEMS[hashString(`${m.id}:${m.name}`) % IDENTITY_EMBLEMS.length]?.id,
         isSelf: m.isSelf === true,
         lastSeenHours: Number.isFinite(m.lastSeenHours)
           ? Math.max(0, Math.floor(m.lastSeenHours as number))
@@ -429,6 +442,8 @@ function selfMember(player: GuildPlayer, role: GuildRole): GuildMember {
     level: player.level,
     glyph: player.glyph,
     flag: player.flag,
+    photo: player.photo,
+    avatarEmblemId: player.avatarEmblemId,
     isSelf: true,
     lastSeenHours: 0,
     streak: 1,
@@ -441,7 +456,13 @@ function syncSelf(state: GuildState, player: GuildPlayer): GuildState | null {
   const guild = state.guilds.find((g) => g.id === state.joinedId);
   const self = guild?.members.find((m) => m.isSelf);
   if (!guild || !self) return null;
-  if (self.name === player.name && self.trophies === player.trophies && self.level === player.level) {
+  if (
+    self.name === player.name &&
+    self.trophies === player.trophies &&
+    self.level === player.level &&
+    self.photo === player.photo &&
+    self.avatarEmblemId === player.avatarEmblemId
+  ) {
     return null;
   }
   return {
@@ -453,7 +474,14 @@ function syncSelf(state: GuildState, player: GuildPlayer): GuildState | null {
             ...g,
             members: g.members.map((m) =>
               m.isSelf
-                ? { ...m, name: player.name, trophies: player.trophies, level: player.level }
+                ? {
+                    ...m,
+                    name: player.name,
+                    trophies: player.trophies,
+                    level: player.level,
+                    photo: player.photo,
+                    avatarEmblemId: player.avatarEmblemId,
+                  }
                 : m,
             ),
           },

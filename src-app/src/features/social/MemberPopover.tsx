@@ -12,7 +12,7 @@ import { Clock, Flame } from 'lucide-react';
 import { showToast } from '@/lib/toast';
 import { FlagIcon } from './ligas-icons';
 import { standaloneSound } from './ligas-data';
-import { GuildEmblem } from './GuildEmblem';
+import { PlayerAvatar } from './PlayerAvatar';
 import { OverlayShell } from './OverlayShell';
 import { PlayerProfileModal } from './PlayerProfileModal';
 import { formatLastSeen, playerTag, type PlayerSummaryInput } from './player-profile-data';
@@ -74,8 +74,10 @@ export function MemberPopover({ player, onClose }: MemberPopoverProps) {
         }
       >
         <div className="guild-profile">
-          <GuildEmblem
-            emblemId={player.clanEmblemId ?? 'prestigio-1'}
+          <PlayerAvatar
+            photo={player.photo}
+            emblemId={player.avatarEmblemId}
+            glyph={player.glyph}
             size={78}
             className="guild-profile__avatar"
           />

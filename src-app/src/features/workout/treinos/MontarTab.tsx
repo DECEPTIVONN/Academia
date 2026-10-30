@@ -768,7 +768,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
                 </span>
               </div>
             </div>
-            <div className="footer-stat-label">CARDIO CONFIGURADO</div>
+            <div className="footer-stat-label">CARDIO</div>
           </div>
         </div>
 

@@ -250,7 +250,7 @@ export function FriendQrModal({
     if (!canSearch) {
       return (
         <p className="friend-qr__empty">
-          Digite ao menos 2 letras do nome ou username do jogador.
+          Digite ao menos 2 letras do nome, @username ou tag do jogador.
         </p>
       );
     }
@@ -313,7 +313,7 @@ export function FriendQrModal({
             Adicionar Amigos
           </h2>
           <p className="friend-qr__subtitle">
-            Compartilhe seu QR Code ou encontre um jogador pelo nome.
+            Compartilhe seu QR Code ou encontre um jogador pelo nome, @username ou tag.
           </p>
         </div>
 
@@ -375,14 +375,14 @@ export function FriendQrModal({
                 <input
                   id="friend-qr-search"
                   type="search"
-                  placeholder="Pesquisar pelo nome do jogador"
+                  placeholder="Pesquisar por nome, @username ou tag"
                   value={query}
                   maxLength={32}
                   autoComplete="off"
                   autoCorrect="off"
                   spellCheck={false}
                   onChange={(event) => handleQueryChange(event.target.value)}
-                  aria-label="Pesquisar jogador pelo nome"
+                  aria-label="Pesquisar jogador por nome, username ou tag"
                 />
                 {query.length > 0 && (
                   <button

@@ -12,6 +12,7 @@
  *   academia-friend:<codigo>|<nome>   (fallback para QR manual/testes)
  */
 
+import { IDENTITY_EMBLEMS } from '@/features/profile/profile-data';
 import type { AvatarGlyphKey, FlagKey, FriendItem } from './ligas-data';
 
 const CODE_KEY = 'academia_friend_code_v1';
@@ -221,6 +222,7 @@ function createFriendItem(invite: FriendInvite): FriendItem {
     avatarGlyph: AVATAR_GLYPHS[hash % AVATAR_GLYPHS.length],
     flag: FLAGS[hash % FLAGS.length],
     level: 1,
+    avatarEmblemId: IDENTITY_EMBLEMS[hash % IDENTITY_EMBLEMS.length]?.id,
     friendCode: invite.code,
     addedAt: Date.now(),
   };
@@ -256,6 +258,9 @@ function sanitizeStoredFriend(value: unknown): FriendItem | null {
     avatarGlyph: glyph,
     flag,
     level: Number.isFinite(raw.level) ? Math.max(1, Math.floor(raw.level as number)) : 1,
+    photo: typeof raw.photo === 'string' && raw.photo ? raw.photo : undefined,
+    avatarEmblemId:
+      typeof raw.avatarEmblemId === 'string' && raw.avatarEmblemId ? raw.avatarEmblemId : undefined,
     friendCode: typeof raw.friendCode === 'string' ? raw.friendCode : undefined,
     addedAt: Number.isFinite(raw.addedAt) ? Math.floor(raw.addedAt as number) : undefined,
   };

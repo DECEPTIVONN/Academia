@@ -19,7 +19,8 @@ import { useProfileState } from '@/features/profile/useProfileState';
 import { useLocalData } from '@/hooks/useLocalData';
 import type { LocalData } from '@/core/db/queries';
 import { GuildEmblem } from './GuildPanel';
-import { AvatarGlyph, DivisionIcon, FlagIcon } from './ligas-icons';
+import { DivisionIcon, FlagIcon } from './ligas-icons';
+import { PlayerAvatarMedia } from './PlayerAvatar';
 import { DIVISION_COLORS } from './ligas-data';
 import {
   buildPlayerProfile,
@@ -47,18 +48,14 @@ function SectionHead({ title }: { title: string }) {
 }
 
 function Avatar({ view }: { view: PlayerProfileView }) {
-  const emblemUrl =
-    view.avatarEmblemUrl ?? (view.isSelf ? undefined : IDENTITY_EMBLEMS[0]?.url);
-
   return (
     <div className="player-profile__avatar" data-frame={view.avatarFrame || ''}>
-      {view.photo ? (
-        <img src={view.photo} alt="" referrerPolicy="no-referrer" />
-      ) : emblemUrl ? (
-        <img src={emblemUrl} alt="" draggable={false} />
-      ) : (
-        <AvatarGlyph glyph={view.glyph} size={34} className="text-white" />
-      )}
+      <PlayerAvatarMedia
+        photo={view.photo}
+        emblemId={view.avatarEmblemId}
+        glyph={view.glyph}
+        size={68}
+      />
     </div>
   );
 }
@@ -163,7 +160,9 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
               <div className="player-profile__badges">
                 {badgeEmblems.map((emblem) => (
                   <span className="player-profile__badge" key={emblem.id} title={emblem.nome}>
-                    {emblem.icon}
+                    <span className="player-profile__emblem-icon" aria-hidden="true">
+                      {emblem.icon}
+                    </span>
                   </span>
                 ))}
               </div>
@@ -233,7 +232,9 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
               {emblemSlots.map((emblem, index) =>
                 emblem ? (
                   <span className="player-profile__emblem" key={`${emblem.id}-${index}`} title={emblem.nome}>
-                    {emblem.icon}
+                    <span className="player-profile__emblem-icon" aria-hidden="true">
+                      {emblem.icon}
+                    </span>
                   </span>
                 ) : (
                   <span

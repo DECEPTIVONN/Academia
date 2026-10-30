@@ -29,11 +29,12 @@ import {
 import { IDENTITY_EMBLEMS } from '@/features/profile/profile-data';
 import { useModalPresence } from '@/hooks/useModalPresence';
 import { showToast } from '@/lib/toast';
-import { AvatarGlyph, FlagIcon } from './ligas-icons';
+import { FlagIcon } from './ligas-icons';
 import { standaloneSound } from './ligas-data';
 import { GuildEmblem } from './GuildEmblem';
 import { MemberPopover } from './MemberPopover';
 import { OverlayShell } from './OverlayShell';
+import { PlayerAvatar } from './PlayerAvatar';
 import { memberToPlayer } from './player-profile-data';
 import {
   canJoinGuild,
@@ -89,9 +90,13 @@ function MemberRow({
   const content = (
     <>
       <span className="guild-member__rank">{rank}</span>
-      <span className="guild-member__avatar">
-        <AvatarGlyph glyph={member.glyph} size={16} />
-      </span>
+      <PlayerAvatar
+        photo={member.photo}
+        emblemId={member.avatarEmblemId}
+        glyph={member.glyph}
+        size={28}
+        className="guild-member__avatar"
+      />
       <span className="guild-member__id">
         <span className="guild-member__name">{member.name}</span>
         <span className="guild-member__meta">

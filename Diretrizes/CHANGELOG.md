@@ -2,6 +2,32 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.15] - 2026-10-30
+
+**Avatares reais no Social, estandartes circulares, busca por tag, cardio simplificado, formulário em linha e heatmap mais alto.**
+
+### Added
+- `src-app/src/features/social/PlayerAvatar.tsx` + `player-avatar.css` — avatar compartilhado dos jogadores com prioridade **foto → emblema de identidade → glifo**, no mesmo círculo escuro do emblema da guilda; usado por `LigasFeature`, `GuildPanel`, `MemberPopover` e `PlayerProfileModal` para que amigos, membros e rankings mostrem a imagem real de cada jogador.
+- `guild-data.ts`, `ligas-data.ts`, `friend-invites.ts` e `player-profile-data.ts` — campos `photo`/`avatarEmblemId` em `GuildMember`, `GuildPlayer`, `FriendItem` e `PlayerSummaryInput`, incluindo seeds, normalização do localStorage e sincronização do jogador local. Sem foto, o membro cai no emblema de identidade determinístico em vez da imagem fixa de prestígio.
+
+### Changed
+- `PlayerProfileModal.tsx` + `player-profile.css` — o avatar do perfil usa `PlayerAvatarMedia`; os emblemas do banner e os 8 slots da grade passam a ser **badges circulares** (`.player-profile__emblem-icon`) com o mesmo fundo radial/sombra interna do emblema da guilda, mantendo o emoji do estandarte como ícone.
+- `legacy-style/treino/8-customizacao.css` — `.emblem-gallery .emblem-gallery__icon` também vira um círculo escuro no padrão dos avatares da guilda.
+- `friend-search.ts` + `FriendQrModal.tsx` — a busca aceita a tag digitada como `@username`/`#username` (prefixo descartado) e continua consultando `username`/`display_name` em `public.profiles`; textos, placeholder e `aria-label` passam a citar nome, @username ou tag.
+- `FichaDeck.tsx` e `MontarTab.tsx` — o rótulo **CARDIO CONFIGURADO** vira **CARDIO** nas prévias de treino (Início e seletor de treino).
+- `ExercicioFormModal.tsx` — **Tipo de Movimento / Foco** e **Descanso (s)** agora dividem a mesma `.form-row--2`; séries/repetições/carga continuam na linha de 3 colunas.
+- `progresso.css` — células do heatmap de séries passam de `1:1,5` para **`1:2`** (mínimo 9px), ganhando altura vertical sem perder a grade anual.
+
+### Fixed
+- `legacy-style/treino/2-modals.css` — o checkbox **“Esta carga é por lado”** deixa o fundo branco nativo: desmarcado fica preto com borda sutil, marcado recebe o acento do tema e um check desenhado em CSS (`#inputPorLado`).
+- `PlayerProfileModal.tsx` — os estandartes/conquistas voltam a renderizar corretamente dentro dos novos badges circulares, sem a caixa quadrada antiga.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros, 72 avisos (linha de base).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK (356 caminhos verificados).
+
 ## [v4.56.14] - 2026-10-29
 
 **Banner do Início abre o perfil, "Último treino" igual à prévia do Início, formulário em linhas, timer animado, Modo Foco por duplo clique com cardio e tabela com colunas alinhadas.**

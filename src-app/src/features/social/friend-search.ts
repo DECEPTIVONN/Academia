@@ -1,9 +1,12 @@
 /**
- * friend-search.ts — busca de jogadores pelo nome (tabela public.profiles).
+ * friend-search.ts — busca de jogadores pelo nome/tag (tabela public.profiles).
  *
  * A lista de amigos do app é local-first, mas o cadastro (username/display_name)
  * fica no Supabase. A busca só é usada para preencher o convite com o `id` da
  * conta; a amizade continua sendo gravada localmente por `acceptFriendInvite`.
+ *
+ * A "tag" do jogador é o `@username`; a busca aceita o prefixo `@`/`#` e procura
+ * tanto no username quanto no display_name.
  */
 
 import { isSupabaseConfigured, supabase } from '@/core/supabase';
@@ -18,11 +21,17 @@ export interface PlayerSearchResult {
 const MAX_QUERY = 32;
 const MIN_QUERY = 2;
 
-/** Remove caracteres que quebram a sintaxe do filtro `.or()` do PostgREST. */
+/**
+ * Remove caracteres que quebram a sintaxe do filtro `.or()` do PostgREST e
+ * aceita a tag digitada no formato do jogo (`@username` / `#username`): o
+ * prefixo é descartado e a busca continua por username/display_name.
+ */
 export function sanitizeSearchQuery(raw: string): string {
   return raw
     .replace(/[%_,()*\\"']/g, ' ')
     .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^[@#]+/, '')
     .trim()
     .slice(0, MAX_QUERY);
 }

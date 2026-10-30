@@ -73,6 +73,7 @@ import { FriendQrModal } from './FriendQrModal';
 import { QrScannerModal } from './QrScannerModal';
 import { GuildEmblem, GuildPanel } from './GuildPanel';
 import { MemberPopover } from './MemberPopover';
+import { PlayerAvatarMedia } from './PlayerAvatar';
 import { getGuild, useGuildState, type GuildPlayer } from './guild-data';
 import { getLevel, getXp } from '@/core/db/queries';
 import { useLocalData } from '@/hooks/useLocalData';
@@ -848,11 +849,12 @@ function FriendRow({
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-slate-950/40 shadow-inner relative overflow-hidden bg-slate-900"
         >
-          {PRESTIGIO_1?.type === 'image' && PRESTIGIO_1.url ? (
-            <img src={PRESTIGIO_1.url} alt={PRESTIGIO_1.nome} className="w-full h-full object-cover" />
-          ) : (
-            <AvatarGlyph glyph={glyph} size={16} className="text-white" />
-          )}
+          <PlayerAvatarMedia
+            photo={item.photo}
+            emblemId={item.avatarEmblemId}
+            glyph={glyph}
+            size={32}
+          />
           {item.online && (
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 border border-slate-950 rounded-full animate-pulse" />
           )}
@@ -1049,8 +1051,16 @@ export function LigasFeature({
       level: playerLevel,
       glyph: 'crown',
       flag: 'BR',
+      photo: profileState?.customization?.photo,
+      avatarEmblemId: profileState?.customization?.mainEmblem,
     }),
-    [displayName, playerTrophies, playerLevel],
+    [
+      displayName,
+      playerTrophies,
+      playerLevel,
+      profileState?.customization?.photo,
+      profileState?.customization?.mainEmblem,
+    ],
   );
   const guildState = useGuildState(guildPlayer);
   const myGuild = getGuild(guildState);
@@ -1085,6 +1095,8 @@ export function LigasFeature({
         avatarGlyph: member.glyph,
         flag: member.flag,
         level: member.level,
+        photo: member.photo,
+        avatarEmblemId: member.avatarEmblemId,
         role: member.role,
         lastSeenHours: member.lastSeenHours,
         streak: member.streak,
@@ -1301,11 +1313,12 @@ export function LigasFeature({
   /* Abre o popover do jogador (último acesso/ofensiva + Ver perfil). */
   const openPlayer = (item: FriendItem, kind: PlayerKind) => {
     standaloneSound.playMove();
+    const self = isSelfFriend(item);
     setSelectedPlayer({
       id: item.id,
       name: item.name,
       kind,
-      isSelf: isSelfFriend(item),
+      isSelf: self,
       role: kind === 'membro' ? item.role : undefined,
       clan: kind === 'membro' ? myGuild?.name ?? item.clan : item.clan,
       clanEmblemId: myGuild?.emblemId,
@@ -1313,6 +1326,12 @@ export function LigasFeature({
       level: item.level,
       flag: item.flag,
       glyph: item.avatarGlyph,
+      /* O jogador local usa a foto/emblema do próprio perfil; os demais
+         mostram a imagem que veio na lista (foto/emblema do cadastro). */
+      photo: self ? profileState?.customization?.photo : item.photo,
+      avatarEmblemId: self
+        ? profileState?.customization?.mainEmblem
+        : item.avatarEmblemId,
       online: item.online,
       lastSeenHours:
         item.lastSeenHours ?? fallbackLastSeenHours(`${item.id}:${item.name}`, item.online),

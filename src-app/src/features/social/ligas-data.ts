@@ -103,6 +103,10 @@ export interface FriendItem {
   avatarGlyph?: AvatarGlyphKey;
   flag?: FlagKey;
   level?: number;
+  /** Foto de perfil real do jogador (customization.photo / OAuth). */
+  photo?: string;
+  /** Emblema de identidade equipado (vira a imagem de perfil sem foto). */
+  avatarEmblemId?: string;
   /** Código permanente do convite (preenchido nos amigos adicionados por QR/link). */
   friendCode?: string;
   /** Timestamp de quando o amigo foi adicionado por QR/link. */
@@ -521,19 +525,19 @@ export const DEFAULT_PROFILE: PlayerProfile = {
 };
 
 export const INITIAL_FRIENDS: FriendItem[] = [
-  { id: '1', name: 'GABRIEL GS', trophies: 12710, clan: null, online: true, avatarColor: 'from-emerald-500 to-teal-700', avatarInitial: 'G', rank: 1, avatarGlyph: 'crown', flag: 'BR', level: 15 },
-  { id: '2', name: 'Basti', trophies: 10851, clan: null, online: false, avatarColor: 'from-blue-500 to-indigo-700', avatarInitial: 'B', rank: 2, avatarGlyph: 'wolf', flag: 'DE', level: 12 },
-  { id: '3', name: 'leventopsalis', trophies: 9185, clan: null, online: true, avatarColor: 'from-amber-500 to-orange-700', avatarInitial: 'L', rank: 3, avatarGlyph: 'frog', flag: 'GB', level: 10 },
-  { id: '4', name: 'jooo_vitalc', trophies: 9177, clan: 'milicas', online: false, avatarColor: 'from-rose-500 to-pink-700', avatarInitial: 'J', rank: 4, avatarGlyph: 'alien', flag: 'BR', level: 9 },
-  { id: '5', name: 'Douvis', trophies: 8601, clan: 'milicas', online: true, avatarColor: 'from-violet-500 to-fuchsia-700', avatarInitial: 'D', rank: 5, avatarGlyph: 'panda', flag: 'CL', level: 8 },
+  { id: '1', name: 'GABRIEL GS', trophies: 12710, clan: null, online: true, avatarColor: 'from-emerald-500 to-teal-700', avatarInitial: 'G', rank: 1, avatarGlyph: 'crown', flag: 'BR', level: 15, avatarEmblemId: 'prestigio-1' },
+  { id: '2', name: 'Basti', trophies: 10851, clan: null, online: false, avatarColor: 'from-blue-500 to-indigo-700', avatarInitial: 'B', rank: 2, avatarGlyph: 'wolf', flag: 'DE', level: 12, avatarEmblemId: 'lobo-alfa' },
+  { id: '3', name: 'leventopsalis', trophies: 9185, clan: null, online: true, avatarColor: 'from-amber-500 to-orange-700', avatarInitial: 'L', rank: 3, avatarGlyph: 'frog', flag: 'GB', level: 10, avatarEmblemId: 'estrela-honra' },
+  { id: '4', name: 'jooo_vitalc', trophies: 9177, clan: 'milicas', online: false, avatarColor: 'from-rose-500 to-pink-700', avatarInitial: 'J', rank: 4, avatarGlyph: 'alien', flag: 'BR', level: 9, avatarEmblemId: 'escudo-aguia' },
+  { id: '5', name: 'Douvis', trophies: 8601, clan: 'milicas', online: true, avatarColor: 'from-violet-500 to-fuchsia-700', avatarInitial: 'D', rank: 5, avatarGlyph: 'panda', flag: 'CL', level: 8, avatarEmblemId: 'prestigio-1' },
 ];
 
 export const INITIAL_MEMBERS: FriendItem[] = [
-  { id: 'm1', name: 'zTetrisGod', trophies: 13400, clan: 'Great Warriors', online: true, avatarColor: 'from-purple-500 to-indigo-700', avatarInitial: 'Z', rank: 1, avatarGlyph: 'alien', flag: 'US', level: 18 },
-  { id: 'm2', name: 'GABRIEL GS', trophies: 12710, clan: 'Great Warriors', online: true, avatarColor: 'from-emerald-500 to-teal-700', avatarInitial: 'G', rank: 2, avatarGlyph: 'crown', flag: 'BR', level: 15 },
-  { id: 'm3', name: 'Basti', trophies: 10851, clan: 'Great Warriors', online: false, avatarColor: 'from-blue-500 to-indigo-700', avatarInitial: 'B', rank: 3, avatarGlyph: 'wolf', flag: 'DE', level: 12 },
-  { id: 'm4', name: 'ClashMaster', trophies: 9420, clan: 'Great Warriors', online: false, avatarColor: 'from-yellow-500 to-amber-700', avatarInitial: 'C', rank: 4, avatarGlyph: 'lion', flag: 'CA', level: 11 },
-  { id: 'm5', name: 'Douvis', trophies: 8601, clan: 'Great Warriors', online: true, avatarColor: 'from-violet-500 to-fuchsia-700', avatarInitial: 'D', rank: 5, avatarGlyph: 'panda', flag: 'CL', level: 8 },
+  { id: 'm1', name: 'zTetrisGod', trophies: 13400, clan: 'Great Warriors', online: true, avatarColor: 'from-purple-500 to-indigo-700', avatarInitial: 'Z', rank: 1, avatarGlyph: 'alien', flag: 'US', level: 18, avatarEmblemId: 'escudo-aguia' },
+  { id: 'm2', name: 'GABRIEL GS', trophies: 12710, clan: 'Great Warriors', online: true, avatarColor: 'from-emerald-500 to-teal-700', avatarInitial: 'G', rank: 2, avatarGlyph: 'crown', flag: 'BR', level: 15, avatarEmblemId: 'prestigio-1' },
+  { id: 'm3', name: 'Basti', trophies: 10851, clan: 'Great Warriors', online: false, avatarColor: 'from-blue-500 to-indigo-700', avatarInitial: 'B', rank: 3, avatarGlyph: 'wolf', flag: 'DE', level: 12, avatarEmblemId: 'lobo-alfa' },
+  { id: 'm4', name: 'ClashMaster', trophies: 9420, clan: 'Great Warriors', online: false, avatarColor: 'from-yellow-500 to-amber-700', avatarInitial: 'C', rank: 4, avatarGlyph: 'lion', flag: 'CA', level: 11, avatarEmblemId: 'estrela-honra' },
+  { id: 'm5', name: 'Douvis', trophies: 8601, clan: 'Great Warriors', online: true, avatarColor: 'from-violet-500 to-fuchsia-700', avatarInitial: 'D', rank: 5, avatarGlyph: 'panda', flag: 'CL', level: 8, avatarEmblemId: 'prestigio-1' },
 ];
 
 export const INITIAL_CLAN_MESSAGES: ClanMessage[] = [

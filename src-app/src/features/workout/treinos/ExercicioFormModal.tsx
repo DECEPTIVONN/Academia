@@ -339,28 +339,44 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="inputTipoMovimento">Tipo de Movimento / Foco</label>
-            <select
-              id="inputTipoMovimento"
-              value={tags.join(' ')}
-              onChange={(e) => {
-                const selected = e.target.value
-                  .split(' ')
-                  .filter((v) => v !== '')
-                  .map((v) => v as ExerciseTag);
-                setTags(selected);
-              }}
-              className="mu-select"
-              required
-            >
-              <option value="" disabled>Selecione o tipo de movimento</option>
-              {TAG_OPTIONS.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
+          {/* v4.56.15 — Tipo de Movimento/Foco + Descanso na MESMA linha. */}
+          <div className="form-row form-row--2">
+            <div className="form-group">
+              <label htmlFor="inputTipoMovimento">Tipo de Movimento / Foco</label>
+              <select
+                id="inputTipoMovimento"
+                value={tags.join(' ')}
+                onChange={(e) => {
+                  const selected = e.target.value
+                    .split(' ')
+                    .filter((v) => v !== '')
+                    .map((v) => v as ExerciseTag);
+                  setTags(selected);
+                }}
+                className="mu-select"
+                required
+              >
+                <option value="" disabled>Selecione o tipo de movimento</option>
+                {TAG_OPTIONS.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="inputDescanso">Descanso (s)</label>
+              <input
+                type="number"
+                id="inputDescanso"
+                min={0}
+                max={300}
+                placeholder="0 = desativado"
+                value={descanso}
+                onChange={(e) => setDescanso(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="form-group" style={{ marginTop: 20, marginBottom: 20 }}>
@@ -381,7 +397,7 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
               <input
                 type="checkbox"
                 id="inputPorLado"
-                style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--primary)' }}
+                style={{ width: 18, height: 18, cursor: 'pointer' }}
                 checked={porLado}
                 onChange={(e) => setPorLado(e.target.checked)}
               />
@@ -391,8 +407,7 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
             </label>
           </div>
 
-          {/* v4.56.14 — Séries, Repetições e Carga na MESMA linha (3 colunas).
-              Descanso saiu para a linha de baixo para não quebrar o trio. */}
+          {/* v4.56.14 — Séries, Repetições e Carga na MESMA linha (3 colunas). */}
           <div className="form-row form-row--3">
             <div className="form-group">
               <label htmlFor="inputSeries">Séries</label>
@@ -415,19 +430,6 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
                 }}
               />
             </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="inputDescanso">Descanso (s)</label>
-            <input
-              type="number"
-              id="inputDescanso"
-              min={0}
-              max={300}
-              placeholder="0 = desativado"
-              value={descanso}
-              onChange={(e) => setDescanso(e.target.value)}
-            />
           </div>
 
           <div className="form-group">

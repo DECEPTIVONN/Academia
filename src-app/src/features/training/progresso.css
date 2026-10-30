@@ -311,11 +311,11 @@
 }
 
 /* Células mais altas: o heatmap ganha presença vertical sem perder a grade
-   de 53 semanas — cada quadrado vira um retângulo 1:1,5. */
+   de 53 semanas — cada quadrado vira um retângulo 1:2. */
 .prog-heat__cell {
   width: 100%;
-  aspect-ratio: 1 / 1.5;
-  min-height: 7px;
+  aspect-ratio: 1 / 2;
+  min-height: 9px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.05);
 }

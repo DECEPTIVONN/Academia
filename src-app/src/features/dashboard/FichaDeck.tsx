@@ -216,7 +216,7 @@ export const FichaDeck: React.FC<FichaDeckProps> = ({
               </span>
             </div>
           </div>
-          <span className="dash-mini-deck__stat-label">CARDIO CONFIGURADO</span>
+          <span className="dash-mini-deck__stat-label">CARDIO</span>
         </div>
       </div>
     </>
