@@ -1,0 +1,291 @@
+/* ============================================================
+   rankings.css — interface de Rankings (menu do Início)
+   ============================================================
+   Mesma linguagem visual da interface de Liga (aba Social), adaptada ao
+   tema do site: painel escuro, abas em pílula com o acento do usuário,
+   banner "Modo Ranqueado" e linhas com posição / avatar / nome / pontuação.
+   Tokens: --primary / --primary-rgb / --primary-light / --primary-dark.
+   ============================================================ */
+
+.rk-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* ── Abas (Jogadores / Clãs / Amigos) ─────────────────────────── */
+
+.rk-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b0b10;
+}
+
+.rk-tab {
+  padding: 9px 6px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.rk-tab:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.rk-tab.is-active {
+  color: #fff;
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--primary-rgb, 139, 92, 246), 0.35),
+    rgba(var(--primary-rgb, 139, 92, 246), 0.16)
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* ── Banner da categoria ──────────────────────────────────────── */
+
+.rk-banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 14px;
+  overflow: hidden;
+  text-align: center;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.4), transparent 70%),
+    linear-gradient(160deg, #241a44 0%, #120c26 60%, #0a0714 100%);
+}
+
+.rk-banner--muted {
+  border-color: rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.08), transparent 70%),
+    linear-gradient(160deg, #1a1a24 0%, #101017 70%);
+}
+
+.rk-banner__icon {
+  color: var(--primary-light, #c084fc);
+}
+
+.rk-banner--muted .rk-banner__icon {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.rk-banner__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rk-banner__title {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.rk-banner__sub {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Lista ────────────────────────────────────────────────────── */
+
+.rk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rk-row {
+  display: grid;
+  grid-template-columns: 28px 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 13px;
+  background: linear-gradient(180deg, #12111c 0%, #0a0a11 100%);
+}
+
+.rk-row.is-self {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.55);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--primary-rgb, 139, 92, 246), 0.28) 0%,
+    rgba(var(--primary-rgb, 139, 92, 246), 0.1) 100%
+  );
+}
+
+.rk-row__rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #1a1926;
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.rk-row__rank.is-first {
+  border-color: #fbbf24;
+  background: linear-gradient(180deg, #fde047, #f59e0b);
+  color: #3b2503;
+}
+
+.rk-row__rank.is-second {
+  border-color: #cbd5e1;
+  background: linear-gradient(180deg, #f1f5f9, #94a3b8);
+  color: #1e293b;
+}
+
+.rk-row__rank.is-third {
+  border-color: #f59e0b;
+  background: linear-gradient(180deg, #fbbf24, #b45309);
+  color: #2a1602;
+}
+
+.rk-row__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0b0b12;
+}
+
+.rk-row__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rk-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rk-row__name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.rk-row__name-text {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rk-row__flag {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.rk-row__you {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: var(--primary-light, #c084fc);
+}
+
+.rk-row__meta {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rk-row__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.rk-row__medal {
+  color: #fbbf24;
+}
+
+/* ── Estado vazio (sem guilda / sem amigos) ───────────────────── */
+
+.rk-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: center;
+}
+
+.rk-empty__icon {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.rk-empty__text {
+  margin: 0;
+  max-width: 30ch;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.6);
+}

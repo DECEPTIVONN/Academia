@@ -37,12 +37,13 @@ import { FichaDeck } from '@/features/dashboard/FichaDeck';
 import { MissionsOverlay } from '@/features/dashboard/MissionsOverlay';
 import { InicioMenuModal } from '@/features/dashboard/InicioMenuModal';
 import { FitIdOverlay } from '@/features/dashboard/FitIdOverlay';
+import { RankingsOverlay } from '@/features/social/RankingsOverlay';
+import { MessagesModal } from '@/features/dashboard/MessagesModal';
 import { NewsOverlay } from '@/features/news/NewsOverlay';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { IDENTITY_EMBLEMS, SPRITESHEET_URL, tituloNome } from '@/features/profile/profile-data';
 
 interface DashboardFeatureProps {
-  onNavigate: (section: string) => void;
   onOpenFicha: (letter: SheetKey) => void;
   onOpenPerfil: () => void;
   /** Hub de configurações do Perfil (usado pelo menu e pelo Fit ID). */
@@ -54,7 +55,6 @@ interface DashboardFeatureProps {
 }
 
 export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
-  onNavigate,
   onOpenFicha,
   onOpenPerfil,
   onOpenSettings,
@@ -72,6 +72,9 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   /* v4.31.1 — menu popup do Início + tela de identidade Fit ID */
   const [menuOpen, setMenuOpen] = useState(false);
   const [fitIdOpen, setFitIdOpen] = useState(false);
+  /* v4.56.19 — Rankings e Mensagens abertos pelo menu do Início. */
+  const [rankingsOpen, setRankingsOpen] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
   /* v4.8.3-navbars: overlays Missões/Notícias controlados pelo App */
   const missionsOpen = overlay === 'missions';
   const newsOpen = overlay === 'news';
@@ -499,11 +502,16 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
       <InicioMenuModal
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-        onOpenMessages={() => onNavigate('social')}
+        onOpenRankings={() => setRankingsOpen(true)}
+        onOpenMessages={() => setMessagesOpen(true)}
         onOpenSettings={onOpenSettings}
         onOpenFitId={() => setFitIdOpen(true)}
         onOpenCycles={() => setCycleModalOpen(true)}
       />
+      {/* v4.56.19 — interface de Rankings (menu do Início) */}
+      <RankingsOverlay open={rankingsOpen} onClose={() => setRankingsOpen(false)} />
+      {/* v4.56.19 — caixa de Mensagens (menu do Início) */}
+      <MessagesModal open={messagesOpen} onClose={() => setMessagesOpen(false)} />
       <FitIdOverlay
         open={fitIdOpen}
         onClose={() => setFitIdOpen(false)}

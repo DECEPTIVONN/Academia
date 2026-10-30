@@ -18,7 +18,8 @@
  *
  * Itens, de cima para baixo: Configurações (hub do Perfil) · Tela cheia
  * (entrar/sair, v4.33.0 — mesmo hook do shell) · Registro de Treinos ·
- * Rankings · Mensagens (aba Social) · Ajuda · Fit ID.
+ * Rankings (interface de ranking) · Mensagens (caixa de mensagens) · Ajuda ·
+ * Fit ID.
  *
  * Portal para document.body: o .section-strip tem transform/will-change e
  * passaria a ser o containing block do position:fixed (mesma causa-raiz dos
@@ -125,7 +126,9 @@ interface MenuItem {
 interface InicioMenuModalProps {
   open: boolean;
   onClose: () => void;
-  /** Aba Social (Mensagens). */
+  /** Interface de Rankings (Jogadores / Clãs / Amigos). */
+  onOpenRankings: () => void;
+  /** Caixa de Mensagens. */
   onOpenMessages: () => void;
   /** Hub de configurações do Perfil. */
   onOpenSettings: () => void;
@@ -138,6 +141,7 @@ interface InicioMenuModalProps {
 export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
   open,
   onClose,
+  onOpenRankings,
   onOpenMessages,
   onOpenSettings,
   onOpenFitId,
@@ -197,20 +201,21 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
 
   if (!mounted) return null;
 
-  /* Rankings / Ajuda ainda não existem: avisam (só no TOQUE — v4.32.0) e
-     fecham. */
+  /* Ajuda ainda não existe: avisa (só no TOQUE — v4.32.0) e fecha. */
   const soon = (label: string) => {
     onClose();
     showToast(`${label} — em breve.`, 'info');
   };
 
-  /* v4.56.16 — "Registro de Treinos" abre o modal de Ciclos de Treino (o mesmo
-     do card CICLO). Espera o fade de saída do menu (MODAL_EXIT_MS) para o
-     overlay do menu não cobrir o modal que tem z-index menor. */
-  const openCycles = () => {
+  /* "Registro de Treinos" abre o modal de Ciclos de Treino (o mesmo do card
+     CICLO). Espera o fade de saída do menu (MODAL_EXIT_MS) para o overlay do
+     menu não cobrir o modal que tem z-index menor. Mesmo padrão para Rankings
+     e Mensagens, que também são overlays de z-index menor. */
+  const openAfterClose = (action: () => void) => {
     onClose();
-    window.setTimeout(onOpenCycles, MODAL_EXIT_MS);
+    window.setTimeout(action, MODAL_EXIT_MS);
   };
+  const openCycles = () => openAfterClose(onOpenCycles);
 
   const groups: MenuItem[][] = [
     [
@@ -235,17 +240,19 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
     ],
     [
       { key: 'registro', label: 'Registro de Treinos', icon: IcoRegistro, action: openCycles },
-      { key: 'rankings', label: 'Rankings', icon: IcoRankings, action: () => soon('Rankings') },
+      {
+        key: 'rankings',
+        label: 'Rankings',
+        icon: IcoRankings,
+        action: () => openAfterClose(onOpenRankings),
+      },
     ],
     [
       {
         key: 'mensagens',
         label: 'Mensagens',
         icon: IcoMensagens,
-        action: () => {
-          onClose();
-          onOpenMessages();
-        },
+        action: () => openAfterClose(onOpenMessages),
       },
     ],
     [{ key: 'ajuda', label: 'Ajuda', icon: IcoAjuda, action: () => soon('Ajuda') }],

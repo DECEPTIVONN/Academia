@@ -1,0 +1,236 @@
+/* ============================================================
+   messages-modal.css — caixa de Mensagens (menu do Início)
+   ============================================================
+   Referência: popup "Mensagens" do jogo (cartões com título, tempo relativo
+   e texto). Aqui no estilo do site: painel escuro #0b0b10 com hairline,
+   acento do tema, ícone por mensagem e ✕ vermelho no cabeçalho.
+   ============================================================ */
+
+.msg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(4, 4, 8, 0.72);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: msgFadeIn 0.18s ease both;
+}
+
+.msg-overlay.is-closing {
+  animation: msgFadeOut 0.2s ease both;
+}
+
+.msg-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(94vw, 420px);
+  max-height: min(86vh, 620px);
+  overflow: hidden;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.32);
+  border-radius: 22px;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(var(--primary-rgb, 139, 92, 246), 0.18), transparent 62%),
+    linear-gradient(180deg, #101019 0%, #08080d 62%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+  animation: msgPanelIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.msg-overlay.is-closing .msg-panel {
+  animation: msgPanelOut 0.2s ease both;
+}
+
+/* ── Cabeçalho ───────────────────────────────────────────────── */
+
+.msg-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px 12px;
+  border-bottom: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.16);
+  background: linear-gradient(180deg, rgba(24, 21, 40, 0.96), rgba(12, 11, 20, 0.9));
+}
+
+.msg-head__spacer {
+  flex: 0 0 36px;
+}
+
+.msg-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.msg-close {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f87171, #dc2626);
+  box-shadow: 0 3px 0 #991b1b;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.msg-close:hover {
+  filter: brightness(1.08);
+}
+
+.msg-close:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+/* ── Lista ───────────────────────────────────────────────────── */
+
+.msg-body {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px;
+}
+
+.msg-card {
+  padding: 11px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid rgba(var(--primary-rgb, 139, 92, 246), 0.7);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #12111c 0%, #0b0b12 100%);
+}
+
+.msg-card--friend {
+  border-left-color: #34d399;
+}
+
+.msg-card--streak {
+  border-left-color: #fb923c;
+}
+
+.msg-card--guild {
+  border-left-color: #fbbf24;
+}
+
+.msg-card--news {
+  border-left-color: var(--primary-light, #c084fc);
+}
+
+.msg-card__top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 5px;
+}
+
+.msg-card__icon {
+  display: inline-flex;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.msg-card__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.msg-card__time {
+  flex: 0 0 auto;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.msg-card__text {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* ── Animações / mobile ──────────────────────────────────────── */
+
+@keyframes msgFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes msgFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes msgPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes msgPanelOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@media (max-width: 360px) {
+  .msg-overlay {
+    padding: 10px;
+  }
+
+  .msg-panel {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msg-overlay,
+  .msg-panel {
+    animation: none;
+  }
+
+  .msg-overlay.is-closing,
+  .msg-overlay.is-closing .msg-panel {
+    animation-duration: 0.01ms;
+  }
+}

@@ -37,6 +37,7 @@ import { FocusModal } from '@/features/workout/FocusModal';
 import { fadeIn, fadeSwap } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
 import { convertSpeedValue, getSpeedUnitLabel, isFocusModeDefault } from '@/lib/app-prefs';
+import './ficha-focus.css';
 
 /* v4.22.0 — o modo "Coleção" (deck) saiu; o 3º slot virou o botão FOCO. */
 type ViewMode = 'table' | 'grid';
@@ -55,11 +56,13 @@ interface FichaFeatureProps {
 
 /* ── Imagem do exercício (onerror → .premium-placeholder, igual ao legado) ── */
 
-const FichaImg: React.FC<{ ex: Exercise; padded?: boolean; draggable?: boolean }> = ({
-  ex,
-  padded,
-  draggable,
-}) => {
+const FichaImg: React.FC<{
+  ex: Exercise;
+  padded?: boolean;
+  draggable?: boolean;
+  /** v4.56.19 — clicar no GIF abre o Modo Foco (tabela e grid). */
+  onActivate?: () => void;
+}> = ({ ex, padded, draggable, onActivate }) => {
   const [failed, setFailed] = useState(false);
   const placeholder = (
     <div className="premium-placeholder">
@@ -77,7 +80,36 @@ const FichaImg: React.FC<{ ex: Exercise; padded?: boolean; draggable?: boolean }
       />
     ) : null;
   const content = img ?? placeholder;
-  return padded ? <div className="img-placeholder">{content}</div> : <>{content}</>;
+
+  /* Clicar no GIF (ou no placeholder) é o gatilho do Modo Foco, tanto na
+     tabela quanto no grid. Para de propagar para não disparar o duplo clique
+     do grid. */
+  const inner = onActivate ? (
+    <span
+      className="ficha-gif-focus"
+      role="button"
+      tabIndex={0}
+      title="Abrir Modo Foco"
+      aria-label={`Abrir Modo Foco — ${ex.name}`}
+      onClick={(event) => {
+        event.stopPropagation();
+        onActivate();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.stopPropagation();
+          onActivate();
+        }
+      }}
+    >
+      {content}
+    </span>
+  ) : (
+    content
+  );
+
+  return padded ? <div className="img-placeholder">{inner}</div> : <>{inner}</>;
 };
 
 /* ── Botão de anotação rápida (btn-note-toggle-table / -deck) ── */
@@ -147,6 +179,8 @@ interface CardProps {
   onToggle: (exId: string) => void;
   onSet: (exId: string, idx: number) => void;
   onNote: (ex: Exercise) => void;
+  /** v4.56.19 — clique no GIF do exercício → Modo Foco. */
+  onFocus: () => void;
 }
 
 const buildSeriesButtons = (
@@ -180,6 +214,7 @@ const FichaTableRow: React.FC<CardProps & { idPrefix: string }> = ({
   onToggle,
   onSet,
   onNote,
+  onFocus,
   idPrefix,
 }) => {
   const cells = buildSeriesButtons(ex, seriesDone, onSet, true);
@@ -212,7 +247,7 @@ const FichaTableRow: React.FC<CardProps & { idPrefix: string }> = ({
         <span className="ex-name">{ex.name}</span>
       </td>
       <td>
-        <FichaImg ex={ex} padded />
+        <FichaImg ex={ex} padded onActivate={onFocus} />
       </td>
       <td>
         <div className="vol-text">
@@ -246,6 +281,7 @@ const FichaCard: React.FC<CardProps & { mode: 'grid' | 'deck' }> = ({
   onToggle,
   onSet,
   onNote,
+  onFocus,
   mode,
 }) => {
   const prefix = mode === 'grid' ? 'chk-grid-' : 'chk-deck-';
@@ -266,7 +302,7 @@ const FichaCard: React.FC<CardProps & { mode: 'grid' | 'deck' }> = ({
     >
       <div className="deck-card-header">{ex.muscleGroup}</div>
       <div className="deck-card-img">
-        <FichaImg ex={ex} draggable={false} />
+        <FichaImg ex={ex} draggable={false} onActivate={onFocus} />
       </div>
       <div className="deck-card-info">
         <div className="deck-card-name">{ex.name}</div>
@@ -711,6 +747,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     onToggle: onToggleCheck,
     onSet: onToggleSet,
     onNote: onEditNote,
+    onFocus: onStartFocus,
   });
 
   const cardioProps: CardioProps = {

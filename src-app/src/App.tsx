@@ -520,6 +520,7 @@ function AppShell() {
         t.closest('.missions-overlay') ||
         t.closest('.friend-qr-overlay') ||
         t.closest('.guild-overlay') ||
+        t.closest('.msg-overlay') ||
         t.closest('.of-root') ||
         t.closest('.bm-root') ||
         t.closest('.cal-ov') ||
@@ -928,7 +929,6 @@ function AppShell() {
 
               {/* DashboardFeature monta o próprio .section-slide[data-section=dashboard] */}
               <DashboardFeature
-                onNavigate={(sec) => navigateSection(sec as SectionType)}
                 onOpenFicha={handleOpenFicha}
                 onOpenPerfil={() => setIsSelfProfileOpen(true)}
                 onOpenSettings={openProfileSettings}

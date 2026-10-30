@@ -2,6 +2,31 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.19] - 2026-10-30
+
+**Rankings e Mensagens no menu do Início, Modo Foco pelo GIF da ficha e confirmação de saída no desenho da referência.**
+
+### Added
+- `src-app/src/features/social/RankingsOverlay.tsx` + `rankings.css` — interface de Rankings aberta pelo item **Rankings** do menu do Início, no desenho da interface de Liga: abas **Jogadores / Clãs / Amigos**, banner "Modo Ranqueado" e linhas com posição (ouro/prata/bronze), avatar, nome, nível/guilda e pontuação. Os filtros **Global/Local** da referência foram ignorados.
+  - **Jogadores**: usuários com as maiores pontuações (placeholders) + o jogador local com o XP real de treinos (`getXp`/`getLevel`), em ordem decrescente.
+  - **Clãs**: ranking dos **membros da guilda** (`getGuild`/`useGuildState`); sem guilda, exibe a mensagem "Você precisa fazer parte de uma guilda para ver o ranking da guilda.".
+  - **Amigos**: ranking dos amigos (`INITIAL_FRIENDS` + adicionados por QR/link) com estado vazio quando não houver nenhum.
+- `src-app/src/features/dashboard/MessagesModal.tsx` + `messages-modal.css` — caixa de **Mensagens** no desenho da referência (título, ✕, cartões com título/tempo relativo/texto), adaptada ao tema do site. Mensagens placeholder de leitura (nada é gravado), Esc e clique no backdrop fecham, `useModalPresence` anima a saída e o scroll do body trava enquanto aberto.
+- `src-app/src/features/workout/ficha-focus.css` — o **GIF do exercício** virou o gatilho do Modo Foco (`.ficha-gif-focus`), com cursor, zoom/brilho no hover, foco visível e z-index acima do gradiente decorativo do card.
+
+### Changed
+- `src-app/src/features/dashboard/InicioMenuModal.tsx` — o item **Rankings** deixou o toast "em breve" e abre `RankingsOverlay`; o item **Mensagens** deixou de navegar para a aba Social e abre `MessagesModal` (novo prop `onOpenRankings`). Ambos esperam o fade de saída do menu (`MODAL_EXIT_MS`), como já acontecia com Registro de Treinos.
+- `src-app/src/features/dashboard/DashboardFeature.tsx` — estados `rankingsOpen`/`messagesOpen` e montagem dos dois overlays; o prop `onNavigate` (sem uso restante) foi removido, junto da passagem em `App.tsx`.
+- `src-app/src/App.tsx` — `.msg-overlay` entrou nas exclusões do detector de swipe.
+- `src-app/src/features/workout/FichaFeature.tsx` — `FichaImg` aceita `onActivate` e o `CardProps` ganhou `onFocus`: clicar no GIF (ou no placeholder) abre o Modo Foco **na tabela e no grid**, com Enter/Espaço no teclado. O duplo clique no grid continua funcionando.
+- `src-app/src/components/ExitConfirmDialog.tsx` — no desenho do diálogo de saída da referência: título "Sair do EVO FIT", pergunta "Quer mesmo sair do EVO FIT?" e ações **Cancelar** (vermelho) / **OK** (azul) nas cores dos botões de perigo e azul da guilda; o texto de apoio saiu.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (avisos de linha de base).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+
 ## [v4.56.18] - 2026-10-30
 
 **Cardio da tabela idêntico ao do grid, duplo clique restaurando o Modo Foco, ícone de saída na cor do usuário e confirmação de saída do app funcionando.**
