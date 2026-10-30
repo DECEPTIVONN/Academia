@@ -2,6 +2,26 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.18] - 2026-10-30
+
+**Cardio da tabela idêntico ao do grid, duplo clique restaurando o Modo Foco, ícone de saída na cor do usuário e confirmação de saída do app funcionando.**
+
+### Changed
+- `src-app/src/features/workout/FichaFeature.tsx` — no modo **tabela** o cardio passou a reutilizar o mesmo `FichaCardioCard` do modo grid, dentro de uma linha `<tr><td colSpan={5}>`; rótulo CARDIO, tipo, velocidade/tempo, checkbox e "CONCLUIR CARDIO" ficam iguais nos dois modos (a linha própria da tabela e os ícones `CardioGlyph`/`GearGlyph` foram removidos).
+- `src-app/src/legacy-style/treino/4-gamificacao.css` — novas regras `.row-aerobico-card` (célula sem fundo/hover para preservar o gradiente e a borda verdes do card) e remoção dos estilos órfãos da antiga linha de cardio da tabela (`.ae-table-*`, `.ae-progress-*`, `.row-num--cardio`, `.img-placeholder--cardio`, `.ae-card-header`, `.ae-icon`, `.ae-label`).
+- `src-app/src/styles/shell.css` — removida a regra antiga que forçava `.ae-table-label/.ae-table-type` inline.
+
+### Fixed
+- `src-app/src/features/workout/FichaFeature.tsx` — o **duplo clique** no grid voltou a abrir o Modo Foco em qualquer área do cartão (imagem, cabeçalho, nome, séries). O primeiro alvo é rastreado por `onClickCapture`; dois alvos diferentes em sequência (ex.: marcar séries 1 e 2 rapidamente) **não** abrem o foco, e nota/check continuam isentos.
+- `src-app/src/App.tsx` — o ícone do modal **"Sair da Ficha?"** deixou de ser o emoji ⏹ e virou um SVG cujo quadrado externo usa `var(--primary)` (a cor escolhida pelo usuário) com o miolo branco; `.confirm-icon` ganhou o glow do tema.
+- `src-app/src/App.tsx` — o **ExitConfirmDialog** agora aparece de fato: o histórico recebe uma entrada-guarda (`exitGuard: true`) no boot, então o botão/gesto de voltar no início do app abre "Sair do app?" em vez de fechar silenciosamente; cancelar recoloca a guarda e confirmar retorna à página anterior.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (avisos de linha de base).
+- `npm run build`: OK.
+- `npm run lint:docs`: OK.
+
 ## [v4.56.17] - 2026-10-30
 
 **Identidade dentro do banner do perfil, transições suaves no Social/Aliança e nos Ciclos de Treino, botão de páginas condicional e correção de checks/cardio no detalhe do ciclo.**

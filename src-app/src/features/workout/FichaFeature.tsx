@@ -36,7 +36,7 @@ import { useShareStore } from '@/features/gamification/share-store';
 import { FocusModal } from '@/features/workout/FocusModal';
 import { fadeIn, fadeSwap } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
-import { convertSpeedValue, formatSpeed, getSpeedUnitLabel, isFocusModeDefault } from '@/lib/app-prefs';
+import { convertSpeedValue, getSpeedUnitLabel, isFocusModeDefault } from '@/lib/app-prefs';
 
 /* v4.22.0 — o modo "Coleção" (deck) saiu; o 3º slot virou o botão FOCO. */
 type ViewMode = 'table' | 'grid';
@@ -382,103 +382,15 @@ const FichaCardioCard: React.FC<CardioProps> = ({
   </div>
 );
 
-/* v4.56.14 — ícones em SVG de traço (guia de ícones do app; emoji é
-   proibido como ícone de UI): ECG para o cardio e engrenagem para o editar. */
-const CardioGlyph: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2.5}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    width={size}
-    height={size}
-  >
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-  </svg>
-);
-
-const GearGlyph: React.FC<{ size?: number }> = ({ size = 14 }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    width={size}
-    height={size}
-  >
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-  </svg>
-);
-
-/* v4.56.14 — linha de cardio com a MESMA grade (5 colunas) das linhas de
-   exercício: nº · cardio/tipo · imagem · volume · check. Antes ela usava
-   `colSpan={2}` + uma coluna extra do selo CONCLUÍDO, o que empurrava o
-   checkbox para fora da coluna do ✓ e desalinhava volume/séries. */
-const FichaCardioRow: React.FC<CardioProps> = ({
-  tipo,
-  vel,
-  tempo,
-  index,
-  checked,
-  aeId,
-  onToggle,
-}) => (
-  <tr
-    className={`row-aerobico stagger-item ${checked ? 'row-done' : ''}`}
-    data-id={aeId}
-    style={{ '--item-index': index } as React.CSSProperties}
-  >
-    <td>
-      <div className="row-num row-num--cardio">
-        <CardioGlyph size={15} />
-      </div>
-    </td>
-    <td>
-      <div className="ae-table-cardio">
-        <span className="ae-table-label">CARDIO</span>
-        <span className="ae-table-type">{tipo}</span>
-      </div>
-    </td>
-    <td>
-      <div className="img-placeholder img-placeholder--cardio" aria-hidden="true">
-        <CardioGlyph size={22} />
-      </div>
-    </td>
-    <td>
-      <div className="ae-table-stats">
-        <div className="ae-t-stat">
-          <span>Vel:</span> <strong>{formatSpeed(vel)}</strong>
-        </div>
-        <div className="ae-t-stat">
-          <span>Tempo:</span> <strong>{tempo || '--'} min</strong>
-        </div>
-      </div>
-      {/* Engrenagem migrou para baixo das estatísticas, no mesmo lugar do
-          botão de nota das linhas de exercício. */}
-      <div className="ae-table-tools">
-        <button
-          type="button"
-          className="btn-note-toggle-table btn-edit-ae-ficha"
-          data-treino={aeId.replace('ae-', '')}
-          title="Editar Cardio"
-        >
-          <GearGlyph />
-        </button>
-      </div>
-    </td>
-    <td>
-      <CheckWrap
-        wrap="check"
-        id={`chk-${aeId}`}
-        exId={aeId}
-        checked={checked}
-        onToggle={onToggle}
-      />
+/* v4.56.18 — no modo TABELA o cardio usa o MESMO componente do modo GRID
+   (`FichaCardioCard`), em uma linha que ocupa todas as colunas. Assim rótulo,
+   tipo, velocidade/tempo, checkbox e "CONCLUIR CARDIO" ficam idênticos aos do
+   card do grid — antes a tabela tinha uma linha própria com outra hierarquia
+   (Vel:/Tempo:, engrenagem e checkbox sem texto). */
+const FichaCardioRow: React.FC<CardioProps> = (props) => (
+  <tr className="row-aerobico-card">
+    <td colSpan={5}>
+      <FichaCardioCard {...props} />
     </td>
   </tr>
 );
@@ -709,14 +621,32 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     setFocusOpen(true);
   };
 
-  /* v4.56.14 — duplo clique num cartão do GRID abre o Modo Foco. Ignora
-     cliques em controles do próprio cartão (séries, check, nota). Os cartões
-     de exercício do grid são `.deck-card`; `.ex-card` é o cartão de cardio. */
+  /* v4.56.18 — duplo clique em QUALQUER área do grid abre o Modo Foco (não
+     só no miolo do cartão). Ignora os controles que mudam estado (check, nota,
+     campos) para não abrir o foco sem querer; os botões de série continuam
+     válidos desde que os DOIS cliques caiam no mesmo alvo — assim marcar
+     séries em sequência rapidamente não abre o foco. */
+  const gridClickTargetRef = useRef<{ target: EventTarget | null; time: number }>({
+    target: null,
+    time: 0,
+  });
+  const onGridClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const now = Date.now();
+    const prev = gridClickTargetRef.current;
+    gridClickTargetRef.current = {
+      /* 600ms acompanha a janela do dblclick nativo: se o primeiro clique
+         ficou mais tempo que isso, este é um clique novo. */
+      target: now - prev.time > 600 ? event.target : prev.target,
+      time: now,
+    };
+  };
   const onGridDoubleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement | null;
     if (!target) return;
-    if (target.closest('button, input, label, textarea, select, a')) return;
-    if (!target.closest('.ex-card, .deck-card')) return;
+    if (target.closest('input, label, textarea, select, a, .btn-note-toggle-deck')) return;
+    const first = gridClickTargetRef.current.target;
+    gridClickTargetRef.current = { target: null, time: 0 };
+    if (first && first !== event.target) return;
     onStartFocus();
   };
 
@@ -1088,6 +1018,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
               id="workoutGrid"
               className="workout-deck-grid"
               style={{ display: showGrid ? 'grid' : 'none' }}
+              onClickCapture={onGridClick}
               onDoubleClick={onGridDoubleClick}
             >
               {exercicios.map((ex, i) => (

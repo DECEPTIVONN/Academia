@@ -442,34 +442,6 @@
     border-color: rgba(34, 197, 94, 0.4);
     box-shadow: 0 12px 40px rgba(34, 197, 94, 0.15);
 }
-.ae-card-header {
-    height: 120px;
-    background: rgba(34, 197, 94, 0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border-bottom: 1px solid rgba(34, 197, 94, 0.1);
-}
-.ae-icon {
-    font-size: 3rem;
-    filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.4));
-    animation: aeRun 2s infinite ease-in-out;
-}
-@keyframes aeRun {
-    0%, 100% { transform: translateX(-5px) rotate(-5deg); }
-    50% { transform: translateX(5px) rotate(5deg); }
-}
-.ae-label {
-    font-size: 0.7rem;
-    font-weight: 900;
-    letter-spacing: 3px;
-    color: var(--gym-green);
-    background: rgba(34, 197, 94, 0.15);
-    padding: 4px 12px;
-    border-radius: 50px;
-}
 /* Linha do cardio no card: "CARDIO" e o nome escolhido continuam na MESMA
    linha e com a MESMA tipografia, um à esquerda e outro à direita, mas dentro
    de um bloco compacto CENTRALIZADO no card (como km e minutos) — sem o
@@ -550,111 +522,18 @@
 }
 
 /* DESIGN AERÓBICO REFINADO - TABELA */
-.row-aerobico {
-    background: rgba(34, 197, 94, 0.03) !important;
+/* v4.56.18 — no modo TABELA o cardio é o MESMO card do grid, dentro de uma
+   linha que ocupa todas as colunas. A célula não pinta fundo nem hover para o
+   card manter o gradiente/borda verdes idênticos aos do grid. */
+.workout-table tbody tr.row-aerobico-card td {
+    padding: 12px;
+    background: transparent;
 }
-/* Linha do cardio na tabela: mesma regra do card — rótulo à esquerda e tipo à
-   direita dentro de um bloco compacto centralizado na célula. */
-.ae-table-cardio {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    width: 100%;
+.workout-table tbody tr.row-aerobico-card:hover td {
+    background: transparent;
+}
+.workout-table tbody tr.row-aerobico-card .ex-card {
     margin: 0;
-}
-/* v4.56.14 — linha de cardio alinhada à grade das linhas de exercício:
-   ícone ECG no lugar do emoji, célula de imagem com o mesmo placeholder e
-   a engrenagem (editar cardio) abaixo das estatísticas, onde fica o botão de
-   nota dos exercícios. */
-.row-num--cardio {
-    background: rgba(34, 197, 94, 0.16) !important;
-    color: var(--gym-green);
-}
-.img-placeholder--cardio {
-    background: rgba(34, 197, 94, 0.1);
-    border-color: rgba(34, 197, 94, 0.3);
-    color: var(--gym-green);
-}
-.ae-table-tools {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 6px;
-}
-.ae-table-tools .btn-edit-ae-ficha {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    justify-content: center;
-}
-.ae-table-label,
-.ae-table-type {
-    font-family: inherit;
-    font-size: 0.95rem;
-    font-weight: 800;
-    line-height: 1.2;
-    letter-spacing: 0;
-    color: #fff;
-    white-space: nowrap;
-}
-.ae-table-label {
-    flex-shrink: 0;
-    text-align: left;
-}
-.ae-table-type {
-    text-align: right;
-}
-.ae-table-stats {
-    display: flex;
-    gap: 20px;
-}
-.ae-t-stat {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-.ae-t-stat span {
-    font-size: 0.7rem;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    margin-right: 4px;
-}
-.ae-t-stat strong {
-    color: var(--gym-green);
-    font-weight: 800;
-}
-.ae-progress-pill {
-    position: relative;
-    height: 28px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 50px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255,255,255,0.05);
-}
-.ae-progress-fill {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    background: var(--gym-green);
-    transition: width 0.5s ease;
-    opacity: 0.2;
-}
-.ae-progress-text {
-    position: relative;
-    z-index: 1;
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-    color: var(--gym-green);
-}
-.row-aerobico.row-done .ae-progress-fill {
-    opacity: 1;
-}
-.row-aerobico.row-done .ae-progress-text {
-    color: #fff;
 }
 
 /* CICLO DE TREINO / XP BAR */

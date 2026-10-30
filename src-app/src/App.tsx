@@ -305,26 +305,40 @@ function AppShell() {
 
   /* Histórico nativo (botão voltar do celular): troca de aba vira entrada
      de histórico; voltar retorna à aba anterior. Sem estado anterior, pede
-     confirmação antes de sair do app. */
+     confirmação antes de sair do app.
+
+     v4.56.18 — o `replaceState` sozinho deixava a entrada inicial com estado,
+     então o popstate nunca via `state === null` e o ExitConfirmDialog não
+     aparecia (no Android o voltar no início simplesmente fechava o app). Agora
+     uma entrada-guarda fica no topo: voltar nela cai na entrada da seção atual
+     e abre o diálogo; ao cancelar, a guarda é recolocada. */
+  const navigateSectionRef = useRef(navigateSection);
   useEffect(() => {
-    window.history.replaceState({ section: activeSectionRef.current }, '');
+    navigateSectionRef.current = navigateSection;
+  }, [navigateSection]);
+
+  const historyInitialized = useRef(false);
+  useEffect(() => {
+    if (!historyInitialized.current) {
+      historyInitialized.current = true;
+      window.history.replaceState({ section: activeSectionRef.current }, '');
+      window.history.pushState({ section: activeSectionRef.current, exitGuard: true }, '');
+    }
     const onPopState = (event: PopStateEvent) => {
-      const sec = (event.state as { section?: string } | null)?.section;
+      const state = event.state as { section?: string; exitGuard?: boolean } | null;
+      const sec = state?.section;
       if (sec && sec !== activeSectionRef.current) {
         skipHistoryPush.current = true;
-        navigateSection(sec as SectionType);
+        navigateSectionRef.current(sec as SectionType);
         skipHistoryPush.current = false;
         return;
       }
-      if (!sec) {
-        if (allowExit.current) return;
-        window.history.pushState({ section: activeSectionRef.current }, '');
-        setExitConfirmOpen(true);
-      }
+      if (allowExit.current) return;
+      setExitConfirmOpen(true);
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [navigateSection]);
+  }, []);
   useEffect(() => {
     const onResize = () => {
       stripX.jump(slideBaseX(SECTIONS_ORDER.indexOf(activeSection)));
@@ -1052,7 +1066,15 @@ function AppShell() {
             aria-hidden={!isEncerrarOpen}
           >
             <div className="modal-confirm">
-              <div className="confirm-icon">⏹</div>
+              {/* v4.56.18 — o antigo emoji ⏹ (laranja/branco do sistema) virou
+                  um SVG: a parte colorida usa a cor escolhida pelo usuário
+                  (`--primary`) e o miolo permanece branco. */}
+              <div className="confirm-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" width="48" height="48" role="presentation">
+                  <rect x="3" y="3" width="42" height="42" rx="11" fill="var(--primary)" />
+                  <rect x="16" y="16" width="16" height="16" rx="2.5" fill="#fff" />
+                </svg>
+              </div>
               <h3>Sair da Ficha?</h3>
               <p>
                 O cronômetro será parado e você voltará para a tela Início. As séries
@@ -1139,10 +1161,20 @@ function AppShell() {
           <AuthModal />
           <ExitConfirmDialog
             open={exitConfirmOpen}
-            onCancel={() => setExitConfirmOpen(false)}
+            onCancel={() => {
+              setExitConfirmOpen(false);
+              /* Recoloca a guarda para o próximo "voltar" continuar pedindo
+                 confirmação em vez de fechar o app. */
+              window.history.pushState(
+                { section: activeSectionRef.current, exitGuard: true },
+                ''
+              );
+            }}
             onConfirm={() => {
               allowExit.current = true;
               setExitConfirmOpen(false);
+              /* A guarda já foi consumida pelo "voltar" que abriu o diálogo;
+                 este passo retorna à página anterior ao app. */
               window.history.back();
             }}
           />
