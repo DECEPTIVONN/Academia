@@ -28,6 +28,27 @@
   animation: modalPanelOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
+/* v4.57.0 — Share Card: o painel não tinha animação de entrada nem de saída
+   (só o fade do overlay legado). Entrada ao montar + recolhimento no closing. */
+.modal-overlay .share-modal-container {
+  animation: sharePanelIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modal-overlay.is-closing .share-modal-container {
+  animation: modalPanelOut 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes sharePanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes modalOverlayOut {
   from {
     opacity: 1;
@@ -50,6 +71,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .modal-overlay.is-closing,
+  .modal-overlay.is-closing .share-modal-container,
+  .modal-overlay .share-modal-container,
   .modal-overlay.is-closing .modal-form,
   .modal-overlay.is-closing .modal-picker,
   .modal-overlay.is-closing .modal-confirm,

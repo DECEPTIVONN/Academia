@@ -33,6 +33,30 @@
   }
 }
 
+/* v4.57.0 — saída ao desbloquear (o componente fica montado por
+   MODAL_EXIT_MS com `.is-closing` antes de sair do DOM). */
+.lock.is-closing {
+  pointer-events: none;
+  animation: lockOut 0.26s ease forwards;
+}
+
+@keyframes lockOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lock.is-closing {
+    animation-duration: 0.01ms;
+  }
+}
+
 .lock__wall {
   position: absolute;
   inset: 0;

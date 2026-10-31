@@ -14,6 +14,7 @@ import { ProgressoFeature } from '@/features/training/ProgressoFeature';
 import { SocialFeature } from '@/features/social/SocialFeature';
 import { SelfPlayerProfileModal } from '@/features/social/PlayerProfileModal';
 import { ConclusaoModal } from '@/features/workout/ConclusaoModal';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { ProfileFeature } from '@/features/profile/ProfileFeature';
 import { applySavedTheme } from '@/features/settings/theme-colors';
 import { BottomNav, type SectionType } from '@/components/BottomNav';
@@ -228,6 +229,9 @@ function AppShell() {
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const allowExit = useRef(false);
   const [isEncerrarOpen, setIsEncerrarOpen] = useState(false);
+  /* v4.57.0 — o modal Encerrar Treino entra com o fadeIn/slideUp legado e
+     agora também SAI animado (`.is-closing` + modal-motion.css). */
+  const encerrarPresence = useModalPresence(isEncerrarOpen);
   const isShareOpen = useShareStore((s) => s.show);
   const isMaestriaUiOpen = useMaestriaUi((s) => s.colecaoOpen || s.maestriaExId !== null);
   const perfilScrollRef = useRef<HTMLDivElement>(null);
@@ -1045,13 +1049,13 @@ function AppShell() {
           <ConclusaoModal open={isConclusaoOpen} onClose={handleConclusaoClose} />
 
           {/* Modal: Encerrar Treino (modais.html L364–374) */}
+          {encerrarPresence.mounted && (
           <div
-            className="modal-overlay"
+            className={`modal-overlay${encerrarPresence.closing ? ' is-closing' : ''}`}
             id="modalEncerrarTreino"
-            style={{ display: isEncerrarOpen ? 'flex' : 'none' }}
             role="dialog"
             aria-modal="true"
-            aria-hidden={!isEncerrarOpen}
+            aria-hidden={encerrarPresence.closing || undefined}
           >
             <div className="modal-confirm">
               {/* v4.56.18 — o antigo emoji ⏹ (laranja/branco do sistema) virou
@@ -1088,6 +1092,7 @@ function AppShell() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Modal: Share Card (modais.html L465–576) — acima dos demais */}
           <ShareModal />

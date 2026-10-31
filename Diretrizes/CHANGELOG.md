@@ -2,6 +2,31 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.57.0] - 2026-10-31
+
+**Auditoria de animações: todo modal/interface que aparecia e desaparecia de uma vez agora tem transição suave de entrada e saída.**
+
+### Added
+- `src-app/src/hooks/useModalPresence.ts` — novo hook **`usePresenceValue(value)`** para modais abertos por DADO (`{renaming && <RenameModal playlist={renaming}/>}`): quando o valor vira nulo, guarda o último valor por `MODAL_EXIT_MS` e devolve `closing`, então o componente continua montado **com os dados** enquanto a animação de saída roda. Segue o mesmo padrão de ajuste de estado durante o render do `useModalPresence` (sem setState síncrono em efeito).
+- `src-app/src/features/music/MusicOverlay.tsx` — componente interno **`MuSheet`** (fade do `.mu-modal` + `muSlideDown` do painel) usado pelas 8 sheets do overlay: excluir música, fixar nas escolhas rápidas, criar playlist, adicionar músicas, embed do Spotify, link da Biblioteca, ações da playlist e renomear.
+
+### Changed
+- `src-app/src/features/search/GlobalSearchOverlay.tsx` + `search.css` — a Busca Geral só tinha entrada (`gsFade`/`gsPop`); agora fecha com `.is-closing` (fade + recolhimento do painel) via `useModalExit`, incluindo ESC, clique no backdrop e o botão de fechar.
+- `src-app/src/features/settings/ColorPickerModal.tsx` + `settings.css` — o Seletor Avançado de Cores também só animava a entrada; o fechamento (X, backdrop, ESC, Cancelar e Aplicar) passa por `requestClose`, com `setFadeOut`/`setSlideOut`.
+- `src-app/src/components/ExitConfirmDialog.tsx` — o diálogo "Sair do EVO FIT" agora usa `useModalPresence` e fecha com a animação `.guild-overlay.is-closing` (mesma casca da guilda) em vez de sumir no mesmo frame.
+- `src-app/src/features/workout/ConclusaoModal.tsx` — o painel `#modalConclusao` era montado/desmontado na hora (`{open && ...}`) enquanto só o backdrop tinha `transition`. Passou a usar `useModalPresence`, então entra com `fadeIn`/`slideUp` e sai com `modalOverlayOut`/`modalPanelOut`.
+- `src-app/src/features/gamification/ShareModal.tsx` + `styles/modal-motion.css` — o Share Card não tinha animação no painel; ganhou entrada (`sharePanelIn`, fade + subida) e saída (`.share-modal-container` no `.is-closing`), com `useModalPresence` no lugar do `if (!show) return null`.
+- `src-app/src/App.tsx` — `#modalEncerrarTreino` era um `display: none/flex` (aparecia e desaparecia sem transição). Agora é montado por `useModalPresence`, com a saída animada já prevista para `.modal-confirm` no `modal-motion.css`.
+- `src-app/src/features/lock/LockScreen.tsx` + `lock.css` — desbloquear removia a tela de bloqueio de uma vez; agora ela sai com `lockOut` (fade + leve zoom) durante `MODAL_EXIT_MS`.
+- `src-app/src/features/auth/AuthModal.tsx` + `AuthScreen.tsx` + `auth-screen.css` — a tela cheia de login aparecia/desaparecia sem transição: `AuthModal` usa `useModalPresence` e passa `closing` para a `AuthScreen`, que ganhou `authScreenIn`/`authScreenOut`.
+- `src-app/src/features/sync/OfflineSyncBanner.tsx` + `sync.css` — o banner de offline/sincronização só animava a entrada (`syToastIn`); ao zerar as pendências ele desaparecia de imediato. Agora sai com `syToastOut` (`.is-closing` via `useModalPresence`).
+- `src-app/src/features/music/MusicOverlay.tsx` + `music.css` — todas as sheets internas fecham com `.mu-modal.is-closing`; a de renomear e a de ações usam `usePresenceValue` (mantêm a playlist na tela durante a saída), a de link e o embed do Spotify idem para o tipo/item.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (72 avisos de linha de base — nenhum novo; o hook novo não gera o aviso `react(set-state-in-effect)`).
+- `npm run build`: OK — 52 entradas de precache (~7,6 MB), sem erros de tipo.
+
 ## [v4.56.23] - 2026-10-31
 
 **Modo offline do PWA alinhado ao guia: fila reativa com snapshots, push sem rede e sincronização manual.**

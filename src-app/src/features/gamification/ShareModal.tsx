@@ -23,6 +23,7 @@ import {
 import { averageLoadKg, effectiveLoadKg } from '@/lib/suggested-load';
 import { shareNative, canNativeShare } from '@/lib/native-share';
 import type { NativeShareResult } from '@/lib/native-share';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { useShareStore } from './share-store';
 import { useRadarMode } from './useRadarFit';
 import { showToast } from '@/lib/toast';
@@ -55,6 +56,8 @@ function activeCardName(kind: string): 'treino' | 'conquista' | 'radar' {
 export function ShareModal() {
   const { exercises, sheets, history, legacy } = useLocalData();
   const { show, kind, badge, quote, close } = useShareStore();
+  /* v4.57.0 — o modal fica montado durante a animação de saída. */
+  const { mounted, closing } = useModalPresence(show);
   const radarMode = useRadarMode((s) => s.mode);
   const [busy, setBusy] = useState<'share' | 'download' | null>(null);
   const [imageReady, setImageReady] = useState(false);
@@ -285,16 +288,16 @@ export function ShareModal() {
     }
   };
 
-  if (!show) return null;
+  if (!mounted) return null;
 
   return (
     <div
-      className="modal-overlay"
+      className={`modal-overlay${closing ? ' is-closing' : ''}`}
       id="modalShare"
       style={{ display: 'flex' }}
       role="dialog"
       aria-modal="true"
-      aria-hidden={false}
+      aria-hidden={closing || undefined}
     >
       <div className="share-modal-container">
         {/* Card TREINO (modais.html L468–512) */}

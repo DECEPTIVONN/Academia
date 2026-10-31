@@ -556,6 +556,34 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
+/* v4.57.0 — SAÍDA das sheets do MusicOverlay: o componente (MuSheet) fica
+   montado por MODAL_EXIT_MS com `.is-closing` antes de sumir do DOM. */
+.mu-modal.is-closing {
+  pointer-events: none;
+  animation: muFadeOut 0.2s ease forwards;
+}
+
+.mu-modal.is-closing .mu-modal__panel {
+  animation: muSlideDown 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes muFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes muSlideDown {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(24px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mu-modal.is-closing,
+  .mu-modal.is-closing .mu-modal__panel {
+    animation-duration: 0.01ms;
+  }
+}
+
 .mu-modal__title { margin: 0; font-size: 1.05rem; font-weight: 800; }
 .mu-modal__label { font-size: 0.7rem; font-weight: 800; letter-spacing: 1.2px; color: #8a8a9c; text-transform: uppercase; }
 .mu-modal__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }

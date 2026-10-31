@@ -299,7 +299,7 @@ function LegalModal({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: () 
 
 /* ── Tela principal ── */
 
-export function AuthScreen() {
+export function AuthScreen({ closing }: { closing?: boolean } = {}) {
   const { user, signIn, signUp, signInWithGoogle, resetPassword, signInAsTest } = useAuth();
   const close = useAuthModalStore((s) => s.closeModal);
 
@@ -574,7 +574,10 @@ export function AuthScreen() {
   );
 
   return (
-    <div className="fixed inset-0 z-[1150] w-full h-full flex flex-col bg-black overflow-y-auto no-scrollbar select-none text-white">
+    <div
+      className={`auth-screen fixed inset-0 z-[1150] w-full h-full flex flex-col bg-black overflow-y-auto no-scrollbar select-none text-white${closing ? ' auth-screen--closing' : ''}`}
+      aria-hidden={closing || undefined}
+    >
       <CurvedPerspectiveBackground />
 
       <div className="relative z-10 w-full flex-1 flex flex-col justify-between px-6 py-10 max-w-lg mx-auto">

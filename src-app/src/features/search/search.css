@@ -37,6 +37,37 @@
   animation: gsPop 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* v4.57.0 — saída animada (o componente fica montado por MODAL_EXIT_MS e
+   recebe `.is-closing` antes do onClose do pai). */
+.gs-overlay.is-closing {
+  pointer-events: none;
+  animation: gsFadeOut 0.2s ease forwards;
+}
+
+.gs-overlay.is-closing .gs-panel {
+  animation: gsPopOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes gsFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes gsPopOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+}
+
 @keyframes gsFade {
   from {
     opacity: 0;
@@ -249,6 +280,15 @@
   flex-shrink: 0;
   flex-wrap: wrap;
   gap: 8px 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-backdrop,
+  .gs-panel,
+  .gs-overlay.is-closing,
+  .gs-overlay.is-closing .gs-panel {
+    animation-duration: 0.01ms;
+  }
 }
 
 @media (max-width: 640px) {

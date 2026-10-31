@@ -32,9 +32,12 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from 'react';
+import { useModalPresence, usePresenceValue } from '@/hooks/useModalPresence';
 import {
   ArrowLeft,
   Disc3,
@@ -244,6 +247,45 @@ function PlaylistArt({ pl, size = 30 }: { pl: Playlist; size?: number }) {
   return <ListMusic size={size} />;
 }
 
+/**
+ * Bottom-sheet / modal interno do MusicOverlay com SAÍDA animada (v4.57.0).
+ *
+ * O CSS já animava a entrada (`muFadeIn` no overlay + `muSlideUp` no painel);
+ * aqui o componente continua montado por MODAL_EXIT_MS com `.is-closing` antes
+ * de sair do DOM, então o fechamento acompanha a entrada.
+ */
+function MuSheet({
+  open,
+  onClose,
+  variant,
+  style,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  variant?: 'sheet' | 'embed';
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
+  const { mounted, closing } = useModalPresence(open);
+  if (!mounted) return null;
+  return (
+    <div
+      className={`mu-modal${variant ? ` mu-modal--${variant}` : ''}${closing ? ' is-closing' : ''}`}
+      aria-hidden={closing || undefined}
+      style={style}
+      onClick={closing ? undefined : onClose}
+    >
+      <div
+        className={`mu-modal__panel${variant === 'embed' ? ' mu-modal__panel--embed' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* ────────────────────────────── OVERLAY ──────────────────────────────── */
 
 export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
@@ -297,7 +339,12 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
   }, [open, onClose, renaming, menuId, openId]);
 
   const openPlaylist = openId ? (playlists.find((p) => p.id === openId) ?? null) : null;
-  const menuPlaylist = menuId ? (playlists.find((p) => p.id === menuId) ?? null) : null;
+  const menuTarget = menuId ? (playlists.find((p) => p.id === menuId) ?? null) : null;
+  /* v4.57.0 — as sheets continuam montadas (com os dados) durante a saída. */
+  const menuSheet = usePresenceValue(menuTarget);
+  const menuPlaylist = menuSheet.value;
+  const renameSheet = usePresenceValue(renaming);
+  const renameTarget = renameSheet.value;
 
   const goToTab = (t: Tab) => {
     setOpenId(null);
@@ -440,6 +487,7 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
       {menuPlaylist && (
         <PlaylistActionSheet
           playlist={menuPlaylist}
+          closing={menuSheet.closing}
           isWorkout={activePlaylistId === menuPlaylist.id}
           isPinned={pinnedQuick.includes(pinPlaylistKey(menuPlaylist.id))}
           onClose={() => setMenuId(null)}
@@ -468,11 +516,12 @@ export function MusicOverlay({ open, onClose }: MusicOverlayProps) {
       )}
 
       {/* Modal renomear */}
-      {renaming && (
+      {renameTarget && (
         <RenameModal
-          playlist={renaming}
+          playlist={renameTarget}
+          closing={renameSheet.closing}
           onSave={(name) => {
-            renamePlaylist(renaming.id, name);
+            renamePlaylist(renameTarget.id, name);
             setRenaming(null);
           }}
           onClose={() => setRenaming(null)}
@@ -496,6 +545,8 @@ function HomeView({
   const { tracks, externalTracks, playlists, pinnedQuick, togglePin, removeTrack } = useLibraryStore();
   const [picking, setPicking] = useState(false);
   const [longPressTrackId, setLongPressTrackId] = useState<string | null>(null);
+  /* v4.57.0 — saída animada do seletor de fixados. */
+  const pickingSheet = useModalPresence(picking);
 
   /* v4.22.0 — "playlist oculta" da aba Início: tocar qualquer música daqui
      monta a fila com TODAS as faixas visíveis (site + uploads), começando
@@ -674,9 +725,11 @@ function HomeView({
         </ul>
       </section>
 
-      {longPressTrackId && (
-        <div className="mu-modal mu-modal--sheet" onClick={() => setLongPressTrackId(null)}>
-          <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
+      <MuSheet
+        open={Boolean(longPressTrackId)}
+        onClose={() => setLongPressTrackId(null)}
+        variant="sheet"
+      >
             <h4 className="mu-modal__title">Excluir música</h4>
             <p className="mu-modal__label">
               Tem certeza que deseja excluir esta música da sua biblioteca?
@@ -712,11 +765,11 @@ function HomeView({
                 Fechar
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </MuSheet>
 
-      {picking && <PinPickerModal onClose={() => setPicking(false)} />}
+      {pickingSheet.mounted && (
+        <PinPickerModal closing={pickingSheet.closing} onClose={() => setPicking(false)} />
+      )}
     </div>
   );
 }
@@ -774,10 +827,10 @@ function PinButton({
 }
 
 /** Modal de fixar: lista álbuns + faixas com toggle de fixação. */
-function PinPickerModal({ onClose }: { onClose: () => void }) {
+function PinPickerModal({ onClose, closing }: { onClose: () => void; closing?: boolean }) {
   const { playlists, tracks, pinnedQuick, togglePin } = useLibraryStore();
   return (
-    <div className="mu-modal" onClick={onClose}>
+    <div className={`mu-modal${closing ? ' is-closing' : ''}`} onClick={closing ? undefined : onClose}>
       <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
         <h4 className="mu-modal__title">Fixar nas escolhas rápidas</h4>
 
@@ -992,9 +1045,11 @@ function PlaylistsView({
         <Plus size={26} />
       </button>
 
-      {creating && (
-        <div className="mu-modal" onClick={() => setCreating(false)} style={{ paddingBottom: kbInset, alignItems: 'flex-start', paddingTop: '12vh' }}>
-          <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
+      <MuSheet
+        open={creating}
+        onClose={() => setCreating(false)}
+        style={{ paddingBottom: kbInset, alignItems: 'flex-start', paddingTop: '12vh' }}
+      >
             <h4 className="mu-modal__title">Criar Playlist</h4>
             <input
               className="mu-input"
@@ -1028,9 +1083,7 @@ function PlaylistsView({
                 Criar
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </MuSheet>
 
       <button
         type="button"
@@ -1110,6 +1163,9 @@ function PlaylistDetail({
   const [expandingId, setExpandingId] = useState<string | null>(null);
   const [embedItem, setEmbedItem] = useState<PlaylistItem | null>(null);
   const kbInset = useKeyboardInset();
+  /* v4.57.0 — guarda o item durante a animação de saída do embed do Spotify. */
+  const embedSheet = usePresenceValue(embedItem);
+  const spotifySheet = embedSheet.value?.kind === 'spotify' ? embedSheet.value : null;
 
   const finishLink = (result: {
     added: number;
@@ -1408,9 +1464,7 @@ function PlaylistDetail({
         </button>
       </section>
 
-      {adding && (
-        <div className="mu-modal" onClick={() => setAdding(false)} style={{ paddingBottom: kbInset }}>
-          <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
+      <MuSheet open={adding} onClose={() => setAdding(false)} style={{ paddingBottom: kbInset }}>
             <h4 className="mu-modal__title">Adicionar músicas</h4>
 
             {notInPlaylist.length > 0 ? (
@@ -1524,23 +1578,18 @@ function PlaylistDetail({
                 {linkBusy ? 'Buscando faixas…' : 'Adicionar link'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </MuSheet>
 
-      {embedItem && embedItem.kind === 'spotify' && (
-        <div
-          className="mu-modal mu-modal--embed"
-          onClick={() => setEmbedItem(null)}
+      {spotifySheet && (
+        <MuSheet
+          open={Boolean(embedItem && embedItem.kind === 'spotify')}
+          onClose={() => setEmbedItem(null)}
+          variant="embed"
           style={{ paddingBottom: kbInset }}
         >
-          <div
-            className="mu-modal__panel mu-modal__panel--embed"
-            onClick={(e) => e.stopPropagation()}
-          >
             <div className="mu-embed__head">
               <div>
-                <h4 className="mu-modal__title">{embedItem.title}</h4>
+                <h4 className="mu-modal__title">{spotifySheet.title}</h4>
                 <p className="mu-note">Reprodução pelo player oficial do Spotify (embed).</p>
               </div>
               <button
@@ -1553,9 +1602,9 @@ function PlaylistDetail({
               </button>
             </div>
             <iframe
-              title={`Spotify: ${embedItem.title}`}
+              title={`Spotify: ${spotifySheet.title}`}
               className="mu-embed"
-              src={spotifyEmbedUrl(embedKind, embedItem.refId)}
+              src={spotifyEmbedUrl(embedKind, spotifySheet.refId)}
               height={embedKind === 'track' ? 152 : 352}
               frameBorder={0}
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -1566,8 +1615,7 @@ function PlaylistDetail({
                 Fechar
               </button>
             </div>
-          </div>
-        </div>
+        </MuSheet>
       )}
     </div>
   );
@@ -1577,6 +1625,7 @@ function PlaylistDetail({
 
 function PlaylistActionSheet({
   playlist,
+  closing,
   isWorkout,
   isPinned,
   onClose,
@@ -1587,6 +1636,7 @@ function PlaylistActionSheet({
   onDelete,
 }: {
   playlist: Playlist;
+  closing?: boolean;
   isWorkout: boolean;
   isPinned: boolean;
   onClose: () => void;
@@ -1597,7 +1647,10 @@ function PlaylistActionSheet({
   onDelete: () => void;
 }) {
   return (
-    <div className="mu-modal mu-modal--sheet" onClick={onClose}>
+    <div
+      className={`mu-modal mu-modal--sheet${closing ? ' is-closing' : ''}`}
+      onClick={closing ? undefined : onClose}
+    >
       <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
         <h4 className="mu-modal__title">{playlist.name}</h4>
         <span className="mu-modal__label">
@@ -1641,17 +1694,23 @@ function PlaylistActionSheet({
 
 function RenameModal({
   playlist,
+  closing,
   onSave,
   onClose,
 }: {
   playlist: Playlist;
+  closing?: boolean;
   onSave: (name: string) => void;
   onClose: () => void;
 }) {
   const [name, setName] = useState(playlist.name);
   const kbInset = useKeyboardInset();
   return (
-    <div className="mu-modal" onClick={onClose} style={{ paddingBottom: kbInset }}>
+    <div
+      className={`mu-modal${closing ? ' is-closing' : ''}`}
+      onClick={closing ? undefined : onClose}
+      style={{ paddingBottom: kbInset }}
+    >
       <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
         <h4 className="mu-modal__title">Renomear playlist</h4>
         <input
@@ -1689,6 +1748,9 @@ function BibliotecaView({
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [linkModal, setLinkModal] = useState<null | 'youtube' | 'spotify'>(null);
+  /* v4.57.0 — mantém a sheet montada (com o tipo do link) durante a saída. */
+  const linkSheet = usePresenceValue(linkModal);
+  const linkSheetKind = linkSheet.value;
   const [link, setLink] = useState('');
   const [linkName, setLinkName] = useState('');
   const [linkErr, setLinkErr] = useState('');
@@ -1953,11 +2015,10 @@ function BibliotecaView({
         </section>
       )}
 
-      {linkModal && (
-        <div className="mu-modal" onClick={() => setLinkModal(null)} style={{ paddingBottom: kbInset }}>
-          <div className="mu-modal__panel" onClick={(e) => e.stopPropagation()}>
+      {linkSheetKind && (
+        <MuSheet open={Boolean(linkModal)} onClose={() => setLinkModal(null)} style={{ paddingBottom: kbInset }}>
             <h4 className="mu-modal__title">
-              {linkKindIsYoutube(linkModal) ? 'Link do YouTube' : 'Link do Spotify'}
+              {linkKindIsYoutube(linkSheetKind) ? 'Link do YouTube' : 'Link do Spotify'}
             </h4>
             <span className="mu-modal__label">Adicionar em</span>
             <select
@@ -1983,7 +2044,7 @@ function BibliotecaView({
             <input
               className="mu-input"
               placeholder={
-                linkKindIsYoutube(linkModal)
+                linkKindIsYoutube(linkSheetKind)
                   ? 'https://youtube.com/playlist?list=...'
                   : 'https://open.spotify.com/playlist/... (playlist, álbum ou faixa)'
               }
@@ -2018,8 +2079,7 @@ function BibliotecaView({
                 {linkBusy ? 'Buscando faixas…' : 'Adicionar'}
               </button>
             </div>
-          </div>
-        </div>
+        </MuSheet>
       )}
     </div>
   );

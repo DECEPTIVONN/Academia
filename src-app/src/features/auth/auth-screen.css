@@ -1,5 +1,45 @@
 /* auth-screen.css — utilitários da tela de login standalone (v4.15.0-auth) */
 
+/* v4.57.0 — entrada/saída suave da tela cheia de login (o AuthModal mantém o
+   componente montado por MODAL_EXIT_MS com `.auth-screen--closing`). */
+.auth-screen {
+  animation: authScreenIn 0.28s ease;
+}
+
+.auth-screen--closing {
+  pointer-events: none;
+  animation: authScreenOut 0.22s ease forwards;
+}
+
+@keyframes authScreenIn {
+  from {
+    opacity: 0;
+    transform: scale(1.01);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes authScreenOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.01);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-screen,
+  .auth-screen--closing {
+    animation-duration: 0.01ms;
+  }
+}
+
 .no-scrollbar {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge antigo */

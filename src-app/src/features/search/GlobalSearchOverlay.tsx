@@ -20,6 +20,7 @@ import {
   type SearchItem,
 } from './search-index';
 import { useLocalData } from '@/hooks/useLocalData';
+import { useModalExit } from '@/hooks/useModalPresence';
 
 const GROUP_LABELS: Record<string, string> = {
   secoes: 'Seções',
@@ -97,6 +98,9 @@ export const GlobalSearchOverlay: React.FC<GlobalSearchOverlayProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const data = useLocalData();
+  /* v4.57.0 — o App monta o overlay condicionalmente; a saída animada roda
+     antes de avisar o pai (que então desmonta). */
+  const { closing, requestClose } = useModalExit(onClose);
 
   const dynamic = useMemo(() => buildDynamicIndex(data), [data]);
 
@@ -126,7 +130,7 @@ export const GlobalSearchOverlay: React.FC<GlobalSearchOverlayProps> = ({
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       e.preventDefault();
-      onClose();
+      requestClose();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       setActive((i) => (flat.length ? (i + 1) % flat.length : 0));
@@ -146,7 +150,7 @@ export const GlobalSearchOverlay: React.FC<GlobalSearchOverlayProps> = ({
     el?.scrollIntoView({ block: 'nearest' });
   }, [activeIdx, open]);
 
-  if (!open) return null;
+  if (!open && !closing) return null;
 
   /* Offset de cada grupo no flat (setas/Enter) — derivado, sem mutação */
   const groupStart = (i: number) =>
@@ -187,8 +191,15 @@ export const GlobalSearchOverlay: React.FC<GlobalSearchOverlayProps> = ({
   const isEmpty = flat.length === 0;
 
   return (
-    <div className="gs-overlay" id="globalSearchOverlay" role="dialog" aria-modal="true" aria-label="Busca geral">
-      <div className="gs-backdrop" onClick={onClose} />
+    <div
+      className={`gs-overlay${closing ? ' is-closing' : ''}`}
+      id="globalSearchOverlay"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden={closing || undefined}
+      aria-label="Busca geral"
+    >
+      <div className="gs-backdrop" onClick={() => requestClose()} />
       <div className="gs-panel">
         <div className="gs-head">
           <span className="gs-head__icon" aria-hidden="true">

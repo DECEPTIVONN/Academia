@@ -12,6 +12,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useModalExit } from '@/hooks/useModalPresence';
 import { hexToHsv, hsvToHex, normalizeHex } from './theme-colors';
 
 export interface ColorPickerModalProps {
@@ -42,6 +43,8 @@ export function ColorPickerModal({
   const [hsv, setHsv] = useState(start);
   const [hexText, setHexText] = useState(() => normalizeHex(initialHex) ?? initialHex);
   const svRef = useRef<HTMLDivElement>(null);
+  /* v4.57.0 — saída animada antes de avisar o pai (que desmonta o modal). */
+  const { closing, requestClose } = useModalExit(onClose);
 
   const hex = hsvToHex(hsv.h, hsv.s, hsv.v);
 
@@ -59,12 +62,12 @@ export function ColorPickerModal({
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        onClose();
+        requestClose();
       }
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [onClose]);
+  }, [requestClose]);
 
   const pickSv = (clientX: number, clientY: number) => {
     const el = svRef.current;
@@ -87,10 +90,11 @@ export function ColorPickerModal({
 
   return createPortal(
     <div
-      className="set-picker-overlay"
+      className={`set-picker-overlay${closing ? ' is-closing' : ''}`}
       role="presentation"
+      aria-hidden={closing || undefined}
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
       <div
@@ -109,7 +113,7 @@ export function ColorPickerModal({
             type="button"
             className="set-icon-btn"
             aria-label="Fechar seletor"
-            onClick={onClose}
+            onClick={() => requestClose()}
           >
             {SvgX}
           </button>
@@ -178,13 +182,13 @@ export function ColorPickerModal({
         </div>
 
         <div className="set-picker__actions">
-          <button type="button" className="set-btn" onClick={onClose}>
+          <button type="button" className="set-btn" onClick={() => requestClose()}>
             Cancelar
           </button>
           <button
             type="button"
             className="set-btn set-btn--primary"
-            onClick={() => onApply(hex)}
+            onClick={() => requestClose(() => onApply(hex))}
           >
             Aplicar
           </button>

@@ -997,6 +997,22 @@
     transform: rotate(360deg);
   }
 }
+/* v4.57.0 — saída suave do banner (o componente fica montado por
+   MODAL_EXIT_MS com `.is-closing` antes de sair do DOM). */
+.sy-offline.is-closing {
+  pointer-events: none;
+  animation: syToastOut 0.22s ease forwards;
+}
+@keyframes syToastOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
 @media (max-width: 640px) {
   .sy-offline {
     bottom: calc(84px + env(safe-area-inset-bottom, 0px));
@@ -1007,7 +1023,8 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sy-offline {
+  .sy-offline,
+  .sy-offline.is-closing {
     animation: none;
   }
   .sy-offline__spin {

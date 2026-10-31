@@ -23,6 +23,7 @@ import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
 import { defaultScreenImage, screenBackgroundStyle } from '@/lib/screen-defaults';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { resolveWallpaper } from './lock-wallpapers';
 import { clearPin, isBiometricEnabled, useLockStore, verifyBiometric, verifyPin } from './lock-store';
 import './lock.css';
@@ -280,14 +281,25 @@ export const LockScreen: React.FC = () => {
     window.location.reload();
   }, []);
 
-  if (!locked) return null;
+  /* v4.57.0 — desbloqueio com fade: a tela continua montada durante a saída
+     (`.lock.is-closing`) em vez de sumir de uma vez. */
+  const { mounted, closing } = useModalPresence(locked);
+
+  if (!mounted) return null;
 
   const nome = (profile?.customization?.nome || '').trim();
   /* Fundo: imagem custom > imagem padrão (sem preset escolhido) > preset. */
   const lockBg = customBg || (!wallExplicit ? defaultScreenImage(portrait) : '');
 
   return (
-    <div className="lock" id="appLockScreen" role="dialog" aria-modal="true" aria-label="App bloqueado">
+    <div
+      className={`lock${closing ? ' is-closing' : ''}`}
+      id="appLockScreen"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden={closing || undefined}
+      aria-label="App bloqueado"
+    >
       <div
         className="lock__wall"
         style={

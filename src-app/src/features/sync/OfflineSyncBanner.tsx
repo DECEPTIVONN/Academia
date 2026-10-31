@@ -15,6 +15,7 @@ import {
   type QueueStatus,
 } from '@/core/sync/offline-queue';
 import { syncNow } from '@/core/sync/sync-manager';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import './sync.css';
 
 const WifiOffIcon = (
@@ -139,7 +140,10 @@ export function OfflineSyncBanner() {
 
   const busy = status.isProcessing || manualSyncing;
   const show = !status.isOnline || status.pendingCount > 0 || busy || reconnected;
-  if (!show) return null;
+  /* v4.57.0 — o banner sai com fade (syToastOut) em vez de desaparecer de uma
+     vez quando as pendências acabam. */
+  const { mounted, closing } = useModalPresence(show);
+  if (!mounted) return null;
 
   const title = !status.isOnline
     ? 'Modo Offline Ativo'
@@ -155,9 +159,10 @@ export function OfflineSyncBanner() {
 
   return (
     <div
-      className={`sy-offline${status.isOnline ? ' sy-offline--online' : ''}`}
+      className={`sy-offline${status.isOnline ? ' sy-offline--online' : ''}${closing ? ' is-closing' : ''}`}
       role="status"
       aria-live="polite"
+      aria-hidden={closing || undefined}
     >
       <div className="sy-offline__icon" aria-hidden="true">
         {status.isOnline ? CloudUploadIcon : WifiOffIcon}

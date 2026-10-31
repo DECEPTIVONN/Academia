@@ -24,6 +24,7 @@ import {
 import { useTodayEntryStore } from '@/store/today-entry-store';
 import { useWorkoutStore } from '@/store/workout-store';
 import { trackMaestriaSessoes } from '@/features/gamification/maestria';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import { useShareStore } from '@/features/gamification/share-store';
 import { averageLoadKg } from '@/lib/suggested-load';
 
@@ -62,6 +63,8 @@ export function ConclusaoModal({ open, onClose, onShare }: ConclusaoModalProps) 
   const entry = useTodayEntryStore((s) => s.entry);
   const [duracaoSec, setDuracaoSec] = useState(0);
   const processedRef = useRef(false);
+  /* v4.57.0 — encerramento com fade (overlay) + recolhimento do painel. */
+  const { mounted, closing } = useModalPresence(open);
 
   const data = useMemo(
     () => ({ exercises, sheets, history, legacy }),
@@ -134,23 +137,17 @@ export function ConclusaoModal({ open, onClose, onShare }: ConclusaoModalProps) 
     })();
   }, [open, data, sheets, legacy]);
 
+  if (!mounted) return null;
+
   return (
     <div
-      className="modal-overlay"
+      className={`modal-overlay${closing ? ' is-closing' : ''}`}
       id="modalConclusao"
-      style={{
-        display: 'flex',
-        opacity: open ? 1 : 0,
-        visibility: open ? 'visible' : 'hidden',
-        pointerEvents: open ? 'auto' : 'none',
-        transition: 'opacity 0.2s ease, visibility 0.2s ease',
-      }}
       role="dialog"
       aria-modal="true"
-      aria-hidden={!open}
+      aria-hidden={closing || undefined}
     >
-      {open && (
-        <div className="modal-conclusao">
+      <div className="modal-conclusao">
           <div className="conclusao-confetti" id="confettiContainer" />
           <div
             className="conclusao-trophy"
@@ -257,7 +254,6 @@ export function ConclusaoModal({ open, onClose, onShare }: ConclusaoModalProps) 
             </button>
           </div>
         </div>
-      )}
     </div>
   );
 }

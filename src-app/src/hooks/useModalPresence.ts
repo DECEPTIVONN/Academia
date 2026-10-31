@@ -48,6 +48,44 @@ export function useModalPresence(open: boolean, duration = MODAL_EXIT_MS) {
   return { mounted, closing };
 }
 
+/**
+ * Presença orientada por VALOR (v4.57.0): para modais cuja abertura é um dado
+ * (`renaming && <RenameModal playlist={renaming}/>`, `{menuPlaylist && ...}`).
+ * Quando o valor vira nulo, guarda o último valor por `duration` e sinaliza
+ * `closing`, para o componente continuar montado (e com os dados!) enquanto a
+ * animação de saída roda.
+ */
+export function usePresenceValue<T>(value: T | null | undefined, duration = MODAL_EXIT_MS) {
+  const current = value ?? null;
+  const [held, setHeld] = useState<T | null>(current);
+  const [closing, setClosing] = useState(false);
+  const [prev, setPrev] = useState<T | null>(current);
+
+  /* Ajuste durante o render (mesmo padrão de `useModalPresence` — evita
+     setState síncrono em efeito): valor novo entra na hora; valor nulo liga
+     `closing` e o efeito abaixo agenda a limpeza. */
+  if (current !== prev) {
+    setPrev(current);
+    if (current) {
+      setHeld(current);
+      setClosing(false);
+    } else if (held !== null) {
+      setClosing(true);
+    }
+  }
+
+  useEffect(() => {
+    if (current || !closing) return undefined;
+    const timer = window.setTimeout(() => {
+      setHeld(null);
+      setClosing(false);
+    }, duration);
+    return () => window.clearTimeout(timer);
+  }, [current, closing, duration]);
+
+  return { value: held, closing };
+}
+
 export function useModalExit(onClose: () => void, duration = MODAL_EXIT_MS) {
   const [closing, setClosing] = useState(false);
   const timerRef = useRef<number | null>(null);

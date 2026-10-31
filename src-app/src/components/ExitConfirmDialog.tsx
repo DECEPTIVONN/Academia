@@ -14,6 +14,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useModalPresence } from '@/hooks/useModalPresence';
 import '@/features/social/guild.css';
 
 export function ExitConfirmDialog({
@@ -37,16 +38,21 @@ export function ExitConfirmDialog({
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onCancel]);
 
-  if (!open) return null;
+  /* v4.57.0 — o diálogo espera a animação de saída (`.is-closing`) antes de
+     sair do DOM; o pai só precisa alternar `open`. */
+  const { mounted, closing } = useModalPresence(open);
+
+  if (!mounted) return null;
 
   return createPortal(
     <div
-      className="guild-overlay guild-overlay--nested guild-overlay--dialog"
+      className={`guild-overlay guild-overlay--nested guild-overlay--dialog${closing ? ' is-closing' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label="Sair do EVO FIT"
+      aria-hidden={closing || undefined}
       style={{ zIndex: 1300 }}
-      onClick={onCancel}
+      onClick={closing ? undefined : onCancel}
     >
       <div className="guild-overlay__panel" onClick={(event) => event.stopPropagation()}>
         <div className="guild-overlay__head">
@@ -70,10 +76,18 @@ export function ExitConfirmDialog({
 
         <div className="guild-overlay__foot">
           <div className="guild-confirm__actions">
-            <button type="button" className="guild-btn guild-btn--danger" onClick={onCancel}>
+            <button
+              type="button"
+              className="guild-btn guild-btn--danger"
+              onClick={onCancel}
+            >
               Cancelar
             </button>
-            <button type="button" className="guild-btn guild-btn--blue" onClick={onConfirm}>
+            <button
+              type="button"
+              className="guild-btn guild-btn--blue"
+              onClick={onConfirm}
+            >
               OK
             </button>
           </div>

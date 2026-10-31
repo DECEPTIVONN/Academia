@@ -1372,6 +1372,44 @@
   }
 }
 
+/* v4.57.0 — saída animada do seletor avançado de cores (`.is-closing` fica
+   ativo durante MODAL_EXIT_MS, antes do onClose do componente pai). */
+.set-picker-overlay.is-closing {
+  pointer-events: none;
+  animation: setFadeOut 0.2s ease forwards;
+}
+
+.set-picker-overlay.is-closing .set-picker {
+  animation: setSlideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes setFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes setSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .set-picker-overlay.is-closing,
+  .set-picker-overlay.is-closing .set-picker {
+    animation-duration: 0.01ms;
+  }
+}
+
 /* ---------- Responsivo ---------- */
 
 @media (max-width: 420px) {
