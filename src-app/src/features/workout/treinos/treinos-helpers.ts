@@ -4,11 +4,13 @@
  * mutações de deck, openAerobicoModal, applyTemplate) + startNewCycle de
  * secao-ficha.js L512–537 sobre as tabelas React (exercises/workoutSheets).
  *
- * Divergência de contrato (documentada no CHANGELOG v4.0.6-phase4):
- *  - `WorkoutSheet.exerciseIds` é string[] COMPACTO (sem nulls). Remoção =
- *    splice (posição do slot é perdida); adicionar = push se < 8; reordenar =
- *    swap entre índices válidos; drop de coleção no slot t = remove+insert.
- *  - O legado mantém `fichas[letra]` com 8 slots (nulls preservam posição).
+ * Contrato de slots (v4.58.0):
+ *  - `WorkoutSheet.exerciseIds` guarda as 8 POSIÇÕES do deck e um slot vazio
+ *    é a string vazia `''` (buraco), então o exercício fica exatamente no slot
+ *    em que foi solto (1..8) em vez de cair no próximo número livre.
+ *  - Quem precisa só da LISTA de exercícios usa `compactIds` (core/db/queries).
+ *  - O legado usava nulls nas 8 posições; até a v4.58.x o array era compacto e
+ *    a posição do slot se perdia na remoção.
  */
 
 import {
@@ -20,7 +22,7 @@ import {
   type WorkoutSheet,
 } from '@/core/db/schema';
 import { emitDbReady, getUserSheets, idb, upsertSheet } from '@/core/db/idb';
-import { SHEET_ORDER, today, type LocalData } from '@/core/db/queries';
+import { compactIds, SHEET_ORDER, today, type LocalData } from '@/core/db/queries';
 import { patchLegacyState } from '@/core/db/legacy-state';
 import { effectiveLoadKg } from '@/lib/suggested-load';
 import { showToast } from '@/lib/toast';
@@ -91,49 +93,102 @@ export async function saveSheetAerobic(
   emitDbReady();
 }
 
-/* ── Deck: regras de slots (compactas) ── */
+/* ── Deck: regras de slots ── */
 
 export const DECK_MAX = 8;
 
-/** Clique no card da coleção (L479–504): adiciona se < 8. */
+/** Valor de um SLOT VAZIO do deck (a posição 1..8 é preservada). */
+export const EMPTY_SLOT = '';
+
+/** Quantos exercícios o deck realmente tem (ignora slots vazios). */
+export function deckCount(ids: string[]): number {
+  return compactIds(ids).length;
+}
+
+/** Remove buracos do fim do array (posições sobrando não precisam existir). */
+function trimSlots(ids: string[]): string[] {
+  const next = [...ids];
+  while (next.length > 0 && !next[next.length - 1]) next.pop();
+  return next;
+}
+
+/**
+ * Insere `exId` na posição `idx`, empurrando os seguintes para a direita SEM
+ * perder exercícios: o que sair da 8ª posição vai para o primeiro slot vazio.
+ */
+function insertAtSlot(ids: string[], idx: number, exId: string): string[] | null {
+  const next = [...ids];
+  while (next.length <= idx) next.push(EMPTY_SLOT);
+  next.splice(idx, 0, exId);
+  if (next.length > DECK_MAX) {
+    const overflow = next.splice(DECK_MAX).filter(Boolean);
+    for (const id of overflow) {
+      const hole = next.findIndex((value) => !value);
+      if (hole < 0) return null;
+      next[hole] = id;
+    }
+  }
+  return next;
+}
+
+/** Clique no card da coleção: ocupa o primeiro slot vazio (ou o fim) se < 8. */
 export function addFromCollection(ids: string[], exId: string): string[] | null {
-  if (ids.length >= DECK_MAX) return null;
   if (ids.includes(exId)) return null;
+  if (deckCount(ids) >= DECK_MAX) return null;
+  const hole = ids.findIndex((value) => !value);
+  if (hole >= 0) {
+    const next = [...ids];
+    next[hole] = exId;
+    return next;
+  }
   return [...ids, exId];
 }
 
-/** Drop da coleção no slot t (L559–576): remove ocorrência e insere em t. */
+/**
+ * Drop da coleção no slot `target` (0–7): o exercício OCUPA o slot solto
+ * (posições anteriores podem ficar vazias), em vez de cair no próximo número
+ * livre. Slot ocupado → insere antes (empurra os seguintes).
+ */
 export function dropCollectionAt(
   ids: string[],
   exId: string,
   target: number
 ): string[] | null {
   const next = ids.filter((i) => i !== exId);
-  if (next.length >= DECK_MAX) return null;
-  const t = Math.max(0, Math.min(target, next.length));
-  next.splice(t, 0, exId);
-  return next;
+  if (deckCount(next) >= DECK_MAX) return null;
+  const t = Math.max(0, Math.min(target, DECK_MAX - 1));
+
+  if (t >= next.length || !next[t]) {
+    const slots = [...next];
+    while (slots.length < t) slots.push(EMPTY_SLOT);
+    if (slots.length === t) slots.push(exId);
+    else slots[t] = exId;
+    return slots;
+  }
+  return insertAtSlot(next, t, exId);
 }
 
-/** Reordenar grid→grid (L379–383): swap source→target. */
+/** Reordenar grid→grid (L379–383): troca source↔target (aceita slots vazios). */
 export function swapSlots(
   ids: string[],
   source: number,
   target: number
 ): string[] | null {
-  if (source < 0 || source >= ids.length || target < 0 || target >= ids.length) {
+  if (source < 0 || source >= DECK_MAX || target < 0 || target >= DECK_MAX) {
     return null;
   }
+  if (source >= ids.length && target >= ids.length) return null;
   const next = [...ids];
+  while (next.length <= Math.max(source, target)) next.push(EMPTY_SLOT);
   const temp = next[target];
   next[target] = next[source];
   next[source] = temp;
-  return next;
+  return trimSlots(next);
 }
 
-/** Remover do deck (L431–448): splice (ver divergência no header). */
+/** Remover do deck (L431–448): o slot fica VAZIO e os demais não se movem. */
 export function removeFromDeck(ids: string[], exId: string): string[] {
-  return ids.filter((i) => i !== exId);
+  return trimSlots(ids.map((id) => (id === exId ? EMPTY_SLOT : id)));
 }
 
 /* ── Exercícios ── */
@@ -146,7 +201,9 @@ export async function deleteExerciseRecord(exId: string): Promise<void> {
     if (sheet.exerciseIds.includes(exId)) {
       await upsertSheet({
         ...sheet,
-        exerciseIds: sheet.exerciseIds.filter((i) => i !== exId),
+        /* v4.58.0 — o slot do exercício apagado fica vazio: as posições dos
+           outros exercícios do deck não mudam. */
+        exerciseIds: removeFromDeck(sheet.exerciseIds, exId),
         updatedAt: new Date().toISOString(),
       });
     }

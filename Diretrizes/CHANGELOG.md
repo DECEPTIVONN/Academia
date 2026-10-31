@@ -2,6 +2,30 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.58.0] - 2026-10-31
+
+**Minha Ficha: coleção com cards do deck, ghost de arraste no desenho do deck e exercício caindo no slot exato (1–8).**
+
+### Added
+- `src-app/src/lib/app-prefs.ts` — nova preferência **`academia_pref_collection_cards`** (`getCollectionCardsMode`/`setCollectionCardsMode`, tipos `CollectionCardsMode = 'padrao' | 'deck'`, com `academia:prefs-changed`).
+- `src-app/src/features/workout/treinos/cards.tsx` — `DeckGhostCard`: card do deck no modo grid (grupo muscular + imagem + nome + "Séries: s × r") usado pelo arraste da coleção.
+- `src-app/src/core/db/queries.ts` — `compactIds(ids)`: ids da ficha **sem os slots vazios** do deck.
+
+### Changed
+- `src-app/src/features/workout/treinos/MontarTab.tsx` + `deck-builder.css` — **MINHA COLEÇÃO** ganhou um modo de exibição alternável em Configurações → Preferências do App ("Cartões da Minha coleção"): **Compacto (6 colunas)** ou **Grid do deck (4 colunas, proporção 1/1.35 e "Séries: s × r"**, classe `.collection-grid--deck`).
+- `src-app/src/features/workout/treinos/MontarTab.tsx` — o **ghost do arraste** de um exercício da coleção deixou de ser um clone do card compacto: agora é o `DeckGhostCard` (card do deck no modo grid), com largura medida no slot do deck — **independente** do modo escolhido para a coleção — montado por `createPortal` e posicionado direto no DOM (rAF, sem re-render por frame). No **desktop** a mesma regra vale para a imagem nativa do arraste: `buildDeckDragImage` monta o card do deck fora da tela e o entrega ao `setDragImage` (no lugar do snapshot do card da coleção). Com o deck em visualização de lista a largura vem da coluna do grid do deck (4 colunas; 2 no mobile).
+- `src-app/src/features/workout/treinos/treinos-helpers.ts` — o deck passou a guardar as **8 posições** (`slot vazio = ''`): `dropCollectionAt` coloca o exercício no **slot solto** (1..8) em vez do próximo número livre (ex.: soltar no slot 5 com 1 e 2 ocupados deixa 3 e 4 vazios); `swapSlots` aceita slot vazio/destino além do fim; `addFromCollection` (toque) ocupa o primeiro slot vazio; `removeFromDeck` deixa o slot **vazio sem mover os outros** e descarta buracos no fim — inclusive ao excluir o exercício (`deleteExerciseRecord`). Novos `deckCount`/`EMPTY_SLOT`.
+- `src-app/src/App.tsx` + `src-app/src/features/workout/FocusModal.tsx` — a checagem de conclusão ao **encerrar o treino** e o snapshot/navegação do **Modo Foco** passam por `compactIds`: slots vazios do deck não contam nem viram etapa.
+- `src-app/src/core/db/queries.ts` + `SheetSelectorModal` + `ProgressoFeature` + `FichaFeature` + `search-index` + `LigasFeature` — contagens e “ficha tem conteúdo” passam por `compactIds`, e `applyFichaCompletion` ignora slots vazios (sem isso o treino nunca fecharia); copiar ficha da guilda também compacta.
+- `src-app/src/features/workout/FichaFeature.tsx` — `fichaSlotIds` (compacto) alimenta conclusão e modo foco padrão; a tabela/grid seguem com a lista densa.
+- `src-app/src/features/settings/SettingsFeature.tsx` — nova linha "Cartões da Minha coleção" em Preferências do App (ícone de grade, opções Compacto/Grid do deck) + descrição/keywords do tile atualizadas.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (72 avisos de linha de base, nenhum novo).
+- `npm run build`: OK — 52 entradas de precache.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.58.0.
+
 ## [v4.57.0] - 2026-10-31
 
 **Auditoria de animações: todo modal/interface que aparecia e desaparecia de uma vez agora tem transição suave de entrada e saída.**

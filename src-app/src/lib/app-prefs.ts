@@ -17,6 +17,8 @@ export const APP_PREF_KEYS = {
   timerSound: 'academia_pref_timer_sound',
   /** 'true' abre o Modo Foco automaticamente ao iniciar um treino */
   focusDefault: 'academia_pref_focus_default',
+  /** 'padrao' (6 colunas) | 'deck' (cartões do grid do deck) — Minha coleção */
+  collectionCards: 'academia_pref_collection_cards',
   /** placeholders de notificações (salvos, sem push real) */
   notifications: 'academia_pref_notifications_enabled',
   notifyUpdates: 'academia_pref_notify_updates',
@@ -26,6 +28,8 @@ export const APP_PREF_KEYS = {
 export type FirstDayOfWeek = 'monday' | 'sunday';
 export type WeightUnit = 'kg' | 'lb';
 export type DistanceUnit = 'km' | 'mi';
+/** Modo de exibição da MINHA COLEÇÃO (aba Minha Ficha). */
+export type CollectionCardsMode = 'padrao' | 'deck';
 
 const KG_TO_LB = 2.2046226218;
 
@@ -176,6 +180,20 @@ export function isTimerSoundEnabled(): boolean {
 
 export function setTimerSoundEnabled(enabled: boolean): void {
   write(APP_PREF_KEYS.timerSound, String(enabled));
+  notifyChange();
+}
+
+/**
+ * Minha coleção (aba Minha Ficha): 'padrao' mantém a grade compacta de 6
+ * colunas; 'deck' mostra os cards no MESMO desenho/tamanho do grid do deck
+ * (4 colunas, aspect 1/1.35 e "Séries: s × r").
+ */
+export function getCollectionCardsMode(): CollectionCardsMode {
+  return read(APP_PREF_KEYS.collectionCards) === 'deck' ? 'deck' : 'padrao';
+}
+
+export function setCollectionCardsMode(value: CollectionCardsMode): void {
+  write(APP_PREF_KEYS.collectionCards, value);
   notifyChange();
 }
 

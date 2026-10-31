@@ -154,16 +154,22 @@ export const TreinosCollectionCard: React.FC<{
   ex: Exercise;
   already: boolean;
   menuActive?: boolean;
+  /** v4.58.0 — card no desenho do grid do deck (Minha coleção → Modo deck). */
+  deck?: boolean;
+  /** v4.58.0 — arraste: o MontarTab troca a imagem pelo card do deck. */
+  onDragStart?: (e: React.DragEvent, ex: Exercise) => void;
   onEdit: (ex: Exercise) => void;
   onDel: (ex: Exercise) => void;
   onDetails?: (ex: Exercise) => void;
   onCardClick: (ex: Exercise) => void;
-}> = ({ ex, already, menuActive, onEdit, onDel, onDetails, onCardClick }) => (
+}> = ({ ex, already, menuActive, deck, onDragStart, onEdit, onDel, onDetails, onCardClick }) => (
   <div
-    className={`deck-card collection-card card-${ex.muscleGroup}${already ? ' in-deck' : ''}${menuActive ? ' menu-active' : ''}`}
+    className={`deck-card collection-card card-${ex.muscleGroup}${already ? ' in-deck' : ''}${menuActive ? ' menu-active' : ''}${deck ? ' collection-card--deck' : ''}`}
     data-id={ex.id}
     draggable={!already}
-    onDragStart={(e) => e.dataTransfer.setData('text/plain', ex.id)}
+    onDragStart={(e) =>
+      onDragStart ? onDragStart(e, ex) : e.dataTransfer.setData('text/plain', ex.id)
+    }
     onClick={() => onCardClick(ex)}
   >
     <div className="deck-card-header">{ex.muscleGroup}</div>
@@ -182,7 +188,9 @@ export const TreinosCollectionCard: React.FC<{
           width: '100%',
         }}
       >
-        <span className="deck-card-level">{ex.sets} séries</span>
+        <span className="deck-card-level">
+          {deck ? `Séries: ${ex.sets} × ${ex.reps}` : `${ex.sets} séries`}
+        </span>
         {onDetails && (
           <button
             type="button"
@@ -310,6 +318,29 @@ export const TreinosCollectionCard: React.FC<{
           </svg>{' '}
           Excluir
         </button>
+      </div>
+    </div>
+  </div>
+);
+
+/**
+ * Ghost do arraste de um exercício da COLEÇÃO para o deck (v4.58.0).
+ *
+ * Antes o "fantasma" era um clone do card da coleção (grade compacta, texto
+ * "N séries"). Agora ele usa o MESMO desenho do card do deck no modo grid
+ * (grupo muscular + imagem + nome + "Séries: s × r"), independente do modo de
+ * exibição escolhido em Minha coleção.
+ */
+export const DeckGhostCard: React.FC<{ ex: Exercise }> = ({ ex }) => (
+  <div className={`deck-card card-${ex.muscleGroup}`} aria-hidden="true">
+    <div className="deck-card-header">{ex.muscleGroup}</div>
+    <div className="deck-card-img">
+      <ExImg ex={ex} />
+    </div>
+    <div className="deck-card-info">
+      <div className="deck-card-name">{ex.name}</div>
+      <div className="deck-card-level">
+        Séries: {ex.sets} × {ex.reps}
       </div>
     </div>
   </div>

@@ -13,7 +13,7 @@
  * `sheetKey`/`exerciseName` interpretados pelo App na hora do pick.
  */
 
-import type { LocalData } from '@/core/db/queries';
+import { compactIds, type LocalData } from '@/core/db/queries';
 import type { SheetKey } from '@/core/db/schema';
 import type { SectionType } from '@/components/BottomNav';
 
@@ -87,7 +87,7 @@ export function buildDynamicIndex(data: LocalData): SearchItem[] {
     id: `ficha:${s.sheetKey}`,
     kind: 'ficha' as const,
     title: `Ficha ${s.sheetKey}`,
-    desc: `${s.exerciseIds.length} exercício(s)`,
+    desc: `${compactIds(s.exerciseIds).length} exercício(s)`,
     keywords: [`ficha ${s.sheetKey.toLowerCase()}`, `treino ${s.sheetKey.toLowerCase()}`],
     sheetKey: s.sheetKey,
   }));

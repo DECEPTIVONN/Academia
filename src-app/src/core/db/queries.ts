@@ -95,6 +95,17 @@ export function pickExercises(ids: string[], map: Map<string, Exercise>): Exerci
   return ids.map((id) => map.get(id)).filter((e): e is Exercise => Boolean(e));
 }
 
+/**
+ * IDs de uma ficha SEM os slots vazios do deck (v4.58.0).
+ *
+ * `WorkoutSheet.exerciseIds` guarda as 8 posições do deck e um slot vazio é
+ * `''`; para listas e CONTAGENS (nº de exercícios, ficha "tem conteúdo",
+ * conclusão do treino) use sempre esta versão compacta.
+ */
+export function compactIds(ids: string[] | null | undefined): string[] {
+  return (ids ?? []).filter(Boolean);
+}
+
 /** `today()` do legado — data LOCAL (YYYY-MM-DD), não UTC. */
 export function today(): string {
   const d = new Date();
@@ -178,7 +189,7 @@ export function determineNextTreino(data: LocalData): SheetKey {
       for (let i = 1; i <= SHEET_ORDER.length; i++) {
         const next = SHEET_ORDER[(currentIdx + i) % SHEET_ORDER.length];
         const sheet = data.sheets.find((s) => s.sheetKey === next);
-        const temExercicios = (sheet?.exerciseIds?.length ?? 0) > 0;
+        const temExercicios = compactIds(sheet?.exerciseIds).length > 0;
         const temCardio = Boolean(sheet?.aerobic?.tipo);
         if (temExercicios || temCardio) return next;
       }
@@ -454,9 +465,11 @@ export function applyFichaCompletion(
 ): WorkoutHistory {
   const e = cloneEntry(base);
   const aeId = `ae-${letter}`;
+  /* Slots vazios do deck não contam como exercício a concluir. */
+  const ids = compactIds(fichaIds);
   const allDone =
-    fichaIds.length > 0 &&
-    fichaIds.every((id) => e.checks.includes(id)) &&
+    ids.length > 0 &&
+    ids.every((id) => e.checks.includes(id)) &&
     (!hasAerobic || e.checks.includes(aeId));
 
   if (allDone) {

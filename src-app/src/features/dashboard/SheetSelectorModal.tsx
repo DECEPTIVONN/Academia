@@ -14,7 +14,7 @@
 
 import React, { useMemo } from 'react';
 import type { Exercise, SheetKey, WorkoutSheet } from '@/core/db/schema';
-import { SHEET_ORDER, type LegacyRaw } from '@/core/db/queries';
+import { compactIds, SHEET_ORDER, type LegacyRaw } from '@/core/db/queries';
 import { FichaDeck } from '@/features/dashboard/FichaDeck';
 import { useModalPresence } from '@/hooks/useModalPresence';
 
@@ -52,7 +52,7 @@ export const SheetSelectorModal: React.FC<SheetSelectorModalProps> = ({
     () =>
       SHEET_ORDER.filter((letter) => {
         const sheet = sheets.find((s) => s.sheetKey === letter);
-        return (sheet?.exerciseIds?.length ?? 0) > 0 || Boolean(sheet?.aerobic?.tipo);
+        return compactIds(sheet?.exerciseIds).length > 0 || Boolean(sheet?.aerobic?.tipo);
       }),
     [sheets]
   );

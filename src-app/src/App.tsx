@@ -30,7 +30,7 @@ import { PREF_KEYS, readLS, writeLS } from '@/features/profile/profile-data';
 import { useCrossBrowserFullscreen } from '@/lib/fullscreen';
 import { useWorkoutStore } from '@/store/workout-store';
 import { useTodayEntryStore } from '@/store/today-entry-store';
-import { loadLocalData, getTodayTreino, selectSheetEntry } from '@/core/db/queries';
+import { compactIds, loadLocalData, getTodayTreino, selectSheetEntry } from '@/core/db/queries';
 import { bootstrap } from '@/core/db/bootstrap';
 import { ShareModal } from '@/features/gamification/ShareModal';
 /* v4.19.0-music — interface de Músicas e Playlists (overlay estilo YT Music) */
@@ -662,7 +662,8 @@ function AppShell() {
     const data = await loadLocalData();
     const entry = useTodayEntryStore.getState().entry;
     const treino = entry.sheetKey ?? getTodayTreino(data);
-    const fichaIds = data.sheets.find((s) => s.sheetKey === treino)?.exerciseIds ?? [];
+    /* v4.58.0 — slots vazios do deck ('' nas posições 1..8) não são exercícios. */
+    const fichaIds = compactIds(data.sheets.find((s) => s.sheetKey === treino)?.exerciseIds);
     const vaiConcluir =
       fichaIds.length > 0 && fichaIds.every((id) => entry.checks.includes(id));
 

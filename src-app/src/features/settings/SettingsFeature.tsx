@@ -52,16 +52,19 @@ import {
 } from '@/lib/background-music';
 import { WALL_PRESETS } from '@/features/lock/lock-wallpapers';
 import {
+  getCollectionCardsMode,
   getDistanceUnit,
   getFirstDayOfWeek,
   getWeightUnit,
   isFocusModeDefault,
   isTimerSoundEnabled,
+  setCollectionCardsMode,
   setDistanceUnit,
   setFirstDayOfWeek,
   setFocusModeDefault,
   setTimerSoundEnabled,
   setWeightUnit,
+  type CollectionCardsMode,
   type DistanceUnit,
   type FirstDayOfWeek,
   type WeightUnit,
@@ -263,6 +266,15 @@ const SvgRoute = (
     <circle cx="6" cy="19" r="3" />
     <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
     <circle cx="18" cy="5" r="3" />
+  </svg>
+);
+
+const SvgGrid19 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="19" height="19">
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
   </svg>
 );
 
@@ -515,6 +527,10 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [firstDay, setFirstDayState] = useState<FirstDayOfWeek>(() => getFirstDayOfWeek());
   const [weightUnit, setWeightUnitState] = useState<WeightUnit>(() => getWeightUnit());
   const [distanceUnit, setDistanceUnitState] = useState<DistanceUnit>(() => getDistanceUnit());
+  /* v4.58.0 — modo de exibição da MINHA COLEÇÃO (aba Minha Ficha). */
+  const [collectionCards, setCollectionCardsState] = useState<CollectionCardsMode>(() =>
+    getCollectionCardsMode()
+  );
   const [openPref, setOpenPref] = useState<string | null>(null);
   const [language, setLanguage] = useState(() => readLS('academia_lang') || 'pt');
   const [timerSound, setTimerSoundState] = useState(() => isTimerSoundEnabled());
@@ -577,6 +593,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       setFirstDayState(getFirstDayOfWeek());
       setWeightUnitState(getWeightUnit());
       setDistanceUnitState(getDistanceUnit());
+      setCollectionCardsState(getCollectionCardsMode());
       setTimerSoundState(isTimerSoundEnabled());
       setFocusDefaultState(isFocusModeDefault());
       setPrefs((current) => ({
@@ -774,6 +791,17 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     setDistanceUnit(value);
     setDistanceUnitState(value);
     showToast(`Unidade de distância: ${value === 'km' ? 'quilômetros (km)' : 'milhas (mi)'}.`, 'success');
+  };
+
+  const changeCollectionCards = (value: CollectionCardsMode) => {
+    setCollectionCardsMode(value);
+    setCollectionCardsState(value);
+    showToast(
+      value === 'deck'
+        ? 'Minha coleção: cards no estilo do deck.'
+        : 'Minha coleção: grade compacta.',
+      'success'
+    );
   };
 
   const changeLanguage = (value: string) => {
@@ -1091,7 +1119,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     {
       id: 'preferencias',
       title: 'Preferências do App',
-      desc: 'Primeiro dia da semana, unidades de peso e distância, tema, som do temporizador e modo foco',
+      desc: 'Primeiro dia da semana, unidades, cartões da Minha coleção, tema, som do temporizador e modo foco',
       icon: SvgGear,
       badge: `${firstDay === 'monday' ? 'Seg' : 'Dom'} · ${weightUnit} · ${distanceUnit}`,
       keywords: [
@@ -1099,7 +1127,8 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         'segunda', 'domingo', 'unidade', 'medida', 'peso', 'kg', 'lb', 'libras',
         'distancia', 'distância', 'km', 'milhas', 'mi', 'tema', 'idioma',
         'som', 'temporizador', 'timer', 'descanso', 'series', 'séries',
-        'modo foco', 'foco', 'treino',
+        'modo foco', 'foco', 'treino', 'colecao', 'coleção', 'minha ficha',
+        'cards', 'cartoes', 'cartões', 'deck', 'grid', 'grade',
       ],
     },
     {
@@ -2114,6 +2143,60 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                       onClick={() => changeDistanceUnit(option.value)}
                     >
                       {distanceUnit === option.value && SvgCheck}
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+            </div>
+          </section>
+
+          {/* v4.58.0 — exibição da MINHA COLEÇÃO (aba Minha Ficha) */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">MINHA FICHA</div>
+                <h3 className="set-card__title">Coleção de exercícios</h3>
+                <p className="set-card__desc">
+                  Como os cards da coleção aparecem abaixo do deck.
+                </p>
+              </div>
+            </div>
+
+            <div className="set-pref-list">
+              <button
+                type="button"
+                className={`set-pref-row${openPref === 'collection' ? ' is-open' : ''}`}
+                aria-expanded={openPref === 'collection'}
+                onClick={() =>
+                  setOpenPref((current) => (current === 'collection' ? null : 'collection'))
+                }
+              >
+                <span className="set-pref-row__icon">{SvgGrid19}</span>
+                <span className="set-pref-row__label">Cartões da Minha coleção</span>
+                <span className="set-pref-row__value">
+                  {collectionCards === 'deck' ? 'Grid do deck' : 'Compacto'}
+                </span>
+                <span className="set-pref-row__chev">{SvgChevronRightSm}</span>
+              </button>
+              {openPref === 'collection' && (
+                <div
+                  className="set-pref-options"
+                  role="group"
+                  aria-label="Modo de exibição da Minha coleção"
+                >
+                  {([
+                    { value: 'padrao', label: 'Compacto (6 colunas)' },
+                    { value: 'deck', label: 'Grid do deck (4 colunas)' },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`set-pref-option${collectionCards === option.value ? ' is-active' : ''}`}
+                      onClick={() => changeCollectionCards(option.value)}
+                    >
+                      {collectionCards === option.value && SvgCheck}
                       {option.label}
                     </button>
                   ))}

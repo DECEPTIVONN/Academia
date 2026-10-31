@@ -11,8 +11,10 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Exercise, SheetKey } from '@/core/db/schema';
 import { useLocalData } from '@/hooks/useLocalData';
+import { getCollectionCardsMode, type CollectionCardsMode } from '@/lib/app-prefs';
 import { getMaestriaState } from '@/features/gamification/maestria';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
 import { fadeIn } from '@/lib/animations';
@@ -25,12 +27,13 @@ import {
   applyTemplate,
   computeDeckStats,
   DECK_MAX,
+  deckCount,
   dropCollectionAt,
   mutateSheetIds,
   removeFromDeck,
   swapSlots,
 } from './treinos-helpers';
-import { DeckActiveSlot, DeckEmptySlot, TreinosCollectionCard } from './cards';
+import { DeckActiveSlot, DeckEmptySlot, DeckGhostCard, TreinosCollectionCard } from './cards';
 import { MontarMenuModal } from './MontarMenuModal';
 import { ConfirmModal } from './TreinosModals';
 
@@ -163,6 +166,75 @@ const TEMPLATE_BTNS: TemplateBtn[] = [
   { key: 'perda_ponderal_media_ii', name: 'Perda Ponderal (Médio) II', desc: "8 exercícios + aeróbico 20' — 6x/semana", icon: TPL_ICONS.heart },
 ];
 
+/* ══════════ Ghost / imagem de arraste (v4.58.0) ══════════ */
+
+/**
+ * Largura do card do deck no modo GRID — base do ghost do arraste.
+ * Na visão em lista os slots ocupam a linha inteira, então a largura vem da
+ * coluna do grid do deck (4 colunas, 2 no mobile).
+ */
+function deckGridCardWidth(grid: HTMLElement | null, view: DeckView): number {
+  if (view !== 'list') {
+    const slot = grid?.querySelector<HTMLElement>('.deck-slot');
+    if (slot?.offsetWidth) return slot.offsetWidth;
+  }
+  const columns = window.innerWidth <= 850 ? 2 : 4;
+  const available = (grid?.clientWidth ?? 0) - 16 * (columns - 1);
+  if (available > 0) return Math.max(84, Math.round(available / columns));
+  return Math.min(220, Math.round(window.innerWidth * 0.44));
+}
+
+/**
+ * Imagem do arraste no DESKTOP: monta o MESMO card do deck no modo grid
+ * (grupo muscular + imagem + nome + "Séries: s × r"), independente do modo de
+ * exibição escolhido em Minha coleção. O nó fica fora da tela e é removido no
+ * tick seguinte (o navegador já tirou o snapshot).
+ */
+function buildDeckDragImage(ex: Exercise, width: number): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'deck-drag-ghost';
+  wrap.style.left = '-1000px';
+  wrap.style.top = '-1000px';
+  wrap.style.width = `${width}px`;
+  wrap.style.height = `${Math.round(width * 1.35)}px`;
+
+  const card = document.createElement('div');
+  card.className = `deck-card card-${ex.muscleGroup}`;
+
+  const header = document.createElement('div');
+  header.className = 'deck-card-header';
+  header.textContent = ex.muscleGroup;
+
+  const imgWrap = document.createElement('div');
+  imgWrap.className = 'deck-card-img';
+  if (ex.imageUrl) {
+    const img = document.createElement('img');
+    img.src = ex.imageUrl;
+    img.alt = ex.name;
+    imgWrap.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'premium-placeholder';
+    ph.textContent = 'EXERCÍCIO';
+    imgWrap.appendChild(ph);
+  }
+
+  const info = document.createElement('div');
+  info.className = 'deck-card-info';
+  const name = document.createElement('div');
+  name.className = 'deck-card-name';
+  name.textContent = ex.name;
+  const level = document.createElement('div');
+  level.className = 'deck-card-level';
+  level.textContent = `Séries: ${ex.sets} × ${ex.reps}`;
+  info.append(name, level);
+
+  card.append(header, imgWrap, info);
+  wrap.appendChild(card);
+  document.body.appendChild(wrap);
+  return wrap;
+}
+
 /* ══════════ Componente ══════════ */
 
 interface MontarTabProps {
@@ -214,6 +286,27 @@ export const MontarTab: React.FC<MontarTabProps> = ({
 
   /* Estado visual */
   const [dragOver, setDragOver] = useState<number | null>(null);
+
+  /* v4.58.0 — modo de exibição da MINHA COLEÇÃO (Configurações → Preferências
+     do App): 'padrao' = grade compacta; 'deck' = cards do grid do deck. */
+  const [collectionCards, setCollectionCardsState] = useState<CollectionCardsMode>(
+    () => getCollectionCardsMode()
+  );
+  useEffect(() => {
+    const sync = () => setCollectionCardsState(getCollectionCardsMode());
+    window.addEventListener('academia:prefs-changed', sync);
+    return () => window.removeEventListener('academia:prefs-changed', sync);
+  }, []);
+  const deckCards = collectionCards === 'deck';
+
+  /* v4.58.0 — ghost do arraste: card do DECK (modo grid) seguindo o dedo, em
+     vez de um clone do card da coleção. */
+  const [dragGhost, setDragGhost] = useState<{ ex: Exercise; x: number; y: number; w: number } | null>(
+    null
+  );
+  const ghostPos = useRef({ x: 0, y: 0 });
+  const ghostRaf = useRef<number | null>(null);
+  const ghostRef = useRef<HTMLDivElement | null>(null);
 
   /* Fichas desbloqueadas (A/B inicialmente; até J) */
   const [unlockedSheets, setUnlockedSheets] = useState<SheetKey[]>(() => {
@@ -288,7 +381,10 @@ export const MontarTab: React.FC<MontarTabProps> = ({
       showToast('Treino atualizado!', 'success');
     } else if (exId) {
       const next = dropCollectionAt(ids, exId, target);
-      if (!next) return;
+      if (!next) {
+        showToast(`Máximo de ${DECK_MAX} exercícios atingido!`, 'error');
+        return;
+      }
       await mutateSheetIds(deckLetter, () => next);
       showToast('Treino atualizado!', 'success');
     }
@@ -397,6 +493,19 @@ export const MontarTab: React.FC<MontarTabProps> = ({
       showToast('Link copiado!', 'success');
     } catch {
       showToast('Não foi possível copiar o link.', 'error');
+    }
+  };
+
+  /* ── Coleção: arraste no desktop com a imagem do card do deck ── */
+  const onCollectionDragStart = (e: React.DragEvent, ex: Exercise) => {
+    e.dataTransfer.setData('text/plain', ex.id);
+    e.dataTransfer.effectAllowed = 'copyMove';
+    try {
+      const image = buildDeckDragImage(ex, deckGridCardWidth(activeGridRef.current, deckView));
+      e.dataTransfer.setDragImage(image, image.offsetWidth / 2, image.offsetHeight / 2);
+      window.setTimeout(() => image.remove(), 0);
+    } catch {
+      /* navegador sem setDragImage */
     }
   };
 
@@ -518,25 +627,41 @@ export const MontarTab: React.FC<MontarTabProps> = ({
     };
 
     const bindAdd = (card: HTMLElement) => {
-      if (ids.length >= DECK_MAX) return;
-      let ghost: HTMLElement | null = null;
+      if (deckCount(ids) >= DECK_MAX) return;
       let pressTimer: number | null = null;
       let isDragging = false;
+      let ghostW = 0;
+
+      /* Largura de referência = card do deck no modo grid (o ghost é o MESMO
+         card do deck, independente do modo da Minha coleção). */
+      const measureGhost = () => deckGridCardWidth(activeGridRef.current, deckView);
+
+      /* Posição atualizada direto no DOM (sem re-render por frame). */
+      const moveGhost = (clientX: number, clientY: number) => {
+        ghostPos.current = { x: clientX - ghostW / 2, y: clientY - (ghostW * 1.35) / 2 };
+        if (ghostRaf.current !== null) return;
+        ghostRaf.current = window.requestAnimationFrame(() => {
+          ghostRaf.current = null;
+          const el = ghostRef.current;
+          if (!el) return;
+          el.style.left = `${ghostPos.current.x}px`;
+          el.style.top = `${ghostPos.current.y}px`;
+        });
+      };
 
       const onTouchStart = (e: TouchEvent) => {
         const touch = e.touches[0];
         pressTimer = window.setTimeout(() => {
+          const exId = card.dataset.id;
+          const ex = exId ? exMap.get(exId) : undefined;
+          if (!ex) return;
           isDragging = true;
-          ghost = card.cloneNode(true) as HTMLElement;
-          ghost.style.position = 'fixed';
-          ghost.style.width = card.offsetWidth + 'px';
-          ghost.style.height = card.offsetHeight + 'px';
-          ghost.style.opacity = '0.8';
-          ghost.style.pointerEvents = 'none';
-          ghost.style.zIndex = '9999';
-          ghost.style.left = touch.clientX - card.offsetWidth / 2 + 'px';
-          ghost.style.top = touch.clientY - card.offsetHeight / 2 + 'px';
-          document.body.appendChild(ghost);
+          ghostW = measureGhost();
+          ghostPos.current = {
+            x: touch.clientX - ghostW / 2,
+            y: touch.clientY - (ghostW * 1.35) / 2,
+          };
+          setDragGhost({ ex, x: ghostPos.current.x, y: ghostPos.current.y, w: ghostW });
           card.classList.add('dragging');
           if (navigator.vibrate) navigator.vibrate(50);
         }, 250);
@@ -549,10 +674,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
         }
         e.preventDefault();
         const touch = e.touches[0];
-        if (ghost) {
-          ghost.style.left = touch.clientX - ghost.offsetWidth / 2 + 'px';
-          ghost.style.top = touch.clientY - ghost.offsetHeight / 2 + 'px';
-        }
+        moveGhost(touch.clientX, touch.clientY);
         const target = document.elementFromPoint(touch.clientX, touch.clientY);
         const slot = target ? target.closest<HTMLElement>('.deck-slot') : null;
         document
@@ -565,6 +687,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
         if (!isDragging) return;
         isDragging = false;
         card.classList.remove('dragging');
+        setDragGhost(null);
         const touch = e.changedTouches[0];
         const target = document.elementFromPoint(touch.clientX, touch.clientY);
         const slot = target ? target.closest<HTMLElement>('.deck-slot') : null;
@@ -578,12 +701,12 @@ export const MontarTab: React.FC<MontarTabProps> = ({
               void mutateSheetIds(deckLetter, () => next).then(() => {
                 showToast('Adicionado ao treino!', 'success');
               });
+            } else {
+              showToast(`Máximo de ${DECK_MAX} exercícios atingido!`, 'error');
             }
           }
         }
 
-        ghost?.remove();
-        ghost = null;
         document
           .querySelectorAll('#deckActiveGrid .deck-slot')
           .forEach((s) => s.classList.remove('drag-over'));
@@ -597,7 +720,6 @@ export const MontarTab: React.FC<MontarTabProps> = ({
         card.removeEventListener('touchstart', onTouchStart);
         card.removeEventListener('touchmove', onTouchMove);
         card.removeEventListener('touchend', onTouchEnd);
-        ghost?.remove();
       });
     };
 
@@ -608,8 +730,14 @@ export const MontarTab: React.FC<MontarTabProps> = ({
       ?.querySelectorAll<HTMLElement>('.collection-card:not(.in-deck)')
       .forEach(bindAdd);
 
-    return () => cleanups.forEach((fn) => fn());
-  }, [ids, deckLetter, deckView, collection]);
+    return () => {
+      cleanups.forEach((fn) => fn());
+      if (ghostRaf.current !== null) {
+        window.cancelAnimationFrame(ghostRaf.current);
+        ghostRaf.current = null;
+      }
+    };
+  }, [ids, deckLetter, deckView, collection, exMap]);
 
   /* ── Slots do grid ativo (8 fixos) ── */
   const slots: React.ReactNode[] = [];
@@ -821,12 +949,18 @@ export const MontarTab: React.FC<MontarTabProps> = ({
               </div>
             </div>
           </div>
-          <div className="collection-grid" id="deckCollectionGrid" ref={collectionGridRef}>
+          <div
+            className={`collection-grid${deckCards ? ' collection-grid--deck' : ''}`}
+            id="deckCollectionGrid"
+            ref={collectionGridRef}
+          >
             {collection.map((ex) => (
               <TreinosCollectionCard
                 key={ex.id}
                 ex={ex}
                 already={ids.includes(ex.id)}
+                deck={deckCards}
+                onDragStart={onCollectionDragStart}
                 onEdit={onEdit}
                 onDel={onDelete}
                 onDetails={onOpenCR}
@@ -869,6 +1003,19 @@ export const MontarTab: React.FC<MontarTabProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Ghost do arraste (card do deck no modo grid seguindo o dedo) */}
+      {dragGhost &&
+        createPortal(
+          <div
+            ref={ghostRef}
+            className="deck-drag-ghost"
+            style={{ left: dragGhost.x, top: dragGhost.y, width: dragGhost.w }}
+          >
+            <DeckGhostCard ex={dragGhost.ex} />
+          </div>,
+          document.body
+        )}
 
       <MontarMenuModal
         open={menuOpen}

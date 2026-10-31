@@ -158,6 +158,37 @@
     aspect-ratio: 1 / 1.3;
 }
 
+/* v4.58.0 — MINHA COLEÇÃO no modo DECK (Configurações → Preferências do App):
+   os mesmos cards do grid do deck (4 colunas, proporção 1/1.35). */
+.collection-grid--deck {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 850px) {
+    .collection-grid--deck { grid-template-columns: repeat(2, 1fr); }
+}
+
+.collection-grid--deck .collection-card {
+    aspect-ratio: 1 / 1.35;
+}
+
+/* Ghost do arraste coleção → deck: o MESMO card do deck no modo grid
+   (independe do modo de exibição escolhido para a coleção). */
+.deck-drag-ghost {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    aspect-ratio: 1 / 1.35;
+    opacity: 0.85;
+    filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.55));
+    transform: translateZ(0);
+}
+
+.deck-drag-ghost .deck-card {
+    pointer-events: none;
+    cursor: grabbing;
+}
+
 .collection-card.in-deck {
     filter: grayscale(1) opacity(0.3);
     pointer-events: none;

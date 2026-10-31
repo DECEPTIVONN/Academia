@@ -75,7 +75,7 @@ import { GuildEmblem, GuildPanel } from './GuildPanel';
 import { MemberPopover } from './MemberPopover';
 import { PlayerAvatarMedia } from './PlayerAvatar';
 import { getGuild, useGuildState, type GuildPlayer } from './guild-data';
-import { getLevel, getXp } from '@/core/db/queries';
+import { compactIds, getLevel, getXp } from '@/core/db/queries';
 import { useLocalData } from '@/hooks/useLocalData';
 import {
   fallbackLastSeenHours,
@@ -1825,12 +1825,17 @@ export function LigasFeature({
               >
                 <div>
                   <span className="text-xs font-black text-white">Ficha {s.sheetKey}</span>
-                  <span className="text-[9px] text-slate-500 ml-2">{s.exerciseIds.length} ex.</span>
+                  <span className="text-[9px] text-slate-500 ml-2">
+                    {compactIds(s.exerciseIds).length} ex.
+                  </span>
                 </div>
                 <button
                   onClick={() => {
                     try {
-                      localStorage.setItem('academia_clipboard_sheet', JSON.stringify(s.exerciseIds));
+                      localStorage.setItem(
+                        'academia_clipboard_sheet',
+                        JSON.stringify(compactIds(s.exerciseIds))
+                      );
                       showToast('Ficha copiada! Cole na aba Minha Ficha.', 'success');
                     } catch {
                       showToast('Erro ao copiar ficha.', 'error');

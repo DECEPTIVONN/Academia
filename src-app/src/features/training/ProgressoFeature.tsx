@@ -26,6 +26,7 @@ import { useLocalData } from '@/hooks/useLocalData';
 import { fadeIn } from '@/lib/animations';
 import {
   SHEET_ORDER,
+  compactIds,
   formatSeconds,
   getCycleTimeline,
   getExerciseMap,
@@ -334,7 +335,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   }, [cycleRows]);
   const breakdownItems = SHEET_ORDER.filter((key) => {
     const sheet = sheetMap.get(key);
-    const temEx = (sheet?.exerciseIds?.length ?? 0) > 0;
+    const temEx = compactIds(sheet?.exerciseIds).length > 0;
     const temCardio = Boolean(sheet?.aerobic?.tipo);
     return cycleBreakdown[key] > 0 || temEx || temCardio;
   });

@@ -19,6 +19,7 @@ import { useTodayEntryStore } from '@/store/today-entry-store';
 import { effectiveAerobic, type Exercise, type WorkoutHistory } from '@/core/db/schema';
 import { getSuggestedLoadIfMissing } from '@/lib/suggested-load';
 import {
+  compactIds,
   formatCarga,
   getExerciseMap,
   getTodayTreino,
@@ -74,7 +75,8 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
 
   const treino = entry.sheetKey ?? getTodayTreino(data);
   const fichaIds = useMemo(
-    () => sheets.find((s) => s.sheetKey === treino)?.exerciseIds ?? [],
+    /* v4.58.0 — o Modo Foco navega só pelos exercícios (sem slots vazios). */
+    () => compactIds(sheets.find((s) => s.sheetKey === treino)?.exerciseIds),
     [sheets, treino]
   );
 
@@ -93,7 +95,7 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
   useEffect(() => {
     if (open && !wasOpenRef.current) {
       const t = useTodayEntryStore.getState().entry.sheetKey ?? getTodayTreino(data);
-      const ids = sheets.find((s) => s.sheetKey === t)?.exerciseIds ?? [];
+      const ids = compactIds(sheets.find((s) => s.sheetKey === t)?.exerciseIds);
       setFocusIds(ids);
       setFocusIndex(0);
     }

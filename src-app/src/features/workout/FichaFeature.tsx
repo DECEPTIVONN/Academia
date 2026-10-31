@@ -19,6 +19,7 @@ import { effectiveAerobic } from '@/core/db/schema';
 import { getSuggestedLoadIfMissing } from '@/lib/suggested-load';
 import {
   applyFichaCompletion,
+  compactIds,
   determineNextTreino,
   formatCarga,
   getExerciseMap,
@@ -503,6 +504,8 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
   const treino = entry.sheetKey ?? getTodayTreino(data);
   const sheet = sheets.find((s) => s.sheetKey === treino);
   const fichaIds = useMemo(() => sheet?.exerciseIds ?? [], [sheet]);
+  /* v4.58.0 — slots vazios do deck não são exercícios (contagens/conclusão). */
+  const fichaSlotIds = useMemo(() => compactIds(fichaIds), [fichaIds]);
   const exMap = useMemo(() => getExerciseMap(exercises), [exercises]);
   const exercicios = useMemo(() => pickExercises(fichaIds, exMap), [fichaIds, exMap]);
   /* v4.31.0 — cardio padrão de todo treino (10 min de esteira a 3 km/h): a
@@ -624,7 +627,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
 
   const withCompletion = (mut: FichaMutation): FichaMutation => ({
     ...mut,
-    entry: applyFichaCompletion(mut.entry, treino, fichaIds, requiresAe),
+    entry: applyFichaCompletion(mut.entry, treino, fichaSlotIds, requiresAe),
   });
 
   const onToggleCheck = (exId: string) => {
@@ -648,7 +651,7 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
 
   /* startFocusMode (secao-ficha.js L759-776): valida ficha + marca o início */
   const onStartFocus = () => {
-    if (fichaIds.length === 0) {
+    if (fichaSlotIds.length === 0) {
       showToast('Adicione exercícios à ficha antes de iniciar o Modo Foco!', 'error');
       return;
     }
@@ -696,13 +699,13 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     }
     if (focusDefaultApplied.current) return;
     focusDefaultApplied.current = true;
-    if (!isFocusModeDefault() || fichaIds.length === 0) return;
+    if (!isFocusModeDefault() || fichaSlotIds.length === 0) return;
     if (!sessionStorage.getItem('focusStartTime')) {
       sessionStorage.setItem('focusStartTime', String(Date.now()));
     }
     // eslint-disable-next-line react/set-state-in-effect -- preferência abre o foco junto com o treino
     setFocusOpen(true);
-  }, [isActive, fichaIds.length]);
+  }, [isActive, fichaSlotIds.length]);
 
   const onEditNote = (ex: Exercise) => {
     setNoteEx(ex);
@@ -937,7 +940,8 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
                   {(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] as SheetKey[]).map(
                     (letter) => {
                       const s = sheets.find((sh) => sh.sheetKey === letter);
-                      const temConteudo = (s?.exerciseIds?.length ?? 0) > 0 || Boolean(s?.aerobic?.tipo);
+                      const temConteudo =
+                        compactIds(s?.exerciseIds).length > 0 || Boolean(s?.aerobic?.tipo);
                       return (
                         <button
                           key={letter}
