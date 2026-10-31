@@ -41,6 +41,7 @@ import {
 import { showToast } from '@/lib/toast';
 import { useSettingsGroup } from '@/features/settings/SettingsFeature';
 import { HubShell, type HubScreen, type HubTile } from '@/features/settings/HubShell';
+import { HealthProfile } from '@/features/settings/HealthProfile';
 import { computeRadarStats, getArchetypeBadge } from '@/features/gamification/radar';
 import { useRadarMode } from '@/features/gamification/useRadarFit';
 import { useShareStore } from '@/features/gamification/share-store';
@@ -113,6 +114,13 @@ const SvgType20 = (
     <polyline points="4 7 4 4 20 4 20 7" />
     <line x1="9" y1="20" x2="15" y2="20" />
     <line x1="12" y1="4" x2="12" y2="20" />
+  </svg>
+);
+
+/* v4.56.22 — Perfil de Saúde (ECG/pulso, Diretrizes/Ícones.md) */
+const SvgPulse20 = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
   </svg>
 );
 
@@ -382,6 +390,17 @@ export function ProfileFeature() {
       badge: '3 de 4',
       keywords: ['medalhas', 'premios', 'ouro', 'prata', 'bronze'],
     },
+    {
+      id: 'saude',
+      title: 'Perfil de Saúde',
+      desc: 'Sexo, altura, peso e data de nascimento',
+      icon: SvgPulse20,
+      badge: 'Saúde',
+      keywords: [
+        'saude', 'perfil de saude', 'sexo', 'genero', 'altura', 'peso',
+        'nascimento', 'idade', 'dados corporais', 'personalizacao', 'treino personalizado',
+      ],
+    },
   ];
 
   const perfilScreens: Record<string, HubScreen> = {
@@ -624,8 +643,7 @@ export function ProfileFeature() {
     },
     medalhas: {
       title: 'Medalhas',
-      content: (
-        <div className="perf-sub-content" id="perf-subtab-medalhas">
+      content: (        <div className="perf-sub-content" id="perf-subtab-medalhas">
           <div className="theme-section theme-ouro">
             <div className="theme-bg" />
             <div className="theme-content">
@@ -672,6 +690,10 @@ export function ProfileFeature() {
           </div>
         </div>
       ),
+    },
+    saude: {
+      title: 'Perfil de Saúde',
+      content: <HealthProfile />,
     },
   };
 

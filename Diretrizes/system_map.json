@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.56.21",
-  "last_updated": "2026-10-30",
+  "version": "4.56.22",
+  "last_updated": "2026-10-31",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
   "entry_points": {
@@ -712,11 +712,23 @@
       },
       {
         "file": "src-app/src/features/settings/",
-        "purpose": "Shell de hubs reutilizável (HubShell.tsx, SettingsFeature.tsx) — 6 tiles de config na raiz do hub do Perfil (conta, segurança, dispositivos, preferências do app, notificações, cores e exibição); theme-colors.ts (12 presets + custom) + ColorPickerModal.tsx; settings.css (BEM .set-* e .set-pref-*) + player-prefs (música: modo flex/fixo, 6 posições, visibilidade). Preferências do App: primeiro dia da semana, unidade de peso/distância, tema, idioma, som do temporizador e modo foco padrão. Notificações: permissão + lembretes/novidades/ligas/mensagens como placeholders persistidos."
+        "purpose": "Shell de hubs reutilizável (HubShell.tsx, SettingsFeature.tsx) — 6 tiles de config na raiz do hub do Perfil (conta, segurança, dispositivos, preferências do app, notificações, cores e exibição); theme-colors.ts (12 presets + custom) + ColorPickerModal.tsx; settings.css (BEM .set-* e .set-pref-*) + player-prefs (música: modo flex/fixo, 6 posições, visibilidade). Preferências do App: primeiro dia da semana, unidade de peso/distância, tema, idioma, som do temporizador e modo foco padrão. Notificações: permissão + lembretes/novidades/ligas/mensagens como placeholders persistidos. Inclui o Perfil de Saúde (HealthProfile.tsx + health-profile.ts + health-profile.css): sexo/altura/peso/data de nascimento, com peso canônico em kg no localStorage academia_health_profile_v1 e exibição na unidade da preferência."
+      },
+      {
+        "file": "src-app/src/features/settings/HealthProfile.tsx",
+        "purpose": "Tela Perfil de Saúde (Configurações → Perfil): formulário no desenho da referência com Sexo, Altura (cm), Peso (kg/lb conforme getWeightUnit) e Data de nascimento, dica de idade e botão Concluído; valida os campos e grava via saveHealthProfile, reaproveitando os estilos set-card/set-field/set-input. CSS próprio em health-profile.css (BEM .hp-*)."
+      },
+      {
+        "file": "src-app/src/features/settings/health-profile.ts",
+        "purpose": "Persistência do Perfil de Saúde: tipos (HealthSex/HealthProfileData), HEALTH_SEX_OPTIONS, leitura/gravação em localStorage (academia_health_profile_v1) com sanitização numérica e de data, evento academia:health-profile-changed, healthAge() e a constante de conversão KG_TO_LB. Separado das métricas corporais do Dexie."
+      },
+      {
+        "file": "src-app/src/features/settings/health-profile.css",
+        "purpose": "Estilos do Perfil de Saúde (.hp-*): campos empilhados full-width, select/date com color-scheme dark, sufixos de unidade (cm/kg/lb), botão Concluído largo e respeito a prefers-reduced-motion."
       },
       {
         "file": "src-app/src/features/profile/ProfileFeature.tsx",
-        "purpose": "Overlay do Perfil como hub fullscreen (v4.3.0-profile-hub; v4.5.1: sem tile Configurações): raiz com 8 tiles — 3 grupos (Perfil/Progressão/Personalizar) + 5 tiles de config promovidos (Sua Conta/Segurança/Notificações/Cores/Exibição-PWA) + hubExtra (linha Sair da Conta) — via features/settings/HubShell com navStack controlado — as 4 sub-abas #perfTabNav e o localStorage.academia_perfil_tab foram REMOVIDOS; cada grupo abre seus filhos (Perfil: Cartão/Ofensivas/Medalhas; Progressão: dev row como head + Visão Geral/Nível e XP/Conquistas; Personalizar: #btnSalvarCustomizacaoTab herdado pelo grupo + Identidade/Frase/Em Destaque/Título); os 5 tiles de config vêm de useSettingsGroup (tile conta ganha keywords recursivas via screenKeywords); busca só na raiz com keywords dos leaves; #btnEditarPerfil navega p/ personalizar/identidade via setNavStack; shell do overlay (header + #perfilOverlayClose) permanece no App.tsx."
+        "purpose": "Overlay do Perfil como hub fullscreen (v4.3.0-profile-hub; v4.5.1: sem tile Configurações): raiz com 8 tiles — 3 grupos (Perfil/Progressão/Personalizar) + 5 tiles de config promovidos (Sua Conta/Segurança/Notificações/Cores/Exibição-PWA) + hubExtra (linha Sair da Conta) — via features/settings/HubShell com navStack controlado — as 4 sub-abas #perfTabNav e o localStorage.academia_perfil_tab foram REMOVIDOS; cada grupo abre seus filhos (Perfil: Cartão/Ofensivas/Medalhas/Perfil de Saúde; Progressão: dev row como head + Visão Geral/Nível e XP/Conquistas; Personalizar: #btnSalvarCustomizacaoTab herdado pelo grupo + Identidade/Frase/Em Destaque/Título); os 5 tiles de config vêm de useSettingsGroup (tile conta ganha keywords recursivas via screenKeywords); busca só na raiz com keywords dos leaves; #btnEditarPerfil navega p/ personalizar/identidade via setNavStack; shell do overlay (header + #perfilOverlayClose) permanece no App.tsx."
       },
       {
         "file": "src-app/src/features/profile/profile-data.ts",

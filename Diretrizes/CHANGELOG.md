@@ -2,6 +2,26 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.22] - 2026-10-31
+
+**Transições entre as sub-abas de Rankings e no resultado das ligas, formulário de exercício em duas colunas, novo Perfil de Saúde e opções de cardio da referência.**
+
+### Added
+- `src-app/src/features/settings/HealthProfile.tsx` + `health-profile.ts` + `health-profile.css` — novo **Perfil de Saúde**, acessível pelo tile do grupo Perfil (Configurações → Perfil), no desenho da referência: aviso "Usamos gênero, peso e idade para fornecer treinos personalizados mais precisos.", campos **Sexo** (Masculino/Feminino/Outro/Prefiro não informar), **Altura** (cm), **Peso** (na unidade da preferência, `getWeightUnit()`) e **Data de nascimento** (com dica de idade), e o botão largo **Concluído**. O peso é persistido sempre em kg; a conversão kg↔lb acontece só na exibição/entrada e o campo se reformata quando a preferência de unidade muda. Os dados ficam isolados em `localStorage.academia_health_profile_v1` (não se misturam com as métricas corporais do Dexie); `health-profile.ts` concentra tipos, leitura/gravação sanitizada, `healthAge()` e `KG_TO_LB`. CSS BEM `.hp-*` com `color-scheme: dark` no select/date e respeito a `prefers-reduced-motion`.
+- `src-app/src/features/workout/treinos/TreinosModals.tsx` — o seletor de cardio ganhou as opções da referência que faltavam: **Bicicleta de ar, Caminhada, Caminhada na esteira, Ciclismo, Ciclismo na ergométrica, Corrida, Corrida na esteira, Escalador vertical, Natação, Remada, SkiErg** e **Stepper**. As opções legadas (Esteira, Bicicleta, Elíptico, Pular Corda, Escada, Corrida de Rua, Remo Ergométrico) continuam com os mesmos valores, preservando fichas já salvas; nenhuma mecânica do cardio foi alterada.
+
+### Changed
+- `src-app/src/features/social/RankingsOverlay.tsx` + `rankings.css` — as sub-abas **Jogadores / Clãs / Amigos** agora trocam com um deslize direcional suave (banner + lista juntos, `AnimatePresence`/`motion` com direção conforme a aba escolhida e fade curto); o novo `.rk-panel` mantém o espaçamento vertical entre banner e conteúdo.
+- `src-app/src/features/workout/treinos/ExercicioFormModal.tsx` — as linhas do formulário de exercício foram reorganizadas: **Nome do Exercício + Descanso (s)** na primeira linha e **Tipo de Movimento / Foco + Grupo Muscular** na segunda; Séries/Reps/Carga permanecem na terceira.
+- `src-app/src/features/social/LigasFeature.tsx` + `social.css` — o resultado de uma partida simulada (liga semanal e mensal) agora anima as posições: `ParticipantRow` virou `motion.div` com `layout` (as linhas se reacomodam com mola) e a linha do jogador mostra um selo **+XP** transitório, com flash verde radial na linha. O estado `matchGain` (com limpeza do timer no unmount) alimenta as duas visões sem interferir no cálculo de XP existente.
+- `src-app/src/features/profile/ProfileFeature.tsx` — o grupo Perfil ganhou o tile **Perfil de Saúde** (ícone ECG/pulso, em `Ícones.md`) e a tela `saude` correspondente, com keywords para a busca do hub.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (avisos de linha de base, nenhum novo).
+- `npm run build`: OK — 52 entradas de precache (~7,6 MB), sem erros de tipo.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.56.22 com todos os caminhos citados existentes.
+
 ## [v4.56.21] - 2026-10-30
 
 **Confirmação de saída realmente exibida, Modo Foco fluido com timer visível, cardio opcional e offline do PWA de verdade.**

@@ -252,11 +252,14 @@ function ParticipantRow({
   rank,
   showXpLabel = false,
   scaleSelf = false,
+  gain = null,
 }: {
   item: LeagueParticipant;
   rank: number;
   showXpLabel?: boolean;
   scaleSelf?: boolean;
+  /** Ganho da última partida simulada (só na linha do jogador). */
+  gain?: { amount: number; key: number } | null;
 }) {
   const isTop3 = rank <= 3;
   const isBot3 = rank >= 8;
@@ -266,9 +269,24 @@ function ParticipantRow({
   const level = item.level || 1;
 
   return (
-    <div
-      className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${rowTone(isSelf, isTop3, isBot3)} ${isSelf && scaleSelf ? 'scale-[1.02]' : ''}`}
+    <motion.div
+      layout
+      transition={{
+        layout: { type: 'spring', stiffness: 420, damping: 38 },
+        default: { duration: 0.2, ease: 'easeOut' },
+      }}
+      className={`relative overflow-hidden flex items-center justify-between p-2.5 rounded-xl border transition-all ${rowTone(isSelf, isTop3, isBot3)} ${isSelf && scaleSelf ? 'scale-[1.02]' : ''}`}
     >
+      {isSelf && gain && (
+        <motion.span
+          key={`flash-${gain.key}`}
+          className="ligas-gain-flash"
+          aria-hidden="true"
+          initial={{ opacity: 0.55 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.9, ease: 'easeOut' }}
+        />
+      )}
       <div className="flex items-center gap-3">
         <div
           className={`w-6 h-6 rounded-full border-2 font-mono font-black text-xs flex items-center justify-center shrink-0 ${rankBadgeClass(rank)}`}
@@ -301,12 +319,26 @@ function ParticipantRow({
       </div>
       <div className="text-right shrink-0">
         <span
-          className={`text-xs font-black font-mono tracking-tight ${isSelf ? 'ligas-text-accent' : 'text-slate-300'}`}
+          className={`block text-xs font-black font-mono tracking-tight ${isSelf ? 'ligas-text-accent' : 'text-slate-300'}`}
         >
           {showXpLabel ? `${item.xp} XP` : item.xp}
         </span>
+        <AnimatePresence>
+          {isSelf && gain && (
+            <motion.span
+              key={gain.key}
+              className="ligas-gain-badge"
+              initial={{ opacity: 0, y: 4, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              +{gain.amount} XP
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -493,11 +525,13 @@ function LeagueStandings({
   opponents,
   profile,
   scaleSelf,
+  gain,
 }: {
   playerXp: number;
   opponents: LeagueParticipant[];
   profile: { username: string; level: number };
   scaleSelf?: boolean;
+  gain?: { amount: number; key: number } | null;
 }) {
   const playerItem = buildPlayerParticipant(
     { ...DEFAULT_PROFILE, username: profile.username, level: profile.level },
@@ -513,7 +547,13 @@ function LeagueStandings({
           <React.Fragment key={participant.id}>
             {rank === 4 && <ZoneSeparator kind="up" />}
             {rank === 8 && <ZoneSeparator kind="down" />}
-            <ParticipantRow item={participant} rank={rank} showXpLabel scaleSelf={scaleSelf} />
+            <ParticipantRow
+              item={participant}
+              rank={rank}
+              showXpLabel
+              scaleSelf={scaleSelf}
+              gain={participant.isPlayer ? gain : null}
+            />
           </React.Fragment>
         );
       })}
@@ -1121,6 +1161,28 @@ export function LigasFeature({
     getMonthlyLeagueState().lastResult ? 1 : null
   );
 
+  /* v4.56.22 — ganho da última partida simulada, para animar a linha do
+     jogador (badge +XP e flash) enquanto as posições se reacomodam. */
+  const [matchGain, setMatchGain] = useState<{
+    amount: number;
+    key: number;
+    scope: 'weekly' | 'monthly';
+  } | null>(null);
+  const gainTimerRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (gainTimerRef.current !== null) window.clearTimeout(gainTimerRef.current);
+    },
+    []
+  );
+
+  const showMatchGain = (amount: number, scope: 'weekly' | 'monthly') => {
+    if (gainTimerRef.current !== null) window.clearTimeout(gainTimerRef.current);
+    setMatchGain({ amount, key: Date.now(), scope });
+    gainTimerRef.current = window.setTimeout(() => setMatchGain(null), 1200);
+  };
+
   useEffect(() => {
     const handleUpdate = (e: Event) => {
       const ce = e as CustomEvent<LeagueState>;
@@ -1149,7 +1211,9 @@ export function LigasFeature({
 
   const handleSimulateMatchXp = () => {
     standaloneSound.playMove();
-    addPlayerLeagueXp(Math.floor(Math.random() * 50) + 35);
+    const gain = Math.floor(Math.random() * 50) + 35;
+    addPlayerLeagueXp(gain);
+    showMatchGain(gain, 'weekly');
   };
 
   const handleEndWeek = () => {
@@ -1183,7 +1247,9 @@ export function LigasFeature({
 
   const handleSimulateMonthlyMatchXp = () => {
     standaloneSound.playMove();
-    addPlayerMonthlyLeagueXp(Math.floor(Math.random() * 50) + 35);
+    const gain = Math.floor(Math.random() * 50) + 35;
+    addPlayerMonthlyLeagueXp(gain);
+    showMatchGain(gain, 'monthly');
   };
 
   const handleEndMonth = () => {
@@ -1881,6 +1947,7 @@ export function LigasFeature({
                 playerXp={leagueState.playerXp}
                 opponents={leagueState.opponents}
                 profile={{ username: profile.username, level: profile.level }}
+                gain={matchGain?.scope === 'weekly' ? matchGain : null}
               />
               <LeagueTestControls onSimulate={handleSimulateMatchXp} onEnd={handleEndWeek} endLabel="Finalizar Semana" />
             </div>
@@ -1905,6 +1972,7 @@ export function LigasFeature({
                 opponents={monthlyLeagueState.opponents}
                 profile={{ username: profile.username, level: profile.level }}
                 scaleSelf
+                gain={matchGain?.scope === 'monthly' ? matchGain : null}
               />
               <LeagueTestControls
                 onSimulate={handleSimulateMonthlyMatchXp}

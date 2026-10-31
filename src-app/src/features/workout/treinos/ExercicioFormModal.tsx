@@ -306,7 +306,7 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
             </button>
           </div>
 
-          {/* v4.56.14 — Nome + Grupo Muscular na MESMA linha (2 colunas). */}
+          {/* v4.56.22 — Nome do Exercício + Descanso na MESMA linha. */}
           <div className="form-row form-row--2">
             <div className="form-group">
               <label htmlFor="inputNome">Nome do Exercício *</label>
@@ -321,25 +321,20 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
             </div>
 
             <div className="form-group">
-              <label htmlFor="inputGrupo">Grupo Muscular *</label>
-              <select
-                id="inputGrupo"
-                value={grupo}
-                onChange={(e) => setGrupo(e.target.value)}
-                className="mu-select"
-                required
-              >
-                <option value="" disabled>Selecione o grupo muscular</option>
-                {GRUPO_CHIPS.map((chip) => (
-                  <option key={chip.value} value={chip.value}>
-                    {chip.label}
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="inputDescanso">Descanso (s)</label>
+              <input
+                type="number"
+                id="inputDescanso"
+                min={0}
+                max={300}
+                placeholder="0 = desativado"
+                value={descanso}
+                onChange={(e) => setDescanso(e.target.value)}
+              />
             </div>
           </div>
 
-          {/* v4.56.15 — Tipo de Movimento/Foco + Descanso na MESMA linha. */}
+          {/* v4.56.22 — Tipo de Movimento/Foco + Grupo Muscular na MESMA linha. */}
           <div className="form-row form-row--2">
             <div className="form-group">
               <label htmlFor="inputTipoMovimento">Tipo de Movimento / Foco</label>
@@ -366,16 +361,21 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
             </div>
 
             <div className="form-group">
-              <label htmlFor="inputDescanso">Descanso (s)</label>
-              <input
-                type="number"
-                id="inputDescanso"
-                min={0}
-                max={300}
-                placeholder="0 = desativado"
-                value={descanso}
-                onChange={(e) => setDescanso(e.target.value)}
-              />
+              <label htmlFor="inputGrupo">Grupo Muscular *</label>
+              <select
+                id="inputGrupo"
+                value={grupo}
+                onChange={(e) => setGrupo(e.target.value)}
+                className="mu-select"
+                required
+              >
+                <option value="" disabled>Selecione o grupo muscular</option>
+                {GRUPO_CHIPS.map((chip) => (
+                  <option key={chip.value} value={chip.value}>
+                    {chip.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

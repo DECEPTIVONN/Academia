@@ -114,6 +114,19 @@ const AE_OPTIONS = [
   ['Escada', 'Escada'],
   ['Corrida de Rua', 'Corrida de Rua'],
   ['Remo', 'Remo Ergométrico'],
+  /* v4.56.22 — opções da lista de cardio da referência (imagens 2 e 3). */
+  ['Bicicleta de ar', 'Bicicleta de ar'],
+  ['Caminhada', 'Caminhada'],
+  ['Caminhada na esteira', 'Caminhada na esteira'],
+  ['Ciclismo', 'Ciclismo'],
+  ['Ciclismo na ergométrica', 'Ciclismo na ergométrica'],
+  ['Corrida', 'Corrida'],
+  ['Corrida na esteira', 'Corrida na esteira'],
+  ['Escalador vertical', 'Escalador vertical'],
+  ['Natação', 'Natação'],
+  ['Remada', 'Remada'],
+  ['SkiErg', 'SkiErg'],
+  ['Stepper', 'Stepper'],
   ['Outro', 'Outro Cardio'],
 ] as const;
 

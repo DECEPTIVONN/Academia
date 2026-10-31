@@ -18,6 +18,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Medal, Shield, Trophy, Users } from 'lucide-react';
 import { OverlayShell } from './OverlayShell';
 import { PlayerAvatarMedia } from './PlayerAvatar';
@@ -108,7 +109,18 @@ interface RankingsOverlayProps {
 
 export function RankingsOverlay({ open, onClose }: RankingsOverlayProps) {
   const [tab, setTab] = useState<RankingTab>('jogadores');
+  /* Direção do slide entre as sub-abas: 1 = próxima (entra pela direita),
+     -1 = anterior (entra pela esquerda). */
+  const [tabDir, setTabDir] = useState(1);
   const { mounted, closing } = useModalPresence(open);
+
+  const selectTab = (next: RankingTab) => {
+    if (next === tab) return;
+    const from = TABS.findIndex((item) => item.key === tab);
+    const to = TABS.findIndex((item) => item.key === next);
+    setTabDir(to >= from ? 1 : -1);
+    setTab(next);
+  };
 
   const { history } = useLocalData();
   const { state: profileState } = useProfileState();
@@ -249,48 +261,59 @@ export function RankingsOverlay({ open, onClose }: RankingsOverlayProps) {
               aria-selected={tab === item.key}
               className={`rk-tab${tab === item.key ? ' is-active' : ''}`}
               data-rank-tab={item.key}
-              onClick={() => setTab(item.key)}
+              onClick={() => selectTab(item.key)}
             >
               {item.label}
             </button>
           ))}
         </div>
 
-        <div className={`rk-banner${tab === 'clas' && !myGuild ? ' rk-banner--muted' : ''}`}>
-          {tab === 'clas' ? (
-            <Shield size={24} className="rk-banner__icon" aria-hidden="true" />
-          ) : tab === 'amigos' ? (
-            <Users size={24} className="rk-banner__icon" aria-hidden="true" />
-          ) : (
-            <Trophy size={24} className="rk-banner__icon" aria-hidden="true" />
-          )}
-          <span className="rk-banner__text">
-            <span className="rk-banner__title">{banner.title}</span>
-            <span className="rk-banner__sub">{banner.sub}</span>
-          </span>
-        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={tab}
+            className="rk-panel"
+            initial={{ opacity: 0, x: tabDir * 26 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: tabDir * -26 }}
+            transition={{ duration: 0.22, ease: [0.25, 0.8, 0.25, 1] }}
+          >
+            <div className={`rk-banner${tab === 'clas' && !myGuild ? ' rk-banner--muted' : ''}`}>
+              {tab === 'clas' ? (
+                <Shield size={24} className="rk-banner__icon" aria-hidden="true" />
+              ) : tab === 'amigos' ? (
+                <Users size={24} className="rk-banner__icon" aria-hidden="true" />
+              ) : (
+                <Trophy size={24} className="rk-banner__icon" aria-hidden="true" />
+              )}
+              <span className="rk-banner__text">
+                <span className="rk-banner__title">{banner.title}</span>
+                <span className="rk-banner__sub">{banner.sub}</span>
+              </span>
+            </div>
 
-        {tab === 'clas' && !myGuild ? (
-          <div className="rk-empty">
-            <Shield size={30} className="rk-empty__icon" aria-hidden="true" />
-            <p className="rk-empty__text">
-              Você precisa fazer parte de uma guilda para ver o ranking da guilda.
-            </p>
-          </div>
-        ) : tab === 'amigos' && rows.length === 0 ? (
-          <div className="rk-empty">
-            <Users size={30} className="rk-empty__icon" aria-hidden="true" />
-            <p className="rk-empty__text">
-              Você ainda não tem amigos. Adicione amigos para ver o ranking.
-            </p>
-          </div>
-        ) : (
-          <ol className="rk-list">
-            {rows.map((row, index) => (
-              <RankRowView key={row.id} row={row} rank={index + 1} />
-            ))}
-          </ol>
-        )}
+            {tab === 'clas' && !myGuild ? (
+              <div className="rk-empty">
+                <Shield size={30} className="rk-empty__icon" aria-hidden="true" />
+                <p className="rk-empty__text">
+                  Você precisa fazer parte de uma guilda para ver o ranking da guilda.
+                </p>
+              </div>
+            ) : tab === 'amigos' && rows.length === 0 ? (
+              <div className="rk-empty">
+                <Users size={30} className="rk-empty__icon" aria-hidden="true" />
+                <p className="rk-empty__text">
+                  Você ainda não tem amigos. Adicione amigos para ver o ranking.
+                </p>
+              </div>
+            ) : (
+              <ol className="rk-list">
+                {rows.map((row, index) => (
+                  <RankRowView key={row.id} row={row} rank={index + 1} />
+                ))}
+              </ol>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </OverlayShell>
   );
