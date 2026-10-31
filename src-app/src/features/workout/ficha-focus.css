@@ -45,3 +45,126 @@
 .ficha-gif-focus:active img {
   transform: scale(0.98);
 }
+
+/* ============================================================
+   v4.56.21 — Modo Foco: palco (GIF + timer) e troca suave
+   ============================================================
+   O timer do descanso ficava DEPOIS dos botões de série, no fim da coluna
+   direita, e passava despercebido. Agora o GIF e o timer formam um palco na
+   coluna esquerda (no mobile, empilhados: GIF → timer → séries/reps/carga).
+   A troca de exercício não remonta mais o container (era o "refresh"): a
+   classe .focus-swap anima um fade + deslize curto do conteúdo. */
+
+.focus-main .focus-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 0;
+}
+
+.focus-main .focus-visual {
+  width: 100%;
+}
+
+/* GIF um pouco mais compacto: abre espaço para o timer entre ele e as séries */
+.focus-main .focus-visual img {
+  max-height: 44vh;
+}
+
+.focus-main .f-timer-display {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.focus-main .f-timer-val {
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--primary-light, #c084fc);
+}
+
+.focus-main .f-timer-lbl {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-tertiary, #8b8b9a);
+}
+
+.focus-main .f-timer-display.is-running {
+  border-color: var(--gym-green, #22c55e);
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.22);
+}
+
+.focus-main .f-timer-display.is-running .f-timer-val {
+  color: var(--gym-green, #22c55e);
+}
+
+/* Troca de exercício: fade + deslize curto (o container não remonta) */
+.focus-container.focus-swap .focus-header,
+.focus-container.focus-swap .focus-stage,
+.focus-container.focus-swap .focus-info {
+  animation: focusSwapIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes focusSwapIn {
+  from {
+    opacity: 0.25;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-container.focus-swap .focus-header,
+  .focus-container.focus-swap .focus-stage,
+  .focus-container.focus-swap .focus-info {
+    animation: none;
+  }
+}
+
+/* Cardio: concluir o treino sem fazer a etapa */
+.focus-timer-area .f-btn-skip-cardio {
+  align-self: center;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-secondary, #b8b8c4);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.focus-timer-area .f-btn-skip-cardio:hover,
+.focus-timer-area .f-btn-skip-cardio:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 768px) {
+  .focus-main .focus-visual img {
+    max-height: 200px;
+  }
+  .focus-main .f-timer-val {
+    font-size: 1.3rem;
+  }
+  .focus-main .focus-stage {
+    gap: 10px;
+  }
+}

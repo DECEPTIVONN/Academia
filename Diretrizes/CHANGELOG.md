@@ -2,6 +2,30 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.21] - 2026-10-30
+
+**Confirmação de saída realmente exibida, Modo Foco fluido com timer visível, cardio opcional e offline do PWA de verdade.**
+
+### Fixed
+- `src-app/src/App.tsx` — o **diálogo de confirmação de saída** voltou a aparecer. Cada troca de seção empilhava `pushState({ section })`; as primeiras voltas do histórico só trocavam de aba (ou caíam numa entrada-guarda com o mesmo `section`) e o modal nunca abria. Agora as seções **não geram entrada no histórico** (a navegação é a barra inferior, as setas do desktop e o swipe) e o histórico tem apenas duas entradas próprias: base + guarda. Qualquer "voltar" abre o diálogo; **Cancelar** recoloca a guarda com `history.forward()` (sem inflar o histórico) e **OK** sai de verdade (fecha a janela na PWA instalada; senão um `back()` a partir da base leva à página anterior).
+- `src-app/src/core/auth/auth-context.tsx` — **offline do PWA instalado**: sem rede o refresh do token falhava, o Supabase emitia `SIGNED_OUT` e a AuthScreen (que exige rede) tomava a conta. Agora um snapshot mínimo da última conta (`mbc_offline_user`) mantém o app utilizável offline — dados locais no IndexedDB e fila de sync preservada; ao voltar a conexão (`online`) a sessão real substitui a local, e sair da conta de propósito limpa o snapshot. O fallback não confia só em `navigator.onLine` (fica `true` em Wi-Fi sem rota): sonda a própria origem por uma URL fora do precache (`/index.html?ping=`, `HEAD`, `no-store`, timeout de 2,5 s) e só descarta o snapshot quando a rede responde de verdade.
+- `src-app/vite.config.ts` — o precache do service worker não inclui mais JPG/WEBP (`assets/images/background/MANUTENÇÃO.jpg`, `assets/bg/*`): uma falha de casamento de URL com acento derrubava a instalação **inteira** do SW — sem SW, sem offline. `maximumFileSizeToCacheInBytes` subiu para 5 MB. JPGs e wallpapers entram pelo runtimeCaching de `/assets/`.
+- `src-app/src/features/workout/FocusModal.tsx` — a troca de exercício no **Modo Foco** dava um "refresh" na tela porque o container tinha `key={focusIndex}` (remontava tudo e recarregava o GIF). A chave saiu; a troca é um fade + deslize curto de 320 ms (`.focus-swap`, com `prefers-reduced-motion`).
+- `src-app/src/features/workout/FocusModal.tsx` + `ficha-focus.css` — o **timer do descanso** ficava abaixo dos botões de série e passava despercebido. Virou um bloco em pílula entre o **GIF** e a linha de séries/reps/carga (GIF um pouco mais compacto, 44vh no desktop e 200px no mobile), com contagem ascendente de destaque quando está rodando.
+
+### Added
+- `src-app/src/features/workout/FocusModal.tsx` — botão **"Concluir treino sem o cardio"** na etapa de cardio do Modo Foco: fecha o treino do dia na hora (ficha concluída + `focusMin`), sem exigir a marcação do cardio. Só existe no Modo Foco.
+
+### Changed
+- `src-app/src/features/workout/FichaFeature.tsx` — no modo **TABELA** a coluna de volume não mostra mais o texto "· Sugerido: x kg" (a dica do peso inicial continua no grid e no Modo Foco).
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (72 avisos de linha de base).
+- `npm run build`: OK — `dist/sw.js` com 52 entradas de precache (~7,6 MB), `index.html` + bundle principal + CSS dentro, 0 JPG/GIF/áudio, nenhuma URL ausente no `dist`.
+- `npm run lint:docs`: OK.
+- Não foi possível abrir o navegador desta sessão (painel de preview não anexou), então o Modo Foco e o diálogo foram verificados por build/inspeção de código, não visualmente.
+
 ## [v4.56.20] - 2026-10-30
 
 **Imagens das telas de carregamento proporcionais (mobile e desktop) e PWA realmente offline.**

@@ -84,11 +84,17 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-        // App shell + fontes + ícones/bg + imagens importadas de src/assets.
-        // Caminhos com espaço (GIFs) ficam fora via globIgnores.
-        globPatterns: ['**/*.{js,css,html,svg,ico,woff2,png,jpg,webp}'],
+        /* v4.56.21 — precache do APP SHELL (o que garante abrir offline):
+           JS/CSS/HTML/SVG/ICO + fontes + PNGs (ícones e artes de loading).
+           JPG/WEBP (wallpapers, backgrounds) e as mídias pesadas (GIFs de
+           exercício, áudios) NÃO entram no precache: vêm do runtimeCaching
+           ao serem vistos. Antes um JPG com acento no nome
+           (assets/images/background/MANUTENÇÃO.jpg) estava no precache e
+           qualquer falha de casamento de URL derrubava a instalação INTEIRA
+           do service worker — sem SW não existe offline. */
+        globPatterns: ['**/*.{js,css,html,svg,ico,woff2,png}'],
         globIgnores: ['**/assets/exerciciosgif/**', '**/assets/sounds/**'],
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/index.html',
         // Rotas de API nunca caem no index.html (previews/offline).
         navigateFallbackDenylist: [/^\/api\//],
@@ -132,7 +138,8 @@ export default defineConfig({
               expiration: { maxEntries: 60, maxAgeSeconds: 365 * 24 * 60 * 60 },
             },
           },
-          // Imagens avulsas (backgrounds, emblemas, fotos de tela).
+          // Imagens avulsas (backgrounds, wallpapers, emblemas, fotos de
+          // tela) e qualquer JPG/WEBP: cache sob demanda.
           {
             urlPattern: /assets\//i,
             handler: 'StaleWhileRevalidate',

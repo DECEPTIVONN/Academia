@@ -231,8 +231,9 @@ const FichaTableRow: React.FC<CardProps & { idPrefix: string }> = ({
 
   const cargaHtml =
     ex.load || ex.tags.includes('Peso do Corpo') ? ` · ${formatCarga(ex)}` : '';
-  /* v4.31.0 — exercício ainda sem carga definida: dica do peso inicial. */
-  const cargaSugerida = getSuggestedLoadIfMissing(ex);
+  /* v4.56.21 — a dica "Sugerido: x kg" saiu do modo TABELA (pedido do usuário):
+     era repetitiva na coluna de volume. O grid e o Modo Foco continuam
+     mostrando o peso inicial sugerido. */
 
   return (
     <tr
@@ -254,9 +255,9 @@ const FichaTableRow: React.FC<CardProps & { idPrefix: string }> = ({
           {ex.sets}×{ex.reps}
           <span>REPS</span>
           {cargaHtml}
-          {cargaSugerida && (
-            <span className="carga-sugerida"> · Sugerido: {cargaSugerida}</span>
-          )}
+          {/* v4.56.21 — no modo TABELA o valor sugerido aparece SEM o texto
+              "Sugerido: x kg" (pedido do usuário): a coluna VOLUME fica limpa,
+              só com séries × reps e a carga em uso. */}
         </div>
         <div className="series-grid-table">{cells}</div>
       </td>

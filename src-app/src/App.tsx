@@ -226,9 +226,7 @@ function AppShell() {
   const [isSelfProfileOpen, setIsSelfProfileOpen] = useState(false);
   const [isConclusaoOpen, setIsConclusaoOpen] = useState(false);
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
-  const skipHistoryPush = useRef(false);
   const allowExit = useRef(false);
-  const activeSectionRef = useRef(activeSection);
   const [isEncerrarOpen, setIsEncerrarOpen] = useState(false);
   const isShareOpen = useShareStore((s) => s.show);
   const isMaestriaUiOpen = useMaestriaUi((s) => s.colecaoOpen || s.maestriaExId !== null);
@@ -269,10 +267,6 @@ function AppShell() {
      no desktop a fita fica em x=0 e o conteúdo entra de baixo para cima
      (verticalSwap, transitionguide.md). SEM guarda de re-entrada: um clique
      no meio da animação retargeta a mesma mola (interrupção natural). */
-  useEffect(() => {
-    activeSectionRef.current = activeSection;
-  }, [activeSection]);
-
   const navigateSection = useCallback(
     (sec: SectionType) => {
       /* v4.8.3: sair do Início descarta o overlay pendente */
@@ -285,9 +279,6 @@ function AppShell() {
       const to = SECTIONS_ORDER.indexOf(sec);
       const commit = () => {
         setActiveSection(sec);
-        if (!skipHistoryPush.current) {
-          window.history.pushState({ section: sec }, '');
-        }
         document.dispatchEvent(new CustomEvent('sectionchange', { detail: sec }));
         repairSectionRaster();
       };
@@ -303,37 +294,34 @@ function AppShell() {
     [activeSection, repairSectionRaster, stripX]
   );
 
-  /* Histórico nativo (botão voltar do celular): troca de aba vira entrada
-     de histórico; voltar retorna à aba anterior. Sem estado anterior, pede
-     confirmação antes de sair do app.
+  /* Histórico nativo (botão voltar / gesto do celular) — v4.56.21.
 
-     v4.56.18 — o `replaceState` sozinho deixava a entrada inicial com estado,
-     então o popstate nunca via `state === null` e o ExitConfirmDialog não
-     aparecia (no Android o voltar no início simplesmente fechava o app). Agora
-     uma entrada-guarda fica no topo: voltar nela cai na entrada da seção atual
-     e abre o diálogo; ao cancelar, a guarda é recolocada. */
-  const navigateSectionRef = useRef(navigateSection);
-  useEffect(() => {
-    navigateSectionRef.current = navigateSection;
-  }, [navigateSection]);
+     O "voltar" agora significa SEMPRE sair do app: a navegação entre seções é
+     feita pela barra inferior, pelas setas do desktop e pelo swipe, e não gera
+     mais entradas no histórico. Antes cada troca de aba empilhava
+     `pushState({ section })`, então as primeiras vezes o voltar apenas trocava
+     de aba (ou caía numa entrada-guarda com estado igual) e o diálogo de saída
+     nunca aparecia — o usuário saía do site sem confirmação.
 
-  const historyInitialized = useRef(false);
+     Mecânica: duas entradas próprias (base + guarda). O "voltar" consome a
+     guarda e abre o diálogo; Cancelar recoloca a guarda com `forward()` (o
+     histórico não cresce) e OK marca `allowExit` e sai de verdade — a partir
+     da base, `back()` leva à página anterior (ou `window.close()` fecha a
+     janela da PWA instalada). */
+  /** Marca o `forward()` de cancelamento para o popstate não reabrir o modal. */
+  const restoringGuard = useRef(false);
+
   useEffect(() => {
-    if (!historyInitialized.current) {
-      historyInitialized.current = true;
-      window.history.replaceState({ section: activeSectionRef.current }, '');
-      window.history.pushState({ section: activeSectionRef.current, exitGuard: true }, '');
-    }
-    const onPopState = (event: PopStateEvent) => {
-      const state = event.state as { section?: string; exitGuard?: boolean } | null;
-      const sec = state?.section;
-      if (sec && sec !== activeSectionRef.current) {
-        skipHistoryPush.current = true;
-        navigateSectionRef.current(sec as SectionType);
-        skipHistoryPush.current = false;
+    window.history.replaceState({ __evofitBase: true }, '');
+    window.history.pushState({ __evofitGuard: true }, '');
+
+    const onPopState = () => {
+      if (allowExit.current) return;
+      /* Volta do `forward()` que recoloca a guarda: ignora o próprio evento. */
+      if (restoringGuard.current) {
+        restoringGuard.current = false;
         return;
       }
-      if (allowExit.current) return;
       setExitConfirmOpen(true);
     };
     window.addEventListener('popstate', onPopState);
@@ -1163,19 +1151,28 @@ function AppShell() {
             open={exitConfirmOpen}
             onCancel={() => {
               setExitConfirmOpen(false);
-              /* Recoloca a guarda para o próximo "voltar" continuar pedindo
-                 confirmação em vez de fechar o app. */
-              window.history.pushState(
-                { section: activeSectionRef.current, exitGuard: true },
-                ''
-              );
+              /* O "voltar" já consumiu a guarda: `forward()` a recoloca, então
+                 o próximo voltar volta a pedir confirmação. */
+              restoringGuard.current = true;
+              window.history.forward();
+              window.setTimeout(() => {
+                restoringGuard.current = false;
+              }, 400);
             }}
             onConfirm={() => {
               allowExit.current = true;
               setExitConfirmOpen(false);
-              /* A guarda já foi consumida pelo "voltar" que abriu o diálogo;
-                 este passo retorna à página anterior ao app. */
-              window.history.back();
+              /* PWA instalada: fecha a janela do app quando o navegador
+                 permite. Aba comum: estamos na entrada-base, então um
+                 "voltar" leva de fato à página anterior (sai do site). */
+              try {
+                window.close();
+              } catch {
+                /* navegador não permite fechar a aba */
+              }
+              window.setTimeout(() => {
+                if (!document.hidden) window.history.back();
+              }, 160);
             }}
           />
           <OnboardingGate />

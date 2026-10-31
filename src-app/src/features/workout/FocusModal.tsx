@@ -146,17 +146,32 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
   const isChecked = Boolean(ex && entry.checks.includes(ex.id));
   const seriesDone = ex ? entry.seriesDone?.[ex.id] ?? [] : [];
 
-  /* Animação focus-anim (updateFocusUI L803-806: remove → reflow → add) */
-  const seriesKey = ex ? seriesDone.join(',') : '';
+  /* v4.56.21 — TROCA SUAVE entre exercícios (sem remount/refresh): a classe
+     `.focus-swap` é reaplicada a cada mudança de conteúdo e anima um fade +
+     deslize curto do bloco (prefers-reduced-motion respeitado no CSS). */
+  const [swapping, setSwapping] = useState(false);
+  const swapRafRef = useRef<number | null>(null);
+  const swapTimerRef = useRef<number | null>(null);
+  const currentId = isCardioStep ? 'cardio' : ex?.id ?? '';
   useEffect(() => {
-    if (!open || !ex) return;
-    const main = mainRef.current;
-    if (!main) return;
-    main.classList.remove('focus-anim');
-    void main.offsetWidth;
-    main.classList.add('focus-anim');
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reframe a cada troca de exercício/marcações
-  }, [open, focusIndex, isChecked, seriesKey]);
+    if (!open) return undefined;
+    if (swapRafRef.current !== null) cancelAnimationFrame(swapRafRef.current);
+    if (swapTimerRef.current !== null) window.clearTimeout(swapTimerRef.current);
+    setSwapping(false);
+    swapRafRef.current = requestAnimationFrame(() => {
+      setSwapping(true);
+      swapTimerRef.current = window.setTimeout(() => {
+        setSwapping(false);
+        swapTimerRef.current = null;
+      }, 340);
+    });
+    return () => {
+      if (swapRafRef.current !== null) cancelAnimationFrame(swapRafRef.current);
+      if (swapTimerRef.current !== null) window.clearTimeout(swapTimerRef.current);
+    };
+    /* Só a TROCA de exercício/etapa anima: marcar série ou concluir o
+       exercício não reaplica o fade (evita a sensação de refresh). */
+  }, [open, focusIndex, currentId]);
 
   useEffect(() => clearTimers, []);
 
@@ -244,6 +259,37 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
     toggleDone(ex.id, ex);
   };
 
+  /* v4.56.21 — CARDIO é opcional no Modo Foco: "Concluir treino sem o cardio"
+     fecha o treino do dia na hora (marca a ficha como concluída e alimenta o
+     duracaoFoco), sem exigir a marcação do cardio. */
+  const finishWithoutCardio = () => {
+    if (completeTimerRef.current !== null) {
+      window.clearTimeout(completeTimerRef.current);
+      completeTimerRef.current = null;
+    }
+    applyFocus((base) => {
+      let next = { ...base };
+      const keys = [...(next.completedKeys ?? [])];
+      if (!keys.includes(treino)) keys.push(treino);
+      next = { ...next, completedKeys: keys, completed: true };
+      const startStr = sessionStorage.getItem('focusStartTime');
+      if (startStr) {
+        const mins = Math.max(1, Math.floor((Date.now() - parseInt(startStr, 10)) / 60000));
+        next = { ...next, focusMin: mins };
+        sessionStorage.removeItem('focusStartTime');
+      }
+      return { entry: next };
+    });
+    showToast('Treino concluído sem o cardio. Bom treino!', 'success');
+    completeTimerRef.current = window.setTimeout(() => {
+      completeTimerRef.current = null;
+      if (openRef.current) {
+        onClose();
+        onCompletedRef.current();
+      }
+    }, 600);
+  };
+
   /* Botões de série (L839-843): toggle + updateFocusUI + renderFicha — sem
      timer de descanso (o legado não passa o rest por aqui) */
   const onSetToggle = (setIdx: number) => {
@@ -256,7 +302,7 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
 
   const timerText = restTimeRemaining > 0
     ? `${pad2(Math.floor(restTimeRemaining / 60))}:${pad2(restTimeRemaining % 60)}`
-    : 'DESCANSAR';
+    : '00:00';
 
   /* v4.31.0 — exercício ainda sem carga definida: dica do peso inicial. */
   const sugestaoCarga = ex ? getSuggestedLoadIfMissing(ex) : null;
@@ -271,8 +317,12 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
       aria-modal={open}
       aria-hidden={!open}
     >
+      {/* v4.56.21 — SEM `key={focusIndex}`: remontar o container inteiro a
+          cada troca de exercício era o "refresh" que piscava a tela (e
+          recarregava o GIF). Agora o container é estável; a troca suave vem
+          da classe .focus-swap reaplicada pelo efeito. */}
       {(ex || isCardioStep) && (
-        <div className="focus-container focus-anim" key={focusIndex}>
+        <div className={`focus-container${swapping ? ' focus-swap' : ''}`}>
           <button
             type="button"
             className="focus-close-btn"
@@ -314,6 +364,7 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
           )}
 
           <div className={`focus-main${isCardioStep ? ' focus-main--cardio' : ''}`} ref={mainRef}>
+            <div className="focus-stage">
             {isCardioStep ? (
               <div className="focus-visual focus-visual--cardio">
                 <span className="focus-cardio-icon" aria-hidden="true">
@@ -343,6 +394,18 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
                 />
               </div>
             )}
+
+              {/* v4.56.21 — TIMER entre o GIF e a linha de séries/reps/carga
+                  (pedido do usuário): antes ficava abaixo dos botões de série
+                  e passava despercebido. */}
+              <div
+                className={`f-timer-display${restTimeRemaining > 0 ? ' is-running' : ''}`}
+                id="focusTimerVal"
+              >
+                <span className="f-timer-val">{timerText}</span>
+                <span className="f-timer-lbl">DESCANSO</span>
+              </div>
+            </div>
 
             <div className="focus-info">
               {isCardioStep ? (
@@ -419,9 +482,6 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
                     ))}
                   </div>
                 )}
-                <div className="f-timer-display" id="focusTimerVal">
-                  {timerText}
-                </div>
                 <button
                   type="button"
                   className={`btn btn-primary f-btn-check ${(isCardioStep ? cardioChecked : isChecked) ? 'f-btn-done' : ''}`}
@@ -436,6 +496,19 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
                       ? 'CONCLUÍDO ✓'
                       : 'CONCLUIR EXERCÍCIO'}
                 </button>
+
+                {/* v4.56.21 — o cardio é opcional: fecha o treino do dia
+                    pulando a etapa (só no Modo Foco). */}
+                {isCardioStep && (
+                  <button
+                    type="button"
+                    className="f-btn-skip-cardio"
+                    id="btnFocusSkipCardio"
+                    onClick={finishWithoutCardio}
+                  >
+                    Concluir treino sem o cardio
+                  </button>
+                )}
               </div>
             </div>
           </div>

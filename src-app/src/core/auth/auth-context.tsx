@@ -68,6 +68,37 @@ function createTestUser(): User {
   } as unknown as User;
 }
 
+/* ── Sessão offline (v4.56.21) ─────────────────────────────────────────────
+   O app é offline-first, mas o login não: sem internet o refresh do token
+   falha, o Supabase emite SIGNED_OUT e a AuthScreen (que exige rede) toma a
+   tela — o PWA instalado ficava inutilizável sem sinal. Guardamos um snapshot
+   mínimo da última conta autenticada e, quando o navegador está offline (ou a
+   checagem de sessão falha por falta de rede), mantemos essa conta ativa:
+   os dados locais (IndexedDB) continuam acessíveis e a fila de sync envia o
+   que ficou pendente quando a conexão volta. Sair da conta de propósito limpa
+   o snapshot. */
+const OFFLINE_USER_KEY = 'mbc_offline_user';
+
+function readOfflineUser(): User | null {
+  try {
+    const raw = localStorage.getItem(OFFLINE_USER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as User | null;
+    return parsed && typeof parsed.id === 'string' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeOfflineUser(u: User | null): void {
+  try {
+    if (u) localStorage.setItem(OFFLINE_USER_KEY, JSON.stringify(u));
+    else localStorage.removeItem(OFFLINE_USER_KEY);
+  } catch {
+    /* storage indisponível */
+  }
+}
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 export { AuthContext };
 
@@ -82,21 +113,97 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isTestMode) return;
     if (!isSupabaseConfigured) return;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const applySession = (s: Session | null) => {
+      if (s?.user) storeOfflineUser(s.user);
+      setSession(s);
+      setUser(s?.user ?? null);
       setLoading(false);
-    });
+    };
+
+    /* Sem sessão válida: offline, cai para o snapshot da última conta em vez
+       de mandar o usuário para a tela de login (que precisa de rede).
+
+       `navigator.onLine` sozinho não basta: ele continua `true` em rede sem
+       rota (Wi-Fi de hotel/captive portal). Por isso, com conta em cache,
+       sonda a própria origem por uma URL que o service worker NUNCA responde
+       de cache (query única, fora do precache e das rotas de runtime) e só
+       desiste do snapshot quando a rede responde de verdade. */
+    const reachable = async (): Promise<boolean> => {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
+      try {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), 2500);
+        const res = await fetch(`${window.location.origin}/index.html?ping=${Date.now()}`, {
+          method: 'HEAD',
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        window.clearTimeout(timer);
+        return res.ok;
+      } catch {
+        return false;
+      }
+    };
+
+    const fallbackWhenOffline = async (): Promise<boolean> => {
+      const cached = readOfflineUser();
+      if (!cached) return false;
+      if (await reachable()) return false;
+      setSession(null);
+      setUser(cached);
+      setLoading(false);
+      return true;
+    };
+
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session } }) => {
+        if (session?.user) {
+          applySession(session);
+          return;
+        }
+        if (await fallbackWhenOffline()) return;
+        applySession(null);
+      })
+      .catch(async () => {
+        if (await fallbackWhenOffline()) return;
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+      (event, session) => {
+        /* Falha de refresh sem rede também emite SIGNED_OUT: não expulsa. */
+        if (event === 'SIGNED_OUT') {
+          void fallbackWhenOffline().then((usedCache) => {
+            if (usedCache) return;
+            storeOfflineUser(null);
+            applySession(null);
+          });
+          return;
+        }
+        applySession(session);
       }
     );
 
-    return () => subscription.unsubscribe();
+    /* Voltou a internet: troca a sessão offline pela sessão real. */
+    const onOnline = () => {
+      void supabase.auth
+        .getSession()
+        .then(({ data: { session } }) => {
+          if (session?.user) applySession(session);
+        })
+        .catch(() => {
+          /* segue com a sessão local */
+        });
+    };
+    window.addEventListener('online', onOnline);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('online', onOnline);
+    };
   }, [isTestMode]);
 
   /* "Manter conectado" (v4.15.0-auth): quando desmarcado no AuthScreen
@@ -193,6 +300,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       setUser(null);
     }
+    storeOfflineUser(null);
     if (isSupabaseConfigured && !wasTest) {
       await supabase.auth.signOut();
     }
