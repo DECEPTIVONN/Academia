@@ -2,6 +2,24 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.23] - 2026-10-31
+
+**Modo offline do PWA alinhado ao guia: fila reativa com snapshots, push sem rede e sincronização manual.**
+
+### Added
+- `src-app/src/core/sync/offline-queue.ts` — a fila IndexedDB agora segue a Section 4 do `STANDALONE_OFFLINE_SYNC_GUIDE.md`: store **`offline_snapshots`** (último estado completo por sync key, gravado na mesma transação da mutação), campos `description`, `lastError`, `syncedAt` e `retryCount` por mutação, `getQueueStatus()` (pendentes, processando, último attempt/sucesso, online) e `subscribeToMutationQueue()` para atualização reativa do banner. O banco foi versionado para **2** com atualização in-place do v1 (cria o snapshot store e o índice `syncKey` sem perder a fila existente). A contagem considera apenas `pending` + `failed`; mutações `synced` com mais de 48 h são limpas automaticamente após o processamento. Falha total do IndexedDB cai no backup `academia_offline_pending_backup` do localStorage.
+- `src-app/src/features/sync/OfflineSyncBanner.tsx` — o banner agora assina `subscribeToMutationQueue` e mostra três estados: **Modo Offline Ativo** (com o total salvo localmente), **Sincronizando alterações...** e **Reconectado!**, além do botão **Sincronizar** (chamada manual de `syncNow`) quando há pendências online. O polling de 15 s cobre alterações feitas por caminhos legados.
+
+### Changed
+- `src-app/src/core/sync/sync-manager.ts` — `pushSnapshot` ficou **offline-first**: sem rede ele não tenta requisição nenhuma — transmite o snapshot às abas via `BroadcastChannel` e enfileira no IndexedDB (coalescido). Falhas de rede no meio do upsert também caem na fila em vez de perder o estado. O flush da fila ganhou gatilhos em `focus`, `visibilitychange` e `pointerdown` (throttle de 15 s, sem concorrência), somando-se ao `online` e ao boot; `syncNow` continua esvaziando a fila antes do push.
+- `src-app/src/features/sync/sync.css` — estilos `.sy-offline*` (tema âmbar offline / acento do usuário online, botão com spinner, posicionamento acima da navbar no mobile e respeito a `prefers-reduced-motion`).
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (avisos de linha de base, nenhum novo).
+- `npm run build`: OK — 52 entradas de precache (~7,6 MB), `dist/sw.js` e `dist/registerSW.js` gerados sem erros de tipo.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.56.23, 364 caminhos verificados (198 OK).
+
 ## [v4.56.22] - 2026-10-31
 
 **Transições entre as sub-abas de Rankings e no resultado das ligas, formulário de exercício em duas colunas, novo Perfil de Saúde e opções de cardio da referência.**

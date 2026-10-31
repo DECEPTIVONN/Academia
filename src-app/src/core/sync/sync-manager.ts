@@ -136,6 +136,13 @@ let pushDebounce: number | null = null;
    e loops de sincronização (dados.md §4.4). */
 let lastSavedSnapshotJson = '';
 
+/* ── Flush da fila offline (foco/visibilidade/pointerdown) ──
+   O guia §5.1 pede múltiplos gatilhos além do evento `online`; o throttle
+   evita rajadas de requisições quando o usuário toca na tela várias vezes. */
+const QUEUE_FLUSH_THROTTLE_MS = 15_000;
+let queueFlushInFlight = false;
+let lastQueueFlushAt = 0;
+
 function emitStatus(): void {
   document.dispatchEvent(new CustomEvent('academia:sync-status-changed'));
 }
@@ -342,10 +349,24 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
 
 /* ── Push ── */
 
+/** Transmite o snapshot completo para outras abas do mesmo navegador (<5 ms). */
+function broadcastCrossTabSnapshot(snapshot: AppSnapshot, updatedAt: string): void {
+  if (!crossTabChannel) return;
+  try {
+    crossTabChannel.postMessage({
+      type: 'CROSS_TAB_SYNC',
+      syncKey: dataSyncKey(),
+      data: snapshot,
+      updatedAt,
+      originDeviceId: getPersistentDeviceId(),
+    });
+  } catch {
+    /* Canal fechado */
+  }
+}
+
 export async function pushSnapshot(): Promise<boolean> {
   if (!isSyncConfigured() || isSyncRevoked()) return false;
-  const client = getSyncSupabaseClient();
-  if (!client) return false;
 
   const snapshot = await buildSnapshot();
   const updatedAt = snapshot.updatedAt;
@@ -358,31 +379,39 @@ export async function pushSnapshot(): Promise<boolean> {
     return true;
   }
 
-  /* Transmite para outras abas locais (<5 ms) com o dado completo */
-  if (crossTabChannel) {
-    try {
-      crossTabChannel.postMessage({
-        type: 'CROSS_TAB_SYNC',
-        syncKey: dataSyncKey(),
-        data: snapshot,
-        updatedAt,
-        originDeviceId: getPersistentDeviceId(),
-      });
-    } catch {
-      /* Canal fechado */
-    }
+  /* Offline-first: sem rede não há tentativa de requisição. O snapshot vai
+     para a fila IndexedDB (com coalescência) e as abas locais recebem o
+     estado na hora. O retorno `false` indica "não chegou à nuvem". */
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    broadcastCrossTabSnapshot(snapshot, updatedAt);
+    await queueOfflineMutation(snapshot, { immediate: false });
+    emitStatus();
+    return false;
   }
 
-  const { error } = await client
-    .from('user_sync')
-    .upsert(
-      { sync_key: dataSyncKey(), data: snapshot, updated_at: updatedAt },
-      { onConflict: 'sync_key' }
-    );
+  const client = getSyncSupabaseClient();
+  if (!client) return false;
 
-  if (error) {
-    console.warn('[sync] Push falhou, enfileirando offline:', error.message);
-    await queueOfflineMutation(snapshot);
+  /* Transmite para outras abas locais (<5 ms) com o dado completo */
+  broadcastCrossTabSnapshot(snapshot, updatedAt);
+
+  try {
+    const { error } = await client
+      .from('user_sync')
+      .upsert(
+        { sync_key: dataSyncKey(), data: snapshot, updated_at: updatedAt },
+        { onConflict: 'sync_key' }
+      );
+
+    if (error) {
+      console.warn('[sync] Push falhou, enfileirando offline:', error.message);
+      await queueOfflineMutation(snapshot, { immediate: false });
+      return false;
+    }
+  } catch (err) {
+    /* Rede caiu no meio do envio: preserva o snapshot local para o retry. */
+    console.warn('[sync] Push sem rede, enfileirando offline:', err);
+    await queueOfflineMutation(snapshot, { immediate: false });
     return false;
   }
 
@@ -710,6 +739,34 @@ function onRemoteBroadcast(payload: {
 
 /* ── Start / Stop do motor ── */
 
+/**
+ * Esvazia a fila offline com throttle. Chamado em `online`, `focus`,
+ * `visibilitychange` e `pointerdown` (guia §5.1).
+ */
+async function flushQueueIfNeeded(force = false): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  if (queueFlushInFlight) return;
+
+  const now = Date.now();
+  if (!force && now - lastQueueFlushAt < QUEUE_FLUSH_THROTTLE_MS) return;
+  lastQueueFlushAt = now;
+  queueFlushInFlight = true;
+
+  try {
+    const flushed = await flushOfflineQueue();
+    if (flushed > 0) {
+      emitStatus();
+      /* Garante que o estado final (inclusive mudanças posteriores ao
+         enfileiramento) também chegue à nuvem. */
+      schedulePush(500);
+    }
+  } catch (e) {
+    console.warn('[sync] flush da fila:', e);
+  } finally {
+    queueFlushInFlight = false;
+  }
+}
+
 export function startSyncEngine(): void {
   if (engineRunning) return;
   engineRunning = true;
@@ -770,15 +827,17 @@ export function startSyncEngine(): void {
     if (document.visibilityState === 'visible') void checkRemoteUpdate(0);
   }, REMOTE_CHECK_PERIOD_MS);
 
-  /* Ao voltar para o app/foco, busca novidades imediatamente. */
+  /* Ao voltar para o app/foco, busca novidades e descarrega a fila. */
   document.addEventListener('visibilitychange', onVisibilityChange);
   window.addEventListener('focus', onWindowFocus);
+  /* Toque na tela após inatividade também tenta descarregar (throttled). */
+  window.addEventListener('pointerdown', onPointerDown, { passive: true });
 
   /* Pull inicial + registro no registry.
      Usa a checagem barata: se o dispositivo já está em dia, não baixa o
      snapshot inteiro; só a linha de updated_at. */
   void (async () => {
-    await flushOfflineQueue();
+    await flushQueueIfNeeded(true);
     await checkRemoteUpdate(0);
     await heartbeatDevices();
     emitStatus();
@@ -811,6 +870,7 @@ export function stopSyncEngine(): void {
   document.removeEventListener('academia:profile-updated', onLocalDataChanged);
   document.removeEventListener('visibilitychange', onVisibilityChange);
   window.removeEventListener('focus', onWindowFocus);
+  window.removeEventListener('pointerdown', onPointerDown);
   window.removeEventListener('online', onOnline);
   if (realtimeChannel) {
     void realtimeChannel.unsubscribe().catch(() => undefined);
@@ -826,17 +886,22 @@ function onLocalDataChanged(): void {
 
 function onVisibilityChange(): void {
   if (document.visibilityState !== 'visible') return;
+  void flushQueueIfNeeded();
   void checkRemoteUpdate(5_000);
   void heartbeatDevices();
 }
 
 function onWindowFocus(): void {
+  void flushQueueIfNeeded();
   void checkRemoteUpdate(5_000);
 }
 
+function onPointerDown(): void {
+  void flushQueueIfNeeded();
+}
+
 function onOnline(): void {
-  void flushOfflineQueue().then((n) => {
-    if (n > 0) schedulePush(500);
+  void flushQueueIfNeeded(true).then(() => {
     void checkRemoteUpdate(0);
   });
 }
