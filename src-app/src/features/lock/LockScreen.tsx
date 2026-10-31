@@ -22,7 +22,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
-import { defaultScreenImage } from '@/lib/screen-defaults';
+import { defaultScreenImage, screenBackgroundStyle } from '@/lib/screen-defaults';
 import { resolveWallpaper } from './lock-wallpapers';
 import { clearPin, isBiometricEnabled, useLockStore, verifyBiometric, verifyPin } from './lock-store';
 import './lock.css';
@@ -161,7 +161,7 @@ export const LockScreen: React.FC = () => {
       : readLS(PREF_KEYS.lockWallHorizontal) || 'grafite'
   );
   /* v4.53.0 — só considera o preset quando o usuário ESCOLHEU um wallpaper.
-     Sem escolha, entra a imagem padrão (LoagingVertical/LoadingHorizontal). */
+     Sem escolha, entra a imagem padrão (LoadingVertical/LoadingHorizontal). */
   const [wallExplicit, setWallExplicit] = useState<boolean>(() =>
     Boolean(readLS(portrait ? PREF_KEYS.lockWallVertical : PREF_KEYS.lockWallHorizontal))
   );
@@ -293,9 +293,9 @@ export const LockScreen: React.FC = () => {
         style={
           lockBg
             ? {
-                backgroundImage: `url("${lockBg}")`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                /* v4.56.20 — arte padrão em `contain` (fundo preto) para não
+                   cortar o personagem; imagem personalizada em `cover`. */
+                ...screenBackgroundStyle(lockBg, Boolean(customBg)),
                 filter: 'brightness(0.78) saturate(1.05)',
               }
             : { background: wall.bg }

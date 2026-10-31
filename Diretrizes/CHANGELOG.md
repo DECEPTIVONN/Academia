@@ -2,6 +2,27 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.56.20] - 2026-10-30
+
+**Imagens das telas de carregamento proporcionais (mobile e desktop) e PWA realmente offline.**
+
+### Fixed
+- `src-app/src/assets/LoadingVertical.png` e `LoadingHorizontal.png` — os arquivos estavam com as **orientações trocadas** (o “LoagingVertical” era 1536×1024 paisagem e o “LoagingHorizontal” era 1024×1536 retrato), o que fazia a splash/lock aplicarem a arte errada com `cover` e ampliarem o personagem (~3× no retrato). Os arquivos foram renomeados/corrigidos (e o erro de digitação “Loaging” saiu): retrato = LoadingVertical (1024×1536), paisagem = LoadingHorizontal (1536×1024).
+- `src-app/vite.config.ts` — o `selfDestroying: true` do `vite-plugin-pwa` fazia o service worker gerado **se auto-desregistrar e apagar todos os caches** no activate; em produção não havia offline nenhum. Removido.
+
+### Changed
+- `src-app/src/lib/screen-defaults.ts` — novo `screenBackgroundStyle(image, custom)`: a arte padrão usa `contain` sobre fundo preto (nada é cortado nem ampliado em nenhuma proporção; o fundo da arte é preto, então as faixas se fundem) e imagens personalizadas do usuário seguem em `cover`.
+- `src-app/index.html` — splash usa as novas imagens e alterna `contain` (padrão) / `cover` (imagem custom `mbc_loading_*`), com `background-repeat: no-repeat` e fundo preto.
+- `src-app/src/features/sync/AppLoadingScreen.tsx`, `src-app/src/features/lock/LockScreen.tsx` e `src-app/src/features/sync/ScreensCustomizationPanel.tsx` — passam a usar `screenBackgroundStyle` (mesma regra contain/cover da splash).
+- `src-app/vite.config.ts` — precache enxuto e offline funcional: `globPatterns` cobre app shell, fontes (vendor + Font Awesome), ícones, backgrounds e imagens da splash; `globIgnores` tira `assets/exerciciosgif/**` (23 MB) e `assets/sounds/**` (17 MB) do precache (entram sob demanda). Novas regras de runtime: Google Fonts (Material Symbols) em StaleWhileRevalidate/CacheFirst para funcionar offline após o 1º carregamento, fontes locais (`vendor/fonts` e `vendor/webfonts`) em CacheFirst, mídia de exercício (gif/webp) em CacheFirst com 60 dias/250 entradas, `/assets/` em StaleWhileRevalidate, Supabase (`rest/auth/realtime`) e `/api/` em NetworkOnly. `navigateFallbackDenylist` evita que rotas de API caiam no `index.html`.
+- O `includeAssets` foi removido: os mesmos arquivos (ícones/bg/svg) entravam duas vezes no precache via `globPatterns`.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (avisos de linha de base).
+- `npm run build`: OK — `dist/sw.js` gerado sem `selfDestroying` (sem `unregister`), 53 URLs únicas no precache (~7,6 MB), 0 GIFs/áudios no precache.
+- `npm run lint:docs`: OK.
+
 ## [v4.56.19] - 2026-10-30
 
 **Rankings e Mensagens no menu do Início, Modo Foco pelo GIF da ficha e confirmação de saída no desenho da referência.**

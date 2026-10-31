@@ -51,11 +51,18 @@ export default defineConfig({
     spotifyDevApi(),
     VitePWA({
       registerType: 'autoUpdate',
-      selfDestroying: true,
       injectRegister: 'auto',
-      // v4.18.0-music — '!assets/sounds/**' exclui o MAIN.mp3 (7,2 MB) do
-      // precache: ele é cacheado sob demanda via runtimeCaching StaleWhileRevalidate.
-      includeAssets: ['favicon.ico', 'assets/**/*', '!assets/sounds/**'],
+      // v4.56.20 — OFFLINE REAL: o `selfDestroying: true` da configuração
+      // anterior fazia o SW gerado se AUTO-DESREGISTRAR e apagar todos os
+      // caches no activate — o PWA instalado não abria nada sem internet.
+      // Fora isso, o precache agora é enxuto de propósito:
+      //   • app shell (JS/CSS/HTML/SVG) + fontes (vendor e FA) + ícones/bg;
+      //   • imagens da splash/loading importadas por src/assets;
+      //   • GIFs de exercício (23 MB) e áudios (17 MB) ficam de FORA do
+      //     precache: entram pelo runtimeCaching ao serem vistos (CacheFirst).
+      // Sem includeAssets de propósito: globPatterns já cobre favicon, ícones,
+      // backgrounds e as imagens da splash (antes os mesmos arquivos entravam
+      // duas vezes no precache).
       manifest: {
         name: 'EVO FIT',
         short_name: 'EVO FIT',
@@ -77,40 +84,73 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        // App shell + fontes + ícones/bg + imagens importadas de src/assets.
+        // Caminhos com espaço (GIFs) ficam fora via globIgnores.
+        globPatterns: ['**/*.{js,css,html,svg,ico,woff2,png,jpg,webp}'],
+        globIgnores: ['**/assets/exerciciosgif/**', '**/assets/sounds/**'],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         navigateFallback: '/index.html',
+        // Rotas de API nunca caem no index.html (previews/offline).
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
+          // Material Symbols (CDN): depois do 1º carregamento a fonte e o CSS
+          // passam a vir do cache, então os ícones continuam funcionando offline.
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\//i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts-stylesheets-v1',
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\//i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts-v1',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 40, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
+          // GIFs/WEBP dos exercícios: cache sob demanda (não vão no precache).
           {
             urlPattern: /\.(?:gif|webp)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'exercise-media-v1',
-              expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 250, maxAgeSeconds: 60 * 24 * 60 * 60 },
             },
           },
+          // Fontes locais (vendor/fonts + Font Awesome webfonts).
           {
-            urlPattern: /assets\/fonts\/.+\.woff2$/i,
+            urlPattern: /(?:fonts|webfonts)\/.+\.woff2$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'fonts-v1',
-              expiration: { maxAgeSeconds: 365 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 60, maxAgeSeconds: 365 * 24 * 60 * 60 },
             },
           },
-          {
-            urlPattern: /supabase\.co\/rest\//i,
-            handler: 'NetworkOnly',
-          },
-          {
-            urlPattern: /supabase\.co\/auth\//i,
-            handler: 'NetworkOnly',
-          },
+          // Imagens avulsas (backgrounds, emblemas, fotos de tela).
           {
             urlPattern: /assets\//i,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'static-assets-v1',
-              expiration: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 120, maxAgeSeconds: 30 * 24 * 60 * 60 },
             },
+          },
+          // Supabase e APIs sempre pela rede (dados/dados de sessão nunca vêm
+          // de cache); offline o app usa o banco local + fila de sync.
+          {
+            urlPattern: /supabase\.co\/(?:rest|auth|realtime)\//i,
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /\/api\//i,
+            handler: 'NetworkOnly',
           },
         ],
       },

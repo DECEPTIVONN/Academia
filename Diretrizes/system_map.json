@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.56.19",
+  "version": "4.56.20",
   "last_updated": "2026-10-30",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -812,7 +812,7 @@
       },
       {
         "file": "src-app/src/lib/screen-defaults.ts",
-        "purpose": "Imagens padrão das telas de carregamento e bloqueio: defaultScreenImage(portrait) devolve LoagingVertical.png (mobile/retrato) ou LoadingHorizontal.png (desktop/paisagem), importadas de src-app/src/assets/. Consumido por index.html (splash, via <img> ocultos), LockScreen, AppLoadingScreen e ScreensCustomizationPanel; imagens custom (mbc_*) e presets de wallpaper explícitos têm prioridade."
+        "purpose": "Imagens padrão das telas de carregamento e bloqueio: defaultScreenImage(portrait) devolve LoadingVertical.png (1024×1536, mobile/retrato) ou LoadingHorizontal.png (1536×1024, desktop/paisagem), importadas de src-app/src/assets/. screenBackgroundStyle(image, custom) devolve o fundo pronto: arte padrão em contain sobre preto (não corta/amplia o personagem) e imagem personalizada em cover. Consumido por index.html (splash, via <img> ocultos), LockScreen, AppLoadingScreen e ScreensCustomizationPanel; imagens custom (mbc_*) e presets de wallpaper explícitos têm prioridade."
       },
       {
         "file": "src-app/src/lib/animations.ts",
@@ -888,7 +888,7 @@
       },
       {
         "file": "src-app/vite.config.ts",
-        "purpose": "React + Tailwind v4 + vite-plugin-pwa. Ícones do manifesto (instalação PWA): /assets/icons/logo-192.png, logo-512.png (purpose any) e logo-maskable-512.png (purpose maskable, logo a ~68% sobre fundo preto, dentro da safe zone), todos gerados de assets/Logo.png (v4.56.1 — arte nova SEM fundo: logo-32/48/180/192/512 com transparência, maskable mantém o fundo preto). includeAssets mantém o glob negativo '!assets/sounds/**' — o MAIN.mp3 (7,2 MB) fica FORA do precache do SW e é cacheado sob demanda pelo runtimeCaching StaleWhileRevalidate de /assets/."
+        "purpose": "React + Tailwind v4 + vite-plugin-pwa. Ícones do manifesto (instalação PWA): /assets/icons/logo-192.png, logo-512.png (purpose any) e logo-maskable-512.png (purpose maskable, logo a ~68% sobre fundo preto, dentro da safe zone), todos gerados de assets/Logo.png. CACHE/OFFLINE: o SW NÃO é selfDestroying (antes ele se desregistrava e apagava os caches; não havia offline). Precache com globPatterns (app shell + fontes + ícones/bg + imagens da splash) e globIgnores para assets/exerciciosgif e assets/sounds; GIFs de exercício (23 MB) e áudios (17 MB) entram sob demanda via runtimeCaching CacheFirst. Google Fonts (Material Symbols) e fontes locais em CacheFirst para funcionar offline após o 1º carregamento; Supabase e /api/ em NetworkOnly; navigateFallback /index.html."
       },
       {
         "file": "src-app/src/lib/canonical.ts",
@@ -939,7 +939,7 @@
     },
     "atual_src_app": {
       "shell_e_splash": "[ATUAL] src-app/index.html (splash #splashScreen + overlay de boot) + src-app/src/main.tsx (ordem dos imports CSS) + src-app/src/App.tsx (rotas, overlays, swipe) + src-app/vite.config.ts (PWA/precache)",
-      "imagens_padrao_de_telas": "[ATUAL] src-app/src/lib/screen-defaults.ts (defaultScreenImage) + src-app/src/assets/ (LoagingVertical.png, LoagingHorizontal.png) + src-app/index.html (splash) + src-app/src/features/lock/LockScreen.tsx",
+      "imagens_padrao_de_telas": "[ATUAL] src-app/src/lib/screen-defaults.ts (defaultScreenImage + screenBackgroundStyle) + src-app/src/assets/ (LoadingVertical.png, LoadingHorizontal.png) + src-app/index.html (splash) + src-app/src/features/lock/LockScreen.tsx",
       "tokens_e_cores": "[ATUAL] src-app/src/styles/design-tokens.css + src-app/src/legacy-style/treino/1-core.css (bloco :root = tokens do app) + src-app/src/styles/globals.css (pins de cascata TW4) + src-app/src/features/settings/theme-colors.ts (12 presets)",
       "secao_inicio": "[ATUAL] src-app/src/features/dashboard/DashboardFeature.tsx (arena card, ciclo, ofensiva, prévia) + src-app/src/legacy-style/treino/secoes/dashboard.css",
       "modal_de_ciclos": "[ATUAL] src-app/src/features/dashboard/CycleModal.tsx (lista 0–30 + detalhe) + src-app/src/features/dashboard/cycle-modal.css + src-app/src/core/db/queries.ts (getCycleTimeline/CycleTimelineItem)",

@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { defaultScreenImage } from '@/lib/screen-defaults';
+import { defaultScreenImage, screenBackgroundStyle } from '@/lib/screen-defaults';
 import './sync.css';
 
 const SvgCloud = (
@@ -49,15 +49,22 @@ export function AppLoadingScreen({ verticalImage, horizontalImage, onComplete }:
     return () => window.clearInterval(t);
   }, [onComplete]);
 
-  const activeBg =
-    (portrait ? verticalImage || horizontalImage : horizontalImage || verticalImage) ||
-    defaultScreenImage(portrait);
+  const customBg = portrait
+    ? verticalImage || horizontalImage
+    : horizontalImage || verticalImage;
+  const activeBg = customBg || defaultScreenImage(portrait);
 
   return (
     <div className="sy-loading">
       <div
         className="sy-loading__bg"
-        style={activeBg ? { backgroundImage: `url("${activeBg}")` } : { background: 'radial-gradient(circle at 30% 20%, #1c1917, #000 70%)' }}
+        /* v4.56.20 — arte padrão em `contain` (fundo preto) para não cortar o
+           personagem; imagem personalizada segue em `cover`. */
+        style={
+          screenBackgroundStyle(activeBg, Boolean(customBg)) ?? {
+            background: 'radial-gradient(circle at 30% 20%, #1c1917, #000 70%)',
+          }
+        }
       />
       <div className="sy-loading__shade" />
       <div className="sy-loading__panel">

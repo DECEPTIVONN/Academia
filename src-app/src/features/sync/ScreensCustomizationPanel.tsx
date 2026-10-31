@@ -18,7 +18,7 @@ import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
 import { isBiometricEnabled } from '@/features/lock/lock-store';
 import { resolveWallpaper } from '@/features/lock/lock-wallpapers';
-import { defaultScreenImage } from '@/lib/screen-defaults';
+import { defaultScreenImage, screenBackgroundStyle } from '@/lib/screen-defaults';
 import { AppLoadingScreen } from './AppLoadingScreen';
 import '@/features/lock/lock.css';
 import './sync.css';
@@ -370,9 +370,7 @@ export function ScreensCustomizationPanel() {
               style={
                 previewBg
                   ? {
-                      backgroundImage: `url("${previewBg}")`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
+                      ...screenBackgroundStyle(previewBg, Boolean(customBg)),
                       filter: 'brightness(0.78) saturate(1.05)',
                     }
                   : { background: wall.bg }
