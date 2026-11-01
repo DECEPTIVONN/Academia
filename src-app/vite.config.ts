@@ -63,6 +63,22 @@ export default defineConfig({
       // Sem includeAssets de propósito: globPatterns já cobre favicon, ícones,
       // backgrounds e as imagens da splash (antes os mesmos arquivos entravam
       // duas vezes no precache).
+      /* v4.62.0-OFFLINE — os ícones do manifesto NÃO entram no precache por
+         esta via. `includeManifestIcons` (padrão true) adiciona cada ícone
+         com um `revision` calculado, e o `globPatterns` logo abaixo já
+         inclui os mesmos PNGs com `revision: null`. O Workbox recusa a lista
+         duplicada e lança, no install:
+
+           add-to-cache-list-conflicting-entries
+             assets/icons/logo-192.png
+             assets/icons/logo-192.png?__WB_REVISION__=b0881f94…
+
+         A exceção aborta o precache INTEIRO: o SW até ativa, mas
+         `caches.keys()` fica vazio e qualquer navegação offline cai em
+         ERR_INTERNET_DISCONNECTED (o “dinossauro”). Desligar a injeção deixa
+         os ícones uma única vez, pelo glob — e continua valendo se um ícone
+         for renomeado. */
+      includeManifestIcons: false,
       manifest: {
         name: 'EVO FIT',
         short_name: 'EVO FIT',

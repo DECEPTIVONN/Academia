@@ -2,6 +2,31 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.62.0] - 2026-10-31
+
+**Modo offline consertado: o precache do Service Worker falhava no install por causa de ícones duplicados.**
+
+### Fixed
+- `src-app/vite.config.ts` — **`includeManifestIcons: false`**. O `vite-plugin-pwa` injetava os 3 ícones do manifesto no precache com `revision` calculado, enquanto o `globPatterns` já incluía os mesmos PNGs com `revision: null`. A lista duplicada fazia o Workbox lançar `add-to-cache-list-conflicting-entries` durante o install:
+  ```
+  firstEntry:  assets/icons/logo-192.png
+  secondEntry: assets/icons/logo-192.png?__WB_REVISION__=b0881f94…
+  ```
+  A exceção abortava o precache **inteiro**: o Service Worker até ficava `activated`, mas `caches.keys()` retornava vazio e qualquer navegação offline caía em `ERR_INTERNET_DISCONNECTED` (a tela do dinossauro). Com a injeção desligada, os ícones continuam no precache uma única vez, pelo glob, e renomear um ícone não recria o conflito.
+
+### Verificado
+- `npm run build` (src-app): OK — precache com **54 entradas únicas** (antes: 57, com 3 duplicadas).
+- Teste real de offline com Chrome headless via CDP (`Network.emulateNetworkConditions` offline + reload):
+  - SW `activated` com `workbox-precache-v2` contendo as 54 entradas (`caches.keys()` deixa de ser vazio);
+  - reload offline em `/` abre **EVO FIT** com `#root` montado;
+  - reload offline em rota profunda (`/progresso`) também abre pelo `navigateFallback`;
+  - nenhum `ServiceWorker.workerErrorReported` (antes: 1 erro `add-to-cache-list-conflicting-entries`).
+- `npx oxlint src`: 0 erros.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.62.0.
+
+### Observação
+- O build publicado na Vercel precisa ser refeito para o SW corrigido chegar aos aparelhos. Como o SW do site quebrado não tem caches, na primeira visita online o navegador baixa o novo `sw.js` (servido com `must-revalidate`), instala e popula o precache.
+
 ## [v4.61.0] - 2026-10-31
 
 **Modo Foco: séries preenchem as anteriores, conclusão das séries avança de exercício e a navegação some nas pontas.**
