@@ -209,6 +209,7 @@ Se você é um assistente de inteligência artificial manipulando esta base de c
    - **Porcentagem concluída** (ex.: "60% — 3 de 5 fases").
    - **Fase atual** (ex.: "Fase 2/5 — movendo legado").
    O usuário deve sempre saber quanto tempo falta, quanto já foi feito e em qual etapa a tarefa está.
+11. **DIRETRIZ OBRIGATÓRIA — todo modal/overlay/tela novo nasce com animação de entrada E de saída:** qualquer modal, overlay, sheet, popover, dropdown, drawer ou tela condicional criada ou alterada precisa de transição suave nos **dois sentidos** (≈220 ms, mesma curva), montada por `useModalPresence`/`usePresenceValue` (`src-app/src/hooks/useModalPresence.ts`) com a classe `.is-closing`, respeitando `prefers-reduced-motion`. `{open && …}`, `display: none` seco e desmontar no clique de fechar são proibidos — o componente fica montado durante a saída. Regra completa (com receita de código) na **§12.4 do `Diretrizes/DESIGN.md`**.
 
 ---
 

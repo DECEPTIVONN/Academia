@@ -2,6 +2,26 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.59.0] - 2026-10-31
+
+**Compartilhamento no Android passou a levar a imagem gerada (Radar Fit e Treino Concluído) junto da mensagem; animação de entrada/saída em modais virou regra obrigatória nas diretrizes.**
+
+### Added
+- `@capacitor/share` + `@capacitor/filesystem` (dependências da raiz) — plugins nativos registrados no projeto Android (`npx cap sync android` passou a listar os dois).
+- `src-app/src/lib/native-share.ts` — **`isNativeApp()`**, **`shareImageInNativeApp(file, text, title)`** (grava o PNG em `Directory.Cache` e abre o share nativo com `files` + `text` no MESMO intent) e **`saveImageInNativeApp(file)`** (Documentos → cache como reserva do `<a download>`, que o WebView ignora).
+- `Diretrizes/DESIGN.md` — nova **§12.4**: regra obrigatória de entrada **e saída** animadas para qualquer modal/overlay/sheet/popover/tela condicional, com receita `useModalPresence`/`usePresenceValue` + `.is-closing` e `prefers-reduced-motion`.
+
+### Changed
+- `src-app/src/features/gamification/ShareModal.tsx` — no app Android o compartilhamento usa o **plugin nativo antes do Web Share** (o WebView não compartilha arquivo pelo `navigator.share`, era o motivo de o Radar Fit e o Treino Concluído saírem só com a mensagem); “Baixar imagem” grava pelo Filesystem no APK; o clone do radar recebeu `width/height` 300×300 explícitos para o html2canvas rasterizar o SVG (antes podia sair vazio); os links de WhatsApp/X/Facebook (que só levam texto) ficam ocultos no APK, onde o share nativo já leva imagem + mensagem.
+- `Diretrizes/DESIGN.md` (§14 checklist + regra de ouro §15.4) e `Diretrizes/README.md` (**regra 11** do Guia para Agentes de IA) — animação de aparecimento **e** desaparecimento agora é requisito de aceite para toda interface nova; `{open && …}` e `display: none` seco ficam proibidos.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (72 avisos de linha de base, nenhum novo).
+- `npm run build`: OK — precache gerado.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.59.0.
+- `npx cap sync android`: OK — plugins `@capacitor/filesystem@8.1.5` e `@capacitor/share@8.0.3` registrados (o APK precisa ser recompilado no Android Studio).
+
 ## [v4.58.0] - 2026-10-31
 
 **Minha Ficha: coleção com cards do deck, ghost de arraste no desenho do deck e exercício caindo no slot exato (1–8).**

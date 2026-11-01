@@ -477,7 +477,41 @@ O aplicativo utiliza um conjunto unificado de keyframes para garantir consistên
 }
 ```
 
-### 12.4 Efeito Cascata de Elementos (Staggering)
+### 12.4 REGRA OBRIGATÓRIA — todo modal/overlay/tela nasce com entrada **e saída** animadas
+
+> **Vale para qualquer interface nova** que apareça e desapareça (modal, overlay, sheet, popover, drawer, dropdown, tela condicional, passo de fluxo, diálogo de confirmação). Vale também ao alterar uma interface existente. **A animação de entrada sozinha não cumpre a regra.**
+
+**Regras:**
+1. **Dois sentidos sempre.** A entrada usa keyframe/transição própria e a saída usa outra (`*Out`), com a **mesma duração e curva** da entrada (padrão do app: **220 ms**, `cubic-bezier(0.4, 0, 0.2, 1)`), `animation-fill-mode: forwards` na saída e `pointer-events: none` durante o fechamento.
+2. **O componente continua montado durante a saída.** Nunca desmonte com `{open && ...}`, `display: none` imediato ou removendo o portal no clique de fechar — o conteúdo pisca/some no mesmo frame. Use:
+   - `useModalPresence(open)` — `src-app/src/hooks/useModalPresence.ts`: devolve `{ mounted, closing }`; aplica a classe `.is-closing` no wrapper.
+   - `usePresenceValue(value)` — mesmo arquivo: para modal aberto **por dado** (`{renaming && <Sheet playlist={renaming}/>}`), mantém o último valor durante a saída (evita conteúdo vazio/“piscando”).
+   - `useModalExit` / `requestClose` para overlays imperativos (ex.: busca global).
+3. **CSS:** keyframes pareados no módulo da área (`modalPanelIn`/`modalPanelOut`, `muSlideUp`/`muSlideDown`, `gsPop`/`gsFadeOut`, …), sempre com `@media (prefers-reduced-motion: reduce)` reduzindo/removendo o movimento.
+4. **Animação de saída não pode perder dados nem travar o foco:** o estado que alimenta o conteúdo fica congelado até o fim da animação; o `Esc`, o backdrop e o botão **X** usam o mesmo caminho de fechamento animado.
+5. **Exceção documentada:** interfaces cuja visibilidade é regida por comportamento (ex.: miniplayer temporizado) só podem ficar sem saída animada se o motivo estiver comentado no código.
+
+**Receita mínima (React):**
+```tsx
+const { mounted, closing } = useModalPresence(open);
+if (!mounted) return null;
+return (
+  <div className={`modal-overlay${closing ? ' is-closing' : ''}`} role="dialog" aria-modal="true">
+    <div className="modal-panel">…</div>
+  </div>
+);
+```
+```css
+.modal-overlay { animation: modalOverlayIn .22s cubic-bezier(.4,0,.2,1) both; }
+.modal-overlay .modal-panel { animation: modalPanelIn .22s cubic-bezier(.4,0,.2,1) both; }
+.modal-overlay.is-closing { animation: modalOverlayOut .22s cubic-bezier(.4,0,.2,1) forwards; pointer-events: none; }
+.modal-overlay.is-closing .modal-panel { animation: modalPanelOut .22s cubic-bezier(.4,0,.2,1) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay, .modal-overlay .modal-panel { animation-duration: .01ms; }
+}
+```
+
+### 12.5 Efeito Cascata de Elementos (Staggering)
 Para criar uma sensação premium de carregamento, o aplicativo aplica um micro-atraso incremental nos itens de tabelas e listas dinâmica.
 Isso é feito em CSS puro multiplicando um índice de variável CSS injetado pelo JavaScript (`--item-index`) por um multiplicador de tempo base:
 
@@ -1018,6 +1052,7 @@ Antes de submeter qualquer nova interface ou componente visual no projeto Academ
 *   [ ] **Design Responsivo:** O elemento possui regras `media queries` correspondentes que se adaptam a telas pequenas de smartphones (mobile-first real).
 *   [ ] **Sincronia de Ícones:** Os ícones SVG usam exclusivamente o padrão contorno definido em `Ícones.md` com `stroke="currentColor"`.
 *   [ ] **Micro-interações:** Hover, active e focus possuem transições suaves de pelo menos `0.25s` com curvas de aceleração adequadas (evite transições secas).
+*   [ ] **Animação de Entrada e Saída (OBRIGATÓRIO):** todo modal, overlay, sheet, popover, dropdown ou tela condicional tem animação suave **de aparecimento E de desaparecimento** (≈220 ms, mesma curva), montado por `useModalPresence`/`usePresenceValue` com a classe `.is-closing` — nunca `{open && …}` ou `display: none` seco. Detalhes na **§12.4** e respeitando `prefers-reduced-motion`.
 *   [ ] **Tratamento de Exibição:** Os dados vazios ou de carregamento mostram `.premium-placeholder` com animação de Shimmer e pulso ativas.
 *   [ ] **Sem Token Bloqueado (IA):** O CSS é escrito no módulo de seção correto — no app atual, `src-app/src/legacy-style/treino/secoes/` (importado pelo agregador `legacy.css`) ou em `src-app/src/styles/` — nunca no agregador.
 
@@ -1057,6 +1092,7 @@ Caminhos das colunas **Componente/CSS** relativos à raiz do repositório. CSS d
 1. **Ordem de cascata** definida em `main.tsx`: `legacy.css` → `globals.css` → `design-tokens.css` → **`shell.css` por último** (vence empates). Não reordene sem necessidade.
 2. **Todo overlay/modal** monta via `createPortal(document.body)`: o `.section-strip` tem `will-change: transform` e vira o *containing block* do `position: fixed` (causa-raiz histórica de overlays "fora da tela").
 3. **Ícone novo/alterado** → ler `Diretrizes/Ícones.md` antes; silhuetas `fill` (não `stroke`) só nos casos especiais listados lá.
+4. **Modal/overlay novo ou alterado** → entrada **e** saída animadas (§12.4): `useModalPresence`/`usePresenceValue` + `.is-closing`; `{open && …}` e `display: none` secos são proibidos.
 
 ---
 *Manual desenvolvido e validado por: Antigravity AI — Atualizado em Maio de 2026*

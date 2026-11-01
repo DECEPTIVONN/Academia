@@ -21,7 +21,13 @@ import {
   todayLabel,
 } from '@/core/db/queries';
 import { averageLoadKg, effectiveLoadKg } from '@/lib/suggested-load';
-import { shareNative, canNativeShare } from '@/lib/native-share';
+import {
+  shareNative,
+  canNativeShare,
+  isNativeApp,
+  saveImageInNativeApp,
+  shareImageInNativeApp,
+} from '@/lib/native-share';
 import type { NativeShareResult } from '@/lib/native-share';
 import { useModalPresence } from '@/hooks/useModalPresence';
 import { useShareStore } from './share-store';
@@ -182,10 +188,15 @@ export function ShareModal() {
     container.innerHTML = '';
     const svg = document.querySelector('#radarChartContainer svg');
     if (svg) {
+      /* v4.59.0 — o SVG do radar vem só com viewBox (sem width/height): o
+         html2canvas rasteriza pelo tamanho intrínseco, então o clone recebe
+         300×300 explícito (viewBox é quadrado) para a imagem não sair vazia. */
       const clone = svg.cloneNode(true) as SVGElement;
-      (clone as SVGElement).style.width = '100%';
-      (clone as SVGElement).style.maxWidth = '300px';
-      (clone as SVGElement).style.height = 'auto';
+      clone.setAttribute('width', '300');
+      clone.setAttribute('height', '300');
+      clone.style.width = '300px';
+      clone.style.maxWidth = '100%';
+      clone.style.height = 'auto';
       container.appendChild(clone);
     }
   }, [show, kind]);
@@ -224,6 +235,12 @@ export function ShareModal() {
         showToast('Não foi possível gerar a imagem.', 'error');
         return;
       }
+      /* v4.59.0 — no APK o <a download> é ignorado pelo WebView: grava pelo
+         Filesystem (Documentos → cache, como reserva). */
+      if (isNativeApp() && (await saveImageInNativeApp(file))) {
+        showToast('Imagem salva em Documentos!', 'success');
+        return;
+      }
       downloadFile(file);
       showToast('Imagem gerada com sucesso! Confira seus downloads.', 'success');
     } catch (err) {
@@ -247,6 +264,19 @@ export function ShareModal() {
       }
 
       const text = shareText;
+
+      /* v4.59.0 — APP Android: o WebView não compartilha arquivo via Web Share
+         (era o motivo de o share sair só com a mensagem). O plugin nativo
+         entrega o PNG + texto no mesmo intent, ainda dentro do gesto. */
+      if (isNativeApp()) {
+        const native = await shareImageInNativeApp(file, text, 'Evo Fit');
+        if (native === 'shared') {
+          showToast('Compartilhado com a imagem!', 'success');
+          return;
+        }
+        if (native === 'cancelled') return;
+        /* 'unsupported'/'error' → tenta o caminho web abaixo */
+      }
 
       /* v4.52.1-share — a imagem tem PRIORIDADE: o payload tenta primeiro
          texto + imagem e, se a plataforma recusar a combinação, repete SÓ com
@@ -273,6 +303,10 @@ export function ShareModal() {
       console.info('[share] plataforma sem share de arquivo — imagem entregue por download/clipboard');
       const textResult = await shareNative({ title: 'Evo Fit', text });
       if (textResult === 'cancelled') return; // respeita o cancelamento
+      if (isNativeApp() && (await saveImageInNativeApp(file))) {
+        showToast('Imagem salva em Documentos — anexe no app escolhido!', 'success');
+        return;
+      }
       await deliverImage(file);
       showToast(
         textResult === 'shared'
@@ -579,7 +613,10 @@ export function ShareModal() {
               </>
             )}
           </button>
-            {!canNativeShare() && (
+            {/* v4.59.0 — no APP (Capacitor) o share nativo já entrega imagem +
+                texto; os links abaixo mandariam SÓ o texto (o WebView não tem
+                navigator.share), então ficam escondidos ali. */}
+            {!canNativeShare() && !isNativeApp() && (
              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
                <a href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">WhatsApp</a>
                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(window.location.origin)}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">X</a>

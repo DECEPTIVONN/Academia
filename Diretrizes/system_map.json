@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.58.0",
+  "version": "4.59.0",
   "last_updated": "2026-10-31",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -474,7 +474,7 @@
       },
       {
         "file": "Diretrizes/README.md",
-        "purpose": "Visão geral arquitetural, features, design guidelines e guia de uso para agentes de IA (inclui a regra 7: informar estimativa de prazo e progresso em tarefas demoradas, v4.0.13-typography-docs). LEITURA OBRIGATÓRIA no início de cada sessão."
+        "purpose": "Visão geral arquitetural, features, design guidelines e guia de uso para agentes de IA (regras 7/10: informar prazo e progresso em tarefas demoradas; regra 11: todo modal/overlay novo nasce com entrada E saída animadas). LEITURA OBRIGATÓRIA no início de cada sessão."
       },
       {
         "file": "Diretrizes/CHANGELOG.md",
@@ -486,7 +486,7 @@
       },
       {
         "file": "Diretrizes/DESIGN.md",
-        "purpose": "Manual do Sistema de Design (Bíblia de estilo): tokens de design, core de variáveis globais, fundo dinâmico, navegação, cartões, maestria, personalização, timers, catálogo de animações, blueprints de componentes e checklist de conformidade. LEITURA OBRIGATÓRIA antes de criar ou alterar qualquer elemento visual."
+        "purpose": "Manual do Sistema de Design (Bíblia de estilo): tokens de design, core de variáveis globais, fundo dinâmico, navegação, cartões, maestria, personalização, timers, catálogo de animações, blueprints de componentes e checklist de conformidade. A §12.4 é REGRA OBRIGATÓRIA: todo modal/overlay/tela aparece E desaparece com transição suave (useModalPresence/.is-closing). LEITURA OBRIGATÓRIA antes de criar ou alterar qualquer elemento visual."
       },
       {
         "file": "Referências/navbar-inferior.html",
@@ -576,7 +576,7 @@
       },
       {
         "file": "src-app/src/features/gamification/",
-        "purpose": "Pasta da Fase 3: radar.ts (computeRadarStats/getArchetypeBadge/buildRadarSvgHtml/side effects r_*), useRadarFit.ts (store useRadarMode), RadarChart.tsx (container #dashRadarChartContainer/#radarChartContainer), maestria.ts (MAESTRIA_CHALLENGES/getMaestriaState/trackMaestriaSessoes/computeMasteryTotals), share-store.ts + share-quotes.ts + ShareModal.tsx (#modalShare: cards treino/conquista/radar + Web Share/download com html2canvas; v4.52.0-share: o PNG é gerado uma única vez por card em buildShareFile() e pré-renderizado ao abrir o modal (renderSeqRef descarta render antigo), o fluxo é shareNative({title, text, files:[PNG]}) → share só com {files:[PNG]} → texto + deliverImage (download e cópia do PNG para a área de transferência), AbortError não dispara fallback, texto personalizado por card (shareText) e stats do treino em grid 2 colunas EXERCÍCIOS/KG TOTAIS/OFENSIVA/DURAÇÃO sem VOL. MÉDIO), maestria-ui.ts (store useMaestriaUi: coleção/maestriaEx/busca) e ColecaoModals.tsx (#modalColecaoExercicios + #modalMaestriaEx + showRoyaleTooltip). ShareModal monta por useModalPresence e tem entrada/saída do painel em modal-motion.css."
+        "purpose": "Pasta da Fase 3: radar.ts (computeRadarStats/getArchetypeBadge/buildRadarSvgHtml/side effects r_*), useRadarFit.ts (store useRadarMode), RadarChart.tsx (container #dashRadarChartContainer/#radarChartContainer), maestria.ts (MAESTRIA_CHALLENGES/getMaestriaState/trackMaestriaSessoes/computeMasteryTotals), share-store.ts + share-quotes.ts + ShareModal.tsx (#modalShare: cards treino/conquista/radar + Web Share/download com html2canvas; v4.52.0-share: o PNG é gerado uma única vez por card em buildShareFile() e pré-renderizado ao abrir o modal (renderSeqRef descarta render antigo), no APK o plugin nativo envia PNG + texto (shareImageInNativeApp) e, na web, o fluxo é shareNative({title, text, files:[PNG]}) → share só com {files:[PNG]} → texto + deliverImage (download e cópia do PNG), AbortError não dispara fallback, texto personalizado por card (shareText) e stats do treino em grid 2 colunas EXERCÍCIOS/KG TOTAIS/OFENSIVA/DURAÇÃO sem VOL. MÉDIO), maestria-ui.ts (store useMaestriaUi: coleção/maestriaEx/busca) e ColecaoModals.tsx (#modalColecaoExercicios + #modalMaestriaEx + showRoyaleTooltip). ShareModal monta por useModalPresence e tem entrada/saída do painel em modal-motion.css."
       },
       {
         "file": "src-app/src/features/training/progress-stats.ts",
@@ -764,7 +764,7 @@
       },
       {
         "file": "src-app/src/lib/native-share.ts",
-        "purpose": "Compartilhamento nativo do SO via Web Share API (v4.14.0): shareNative(data) → 'shared'|'cancelled'|'unsupported'|'error' com guarda canShare (envolto em try/catch e, quando a payload tem arquivo, checado com `{ files }` só — a payload completa derrubava o share de imagem; recusa combo inválido → fallback clipboard/download pelo chamador) e canNativeShare(). Criado porque em HTTP local (legacy) a API não existia fora de contexto seguro; em HTTPS (Vercel) a folha nativa Android/Windows/iOS passa a ser usada. Consumidores: LigasFeature (Compartilhar Recompensa — texto + window.location.origin); ShareModal.tsx e backup.ts já usavam navigator.share com files nativamente."
+        "purpose": "Compartilhamento do SO: shareNative(data) → 'shared'|'cancelled'|'unsupported'|'error' com guarda canShare (quando a payload tem arquivo a checagem usa só `{ files }`; recusa → fallback do chamador) e canNativeShare(). No APP Android (Capacitor) o WebView não compartilha arquivo pelo Web Share: isNativeApp() + shareImageInNativeApp() gravam o PNG no cache via @capacitor/filesystem e abrem o share nativo (@capacitor/share) com imagem + texto; saveImageInNativeApp() substitui o download no APK. Consumidores: ShareModal (treino/conquista/radar), LigasFeature e backup.ts."
       },
       {
         "file": "src-app/src/lib/pwa-install.ts",
