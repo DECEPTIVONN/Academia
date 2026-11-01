@@ -34,6 +34,7 @@ export const FitIdOverlay: React.FC<FitIdOverlayProps> = ({
   avatarFrame,
   xp,
   streak,
+  history,
 }) => {
   useEffect(() => {
     if (!open) return undefined;
@@ -44,14 +45,15 @@ export const FitIdOverlay: React.FC<FitIdOverlayProps> = ({
     };
   }, [open]);
 
+  /* v4.66.0 — só números reais: XP, nível (mesma curva do perfil) e
+     quantidade de dias com treino registrado. */
+  const workouts = history && typeof history === 'object' ? Object.keys(history).length : 0;
   const profile = {
-    username: name || 'Jogador',
-    clanName: 'Great Warriors',
-    trophies: streak ?? 0,
-    gold: 0,
-    gems: 0,
+    username: name || 'Atleta',
     xp: xp ?? 0,
     level: Math.max(1, Math.floor((xp ?? 0) / 100) + 1),
+    streak: streak ?? 0,
+    workouts,
   };
 
   return toBody(

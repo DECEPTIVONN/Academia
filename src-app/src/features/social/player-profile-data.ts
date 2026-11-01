@@ -1,44 +1,35 @@
 /**
  * player-profile-data.ts — dados do modal de perfil do jogador (aba Social)
  *
- * O perfil é a versão "Clash Royale" do atleta, com o vocabulário do app:
- * trófeus = XP de treinos, vitórias = treinos concluídos, série atual =
- * ofensiva, cartas encontradas = exercícios feitos, custo médio de elixir =
- * custo médio de carga do último treino e ligas = liga MENSAL.
- *
- * Jogador local (`isSelf`): todos os números saem dos dados reais
- * (`LocalData` + perfil/liga mensal). Demais jogadores (amigos/membros da
- * guilda): valores determinísticos derivados do id/nome — o Social é
- * demonstrativo e não tem perfil remoto (ver contexto em guild-data.ts).
+ * v4.66.0 — sem dados fictícios: o perfil mostra apenas o que existe de fato.
+ *   • Jogador local: tudo sai do histórico local (`LocalData`) + perfil salvo;
+ *   • Outros jogadores (amigos reais da nuvem): nome, nível, XP total, XP do
+ *     mês e ofensiva vêm do que a conta publicou (`profiles`); estatísticas
+ *     detalhadas de treino são PRIVADAS do aparelho de cada um, então não são
+ *     exibidas nem inventadas.
  */
 
 import { getLevel, getXp, type LocalData } from '@/core/db/queries';
 import type { Exercise, ProfileState } from '@/core/db/schema';
-import type { Guild, GuildMember } from './guild-data';
 import { EMBLEMAS, getProfileStats } from '@/features/profile/profile-data';
 import { averageLoadKg } from '@/lib/suggested-load';
-import {
-  getMonthlyLeagueState,
-  LEAGUE_DIVISIONS,
-  type AvatarGlyphKey,
-  type FlagKey,
-  type LeagueDivision,
-} from './ligas-data';
+import type { AvatarGlyphKey, FlagKey } from './ligas-data';
 
-/* ── Entrada (o que o popover/lista já sabe do jogador) ── */
+/* ── Entrada (o que a lista/popover já sabe do jogador) ── */
 
-export type PlayerKind = 'amigo' | 'membro';
+export type PlayerKind = 'amigo';
 
 export interface PlayerSummaryInput {
   id: string;
   name: string;
   kind: PlayerKind;
   isSelf?: boolean;
-  /** Função na guilda (Líder/Ancião/Membro); ausente em amigos. */
-  role?: string;
-  clan?: string | null;
-  clanEmblemId?: string;
+  /** XP total (todas as temporadas). */
   trophies: number;
+  /** XP conquistado na janela mensal da liga (ranking global). */
+  monthlyXp?: number;
+  /** Posição no ranking global mensal, quando conhecida. */
+  rank?: number | null;
   level?: number;
   flag?: FlagKey;
   glyph?: AvatarGlyphKey;
@@ -63,9 +54,9 @@ export interface PlayerEmblemView {
 export interface PlayerLastWorkoutView {
   sheetKey: string;
   date: string;
-  /** Exercícios COMPLETOS, para o mesmo deck Royale da prévia do Início. */
+  /** Exercícios COMPLETOS, para o mesmo deck da prévia do Início. */
   exercises: Exercise[];
-  /** Custo médio de carga em kg (equivalente ao custo médio de elixir). */
+  /** Custo médio de carga em kg. */
   averageLoad: number;
 }
 
@@ -95,15 +86,14 @@ export interface PlayerProfileView {
   glyph: AvatarGlyphKey;
   flag: FlagKey;
   level: number;
-  role?: string;
-  clan: { name: string; emblemId: string } | null;
   trophies: number;
-  totalWorkouts: number;
-  arena: string;
+  monthlyXp: number;
+  rank: number | null;
+  /** Emblemas equipados (somente o próprio jogador expõe isso). */
   emblems: PlayerEmblemView[];
-  leagues: { current: LeagueDivision; previous: LeagueDivision; best: LeagueDivision };
+  /** `null` quando os números de treino não estão disponíveis (outros jogadores). */
   lastWorkout: PlayerLastWorkoutView | null;
-  stats: PlayerStatsView;
+  stats: PlayerStatsView | null;
 }
 
 /**
@@ -119,7 +109,7 @@ export function selfPlayerSummary(
   return {
     id: 'self',
     name,
-    kind: 'membro',
+    kind: 'amigo',
     isSelf: true,
     trophies,
     level: getLevel(trophies),
@@ -130,31 +120,6 @@ export function selfPlayerSummary(
     glyph: 'crown',
     photo: profileState?.customization?.photo,
     avatarEmblemId: profileState?.customization?.mainEmblem,
-  };
-}
-
-/** Converte um membro da guilda no resumo usado pelo popover do jogador. */
-export function memberToPlayer(
-  member: GuildMember,
-  guild?: Pick<Guild, 'name' | 'emblemId'> | null,
-): PlayerSummaryInput {
-  return {
-    id: member.id,
-    name: member.name,
-    kind: 'membro',
-    isSelf: member.isSelf,
-    role: member.role,
-    clan: guild?.name ?? null,
-    clanEmblemId: guild?.emblemId,
-    trophies: member.trophies,
-    level: member.level,
-    flag: member.flag,
-    glyph: member.glyph,
-    photo: member.photo,
-    avatarEmblemId: member.avatarEmblemId,
-    online: (member.lastSeenHours ?? 0) <= 0,
-    lastSeenHours: member.lastSeenHours,
-    streak: member.streak,
   };
 }
 
@@ -169,21 +134,9 @@ function hashString(value: string): number {
   return h >>> 0;
 }
 
-/** PRNG pequeno e determinístico (mulberry32) — mesmo jogador, mesmos números. */
-function seededRandom(seed: number): () => number {
-  let state = seed || 1;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 const TAG_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-/** Tag curta no formato do jogo (#RL88YRJL), estável por jogador. */
+/** Tag curta estável por jogador (#RL88YRJL), derivada do id/nome. */
 export function playerTag(seed: string): string {
   let n = hashString(seed);
   let tag = '';
@@ -195,15 +148,15 @@ export function playerTag(seed: string): string {
 }
 
 /**
- * Último acesso estimado de quem não tem horário próprio (amigos da lista):
- * on-line = 0 (agora); fora do ar = 1–95 h, determinístico pelo id/nome.
+ * Último acesso estimado de quem não tem horário próprio (lista local de
+ * amigos por QR): on-line = 0 (agora); fora do ar = 1–95 h.
  */
 export function fallbackLastSeenHours(seed: string, online?: boolean): number {
   if (online) return 0;
   return 1 + (hashString(seed) % 95);
 }
 
-/** Ofensiva estimada de quem não tem sequência própria (amigos da lista). */
+/** Ofensiva estimada de quem não publicou sequência (amigos só locais). */
 export function fallbackStreak(seed: string): number {
   return hashString(seed) % 30;
 }
@@ -219,18 +172,6 @@ export function formatLastSeen(hours: number | undefined, online?: boolean): str
 }
 
 const BANNER_KEYS = ['roxo-neon', 'aurora', 'aco-frio', 'ciberespaco', 'ouro-elite'];
-
-function leagueRank(division: LeagueDivision | undefined): number {
-  return division ? LEAGUE_DIVISIONS.indexOf(division) : -1;
-}
-
-function bestDivision(list: Array<LeagueDivision | undefined>): LeagueDivision {
-  let best: LeagueDivision = LEAGUE_DIVISIONS[0];
-  for (const item of list) {
-    if (item && leagueRank(item) > leagueRank(best)) best = item;
-  }
-  return best;
-}
 
 /* ── Estatísticas do jogador local ── */
 
@@ -256,7 +197,7 @@ function selfLastWorkout(data: LocalData): PlayerLastWorkoutView | null {
   };
 }
 
-/** Treino feito mais vezes nos últimos 7 dias (carta favorita atual). */
+/** Treino feito mais vezes nos últimos 7 dias. */
 function favoriteWorkout(data: LocalData): string | null {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 6);
@@ -293,24 +234,12 @@ export function buildPlayerProfile(
 ): PlayerProfileView {
   const isSelf = input.isSelf === true;
   const seed = hashString(`${input.id}:${input.name}`);
-  const rnd = seededRandom(seed);
   const pc = isSelf ? profileState?.customization : undefined;
-
   const selfStats = isSelf ? getProfileStats(data) : null;
-  const totalWorkouts = selfStats
-    ? selfStats.totalTreinos
-    : Math.max(1, Math.round(input.trophies / 10));
-  const streak = selfStats
-    ? selfStats.streak
-    : Math.max(0, Math.round(input.streak ?? Math.floor(rnd() * 30)));
 
-  const catalogSize = data.exercises.length;
-  const avatarEmblemId = input.avatarEmblemId ?? (isSelf ? pc?.mainEmblem : undefined);
-
-  let stats: PlayerStatsView;
-  let emblems: PlayerEmblemView[];
-  let lastWorkout: PlayerLastWorkoutView | null;
-  let leagues: PlayerProfileView['leagues'];
+  let stats: PlayerStatsView | null = null;
+  let lastWorkout: PlayerLastWorkoutView | null = null;
+  let emblems: PlayerEmblemView[] = [];
 
   if (isSelf) {
     const completed = data.history.filter((entry) => entry.completed);
@@ -319,104 +248,38 @@ export function buildPlayerProfile(
     for (const entry of completed) for (const id of entry.checks ?? []) doneIds.add(id);
 
     stats = {
-      workouts: totalWorkouts,
+      workouts: selfStats?.totalTreinos ?? completed.length,
       hours: Math.round((minutes / 60) * 10) / 10,
       exercisesDone: doneIds.size,
-      catalogSize,
+      catalogSize: data.exercises.length,
       favoriteWorkout: favoriteWorkout(data),
     };
-    emblems = selfEmblems(profileState);
     lastWorkout = selfLastWorkout(data);
-
-    const monthly = getMonthlyLeagueState();
-    leagues = {
-      current: monthly.division,
-      previous: monthly.lastResult?.oldDivision ?? monthly.division,
-      best: bestDivision([
-        monthly.bestDivision,
-        monthly.division,
-        monthly.lastResult?.oldDivision,
-        monthly.lastResult?.newDivision,
-      ]),
-    };
-  } else {
-    const hoursFactor = 0.6 + rnd() * 0.8;
-    const done = Math.min(
-      catalogSize,
-      Math.max(6, Math.round(catalogSize * (0.35 + rnd() * 0.6))),
-    );
-    const sheetKeys = data.sheets.length
-      ? data.sheets.map((sheet) => sheet.sheetKey)
-      : (['A', 'B', 'C'] as const);
-    const favoriteKey = sheetKeys[Math.floor(rnd() * sheetKeys.length)];
-
-    stats = {
-      workouts: totalWorkouts,
-      hours: Math.round(totalWorkouts * hoursFactor),
-      exercisesDone: done,
-      catalogSize,
-      favoriteWorkout: `Ficha ${favoriteKey}`,
-    };
-
-    const startIndex = Math.floor(rnd() * EMBLEMAS.length);
-    emblems = Array.from({ length: 8 }, (_, index) => {
-      const emblem = EMBLEMAS[(startIndex + index * 3) % EMBLEMAS.length];
-      return { id: `${emblem.id}-${index}`, nome: emblem.nome, icon: emblem.icon };
-    });
-
-    const deckSize = Math.min(6, catalogSize);
-    const offset = catalogSize ? Math.floor(rnd() * catalogSize) : 0;
-    const deck = Array.from({ length: deckSize }, (_, index) =>
-      data.exercises[(offset + index) % Math.max(catalogSize, 1)],
-    ).filter((ex): ex is Exercise => Boolean(ex));
-
-    lastWorkout =
-      deck.length > 0
-        ? {
-            sheetKey: favoriteKey,
-            date: new Date(Date.now() - Math.floor(rnd() * 5) * 86400000)
-              .toISOString()
-              .slice(0, 10),
-            exercises: deck,
-            averageLoad: Math.round(averageLoadKg(deck) * 10) / 10,
-          }
-        : null;
-
-    const current = LEAGUE_DIVISIONS[Math.floor(rnd() * LEAGUE_DIVISIONS.length)];
-    const previous = LEAGUE_DIVISIONS[Math.floor(rnd() * LEAGUE_DIVISIONS.length)];
-    leagues = { current, previous, best: bestDivision([current, previous]) };
+    emblems = selfEmblems(profileState);
   }
-
-  const level = input.level ?? selfStats?.nivel ?? 1;
-  const arenaNumber = Math.min(25, 1 + Math.floor(input.trophies / 500));
 
   return {
     id: input.id,
     name: input.name,
     tag: playerTag(isSelf ? `self:${input.name}` : input.id || input.name),
     kind: input.kind,
-    subtitle: input.role ?? (input.kind === 'membro' ? 'Membro' : 'Amigo'),
+    subtitle: isSelf ? 'Você' : 'Amigo',
     isSelf,
     online: input.online === true,
     lastSeenHours: Math.max(0, Math.floor(input.lastSeenHours ?? 0)),
-    streak,
+    streak: Math.max(0, Math.floor(input.streak ?? 0)),
     banner: pc?.banner || BANNER_KEYS[seed % BANNER_KEYS.length],
     photo: pc?.photo ?? input.photo,
     avatarSeed: pc?.avatarSeed,
-    avatarEmblemId,
+    avatarEmblemId: input.avatarEmblemId ?? (isSelf ? pc?.mainEmblem : undefined),
     avatarFrame: pc?.avatarFrame ?? null,
     glyph: input.glyph ?? 'crown',
     flag: input.flag ?? 'BR',
-    level,
-    role: input.role,
-    clan: input.clan
-      ? { name: input.clan, emblemId: input.clanEmblemId ?? 'prestigio-1' }
-      : null,
+    level: input.level ?? selfStats?.nivel ?? 1,
     trophies: input.trophies,
-    totalWorkouts,
-    arena: `Arena ${arenaNumber}`,
+    monthlyXp: input.monthlyXp ?? 0,
+    rank: typeof input.rank === 'number' && input.rank > 0 ? input.rank : null,
     emblems,
-    leagues,
     lastWorkout,
     stats,
   };

@@ -59,8 +59,8 @@ export function MemberPopover({ player, onClose }: MemberPopoverProps) {
   return (
     <>
       <OverlayShell
-        title={player.kind === 'membro' ? 'Membro' : 'Amigo'}
-        subtitle={player.role ?? player.clan ?? undefined}
+        title="Amigo"
+        subtitle={player.isSelf ? 'Você' : 'Conexão da sua lista'}
         nested
         onClose={onClose}
         footer={
@@ -87,13 +87,6 @@ export function MemberPopover({ player, onClose }: MemberPopoverProps) {
               {tag}
             </button>
             <span className="guild-profile__meta">
-              {player.role && (
-                <span
-                  className={`guild-member__role guild-member__role--${player.role === 'Líder' ? 'leader' : player.role === 'Ancião' ? 'elder' : 'member'}`}
-                >
-                  {player.role}
-                </span>
-              )}
               <FlagIcon flag={player.flag ?? 'BR'} size={12} />
               <span>Nível {player.level ?? 1}</span>
               {player.isSelf && <span className="guild-member__you">VOCÊ</span>}

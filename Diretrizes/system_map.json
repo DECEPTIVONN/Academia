@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.63.0",
-  "last_updated": "2026-10-31",
+  "version": "4.67.0",
+  "last_updated": "2026-11-01",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
   "entry_points": {
@@ -588,7 +588,7 @@
       },
       {
         "file": "src-app/src/features/training/BodyMetricsOverlay.tsx",
-        "purpose": "Métricas corporais (tela cheia): peso, fotos de progresso (frente/lado/costas), gordura corporal, cintura, registro por data e a tela Comparar métricas (7D/30D/90D/6M/1Y + estado vazio). CSS em features/training/metricas-corporais.css (.bm-*); monta via createPortal(document.body)."
+        "purpose": "Métricas corporais (tela cheia): peso, altura (campo novo da v4.64.0), fotos de progresso (frente/lado/costas), gordura corporal, cintura, registro por data e a tela Comparar métricas (7D/30D/90D/6M/1Y + estado vazio). Peso e altura salvos aqui são espelhados no Perfil de Saúde via mergeHealthProfile. CSS em features/training/metricas-corporais.css (.bm-*); monta via createPortal(document.body)."
       },
       {
         "file": "src-app/src/features/training/TrendRadarOverlay.tsx",
@@ -620,7 +620,7 @@
       },
       {
         "file": "src-app/src/features/dashboard/MissionsOverlay.tsx",
-        "purpose": "Overlay de missões #missions-overlay (treino.html L903–1314, <style> inline extraído para missions-overlay.css): 3 abas daily/weekly/guides, openMissionsOverlay/closeMissionsOverlay com lock de body.overflow; mockup estático fiel ao legado; aberto pela pílula #dashBtnMissoes do Dashboard (Fase 3). v4.8.1: renderizado via createPortal(document.body) — o .section-strip (will-change: transform) era o containing block do position:fixed e o overlay ficava fora da viewport; mesmo fix aplicado ao NewsOverlay. v4.8.4-color-standard: cores padronizadas com features/settings/settings.css — fundo #07070b, header/cards #0b0b10 + hairline rgba(255,255,255,0.08), aba ativa var(--primary) com texto near-black, dim #8a8a9c/#5d5d70, trilhos #14141b, fills de progresso (rosa/verde/âmbar) → var(--primary) via const FILL_STYLE, glows sombras divisores via --primary-rgb/hairlines, botão fechar vira classe .ms-close-btn estilo .set-icon-btn (handlers inline vermelhos removidos); classe progress-fill removida das barras (body[data-bar-skin] .progress-fill !important das skins quebrava a padronização); missions-overlay.css acompanha (tabs/hover/arena-bg); geometria/animações intactas."
+        "purpose": "Overlay de missões (#missions-overlay): portal no body, 3 abas daily/weekly/guides, aberto pela pílula do Dashboard. É um módulo DEMO (jogo à parte, com baús/moedas) parqueado: o acesso e o SIMULADOR ficam atrás de isDevMode() até ser reescrito como metas reais. CSS em missions-overlay.css."
       },
       {
         "file": "src-app/src/features/dashboard/FichaDeck.tsx",
@@ -644,7 +644,7 @@
       },
       {
         "file": "src-app/src/features/social/RankingsOverlay.tsx",
-        "purpose": "Interface de Rankings aberta pelo menu do Início (onOpenRankings): abas Jogadores / Clãs / Amigos no desenho da interface de Liga (OverlayShell + banner 'Modo Ranqueado' + linhas posição/avatar/nome/pontuação), sem os filtros Global/Local da referência. Jogadores = placeholders + o jogador local com o XP real (getXp/getLevel); Clãs = membros da guilda (getGuild/useGuildState), com mensagem de 'faça parte de uma guilda' quando não há guilda; Amigos = INITIAL_FRIENDS + amigos adicionados (mergeFriends). CSS em features/social/rankings.css (.rk-*). Monta via portal (OverlayShell)."
+        "purpose": "Rankings abertos pelo menu do Início: abas Jogadores (ranking GLOBAL do mês, real, vindo de global_monthly_ranking) e Amigos (amigos confirmados ordenados pelo XP do mês). Sem clãs e sem pontuações de exemplo; sem nuvem/conta mostra o estado vazio honesto. Monta via portal (OverlayShell), CSS em features/social/rankings.css (.rk-*)."
       },
       {
         "file": "src-app/src/features/social/rankings.css",
@@ -672,15 +672,7 @@
       },
       {
         "file": "src-app/src/features/social/",
-        "purpose": "Aba SOCIAL (React): SocialFeature.tsx (re-exporta LigasFeature) + LigasFeature.tsx (3 sub-abas Amigos/Guilda/Liga, ligas semanal/mensal, banner de temporada, ranking filtrável, banner de guilda, chat e modais) + ligas-data.ts + ligas-icons.tsx + social.css. A sub-aba Amigos separa Amigos on-line (ponto verde, sem posição) e Classificação (ranking completo), combinando INITIAL_FRIENDS com os amigos adicionados. A sub-aba Guilda usa o módulo guild-* (estado local em localStorage academia_guilds_v1; sem doações e sem pontuação de clã): banner no cabeçalho (emblema/nome/membros) abre os detalhes em modal e a sub-aba mostra só o chat, sem troféus nas mensagens e sem atalhos 'Rápido:'. Tocar num amigo OU num membro da guilda (nas duas listas da sub-aba Amigos) abre o mesmo popover (`MemberPopover.tsx`) e o perfil completo (`PlayerProfileModal.tsx`). Avatares usam `PlayerAvatar` (foto → emblema de identidade → glifo), então amigos/membros mostram a imagem real de cada jogador. Amigos: convite permanente por QR/link em friend-invites.ts, FriendQrModal.tsx e QrScannerModal.tsx — código = user.id do Supabase ou UUID local persistido, link ?amigo=&nome=, amigos adicionados em localStorage e leitor de câmera com jsQR (QR invertido/baixo contraste). O FriendQrModal tem duas abas (QR Code e Buscar jogador), com transição fade+slide entre os painéis; a busca consulta public.profiles (username/display_name) em friend-search.ts, aceita @username/#tag e adiciona o jogador pelo id da conta. A lista Amigos↔Membros da Guilda também anima com fade+slide. Estado de ligas/guilda é local; não há tabela de amizades no backend."
-      },
-      {
-        "file": "src-app/src/features/social/guild-data.ts",
-        "purpose": "Estado e regras do sistema de guildas: tipos (Guild/GuildMember/GuildPlayer), guildas iniciais determinísticas, persistência em localStorage (academia_guilds_v1), entrar/sair/criar/validar, filtros da pesquisa (nome/tag, membros, troféus necessários, tipo, localização) e hook useGuildState (evento academia:guild-changed). GuildMember carrega lastSeenHours e streak (último acesso/ofensiva do popover) e os campos de avatar (photo/avatarEmblemId) usados pelo PlayerAvatar. Sem doações semanais e sem pontuação do clã."
-      },
-      {
-        "file": "src-app/src/features/social/GuildPanel.tsx",
-        "purpose": "UI da sub-aba Guilda: estado vazio + barra 'Procure ou forme uma nova guilda!' e, com guilda, apenas o chat (o banner no cabeçalho, em LigasFeature, mostra emblema/nome/membros). O banner abre `GuildDetail` em modal (emblema, tag copiável, descrição, localização/troféus necessários/tipo, membros com funções e botão Sair) com saída animada via useModalPresence/.is-closing. Tocar num membro abre `MemberPopover` (MemberPopover.tsx): avatar/tag, função, país, nível, Último acesso (mostra On-line quando online), Ofensiva e Ver perfil (abre `PlayerProfileModal.tsx`). `memberToPlayer` (player-profile-data.ts) converte o membro no resumo do popover. Saída em modal de confirmação (GuildLeaveDialog). Criação também em modal centrado (OverlayShell `nested` + `backdropClose={false}`): clique fora não fecha, só o X (ou Esc). Overlays em createPortal: pesquisa de guilda com filtros, prévia/entrar, criação em linhas com seletores ◀ valor ▶ para tipo e troféus e seletor de emblema usando IDENTITY_EMBLEMS."
+        "purpose": "Aba SOCIAL (React): SocialFeature.tsx reexporta LigasFeature.tsx, que tem duas abas — Amigos (amizades reais na nuvem com convites recebidos/enviados + amigos locais de QR/link) e Ranking (ranking global do mês). Estado e chamadas de servidor em useSocialCloud.ts/social-cloud.ts; tipos e efeitos sonoros em ligas-data.ts; glifos SVG em ligas-icons.tsx; estilos em social.css. Amigos por QR/link: friend-invites.ts, FriendQrModal.tsx (QR + busca em public.profiles) e QrScannerModal.tsx. Tocar num jogador abre MemberPopover.tsx e o perfil completo (PlayerProfileModal.tsx). Sem guildas, sem usuários fictícios e sem ligas simuladas."
       },
       {
         "file": "src-app/src/features/social/guild.css",
@@ -707,20 +699,16 @@
         "purpose": "Casca dos overlays da aba Social (título/subtítulo, voltar, fechar, rodapé, nested/dialog/closing): portal para document.body, compartilhada por GuildPanel e MemberPopover. Visual em guild.css (.guild-overlay*)."
       },
       {
-        "file": "src-app/src/features/social/GuildEmblem.tsx",
-        "purpose": "Emblema da guilda/jogador usando IDENTITY_EMBLEMS (mesma arte do perfil). Módulo separado para ser reutilizado por GuildPanel, MemberPopover e PlayerProfileModal sem ciclo de imports."
-      },
-      {
         "file": "src-app/src/features/settings/",
-        "purpose": "Shell de hubs reutilizável (HubShell.tsx, SettingsFeature.tsx) — 6 tiles de config na raiz do hub do Perfil (conta, segurança, dispositivos, preferências do app, notificações, cores e exibição); theme-colors.ts (12 presets + custom) + ColorPickerModal.tsx (fecha com .is-closing via useModalExit); settings.css (BEM .set-* e .set-pref-*) + player-prefs (música: modo flex/fixo, 6 posições, visibilidade). Preferências do App: primeiro dia da semana, unidade de peso/distância, tema, idioma, som do temporizador e modo foco padrão. Notificações: permissão + lembretes/novidades/ligas/mensagens como placeholders persistidos. Inclui o Perfil de Saúde (HealthProfile.tsx + health-profile.ts + health-profile.css): sexo/altura/peso/data de nascimento, com peso canônico em kg no localStorage academia_health_profile_v1 e exibição na unidade da preferência."
+        "purpose": "Shell de hubs reutilizável (HubShell.tsx, SettingsFeature.tsx) — 6 tiles de config na raiz do hub do Perfil (conta, segurança, dispositivos, preferências do app, notificações, cores e exibição); theme-colors.ts (12 presets + custom) + ColorPickerModal.tsx (fecha com .is-closing via useModalExit); settings.css (BEM .set-* e .set-pref-*) + player-prefs (música: modo flex/fixo, 6 posições, visibilidade). Preferências do App: primeiro dia da semana, unidade de peso/distância, tema, idioma, som do temporizador e modo foco padrão. Notificações (v4.65.0): permissão real + agendador (lembrete no horário, motivacional diária e fim de liga), com prévia “Próximo aviso” e teste de disparo; só “Novidades e atualizações” segue EM BREVE. Inclui o diálogo “Autorizar dispositivo” do login por QR. Inclui o Perfil de Saúde (HealthProfile.tsx + health-profile.ts + health-profile.css): sexo e data de nascimento SOMENTE LEITURA (preenchidos pelo formulário pós-login), só altura/peso editáveis, com peso canônico em kg no localStorage academia_health_profile_v1, exibição na unidade da preferência e espelhamento a partir das métricas corporais (v4.64.0)."
       },
       {
         "file": "src-app/src/features/settings/HealthProfile.tsx",
-        "purpose": "Tela Perfil de Saúde (Configurações → Perfil): formulário no desenho da referência com Sexo, Altura (cm), Peso (kg/lb conforme getWeightUnit) e Data de nascimento, dica de idade e botão Concluído; valida os campos e grava via saveHealthProfile, reaproveitando os estilos set-card/set-field/set-input. CSS próprio em health-profile.css (BEM .hp-*)."
+        "purpose": "Tela Perfil de Saúde (Configurações → Perfil, v4.64.0): Sexo e Data de nascimento são campos BLOQUEADOS (.hp-locked, com ícone de cadeado) porque vêm do formulário pós-login — sem select/date editáveis; só Altura (cm) e Peso (kg/lb conforme getWeightUnit) podem ser alterados, gravando via mergeHealthProfile (preserva sexo/nascimento). A prop opcional `seed` (gender/nascimento/weightKg/heightCm da customização) cobre perfis antigos que nunca gravaram o Perfil de Saúde, e o efeito em academia:health-profile-changed reidrata peso/altura quando as métricas corporais (aba Progresso) gravam. CSS próprio em health-profile.css (BEM .hp-*)."
       },
       {
         "file": "src-app/src/features/settings/health-profile.ts",
-        "purpose": "Persistência do Perfil de Saúde: tipos (HealthSex/HealthProfileData), HEALTH_SEX_OPTIONS, leitura/gravação em localStorage (academia_health_profile_v1) com sanitização numérica e de data, evento academia:health-profile-changed, healthAge() e a constante de conversão KG_TO_LB. Separado das métricas corporais do Dexie."
+        "purpose": "Persistência do Perfil de Saúde: tipos (HealthSex/HealthProfileData), HEALTH_SEX_OPTIONS, leitura/gravação em localStorage (academia_health_profile_v1) com sanitização numérica e de data, evento academia:health-profile-changed, healthAge(), mergeHealthProfile() (atualiza só os campos informados, usado pelo onboarding e pelas métricas corporais) e a constante de conversão KG_TO_LB. Separado das métricas corporais do Dexie."
       },
       {
         "file": "src-app/src/features/settings/health-profile.css",
@@ -728,7 +716,7 @@
       },
       {
         "file": "src-app/src/features/profile/ProfileFeature.tsx",
-        "purpose": "Overlay do Perfil como hub fullscreen (v4.3.0-profile-hub; v4.5.1: sem tile Configurações): raiz com 8 tiles — 3 grupos (Perfil/Progressão/Personalizar) + 5 tiles de config promovidos (Sua Conta/Segurança/Notificações/Cores/Exibição-PWA) + hubExtra (linha Sair da Conta) — via features/settings/HubShell com navStack controlado — as 4 sub-abas #perfTabNav e o localStorage.academia_perfil_tab foram REMOVIDOS; cada grupo abre seus filhos (Perfil: Cartão/Ofensivas/Medalhas/Perfil de Saúde; Progressão: dev row como head + Visão Geral/Nível e XP/Conquistas; Personalizar: #btnSalvarCustomizacaoTab herdado pelo grupo + Identidade/Frase/Em Destaque/Título); os 5 tiles de config vêm de useSettingsGroup (tile conta ganha keywords recursivas via screenKeywords); busca só na raiz com keywords dos leaves; #btnEditarPerfil navega p/ personalizar/identidade via setNavStack; shell do overlay (header + #perfilOverlayClose) permanece no App.tsx."
+        "purpose": "Overlay do Perfil como hub fullscreen (v4.3.0-profile-hub; v4.5.1: sem tile Configurações): raiz com 8 tiles — 3 grupos (Perfil/Progressão/Personalizar) + 5 tiles de config promovidos (Sua Conta/Segurança/Notificações/Cores/Exibição-PWA) + hubExtra (linha Sair da Conta) — via features/settings/HubShell com navStack controlado — as 4 sub-abas #perfTabNav e o localStorage.academia_perfil_tab foram REMOVIDOS; cada grupo abre seus filhos (Perfil: Cartão/Ofensivas/Medalhas/Perfil de Saúde; Progressão: dev row como head + Visão Geral/Nível e XP/Conquistas; Personalizar: só Em Destaque — as telas Identidade, Frase de Assinatura e Título foram removidas na v4.64.0, junto com a antiga ação #btnSalvarCustomizacaoTab e os presets de frase); os 5 tiles de config vêm de useSettingsGroup (tile conta ganha keywords recursivas via screenKeywords); busca só na raiz com keywords dos leaves; #btnEditarPerfil navega para a lista de tiles do grupo Perfil via setNavStack (v4.64.0); shell do overlay (header + #perfilOverlayClose) permanece no App.tsx."
       },
       {
         "file": "src-app/src/features/profile/profile-data.ts",
@@ -888,7 +876,7 @@
       },
       {
         "file": "src-app/src/features/auth/",
-        "purpose": "Login/conta nuvem (v4.15.0-auth — substituiu o AuthModal modal da v4.9.0-sync): AuthScreen.tsx (novo — tela standalone full-screen portada do LoginAuthStandalone.tsx com guia das 7 imagens de referência: fundo CurvedPerspectiveBackground SVG, marca 'Evo Fit'/'Cuidando da sua Saúde', welcome com pílulas Google/e-mail/criar conta (+ 'Entrar em modo teste' em dev) + atalhos 'Entrar por QR Code • Vincular Chave' (gaveta colapsável que aplica setSyncKey como namespace de sync) + rodapé legal com modais Termos/Privacidade; login com validação de e-mail real (regex — Supabase Auth não autentica por @usuário e um banner amigável orienta), cadastro com display_name=@usuário (3-20, a-z0-9_) e senha mín. 6, recuperação real via resetPasswordForEmail, QR REAL com a lib qrcode (payload origin/?qr=PLN-XXXXXX&exp, contagem 5 min, overlay expirado + Renovar, chip Código de Pareamento); auth real via useAuth, auto-fecha quando a sessão chega, ESC fecha (sem botão X e sem a linha 'Chave ativa' na interface), z-index 1150 abaixo do LockScreen 1200; auth-screen.css com .no-scrollbar) + OnboardingScreen.tsx (perguntas pós-login em tela cheia: assistente de 10 etapas — conta → motivo → objetivos → experiência → sexo → idade → peso → frequência → local → programa — no estilo das imagens de referência com destaque vermelho #ef4444, cartões de opção com rádio, cabeçalho voltar/contador (n/10)/Pular e botão Continuar fixo; a etapa conta pede nome e nome de usuário e, só para contas Google, a senha do usuário via updatePassword; usa <div> em vez de <header>/<main>/<footer> porque o CSS legado global quebra essas tags) + AuthModal.tsx (wrapper fino que monta AuthScreen quando o store abre — ponto de montagem estável p/ App.tsx/Configurações; usa useModalPresence e passa `closing` para o fade de saída em auth-screen.css) + auth-modal-store.ts (zustand, inalterado). Abre pelo rootExtra Entrar das Configurações; dependências novas qrcode + @types/qrcode."
+        "purpose": "Login/conta nuvem (v4.15.0-auth — substituiu o AuthModal modal da v4.9.0-sync): AuthScreen.tsx (novo — tela standalone full-screen portada do LoginAuthStandalone.tsx com guia das 7 imagens de referência: fundo CurvedPerspectiveBackground SVG, marca 'Evo Fit'/'Cuidando da sua Saúde', welcome com pílulas Google/e-mail/criar conta (+ 'Entrar em modo teste' em dev) + atalhos 'Entrar por QR Code • Vincular Chave' (gaveta colapsável que aplica setSyncKey como namespace de sync) + rodapé legal com modais Termos/Privacidade; login com validação de e-mail real (regex — Supabase Auth não autentica por @usuário e um banner amigável orienta), cadastro com display_name=@usuário (3-20, a-z0-9_) e senha mín. 6, recuperação real via resetPasswordForEmail, LOGIN POR QR REAL (v4.65.0): qr-pairing.ts gera o código PLN-XXXX-XXXX (aleatório, sem caracteres ambíguos), desenha o QR com a URL origin/#qr=CODIGO (fragmento não vai ao servidor), assina o canal Realtime evofit-login-pair:CODIGO e espera os tokens; o aparelho já conectado autoriza via PairingAuthorizeDialog (link #qr= ou Configurações → Segurança) publicando access_token/refresh_token; o receptor chama supabase.auth.setSession e entra sem senha. Contagem de 5 min com expiração que encerra o canal, overlay expirado + Renovar e sem fallback de “código decorativo”; auth real via useAuth, auto-fecha quando a sessão chega, ESC fecha (sem botão X e sem a linha 'Chave ativa' na interface), z-index 1150 abaixo do LockScreen 1200; auth-screen.css com .no-scrollbar) + OnboardingScreen.tsx (perguntas pós-login em tela cheia: assistente de 10 etapas — conta → motivo → objetivos → experiência → sexo → nascimento → peso → altura → frequência → local → programa — no estilo das imagens de referência com destaque vermelho #ef4444, cartões de opção com rádio, cabeçalho voltar/contador (n/11)/Pular e botão Continuar fixo; a etapa conta pede nome e nome de usuário e, só para contas Google, a senha do usuário via updatePassword; usa <div> em vez de <header>/<main>/<footer> porque o CSS legado global quebra essas tags) + AuthModal.tsx (wrapper fino que monta AuthScreen quando o store abre — ponto de montagem estável p/ App.tsx/Configurações; usa useModalPresence e passa `closing` para o fade de saída em auth-screen.css) + auth-modal-store.ts (zustand, inalterado). Abre pelo rootExtra Entrar das Configurações; dependências novas qrcode + @types/qrcode."
       },
       {
         "file": "src-app/src/styles/shell.css",
@@ -909,6 +897,78 @@
       {
         "file": "src-app/src/features/sync/OfflineSyncBanner.tsx",
         "purpose": "Banner de status offline/sincronização (dados.md §5.4), montado no App.tsx: status reativo da fila via subscribeToMutationQueue (offline/pendências/sincronizando), contagem de alterações salvas localmente e botão manual Sincronizar (syncNow). Entra com syToastIn e sai com syToastOut (.is-closing via useModalPresence). O aviso de MODO OFFLINE é um toast com janela de 5 s (OFFLINE_NOTICE_MS), aberta pelos eventos online/offline — pendências sem rede não o mantêm fixo na tela; pendências/sincronização aparecem quando há conexão."
+      },
+      {
+        "file": "src-app/src/features/auth/qr-pairing.ts",
+        "purpose": "Pareamento de sessão do login por QR (v4.65.0): createPairingCode (PLN-XXXX-XXXX, alfabeto sem 0/O/1/I), buildPairingUrl (origin/#qr=), normalizePairingCode (aceita URL/link/código digitado), readPairingCodeFromUrl/clearPairingCodeFromUrl, listenForPairingTokens (canal Realtime evofit-login-pair:CODIGO, valida expiresAt e trata expiração/indisponibilidade), registerPairingCode (registra o código em pairing_codes) e sendPairingTokens, que consome o código por pairing_claim ANTES do broadcast — uso único com revogação no servidor (reason used/expired/unavailable/degraded). Depende de isSyncConfigured()."
+      },
+      {
+        "file": "src-app/src/features/auth/PairingAuthorizeDialog.tsx",
+        "purpose": "Diálogo “Autorizar outro aparelho” (v4.65.0): recebe o código do QR/link (prop initialCode) ou digitado, valida o formato, lê a sessão Supabase atual, publica os tokens no canal de pareamento e confirma o envio. Aberto pelo PairingGate do App.tsx (link #qr=) e por Configurações → Segurança."
+      },
+      {
+        "file": "src-app/src/features/notifications/",
+        "purpose": "Sistema de notificações estilo Duolingo (v4.65.0): notification-center.ts (permissão, showAppNotification pelo Service Worker com fallback para new Notification, log local academia_notification_log_v1 por chave + poda de 30 dias), scheduler.ts (tick de 1 min e em visibilitychange/online/focus/prefs-changed: mensagem motivacional diária a partir das 12:00, lembrete de treino no horário de workoutReminderTime só se não treinou hoje e aviso de fim de liga 45 min antes da semanal / 1 h antes da mensal; describeNextNotice para a prévia nas Configurações) e messages.ts (frases do dia a partir de FRASES_PRESET, texto do lembrete e do fim de liga). Entrega com o app fechado fica com push.ts (VAPID + /api/push-dispatch) e o SW em public/push-sw.js."
+      },
+      {
+        "file": "src-app/src/features/social/league-window.ts",
+        "purpose": "Janelas oficiais das ligas (v4.65.0): semanal de domingo 19:00 a domingo 18:59:59 e mensal do dia 1º 06:00 ao último dia 21:00, com leagueWindow/isInsideWindow/nextLeagueWindow/msUntilEnd/formatWindowEnd/formatTimeLeft. Fonte única das datas para o aviso de fim de liga e para a futura implementação real das ligas."
+      },
+      {
+        "file": "src-app/src/features/social/social-cloud.ts",
+        "purpose": "Camada de nuvem do Social: publica o XP do próprio usuário (publish_monthly_xp) a partir do histórico local, lê o ranking global do mês (global_monthly_ranking, mesma janela de league-window.ts) e gerencia amizades (friends_overview, convite, aceite e remoção). Offline/sem conta devolve erro tipado em vez de dados falsos."
+      },
+      {
+        "file": "src-app/src/features/social/useSocialCloud.ts",
+        "purpose": "Hook da aba Social: carrega ranking e amigos, republica o XP quando o histórico muda, escuta eventos de dados/visibilidade e expõe refresh/request/accept/remove. Converte as linhas da nuvem para FriendItem das listas."
+      },
+      {
+        "file": "src-app/src/features/help/HelpCenter.tsx",
+        "purpose": "Central de Ajuda (FAQ/tutoriais) em Configurações → Ajuda e Tutoriais: grupos Começando, Minha Ficha/coleção, Progresso, Social/ranking, Nuvem/offline, Notificações, Privacidade e Instalar, com busca e acordeão animado. Conteúdo derivado de DESIGN.md/README.md."
+      },
+      {
+        "file": "src-app/src/features/help/help.css",
+        "purpose": "Estilos da Central de Ajuda: grupos com o HUD set-*, acordeão com transição grid-rows/opacidade e respeito a prefers-reduced-motion."
+      },
+      {
+        "file": "supabase/migrations/20261101_social_ranking_friends.sql",
+        "purpose": "SQL do Social real: colunas de XP/período/ofensiva em public.profiles, tabela friendships com RLS, RPC publish_monthly_xp, RPC global_monthly_ranking (janela mensal) e RPC friends_overview."
+      },
+      {
+        "file": "supabase/migrations/20261102_push_pairing_account.sql",
+        "purpose": "SQL de push, pareamento de uso único e desativação de conta: push_subscriptions (assinatura por aparelho com fuso, horário do lembrete, toggles e sent_keys para dedupe no servidor, RLS do próprio usuário), pairing_codes sem policies + RPCs pairing_create/pairing_claim/pairing_status e colunas deletion_* em profiles com RPCs request_account_deletion/cancel_account_deletion/account_deletion_status."
+      },
+      {
+        "file": "src-app/api/push-dispatch.js",
+        "purpose": "Endpoint serverless de push: action=key devolve a chave pública VAPID; action=cron (CRON_SECRET) percorre push_subscriptions no fuso de cada aparelho e envia motivacional diária, lembrete no horário e fim das ligas. Criptografia Web Push RFC 8291 e JWT VAPID ES256 feitas com node:crypto, sem dependência nova; remove assinaturas 404/410 e falhas repetidas."
+      },
+      {
+        "file": "src-app/api/account-purge.js",
+        "purpose": "Expurgo agendado das contas desativadas: action=cron (CRON_SECRET) apaga via auth.admin.deleteUser as contas cuja carência de 30 dias venceu; a cascata limpa profiles, friendships e push_subscriptions."
+      },
+      {
+        "file": "src-app/public/push-sw.js",
+        "purpose": "Handlers de Push injetados no Service Worker do Workbox (workbox.importScripts): push (exibe o payload {title, body, tag, url} montado pelo servidor), notificationclick (foca a aba aberta e emite academia:notification-click ou abre nova) e pushsubscriptionchange (pede reassinatura à página)."
+      },
+      {
+        "file": "src-app/src/features/notifications/push.ts",
+        "purpose": "Assinatura de push do aparelho: lê a chave VAPID de /api/push-dispatch?action=key, assina o PushManager, grava em push_subscriptions (fuso, horário do lembrete e o que receber) e expõe pushStatus/enablePush/disablePush/syncPushPreferences/startPushSync com estados honestos (unsupported, unconfigured, no-account, denied, off, on)."
+      },
+      {
+        "file": "src-app/src/features/notifications/inbox.ts",
+        "purpose": "Caixa de Mensagens alimentada por eventos reais: pushMessage com chave de dedupe, marcação de lida, limite de 60 itens e evento academia:inbox-changed; syncFriendMessages (transições de amizade na nuvem), syncAchievementMessages (conquistas novas), syncLeagueMessages (fim de liga em que o usuário treinou) e noteStreakRisk."
+      },
+      {
+        "file": "src-app/src/features/notifications/useInbox.ts",
+        "purpose": "Hook reativo da Caixa de Mensagens (lista + contador de não lidas), revalidando em academia:inbox-changed e no evento storage (outra aba)."
+      },
+      {
+        "file": "src-app/src/features/notifications/RealEventsFeed.tsx",
+        "purpose": "Componente sem UI montado no App: converte dados reais em mensagens (fim de liga, ofensiva em risco, conquistas, amizades e conta reativada via academia:account-restored). Checagem de amigos na nuvem é limitada a 1x/min e silenciosa quando offline."
+      },
+      {
+        "file": "src-app/src/core/auth/account-deletion.ts",
+        "purpose": "Desativação de conta com 30 dias de carência: requestAccountDeletion, deletionStatus, cancelDeletionIfPending (chamada pelo AuthProvider ao abrir sessão, emite academia:account-restored) e cancelAccountDeletion para o botão de cancelar nas Configurações."
       }
     ],
     "core_db": [

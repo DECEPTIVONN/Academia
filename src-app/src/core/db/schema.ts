@@ -292,6 +292,8 @@ export interface ProfileCustomization {
   /** v4.49.0 — 2º lote de perguntas pós-login */
   /** Altura (cm) */
   heightCm?: number;
+  /** Data de nascimento em YYYY-MM-DD (onboarding → Perfil de Saúde). */
+  nascimento?: string;
   /** Motivos de usar o app de fitness (múltipla escolha, máx. 3) */
   appReasons?: string[];
   /** Como o usuário conheceu o app */
@@ -328,6 +330,8 @@ export type BodyPhotoSlot = 'front' | 'side' | 'back';
 export interface BodyMeasurement {
   date: string;              // YYYY-MM-DD
   weightKg?: number;
+  /** v4.65.0 — altura (cm): espelhada no Perfil de Saúde junto com o peso. */
+  heightCm?: number;
   bodyFat?: number;
   waistCm?: number;
 }

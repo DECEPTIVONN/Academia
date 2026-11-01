@@ -1,11 +1,14 @@
 /**
- * HealthProfile.tsx — "Perfil de Saúde" (Configurações → Perfil) v4.56.22
+ * HealthProfile.tsx — "Perfil de Saúde" (Configurações → Perfil) v4.65.0
  *
- * Tela no desenho da referência (Sexo, Altura, Peso, Data de nascimento e o
- * botão "Concluído"), adaptada ao design system `set-*` das Configurações.
- * Usa o mesmo subtítulo da referência e mantém os dados só neste dispositivo.
+ * Sexo e Data de nascimento vêm do formulário pós-login e aparecem aqui
+ * SOMENTE COMO LEITURA (não são editáveis depois do cadastro). Só Peso e
+ * Altura podem ser alterados a qualquer momento — e ambos também são
+ * atualizados quando o usuário registra medidas na aba Progresso
+ * (Métricas corporais), que gravam em `body-metrics.ts` e espelham o valor
+ * aqui via `mergeHealthProfile`.
  *
- * O peso é persistido SEMPRE em kg (`saveHealthProfile`), mas exibido na
+ * O peso é persistido SEMPRE em kg (`mergeHealthProfile`), mas exibido na
  * unidade escolhida pelo usuário (`getWeightUnit()`), com conversão apenas
  * na entrada/saída do campo — igual ao restante do app (`formatLoadLabel`).
  * Ao mudar a preferência de unidade, o campo é reformatado na hora.
@@ -15,11 +18,12 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { getWeightUnit, type WeightUnit } from '@/lib/app-prefs';
 import { showToast } from '@/lib/toast';
 import {
+  HEALTH_PROFILE_EVENT,
   HEALTH_SEX_OPTIONS,
   KG_TO_LB,
   healthAge,
+  mergeHealthProfile,
   readHealthProfile,
-  saveHealthProfile,
   type HealthSex,
 } from './health-profile';
 import './health-profile.css';
@@ -32,9 +36,10 @@ const SvgPulse = (
   </svg>
 );
 
-const SvgChevronDown = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
-    <polyline points="6 9 12 15 18 9" />
+const SvgLock = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
 );
 
@@ -56,23 +61,44 @@ function textToKg(text: string, unit: WeightUnit): string {
   return String(round1(unit === 'lb' ? value / KG_TO_LB : value));
 }
 
-/** Data de hoje em YYYY-MM-DD (limite do input type="date"). */
-function todayISO(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
+/** Data YYYY-MM-DD → dd/mm/aaaa (exibição do campo bloqueado). */
+function formatNascimento(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  if (!y || !m || !d) return '';
+  return `${d}/${m}/${y}`;
 }
 
-export function HealthProfile() {
+/** Dados do cadastro pós-login — fallback p/ perfis salvos antes do v4.65.0. */
+export interface HealthProfileSeed {
+  sexo?: string;
+  nascimento?: string;
+  pesoKg?: number | null;
+  alturaCm?: number | null;
+}
+
+interface HealthProfileProps {
+  seed?: HealthProfileSeed;
+}
+
+export function HealthProfile({ seed }: HealthProfileProps) {
   const initial = useMemo(() => readHealthProfile(), []);
   const [unit, setUnit] = useState<WeightUnit>(() => getWeightUnit());
   const unitRef = useRef<WeightUnit>(unit);
 
-  const [sexo, setSexo] = useState<HealthSex | ''>(initial.sexo);
-  const [alturaCm, setAlturaCm] = useState(initial.alturaCm);
-  const [pesoText, setPesoText] = useState(() => weightToText(initial.pesoKg, unit));
-  const [nascimento, setNascimento] = useState(initial.nascimento);
+  /* Sexo/Nascimento: Perfil de Saúde → cadastro pós-login (leitura apenas). */
+  const sexo: HealthSex | '' =
+    initial.sexo ||
+    (HEALTH_SEX_OPTIONS.includes(seed?.sexo as HealthSex) ? (seed?.sexo as HealthSex) : '');
+  const nascimento =
+    initial.nascimento ||
+    (seed?.nascimento && healthAge(seed.nascimento) !== null ? seed.nascimento : '');
+
+  const [alturaCm, setAlturaCm] = useState(
+    initial.alturaCm || (seed?.alturaCm != null ? String(seed.alturaCm) : '')
+  );
+  const [pesoText, setPesoText] = useState(() =>
+    weightToText(initial.pesoKg || (seed?.pesoKg != null ? String(seed.pesoKg) : ''), unit)
+  );
 
   /* Preferência de unidade pode mudar em outra tela (Exibição): reformata o
      campo convertendo o texto atual, sem perder o que foi digitado. */
@@ -89,15 +115,22 @@ export function HealthProfile() {
     return () => window.removeEventListener('academia:prefs-changed', onPrefs);
   }, []);
 
+  /* Peso/Altura podem ser gravados fora daqui (Métricas corporais na aba
+     Progresso): reidrata os campos quando o perfil mudar. */
+  useEffect(() => {
+    const onHealth = () => {
+      const next = readHealthProfile();
+      setAlturaCm(next.alturaCm);
+      setPesoText(weightToText(next.pesoKg, unitRef.current));
+    };
+    window.addEventListener(HEALTH_PROFILE_EVENT, onHealth);
+    return () => window.removeEventListener(HEALTH_PROFILE_EVENT, onHealth);
+  }, []);
+
   const idade = healthAge(nascimento);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (!sexo) {
-      showToast('Selecione uma opção em Sexo.', 'error');
-      return;
-    }
 
     const altura = parseFloat(alturaCm.replace(',', '.'));
     if (!Number.isFinite(altura) || altura < 50 || altura > 260) {
@@ -112,22 +145,14 @@ export function HealthProfile() {
       return;
     }
 
-    if (healthAge(nascimento) === null) {
-      showToast('Informe uma data de nascimento válida.', 'error');
-      return;
-    }
-
-    const saved = saveHealthProfile({
-      sexo,
+    /* merge (não overwrite): Sexo e Nascimento continuam vindo do cadastro. */
+    const saved = mergeHealthProfile({
       alturaCm: String(round1(altura)),
       pesoKg: kg,
-      nascimento,
     });
 
-    setSexo(saved.sexo);
     setAlturaCm(saved.alturaCm);
     setPesoText(weightToText(saved.pesoKg, unit));
-    setNascimento(saved.nascimento);
     showToast('Perfil de Saúde atualizado!', 'success');
   };
 
@@ -147,27 +172,14 @@ export function HealthProfile() {
       </header>
 
       <form className="hp-form" onSubmit={handleSubmit} noValidate>
+        {/* Sexo — definido no cadastro pós-login (somente leitura). */}
         <div className="set-field">
-          <label className="set-field__label" htmlFor="hp-sexo">
-            Sexo
-          </label>
-          <div className="hp-select-wrap">
-            <select
-              id="hp-sexo"
-              className="set-input hp-select"
-              value={sexo}
-              onChange={(e) => setSexo(e.target.value as HealthSex | '')}
-            >
-              <option value="">Selecione</option>
-              {HEALTH_SEX_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <span className="hp-select__chev" aria-hidden="true">
-              {SvgChevronDown}
+          <span className="set-field__label">Sexo</span>
+          <div className="hp-locked" aria-readonly="true">
+            <span className={sexo ? '' : 'hp-locked__empty'}>
+              {sexo || 'Não informado no cadastro'}
             </span>
+            {SvgLock}
           </div>
         </div>
 
@@ -213,18 +225,15 @@ export function HealthProfile() {
           </div>
         </div>
 
+        {/* Data de nascimento — definida no cadastro pós-login (somente leitura). */}
         <div className="set-field">
-          <label className="set-field__label" htmlFor="hp-nascimento">
-            Data de nascimento
-          </label>
-          <input
-            id="hp-nascimento"
-            className="set-input hp-date"
-            type="date"
-            max={todayISO()}
-            value={nascimento}
-            onChange={(e) => setNascimento(e.target.value)}
-          />
+          <span className="set-field__label">Data de nascimento</span>
+          <div className="hp-locked" aria-readonly="true">
+            <span className={nascimento ? '' : 'hp-locked__empty'}>
+              {nascimento ? formatNascimento(nascimento) : 'Não informada no cadastro'}
+            </span>
+            {SvgLock}
+          </div>
           {idade !== null && (
             <p className="hp-hint">
               {idade} {idade === 1 ? 'ano' : 'anos'}
@@ -235,7 +244,9 @@ export function HealthProfile() {
         <button type="submit" className="set-btn set-btn--primary hp-submit">
           Concluído
         </button>
-        <p className="hp-foot">Seus dados ficam salvos apenas neste dispositivo.</p>
+        <p className="hp-foot">
+          Peso e altura também são atualizados pelas métricas corporais (aba Progresso).
+        </p>
       </form>
     </section>
   );

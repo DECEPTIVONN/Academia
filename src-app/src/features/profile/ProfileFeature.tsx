@@ -21,21 +21,17 @@ import { loadAddedFriends } from '@/features/social/friend-invites';
 import { fadeIn } from '@/lib/animations';
 import { useProfileState } from '@/features/profile/useProfileState';
 import {
-  FRASES_PRESET,
   IDENTITY_EMBLEMS,
   SHOWCASE_STATS,
   SPRITESHEET_URL,
-  TITULOS,
   applyCustomizationGlobals,
   emblemForSlot,
   getBadgeDefinitions,
   getProfileStats,
   handleText,
   isDevMode,
-  isUnlocked,
   revertLockedCustomizations,
   tituloNome,
-  unlockHint,
   writeLS,
 } from '@/features/profile/profile-data';
 import { showToast } from '@/lib/toast';
@@ -49,7 +45,7 @@ import { useMaestriaUi } from '@/features/gamification/maestria-ui';
 import { DEFAULT_PROFILE_CUSTOMIZATION, type ProfileConquista } from '@/core/db/schema';
 
 type ProgSub = 'visao-geral' | 'nivel-xp' | 'conquistas';
-type PersSub = 'identidade' | 'frase' | 'destaque' | 'titulo';
+type PersSub = 'destaque';
 
 /* ── SVGs idênticos ao perfil.html ── */
 
@@ -96,24 +92,10 @@ const SvgStar20 = (
   </svg>
 );
 
-const SvgChat20 = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
-
 const SvgTrending20 = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
     <polyline points="17 6 23 6 23 12" />
-  </svg>
-);
-
-const SvgType20 = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-    <polyline points="4 7 4 4 20 4 20 7" />
-    <line x1="9" y1="20" x2="15" y2="20" />
-    <line x1="12" y1="4" x2="12" y2="20" />
   </svg>
 );
 
@@ -256,19 +238,6 @@ export function ProfileFeature() {
   }, [profile, user, update]);
 
   /* ── Handlers ── */
-
-  const saveIdentity = async () => {
-    const handle = draft.handle.trim() || '@deceptivon';
-    // Por padrão o nome de exibição é o próprio handle (sem opção separada).
-    const nome = handle.replace(/^@/, '').toUpperCase() || 'DECEPTIVON';
-    const assinatura = draft.assinatura.trim();
-    const showcaseStat = draft.showcaseStat || 'streak';
-    const titulo = draft.titulo ?? null;
-    await update((d) => {
-      d.customization = { ...d.customization, nome, handle, assinatura, showcaseStat, titulo };
-    });
-    showToast('Identidade atualizada!', 'success');
-  };
 
   const toggleDevMode = async (checked: boolean) => {
     writeLS('academia_dev_mode', String(checked));
@@ -417,7 +386,7 @@ export function ProfileFeature() {
                   className="profile-edit-btn"
                   id="btnEditarPerfil"
                   title="Personalizar Perfil"
-                  onClick={() => setNavStack(['personalizar', 'identidade'])}
+                  onClick={() => setNavStack(['perfil'])}
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -693,7 +662,16 @@ export function ProfileFeature() {
     },
     saude: {
       title: 'Perfil de Saúde',
-      content: <HealthProfile />,
+      content: (
+        <HealthProfile
+          seed={{
+            sexo: pc.gender ?? undefined,
+            nascimento: pc.nascimento,
+            pesoKg: pc.weightKg,
+            alturaCm: pc.heightCm,
+          }}
+        />
+      ),
     },
   };
 
@@ -895,22 +873,6 @@ export function ProfileFeature() {
 
   const persTiles: HubTile[] = [
     {
-      id: 'identidade',
-      title: 'Identidade',
-      desc: 'Nome de exibição e @handle',
-      icon: SvgUser20,
-      badge: handleText(pc),
-      keywords: ['identidade', 'nome', 'handle', 'usuario', 'exibicao'],
-    },
-    {
-      id: 'frase',
-      title: 'Frase de Assinatura',
-      desc: 'Mensagem no cartão e no share card',
-      icon: SvgChat20,
-      badge: draft.assinatura ? 'Com frase' : 'Sem frase',
-      keywords: ['frase', 'assinatura', 'motivacao', 'share', 'citacao'],
-    },
-    {
       id: 'destaque',
       title: 'Em Destaque',
       desc: 'Estatística em destaque no cartão',
@@ -918,116 +880,9 @@ export function ProfileFeature() {
       badge: showcaseDef?.label ?? 'Streak',
       keywords: ['destaque', 'showcase', 'stat', 'estatistica', 'streak'],
     },
-    {
-      id: 'titulo',
-      title: 'Título',
-      desc: 'Título exibido sob o seu nome',
-      icon: SvgType20,
-      badge: tituloAtivo ?? 'Sem título',
-      keywords: ['titulo', 'rank', 'nome'],
-    },
   ];
 
   const persScreens: Record<PersSub, HubScreen> = {
-    identidade: {
-      title: 'Identidade',
-      content: (
-        <div className="perf-sub-content3 active" id="perf-subtab3-identidade">
-          <div className="theme-section theme-roxo">
-            <div className="theme-bg" />
-            <div className="theme-content">
-              <div className="profile-section-title">Identidade</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div>
-                  <label
-                    style={{
-                      fontSize: '0.65rem',
-                      letterSpacing: '1.5px',
-                      color: 'var(--text-secondary)',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      display: 'block',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    Nome / Handle (@usuário)
-                  </label>
-                  <input
-                    id="inputCustomHandle"
-                    className="profile-name-input"
-                    type="text"
-                    maxLength={20}
-                    placeholder="@handle"
-                    style={{ width: '100%', maxWidth: '100%' }}
-                    value={draft.handle}
-                    onChange={(e) => setDraft((d) => ({ ...d, handle: e.target.value }))}
-                  />
-                </div>
-              </div>
-              {/* v4.11.0 — botão Salvar na tela Identidade */}
-              <button
-                type="button"
-                className="set-btn set-btn--primary"
-                style={{ width: '100%', marginTop: 16 }}
-                onClick={() => void saveIdentity()}
-              >
-                Salvar Identidade
-              </button>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    frase: {
-      title: 'Frase de Assinatura',
-      content: (
-        <div className="perf-sub-content3 active" id="perf-subtab3-frase">
-          <div className="theme-section theme-roxo">
-            <div className="theme-bg" />
-            <div className="theme-content">
-              <div className="profile-section-title">Frase de Assinatura</div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
-                Exibida no seu Share Card e cartão de perfil.
-              </p>
-              <input
-                id="inputCustomAssinatura"
-                className="profile-name-input"
-                type="text"
-                maxLength={60}
-                placeholder="Sua frase motivacional..."
-                style={{
-                  width: '100%',
-                  maxWidth: '100%',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  letterSpacing: '0.5px',
-                  textTransform: 'none',
-                }}
-                value={draft.assinatura}
-                onChange={(e) => setDraft((d) => ({ ...d, assinatura: e.target.value }))}
-              />
-              <div
-                className="frases-preset"
-                id="frasesPreset"
-                style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}
-              >
-                {FRASES_PRESET.map((f) => (
-                  <button
-                    key={f}
-                    className="frase-preset-btn"
-                    data-frase={f}
-                    type="button"
-                    onClick={() => setDraft((d) => ({ ...d, assinatura: f }))}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ),
-    },
     destaque: {
       title: 'Em Destaque',
       content: (
@@ -1066,46 +921,6 @@ export function ProfileFeature() {
                     </span>
                   </div>
                 ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    titulo: {
-      title: 'Título',
-      content: (
-        <div className="perf-sub-content3 active" id="perf-subtab3-titulo">
-          <div className="theme-section theme-ouro">
-            <div className="theme-bg" />
-            <div className="theme-content">
-              <div className="profile-section-title">Título</div>
-              <div className="titulo-list" id="tituloList">
-                {TITULOS.map((t) => {
-                  const unlocked = isUnlocked(t.unlock, stats, devMode, maestrias);
-                  const active = t.id === draft.titulo ? 'titulo-option--active' : '';
-                  const locked = !unlocked ? 'titulo-option--locked' : '';
-                  return (
-                    <div
-                      key={t.id ?? 'sem-titulo'}
-                      className={`titulo-option ${active} ${locked}`}
-                      data-titulo={t.id ?? ''}
-                      data-locked={!unlocked ? 'true' : undefined}
-                      onClick={() => {
-                        if (!unlocked) {
-                          showToast('Título bloqueado!', 'info');
-                          return;
-                        }
-                        setDraft((d) => ({ ...d, titulo: t.id ?? null }));
-                      }}
-                    >
-                      <span className="titulo-option__name">{t.nome}</span>
-                      {!unlocked && t.unlock && (
-                        <span className="titulo-option__hint">{unlockHint(t.unlock)}</span>
-                      )}
-                    </div>
-                  );
-                })}
               </div>
             </div>
           </div>

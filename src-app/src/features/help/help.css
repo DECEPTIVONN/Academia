@@ -1,0 +1,154 @@
+/* ============================================================
+   HELP — Ajuda e Tutoriais (v4.66.0)
+
+   Reaproveita o HUD dark do design system `set-*` (settings.css):
+   cards, eyebrow, títulos e inputs. Aqui ficam só os grupos e o
+   acordeão, com transição suave de abertura/fechamento (grid-rows
+   0fr → 1fr + opacidade), sem saltos de layout.
+   ============================================================ */
+
+.help-root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.help-search {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.help-group {
+  display: block;
+}
+
+.help-group__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.help-group__icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.4);
+  color: var(--primary-light);
+}
+
+.help-group__title {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.help-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---------- Acordeão ---------- */
+
+.help-item {
+  border: 1px solid rgba(63, 63, 70, 0.7);
+  border-radius: 14px;
+  background: rgba(24, 24, 27, 0.72);
+  overflow: hidden;
+  transition:
+    border-color 0.22s ease,
+    background-color 0.22s ease;
+}
+
+.help-item.is-open,
+.help-item:hover {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+}
+
+.help-item__question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+  transition: color 0.2s ease;
+}
+
+.help-item__question:hover {
+  color: var(--primary-light);
+}
+
+.help-item__chev {
+  flex-shrink: 0;
+  color: var(--set-dim-2, #71717a);
+  transition: transform 0.26s cubic-bezier(0.25, 0.8, 0.25, 1), color 0.2s ease;
+}
+
+.help-item.is-open .help-item__chev {
+  transform: rotate(180deg);
+  color: var(--primary-light);
+}
+
+.help-item__answer-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    opacity 0.26s ease;
+}
+
+.help-item.is-open .help-item__answer-wrap {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.help-item__answer {
+  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0 14px;
+  font-size: 0.76rem;
+  line-height: 1.65;
+  color: var(--text-secondary, #a1a1aa);
+  transition: padding 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.help-item.is-open .help-item__answer {
+  padding: 0 14px 14px;
+}
+
+.help-empty {
+  margin: 0;
+  padding: 18px 4px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-tertiary, #71717a);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-item,
+  .help-item__chev,
+  .help-item__answer-wrap,
+  .help-item__answer {
+    transition: none !important;
+  }
+}

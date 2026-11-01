@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { isDevMode } from '@/features/profile/profile-data';
 import '@/features/auth/auth-screen.css';
 import {
     X,
@@ -1546,7 +1547,10 @@ export default function MissoesRecompensasStandalone({
 
                                 </div>
 
-                                {/* TESTER CONTROLS ROW inside modal */}
+                                {/* v4.66.0 — controles de teste só no modo
+                                    desenvolvedor (fora dele, o módulo é apenas
+                                    visualização: nada de progresso artificial). */}
+                                {isDevMode() && (
                                 <div className="bg-slate-900/40 p-2 rounded-xl border border-purple-500/10 flex items-center justify-between gap-2">
                                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">SIMULADOR:</span>
                                     <div className="flex items-center gap-1.5">
@@ -1578,6 +1582,7 @@ export default function MissoesRecompensasStandalone({
                                         </button>
                                     </div>
                                 </div>
+                                )}
 
                             </div>
                         )}

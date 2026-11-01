@@ -1,70 +1,46 @@
 /**
- * RankingsOverlay.tsx — interface de Rankings do menu do Início
+ * RankingsOverlay.tsx — Rankings do menu do Início (v4.66.0)
  *
- * Segue o desenho da interface de Liga (aba Social): título + ✕ no cabeçalho,
- * abas em pílula, banner "Modo Ranqueado" e linhas com posição / avatar / nome /
- * pontuação. As abas Global/Local da referência foram IGNORADAS (pedido do
- * usuário) — o ranking é único e exibido direto.
+ * Duas abas com dados REAIS:
+ *   • Jogadores — ranking global do mês (`global_monthly_ranking`), a mesma
+ *     janela da liga mensal e a mesma pontuação (XP de treinos concluídos);
+ *   • Amigos — seus amigos da nuvem ordenados pelo XP do mês.
  *
- *  • Jogadores — maiores pontuações (placeholders + o jogador local com o XP
- *    real de treinos);
- *  • Clãs — ranking dos MEMBROS da guilda; sem guilda, mostra a mensagem
- *    pedindo para o usuário fazer parte de uma;
- *  • Amigos — ranking dos amigos; sem amigos, mensagem de estado vazio.
- *
- * Usa OverlayShell (mesmo visual dos overlays da aba Social) e monta via
- * portal — o .section-strip (will-change: transform) seria o containing block
- * do position: fixed.
+ * Sem placeholders, sem clãs/guildas e sem pontuação inventada. Quando a
+ * nuvem não está disponível, o overlay mostra o estado honesto (entrar na
+ * conta / configurar a nuvem).
  */
 
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Medal, Shield, Trophy, Users } from 'lucide-react';
+import { Medal, Trophy, Users } from 'lucide-react';
 import { OverlayShell } from './OverlayShell';
 import { PlayerAvatarMedia } from './PlayerAvatar';
 import { FlagIcon } from './ligas-icons';
-import { INITIAL_FRIENDS, type AvatarGlyphKey, type FlagKey } from './ligas-data';
-import { loadAddedFriends, mergeFriends } from './friend-invites';
-import { getGuild, useGuildState, type GuildPlayer } from './guild-data';
-import { useLocalData } from '@/hooks/useLocalData';
-import { useProfileState } from '@/features/profile/useProfileState';
-import { getLevel, getXp } from '@/core/db/queries';
+import { formatWindowEnd, monthlyLeagueWindow } from './league-window';
+import { cloudFriendToItem, rankRowToItem, useSocialCloud } from './useSocialCloud';
+import type { FriendItem } from './ligas-data';
 import { useModalPresence } from '@/hooks/useModalPresence';
 import './rankings.css';
 
-type RankingTab = 'jogadores' | 'clas' | 'amigos';
+type RankingTab = 'jogadores' | 'amigos';
 
 interface RankRow {
   id: string;
   name: string;
   score: number;
   level: number;
-  guild: string | null;
-  glyph: AvatarGlyphKey;
-  flag: FlagKey;
+  glyph: FriendItem['avatarGlyph'];
+  flag: FriendItem['flag'];
   photo?: string;
   emblemId?: string;
   isSelf?: boolean;
-  /** Função na guilda (só na aba Clãs). */
-  role?: string;
+  streak?: number;
 }
 
 const TABS: { key: RankingTab; label: string }[] = [
   { key: 'jogadores', label: 'Jogadores' },
-  { key: 'clas', label: 'Clãs' },
   { key: 'amigos', label: 'Amigos' },
-];
-
-/* Placeholders do ranking global de jogadores (pontuação fictícia). */
-const PLACEHOLDER_PLAYERS: RankRow[] = [
-  { id: 'top-1', name: 'Rafa Power', score: 3120, level: 34, guild: 'Academia Masters BR', glyph: 'lion', flag: 'BR', emblemId: 'estrela-honra' },
-  { id: 'top-2', name: 'Marina Lifts', score: 2985, level: 31, guild: 'Iron Forge SP', glyph: 'moon', flag: 'BR', emblemId: 'lobo-alfa' },
-  { id: 'top-3', name: 'Diego Bulk', score: 2874, level: 29, guild: 'Titan Fitness', glyph: 'flame', flag: 'AR', emblemId: 'escudo-aguia' },
-  { id: 'top-4', name: 'Luiza Strong', score: 2741, level: 27, guild: 'Academia Prime', glyph: 'star', flag: 'BR', emblemId: 'prestigio-1' },
-  { id: 'top-5', name: 'Thiago Heavy', score: 2658, level: 26, guild: 'Red Star Lift', glyph: 'bolt', flag: 'CL', emblemId: 'estrela-honra' },
-  { id: 'top-6', name: 'Ana Progress', score: 2536, level: 24, guild: 'Nordic Kings', glyph: 'shield', flag: 'BR', emblemId: 'escudo-aguia' },
-  { id: 'top-7', name: 'Vitor Core', score: 2410, level: 22, guild: null, glyph: 'sword', flag: 'MX', emblemId: 'lobo-alfa' },
-  { id: 'top-8', name: 'Bia Volume', score: 2325, level: 21, guild: 'Academia Masters BR', glyph: 'gem', flag: 'BR', emblemId: 'prestigio-1' },
 ];
 
 const rankTone = (rank: number) =>
@@ -85,13 +61,12 @@ function RankRowView({ row, rank }: { row: RankRow; rank: number }) {
       <span className="rk-row__body">
         <span className="rk-row__name">
           <span className="rk-row__name-text">{row.name}</span>
-          <FlagIcon flag={row.flag} size={11} className="rk-row__flag" />
+          {row.flag && <FlagIcon flag={row.flag} size={11} className="rk-row__flag" />}
           {row.isSelf && <span className="rk-row__you">VOCÊ</span>}
         </span>
         <span className="rk-row__meta">
-          {row.role
-            ? `${row.role} · Nível ${row.level}`
-            : `Nível ${row.level}${row.guild ? ` · ${row.guild}` : ' · Sem guilda'}`}
+          Nível {row.level}
+          {row.streak ? ` · ${row.streak} ${row.streak === 1 ? 'dia' : 'dias'} de ofensiva` : ''}
         </span>
       </span>
       <span className="rk-row__score">
@@ -114,6 +89,15 @@ export function RankingsOverlay({ open, onClose }: RankingsOverlayProps) {
   const [tabDir, setTabDir] = useState(1);
   const { mounted, closing } = useModalPresence(open);
 
+  const cloud = useSocialCloud();
+  const monthWindow = useMemo(() => monthlyLeagueWindow(), []);
+
+  /* Carrega/atualiza quando o overlay abre (o XP do usuário é republicado). */
+  useEffect(() => {
+    if (open) void cloud.refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const selectTab = (next: RankingTab) => {
     if (next === tab) return;
     const from = TABS.findIndex((item) => item.key === tab);
@@ -121,9 +105,6 @@ export function RankingsOverlay({ open, onClose }: RankingsOverlayProps) {
     setTabDir(to >= from ? 1 : -1);
     setTab(next);
   };
-
-  const { history } = useLocalData();
-  const { state: profileState } = useProfileState();
 
   /* Esc fecha + trava o scroll do body (padrão dos overlays do app). */
   useEffect(() => {
@@ -140,117 +121,86 @@ export function RankingsOverlay({ open, onClose }: RankingsOverlayProps) {
     };
   }, [open, onClose]);
 
-  const displayName = profileState?.customization?.nome?.trim() || 'Atleta';
-  const playerXp = useMemo(() => getXp(history), [history]);
-  const playerLevel = useMemo(() => getLevel(playerXp), [playerXp]);
-
-  const guildPlayer = useMemo<GuildPlayer>(
-    () => ({
-      name: displayName,
-      trophies: playerXp,
-      level: playerLevel,
-      glyph: 'crown',
-      flag: 'BR',
-      photo: profileState?.customization?.photo,
-      avatarEmblemId: profileState?.customization?.mainEmblem,
-    }),
-    [displayName, playerXp, playerLevel, profileState?.customization?.photo, profileState?.customization?.mainEmblem],
+  const playerRows = useMemo<RankRow[]>(
+    () =>
+      cloud.ranking.map((rankingRow) => {
+        const item = rankRowToItem(rankingRow);
+        return {
+          id: item.id,
+          name: item.name,
+          score: item.monthlyXp ?? item.trophies,
+          level: item.level ?? 1,
+          glyph: item.avatarGlyph,
+          flag: item.flag,
+          photo: item.photo,
+          emblemId: item.avatarEmblemId,
+          isSelf: rankingRow.isSelf,
+          streak: rankingRow.streak,
+        };
+      }),
+    [cloud.ranking],
   );
-  const guildState = useGuildState(guildPlayer);
-  const myGuild = getGuild(guildState);
-
-  const selfRow: RankRow = useMemo(
-    () => ({
-      id: 'self',
-      name: displayName,
-      score: playerXp,
-      level: playerLevel,
-      guild: myGuild?.name ?? null,
-      glyph: 'crown',
-      flag: 'BR',
-      photo: profileState?.customization?.photo,
-      emblemId: profileState?.customization?.mainEmblem,
-      isSelf: true,
-    }),
-    [displayName, playerXp, playerLevel, myGuild?.name, profileState?.customization?.photo, profileState?.customization?.mainEmblem],
-  );
-
-  /* Jogadores: placeholders + o jogador local, ordenados pela pontuação. */
-  const playerRows = useMemo(
-    () => [...PLACEHOLDER_PLAYERS, selfRow].sort((a, b) => b.score - a.score),
-    [selfRow],
-  );
-
-  /* Clãs: apenas os membros da guilda do usuário. */
-  const guildRows = useMemo<RankRow[]>(() => {
-    if (!myGuild) return [];
-    return myGuild.members
-      .map((member) => ({
-        id: `guild-${member.id}`,
-        name: member.name,
-        score: member.trophies,
-        level: member.level,
-        guild: myGuild.name,
-        glyph: member.glyph,
-        flag: member.flag,
-        photo: member.photo,
-        emblemId: member.avatarEmblemId,
-        isSelf: member.isSelf || member.name === displayName,
-        role: member.role,
-      }))
-      .sort((a, b) => b.score - a.score);
-  }, [myGuild, displayName]);
-
-  /* Amigos: INITIAL_FRIENDS + amigos adicionados por QR/link. */
-  const [friends, setFriends] = useState(() => mergeFriends(loadAddedFriends(), INITIAL_FRIENDS));
-  useEffect(() => {
-    const reload = () => setFriends(mergeFriends(loadAddedFriends(), INITIAL_FRIENDS));
-    window.addEventListener('academia:friends-updated', reload);
-    window.addEventListener('academia:friends-changed', reload);
-    return () => {
-      window.removeEventListener('academia:friends-updated', reload);
-      window.removeEventListener('academia:friends-changed', reload);
-    };
-  }, []);
 
   const friendRows = useMemo<RankRow[]>(
     () =>
-      friends
-        .map((friend) => ({
-          id: `friend-${friend.id}`,
-          name: friend.name,
-          score: friend.trophies,
-          level: friend.level ?? 1,
-          guild: friend.clan,
-          glyph: friend.avatarGlyph ?? 'crown',
-          flag: friend.flag ?? 'BR',
-          photo: friend.photo,
-          emblemId: friend.avatarEmblemId,
-          isSelf: false,
-        }))
+      cloud.accepted
+        .map((friend) => {
+          const item = cloudFriendToItem(friend);
+          return {
+            id: item.id,
+            name: item.name,
+            score: item.monthlyXp ?? 0,
+            level: item.level ?? 1,
+            glyph: item.avatarGlyph,
+            flag: item.flag,
+            photo: item.photo,
+            emblemId: item.avatarEmblemId,
+            isSelf: false,
+            streak: friend.streak,
+          };
+        })
         .sort((a, b) => b.score - a.score),
-    [friends],
+    [cloud.accepted],
   );
 
   if (!mounted) return null;
 
-  const rows =
-    tab === 'jogadores' ? playerRows : tab === 'clas' ? guildRows : friendRows;
+  const rows = tab === 'jogadores' ? playerRows : friendRows;
 
   const banner =
     tab === 'jogadores'
-      ? { title: 'Modo Ranqueado', sub: 'As maiores pontuações do EVO FIT' }
-      : tab === 'clas'
+      ? {
+          title: 'Ranking global do mês',
+          sub: `XP dos treinos concluídos · fecha em ${formatWindowEnd(monthWindow)}`,
+        }
+      : { title: 'Ranking de amigos', sub: 'Sua rede pelo XP do mês' };
+
+  const empty =
+    !cloud.ready
+      ? {
+          icon: <Trophy size={30} className="rk-empty__icon" aria-hidden="true" />,
+          text:
+            cloud.error === 'offline'
+              ? 'A nuvem não está configurada neste dispositivo — o ranking precisa de conexão com o servidor.'
+              : 'Entre na sua conta para publicar seu XP e disputar o ranking.',
+        }
+      : tab === 'jogadores'
         ? {
-            title: myGuild?.name ?? 'Ranking da Guilda',
-            sub: myGuild
-              ? `Membros de ${myGuild.name} por pontuação`
-              : 'Entre em uma guilda para disputar o ranking interno',
+            icon: <Trophy size={30} className="rk-empty__icon" aria-hidden="true" />,
+            text: 'Nenhum atleta pontuou neste mês ainda. Conclua um treino para abrir o ranking.',
           }
-        : { title: 'Ranking de Amigos', sub: 'Sua rede por pontuação' };
+        : {
+            icon: <Users size={30} className="rk-empty__icon" aria-hidden="true" />,
+            text: 'Você ainda não tem amigos. Adicione amigos na aba Social para comparar o XP do mês.',
+          };
 
   return (
-    <OverlayShell title="Rankings" subtitle="Temporada atual" closing={closing} onClose={onClose}>
+    <OverlayShell
+      title="Rankings"
+      subtitle={`Mês atual · até ${formatWindowEnd(monthWindow)}`}
+      closing={closing}
+      onClose={onClose}
+    >
       <div className="rk-root">
         <div className="rk-tabs" role="tablist" aria-label="Categorias do ranking">
           {TABS.map((item) => (
@@ -277,10 +227,8 @@ export function RankingsOverlay({ open, onClose }: RankingsOverlayProps) {
             exit={{ opacity: 0, x: tabDir * -26 }}
             transition={{ duration: 0.22, ease: [0.25, 0.8, 0.25, 1] }}
           >
-            <div className={`rk-banner${tab === 'clas' && !myGuild ? ' rk-banner--muted' : ''}`}>
-              {tab === 'clas' ? (
-                <Shield size={24} className="rk-banner__icon" aria-hidden="true" />
-              ) : tab === 'amigos' ? (
+            <div className="rk-banner">
+              {tab === 'amigos' ? (
                 <Users size={24} className="rk-banner__icon" aria-hidden="true" />
               ) : (
                 <Trophy size={24} className="rk-banner__icon" aria-hidden="true" />
@@ -291,19 +239,10 @@ export function RankingsOverlay({ open, onClose }: RankingsOverlayProps) {
               </span>
             </div>
 
-            {tab === 'clas' && !myGuild ? (
+            {rows.length === 0 ? (
               <div className="rk-empty">
-                <Shield size={30} className="rk-empty__icon" aria-hidden="true" />
-                <p className="rk-empty__text">
-                  Você precisa fazer parte de uma guilda para ver o ranking da guilda.
-                </p>
-              </div>
-            ) : tab === 'amigos' && rows.length === 0 ? (
-              <div className="rk-empty">
-                <Users size={30} className="rk-empty__icon" aria-hidden="true" />
-                <p className="rk-empty__text">
-                  Você ainda não tem amigos. Adicione amigos para ver o ranking.
-                </p>
+                {empty.icon}
+                <p className="rk-empty__text">{empty.text}</p>
               </div>
             ) : (
               <ol className="rk-list">

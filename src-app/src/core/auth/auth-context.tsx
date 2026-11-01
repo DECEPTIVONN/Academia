@@ -13,6 +13,10 @@ import React, {
 import type { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '@/core/supabase';
 import { clearLocalDB } from '@/core/db/idb';
+import {
+  cancelDeletionIfPending,
+  resetDeletionCheck,
+} from '@/core/auth/account-deletion';
 
 export interface AuthContextValue {
   user:    User    | null;
@@ -118,6 +122,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
+      /* v4.67.0 — entrar de novo em até 30 dias CANCELA a desativação da conta
+         (a RPC roda uma vez por carregamento; o aviso aparece na Caixa de
+         Mensagens via evento `academia:account-restored`). */
+      if (s?.user) void cancelDeletionIfPending();
     };
 
     /* Sem sessão válida: offline, cai para o snapshot da última conta em vez
@@ -289,6 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    resetDeletionCheck();
     const wasTest = isTestMode;
     if (wasTest) {
       try {

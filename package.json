@@ -6,7 +6,8 @@
   "scripts": {
     "build": "npm --prefix src-app run build",
     "dev": "npm --prefix src-app run dev",
-    "lint:docs": "node tools/doc-lint.mjs"
+    "lint:docs": "node tools/doc-lint.mjs",
+    "check:push": "node tools/check-push.mjs"
   },
   "keywords": [],
   "author": "",

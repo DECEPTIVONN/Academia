@@ -68,12 +68,19 @@ function sanitize(raw: unknown): BodyMetricsState {
     if (!item || typeof item.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(item.date)) continue;
     const entry: BodyMeasurement = { date: item.date };
     const weight = parseNumber(item.weightKg);
+    const height = parseNumber(item.heightCm);
     const fat = parseNumber(item.bodyFat);
     const waist = parseNumber(item.waistCm);
     if (weight !== undefined) entry.weightKg = weight;
+    if (height !== undefined) entry.heightCm = height;
     if (fat !== undefined) entry.bodyFat = fat;
     if (waist !== undefined) entry.waistCm = waist;
-    if (entry.weightKg === undefined && entry.bodyFat === undefined && entry.waistCm === undefined) {
+    if (
+      entry.weightKg === undefined &&
+      entry.heightCm === undefined &&
+      entry.bodyFat === undefined &&
+      entry.waistCm === undefined
+    ) {
       continue;
     }
     byDate.set(entry.date, { ...byDate.get(entry.date), ...entry });
@@ -189,9 +196,11 @@ export async function upsertMeasurement(input: BodyMeasurement): Promise<BodyMet
   const state = await readBodyMetrics();
   const entry: BodyMeasurement = { date: input.date };
   const weight = parseNumber(input.weightKg);
+  const height = parseNumber(input.heightCm);
   const fat = parseNumber(input.bodyFat);
   const waist = parseNumber(input.waistCm);
   if (weight !== undefined) entry.weightKg = weight;
+  if (height !== undefined) entry.heightCm = height;
   if (fat !== undefined) entry.bodyFat = fat;
   if (waist !== undefined) entry.waistCm = waist;
 

@@ -145,6 +145,23 @@
   white-space: nowrap;
 }
 
+/* v4.67.0 — contador de mensagens não lidas no item Mensagens. */
+.inicio-menu__badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f87171, #dc2626);
+  box-shadow: 0 2px 0 #991b1b;
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: #fff;
+}
+
 @keyframes inicioMenuFade {
   from {
     opacity: 0;

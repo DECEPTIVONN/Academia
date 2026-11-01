@@ -21,10 +21,24 @@
  * Cores aplicadas globalmente via theme-colors.ts (variáveis --primary*).
  */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 /* v4.13.0 — ícone do opt "Só no Botão" (fonte autorizada Diretrizes/Ícones.md §11) */
 import { MousePointerClick } from 'lucide-react';
 import { useProfileState } from '@/features/profile/useProfileState';
+import { PairingAuthorizeDialog } from '@/features/auth/PairingAuthorizeDialog';
+import { HelpCenter } from '@/features/help/HelpCenter';
+import { describeNextNotice } from '@/features/notifications/scheduler';
+import {
+  disablePush,
+  enablePush,
+  pushStatus,
+  type PushState,
+} from '@/features/notifications/push';
+import {
+  ensureNotificationPermission,
+  notificationSupport,
+  showAppNotification,
+} from '@/features/notifications/notification-center';
 import { PREF_KEYS, readLS, writeLS } from '@/features/profile/profile-data';
 import { exportBackupData, importBackupFile } from '@/features/profile/backup';
 import { showToast } from '@/lib/toast';
@@ -105,6 +119,12 @@ import type { HubScreen, HubTile } from './HubShell';
 import { SyncSettingsPanel } from '@/features/sync/SyncSettingsPanel';
 import { ScreensCustomizationPanel } from '@/features/sync/ScreensCustomizationPanel';
 import { ConnectedDevices } from '@/features/sync/ConnectedDevices';
+import {
+  cancelAccountDeletion,
+  deletionStatus,
+  requestAccountDeletion,
+  type DeletionStatus,
+} from '@/core/auth/account-deletion';
 import { useAuthModalStore } from '@/features/auth/auth-modal-store';
 import { useAuth } from '@/core/auth/use-auth';
 import { supabase, isSupabaseConfigured } from '@/core/supabase';
@@ -393,6 +413,15 @@ const SvgGlobe = (
   </svg>
 );
 
+/* v4.66.0 — ícone da Central de Ajuda (igual traço dos demais) */
+const SvgHelp = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </svg>
+);
+
 const SvgCode = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
     <polyline points="16 18 22 12 16 6" />
@@ -522,6 +551,8 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     () => normalizeHex(readLS(THEME_HEX_KEY) || '') || DEFAULT_HEX
   );
   const [pickerOpen, setPickerOpen] = useState(false);
+  /* v4.65.0 — pareamento do login por QR (Configurações → Segurança). */
+  const [pairingOpen, setPairingOpen] = useState(false);
 
   /* v4.44.0 — Preferências do App (unidades, semana, treino e avisos) */
   const [firstDay, setFirstDayState] = useState<FirstDayOfWeek>(() => getFirstDayOfWeek());
@@ -660,6 +691,57 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
 
+  /* v4.67.0 — push real (entrega com o app fechado) */
+  const [pushState, setPushState] = useState<PushState | 'checking'>('checking');
+
+  useEffect(() => {
+    let alive = true;
+    void pushStatus().then((status) => {
+      if (alive) setPushState(status.state);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const toggleBackgroundPush = async (checked: boolean) => {
+    if (checked) {
+      const result = await enablePush();
+      setPushState(result.status.state);
+      /* Push ligado pressupõe a permissão/master de notificações ligados. */
+      if (result.ok && readLS(PREF_KEYS.notifications) !== 'true') {
+        togglePref('notifications', true);
+      }
+      showToast(result.message, result.ok ? 'success' : 'error');
+      return;
+    }
+    await disablePush();
+    setPushState('off');
+    showToast('Push desativado neste aparelho. Os avisos seguem com o app aberto.', 'info');
+  };
+
+  /* v4.67.0 — desativação de conta (30 dias de carência) */
+  const [delStatus, setDelStatus] = useState<DeletionStatus | null>(null);
+  const [delConfirmOpen, setDelConfirmOpen] = useState(false);
+  const [delTyped, setDelTyped] = useState('');
+  const [delBusy, setDelBusy] = useState(false);
+  const [delError, setDelError] = useState('');
+
+  const refreshDeletion = useCallback(async () => {
+    setDelStatus(await deletionStatus());
+  }, []);
+
+  /* Lê o status da nuvem uma vez ao abrir (assíncrono: não cascateia render). */
+  useEffect(() => {
+    let alive = true;
+    void deletionStatus().then((status) => {
+      if (alive) setDelStatus(status);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   /* ── Handlers ── */
 
   const selectPreset = (id: string) => {
@@ -769,6 +851,37 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     setPrefs((p) => ({ ...p, [key]: checked }));
     writeLS(PREF_KEYS[key], String(checked));
     window.dispatchEvent(new CustomEvent('academia:prefs-changed'));
+  };
+
+  /**
+   * v4.65.0 — liga o aviso escolhido pedindo permissão e o mestre junto.
+   * Sobem as três fontes: motivacional diária, lembrete e fim de liga.
+   */
+  const enableAlerts = async (): Promise<boolean> => {
+    if (notificationSupport() === 'unsupported') {
+      showToast('Este navegador não suporta notificações.', 'error');
+      return false;
+    }
+    const granted = await ensureNotificationPermission();
+    if (!granted) {
+      showToast('Permissão negada — libere as notificações nas preferências do navegador.', 'error');
+      return false;
+    }
+    if (readLS(PREF_KEYS.notifications) !== 'true') togglePref('notifications', true);
+    return true;
+  };
+
+  const toggleSmartAlert = async (
+    key: 'notifyLeagues' | 'messages',
+    checked: boolean
+  ) => {
+    if (checked && !(await enableAlerts())) return;
+    togglePref(key, checked);
+  };
+
+  const toggleReminderAlert = async (checked: boolean) => {
+    if (checked && !(await enableAlerts())) return;
+    updateLock('reminder', String(checked));
   };
 
   /* v4.44.0 — Preferências do App: unidades, semana, treino e tema */
@@ -975,6 +1088,52 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     showToast('Importação cancelada.', 'info');
   };
 
+  /* v4.67.0 — desativa a conta: marca a exclusão (30 dias), sai da sessão
+     (o signOut do AuthProvider limpa o banco local) e volta ao login. */
+  const handleDeactivateAccount = async () => {
+    if (delTyped.trim().toUpperCase() !== 'DESATIVAR') {
+      setDelError('Digite DESATIVAR para confirmar.');
+      return;
+    }
+
+    setDelBusy(true);
+    setDelError('');
+    try {
+      if (delStatus?.cloud) {
+        const request = await requestAccountDeletion('desativacao-pelo-app');
+        showToast(
+          `Conta desativada. A exclusão definitiva acontece em ${new Date(
+            request.effectiveAt,
+          ).toLocaleDateString('pt-BR')} — entre novamente antes disso para reativar.`,
+          'info',
+        );
+      } else {
+        showToast('Conta local apagada deste dispositivo.', 'info');
+      }
+      await signOut();
+    } catch (err) {
+      setDelError(err instanceof Error ? err.message : 'Não foi possível desativar a conta.');
+      setDelBusy(false);
+      return;
+    }
+    setDelBusy(false);
+    setDelConfirmOpen(false);
+    setDelTyped('');
+  };
+
+  const handleCancelDeletion = async () => {
+    setDelBusy(true);
+    const ok = await cancelAccountDeletion();
+    setDelBusy(false);
+    await refreshDeletion();
+    showToast(
+      ok
+        ? 'Desativação cancelada. Sua conta continua ativa.'
+        : 'Não foi possível cancelar agora. Tente novamente.',
+      ok ? 'success' : 'error',
+    );
+  };
+
   /* ── Derivados de UI ── */
 
   const activeHex = activeThemeHex(themeKey, customHex);
@@ -1072,7 +1231,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     {
       id: 'desativar',
       title: 'Desativar Sua Conta',
-      desc: 'Desative seu perfil local (em breve)',
+      desc: 'Desative a conta (30 dias de carência na nuvem)',
       icon: SvgBan,
       keywords: ['desativar', 'excluir', 'deletar', 'remover'],
     },
@@ -1179,6 +1338,20 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         'trilha', 'fundo', 'efeitos', 'sonoros', 'vibracao', 'vibração',
         'treino', 'playlist', 'playlists', 'youtube', 'spotify', 'upload',
         'faixa', 'player', 'músicas',
+      ],
+    },
+    /* v4.66.0 — Central de Ajuda (FAQ/tutoriais a partir das diretrizes) */
+    {
+      id: 'ajuda',
+      title: 'Ajuda e Tutoriais',
+      desc: 'Perguntas frequentes sobre treino, ficha, progresso, ranking e conta',
+      icon: SvgHelp,
+      badge: 'FAQ',
+      keywords: [
+        'ajuda', 'faq', 'tutorial', 'duvida', 'dúvida', 'como', 'suporte',
+        'treino', 'ficha', 'colecao', 'coleção', 'progresso', 'ranking',
+        'amigos', 'offline', 'nuvem', 'backup', 'notificacoes', 'notificações',
+        'conta', 'seguranca', 'segurança', 'instalar', 'pwa',
       ],
     },
     /* v4.10.0 — nuvem movida para dentro de Sua Conta (ProfileFeature);
@@ -1568,25 +1741,109 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               <div className="set-card__head">
                 <div>
                   <div className="set-card__eyebrow">CONTA</div>
-                  <h3 className="set-card__title">
-                    Desativar Sua Conta
-                    <span className="set-badge-soon">EM BREVE</span>
-                  </h3>
+                  <h3 className="set-card__title">Desativar Sua Conta</h3>
                   <p className="set-card__desc">
-                    Desative ou exclua seu perfil local.
+                    {delStatus?.cloud
+                      ? 'Desativa a conta na nuvem e sai deste aparelho. Você tem 30 dias para cancelar entrando novamente.'
+                      : 'Remove os dados desta conta e sai do app neste aparelho.'}
                   </p>
                 </div>
               </div>
-              <p className="set-note" style={{ marginTop: 0 }}>
-                Em breve: a desativação de conta será liberada em uma atualização
-                futura. Seus dados continuam armazenados apenas neste dispositivo.
-              </p>
-              <div className="set-install" style={{ marginTop: 12 }}>
-                <button type="button" className="set-btn" disabled>
-                  {SvgBan}
-                  Desativar conta
-                </button>
-              </div>
+
+              {delStatus?.effectiveAt && !delStatus.expired ? (
+                <>
+                  <p className="set-note" style={{ marginTop: 0 }}>
+                    ⏳ <strong>Desativação agendada</strong> — a exclusão definitiva acontece em{' '}
+                    <strong>{new Date(delStatus.effectiveAt).toLocaleDateString('pt-BR')}</strong>
+                    {delStatus.daysLeft !== null &&
+                      ` (${delStatus.daysLeft} ${delStatus.daysLeft === 1 ? 'dia' : 'dias'} restantes)`}
+                    . Basta entrar novamente antes dessa data para reativar.
+                  </p>
+                  <div className="set-install" style={{ marginTop: 12 }}>
+                    <button
+                      type="button"
+                      className="set-btn set-btn--primary"
+                      onClick={() => void handleCancelDeletion()}
+                      disabled={delBusy}
+                    >
+                      {SvgCheck}
+                      {delBusy ? 'Cancelando…' : 'Cancelar desativação'}
+                    </button>
+                  </div>
+                </>
+              ) : delConfirmOpen ? (
+                <>
+                  <p className="set-note" style={{ marginTop: 0 }}>
+                    {delStatus?.cloud
+                      ? 'Ao desativar você sai da conta agora. Os dados ficam guardados por 30 dias e depois são apagados de vez. Entrar de novo nesse período cancela tudo.'
+                      : 'Ao continuar, o banco local deste aparelho é apagado (fichas, histórico, métricas e personalização). Não há como desfazer.'}
+                  </p>
+                  <label className="set-field" style={{ display: 'block', marginTop: 12 }}>
+                    <span className="set-note" style={{ marginTop: 0 }}>
+                      Digite <strong>DESATIVAR</strong> para confirmar:
+                    </span>
+                    <input
+                      type="text"
+                      value={delTyped}
+                      onChange={(e) => setDelTyped(e.target.value)}
+                      autoComplete="off"
+                      spellCheck={false}
+                      className="set-input"
+                      placeholder="DESATIVAR"
+                      style={{ marginTop: 6 }}
+                    />
+                  </label>
+                  {delError && (
+                    <p className="set-note" style={{ color: '#f87171', marginTop: 8 }}>
+                      {delError}
+                    </p>
+                  )}
+                  <div className="set-install" style={{ marginTop: 12, gap: 8 }}>
+                    <button
+                      type="button"
+                      className="set-btn"
+                      onClick={() => void handleDeactivateAccount()}
+                      disabled={delBusy || delTyped.trim().toUpperCase() !== 'DESATIVAR'}
+                    >
+                      {SvgBan}
+                      {delBusy ? 'Desativando…' : 'Confirmar desativação'}
+                    </button>
+                    <button
+                      type="button"
+                      className="set-btn"
+                      onClick={() => {
+                        setDelConfirmOpen(false);
+                        setDelTyped('');
+                        setDelError('');
+                      }}
+                      disabled={delBusy}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="set-note" style={{ marginTop: 0 }}>
+                    {delStatus?.cloud
+                      ? 'Desativar não apaga nada na hora: a exclusão fica agendada para daqui a 30 dias e é cancelada automaticamente se você entrar novamente antes disso.'
+                      : 'Sem conta na nuvem, a desativação apaga os dados deste aparelho imediatamente.'}
+                  </p>
+                  <div className="set-install" style={{ marginTop: 12 }}>
+                    <button
+                      type="button"
+                      className="set-btn"
+                      onClick={() => {
+                        setDelConfirmOpen(true);
+                        setDelError('');
+                      }}
+                    >
+                      {SvgBan}
+                      Desativar conta
+                    </button>
+                  </div>
+                </>
+              )}
             </section>
           ),
         },
@@ -2028,6 +2285,48 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
               Aplicado na próxima tela de bloqueio, conforme a orientação do dispositivo.
             </p>
           </section>
+
+          {/* Card 7 (v4.65.0): login por QR em outro aparelho */}
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">ACESSO</div>
+                <h3 className="set-card__title">Autorizar Outro Aparelho</h3>
+                <p className="set-card__desc">
+                  Libere o login por QR Code em um celular ou computador sem digitar senha.
+                </p>
+              </div>
+            </div>
+            <div className="set-install" style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                className="set-btn set-btn--primary"
+                onClick={() => setPairingOpen(true)}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  width="16"
+                  height="16"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <path d="M14 14h3v3h-3zM20 14h1M14 20h1M18 18h3v3h-3z" />
+                </svg>
+                Autorizar por código
+              </button>
+            </div>
+            <p className="set-note" style={{ marginTop: 10 }}>
+              O código aparece no aparelho que quer entrar (Entrar por QR Code) e vale por 5
+              minutos.
+            </p>
+          </section>
         </>
       ),
     },
@@ -2401,17 +2700,30 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 <div className="set-toggle__info">
                   <span className="set-toggle__icon">{SvgGlobe}</span>
                   <div>
-                    <span className="set-toggle__label">Segundo Plano</span>
+                    <span className="set-toggle__label">Push com o app fechado</span>
                     <span className="set-toggle__desc">
-                      Receber alertas mesmo com o app fechado
+                      {pushState === 'checking'
+                        ? 'Verificando este aparelho…'
+                        : pushState === 'on'
+                          ? 'Ativo — o servidor envia mesmo com o app fechado'
+                          : pushState === 'no-account'
+                            ? 'Entre na sua conta para ativar'
+                            : pushState === 'unconfigured'
+                              ? 'Servidor sem chaves VAPID configuradas'
+                              : pushState === 'denied'
+                                ? 'Permissão negada no navegador'
+                                : pushState === 'unsupported'
+                                  ? 'Navegador sem suporte a push'
+                                  : 'Desligado — os avisos só chegam com o app aberto'}
                     </span>
                   </div>
                 </div>
                 <label className="set-switch">
                   <input
                     type="checkbox"
-                    checked={prefs.online}
-                    onChange={(e) => togglePref('online', e.target.checked)}
+                    checked={pushState === 'on'}
+                    disabled={pushState === 'checking' || pushState === 'unsupported'}
+                    onChange={(e) => void toggleBackgroundPush(e.target.checked)}
                   />
                   <span className="set-switch__track" />
                 </label>
@@ -2430,14 +2742,22 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   type="button"
                   className="set-btn"
                   onClick={() => {
-                    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                      new Notification('⏰ Teste de Alarme EVO FIT', {
-                        body: 'Disparo de notificação em segundo plano testado com sucesso!',
-                        icon: '/assets/icons/logo-192.png',
+                    void (async () => {
+                      const granted = await ensureNotificationPermission();
+                      if (!granted) {
+                        showToast('Permita notificações no navegador para testar.', 'error');
+                        return;
+                      }
+                      const ok = await showAppNotification({
+                        title: '⏰ EVO FIT',
+                        body: 'Disparo de teste: é assim que seus avisos vão aparecer.',
+                        tag: 'evofit-test',
                       });
-                    } else {
-                      showToast('⚡ Teste de alerta disparado na interface!', 'info');
-                    }
+                      showToast(
+                        ok ? 'Notificação de teste enviada!' : 'Não foi possível exibir a notificação.',
+                        ok ? 'success' : 'error'
+                      );
+                    })();
                   }}
                 >
                   Testar
@@ -2463,9 +2783,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <div>
                     <span className="set-toggle__label">
                       Lembretes de treino
-                      <span className="set-badge-soon" style={{ marginLeft: 7 }}>
-                        EM BREVE
-                      </span>
                     </span>
                     <span className="set-toggle__desc">
                       Receba um lembrete diário no horário do seu treino
@@ -2476,7 +2793,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <input
                     type="checkbox"
                     checked={lock.reminder === 'true'}
-                    onChange={(e) => updateLock('reminder', String(e.target.checked))}
+                    onChange={(e) => void toggleReminderAlert(e.target.checked)}
                   />
                   <span className="set-switch__track" />
                 </label>
@@ -2511,12 +2828,9 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <div>
                     <span className="set-toggle__label">
                       Ligas
-                      <span className="set-badge-soon" style={{ marginLeft: 7 }}>
-                        EM BREVE
-                      </span>
                     </span>
                     <span className="set-toggle__desc">
-                      Avisos de temporadas, subidas de divisão e resultados
+                      Aviso 45 min antes do fim da liga semanal (1 h na mensal)
                     </span>
                   </div>
                 </div>
@@ -2524,7 +2838,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <input
                     type="checkbox"
                     checked={prefs.notifyLeagues}
-                    onChange={(e) => togglePref('notifyLeagues', e.target.checked)}
+                    onChange={(e) => void toggleSmartAlert('notifyLeagues', e.target.checked)}
                   />
                   <span className="set-switch__track" />
                 </label>
@@ -2535,9 +2849,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <div>
                     <span className="set-toggle__label">
                       Mensagens motivacionais
-                      <span className="set-badge-soon" style={{ marginLeft: 7 }}>
-                        EM BREVE
-                      </span>
                     </span>
                     <span className="set-toggle__desc">
                       Frases de incentivo ao concluir treinos
@@ -2548,7 +2859,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                   <input
                     type="checkbox"
                     checked={prefs.messages}
-                    onChange={(e) => togglePref('messages', e.target.checked)}
+                    onChange={(e) => void toggleSmartAlert('messages', e.target.checked)}
                   />
                   <span className="set-switch__track" />
                 </label>
@@ -2568,9 +2879,12 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
                 />
               </div>
             )}
-            <p className="set-note" style={{ marginTop: 10 }}>
-              Estas opções são placeholders: as preferências ficam salvas, mas o
-              envio real de push será ativado em uma próxima versão.
+            <p className="set-note" style={{ marginTop: 12, marginBottom: 0 }}>
+              {describeNextNotice()}
+            </p>
+            <p className="set-note" style={{ marginTop: 6 }}>
+              Os avisos são enviados com o app aberto ou em segundo plano recente
+              — a entrega com o app fechado depende de push do servidor.
             </p>
           </section>
         </>
@@ -3470,6 +3784,13 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         </>
       ),
     },
+
+    /* ================= AJUDA (v4.66.0) ================= */
+    ajuda: {
+      eyebrow: 'ACADEMIA • AJUDA',
+      title: 'Ajuda e Tutoriais',
+      content: <HelpCenter />,
+    },
   };
 
   const modals = (
@@ -3492,6 +3813,13 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
           }}
         />
       )}
+
+      {/* v4.65.0 — autorizar login por QR em outro aparelho */}
+      <PairingAuthorizeDialog
+        open={pairingOpen}
+        initialCode={null}
+        onClose={() => setPairingOpen(false)}
+      />
 
       {/* Confirmação de importação (classes legadas já existentes) */}
       {confirmOpen && (

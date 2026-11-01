@@ -2,6 +2,136 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.67.0] - 2026-11-01
+
+**Notificações saem do navegador: push real com VAPID, Mensagens alimentadas por eventos reais, desativação de conta com 30 dias de carência e login por QR de uso único.**
+
+### Added
+- `supabase/migrations/20261102_push_pairing_account.sql` — três blocos: (1) `public.push_subscriptions` (endpoint único, p256dh/auth, `timezone_offset`, `reminder_time`, toggles de motivacional/lembrete/ligas, `sent_keys` para dedupe no servidor, `failures`) com RLS do próprio usuário; (2) `public.pairing_codes` sem policies + RPCs `pairing_create` (aparelho sem sessão registra o código, TTL 5 min), `pairing_claim` (consumo atômico de uso único, devolve `ok`/`used`/`expired`/`unknown`) e `pairing_status`; (3) colunas `deletion_requested_at`/`deletion_effective_at`/`deletion_cancelled_at`/`deletion_reason` em `profiles` e RPCs `request_account_deletion`, `cancel_account_deletion` e `account_deletion_status`.
+- `src-app/api/push-dispatch.js` — endpoint serverless de push: `?action=key` devolve a chave pública VAPID e `?action=cron` (Authorization: Bearer CRON_SECRET) verifica cada assinatura no fuso do aparelho e envia mensagem motivacional (a partir das 12:00 locais), lembrete no horário escolhido e aviso de fim das ligas semanal/mensal. Criptografia Web Push (RFC 8291, aes128gcm) e JWT VAPID ES256 implementados com `node:crypto` — sem dependência nova; remove assinaturas 404/410 e as que falham 5 vezes, e mantém `sent_keys` para não repetir aviso.
+- `src-app/api/account-purge.js` — expurgo agendado: apaga de verdade (`auth.admin.deleteUser`, cascata) as contas cuja carência de 30 dias venceu.
+- `src-app/public/push-sw.js` — handlers `push`, `notificationclick` (foca a aba aberta e envia `academia:notification-click`, ou abre uma nova) e `pushsubscriptionchange` (pede reassinatura), injetados no SW do Workbox por `workbox.importScripts`.
+- `src-app/src/features/notifications/push.ts` — assinatura do `PushManager` com a chave VAPID do endpoint, gravação em `push_subscriptions` (fuso + horário do lembrete + o que receber), `pushStatus`, `enablePush`, `disablePush`, `syncPushPreferences` e `startPushSync` (prefs, online, visibilidade, mensagens do SW).
+- `src-app/src/features/notifications/inbox.ts` + `useInbox.ts` + `RealEventsFeed.tsx` — Caixa de Mensagens real: `pushMessage` com chave de dedupe, estado de lida, limite de 60 itens e evento `academia:inbox-changed`; os eventos vêm de amizade aceita/convite recebido (snapshot de `friends_overview`), conquista desbloqueada (snapshot das conquistas do Perfil), fim de liga em que o usuário treinou e conta reativada no login.
+- `src-app/src/core/auth/account-deletion.ts` — `requestAccountDeletion`, `deletionStatus`, `cancelDeletionIfPending` (chamado pelo AuthProvider ao abrir sessão; dispara `academia:account-restored`) e `cancelAccountDeletion`.
+
+### Changed
+- `SettingsFeature.tsx` — **Desativar Sua Conta** deixou de ser “EM BREVE”: fluxo real com confirmação digitada (`DESATIVAR`), aviso da data efetiva, botão **Cancelar desativação** enquanto a carência corre, e saída da conta com limpeza do banco local. O toggle **Segundo Plano** virou **Push com o app fechado**, com status honesto (ativo, sem conta, sem VAPID, permissão negada, navegador sem suporte).
+- `MessagesModal.tsx` — sem placeholders: lê o inbox real, mostra estado vazio, destaca não lidas, marca como lida ao tocar e oferece **Marcar todas** / **Limpar**.
+- `InicioMenuModal.tsx` — contador de mensagens não lidas no item **Mensagens** (`.inicio-menu__badge`).
+- `qr-pairing.ts` + `PairingAuthorizeDialog.tsx` — login por QR com **revogação de uso único**: o código é registrado no servidor, consumido por `pairing_claim` antes de qualquer token sair, e quem tentar reusar recebe “código já usado”; modo degradado (sem rede) avisa na UI. `AuthScreen.tsx` registra o código ao gerar o QR.
+- `auth-context.tsx` — ao abrir sessão, cancela a desativação pendente (uma vez por carregamento); `signOut` rearma essa checagem.
+- `vite.config.ts` — `workbox.importScripts: ['push-sw.js']`.
+- `App.tsx` — monta `<PushSync />` (sincronização da assinatura) e `<RealEventsFeed />` (eventos → Mensagens).
+- `MessagesModal`/`InicioMenuModal`: CSS novo para não lidas (`.is-unread`), `.msg-badge`, `.msg-empty`, `.msg-foot`, `.msg-action`, tons `--achievement`/`--league`/`--account` e `.inicio-menu__badge`.
+
+### Configuração necessária (fora do código)
+- Vercel → Environment Variables: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `CRON_SECRET`.
+- Agendar `GET /api/push-dispatch?action=cron` a cada 5–15 min (Vercel Cron no plano Pro ou agendador externo, que é o necessário no Hobby) e `GET /api/account-purge?action=cron` ao menos 1× por dia, sempre com `Authorization: Bearer $CRON_SECRET`.
+
+### Verificação
+- `npx tsc -b` sem erros · `npx oxlint src` 0 erros · `npm run build` OK · `npm run lint:docs` OK.
+- Push e expurgo não foram executados contra o Supabase real (faltam as chaves VAPID e a migração aplicada); o pareamento de uso único depende da migração.
+
+---
+
+## [v4.66.0] - 2026-11-01
+
+**Social deixa de ser demonstrativo: ranking global mensal e amigos reais na nuvem, guildas e jogadores fictícios removidos, Fit ID limpo, Missões parqueadas no modo dev e a Central de Ajuda criada.**
+
+### Added
+- `supabase/migrations/20261101_social_ranking_friends.sql` — backend do Social: colunas `total_xp`/`monthly_xp`/`xp_period`/`streak`/`level`/`avatar_emblem`/`photo`/`last_seen` em `public.profiles`; tabela `public.friendships` (convite → aceite, com RLS para os dois lados); RPC `publish_monthly_xp` (cada conta publica o próprio resumo), RPC `global_monthly_ranking(period, limit)` (posição por XP do mês) e RPC `friends_overview` (aceitos, recebidos e enviados).
+- `src-app/src/features/social/social-cloud.ts` + `useSocialCloud.ts` — cliente do Social: calcula o XP da janela mensal a partir do histórico local (`monthlyXpFromHistory`), publica o resumo, lê o ranking global e gerencia amizades (enviar, aceitar, remover), com erros tipados para offline/sem conta. O hook republica o XP quando o histórico muda e escuta dados/visibilidade.
+- `src-app/src/features/help/HelpCenter.tsx` + `help.css` — **Central de Ajuda**: FAQ/tutoriais derivados de `DESIGN.md`/`README.md` (Começando, Minha Ficha/coleção, Progresso, Social/ranking, Nuvem/backup/offline, Notificações, Privacidade, Instalar/PWA), com busca e acordeão animado (`grid-template-rows` + opacidade, respeitando `prefers-reduced-motion`). Entra em **Configurações → Ajuda e Tutoriais**, no menu do Início (**Ajuda**, antes um toast “em breve”) e na Busca Geral (`cfg:ajuda`).
+
+### Changed
+- `RankingsOverlay.tsx` — ranking real: abas **Jogadores** (ranking global do mês, mesma janela da liga mensal) e **Amigos** (amigos confirmados pelo XP do mês). Saíram os placeholders e a aba **Clãs**; sem nuvem/conta o overlay mostra o estado honesto.
+- `LigasFeature.tsx` — reescrita: abas **Amigos** (amizades reais com convites recebidos/enviados + amigos locais de QR/link) e **Ranking** (top do mês + sua posição), com cabeçalho de XP do mês, nível, ofensiva e fechamento da temporada. Saíram as ligas simuladas, o chat e o banner de guilda.
+- `social-cloud` no fluxo de convites: busca por @username/QR envia um **convite de verdade** (`friendships`) quando há conta + nuvem; QR/link continua funcionando offline.
+- `ligas-data.ts` — agora só tipos, divisões usadas pelos glifos e efeitos sonoros; removidos `INITIAL_FRIENDS`, `INITIAL_MEMBERS`, `INITIAL_CLAN_MESSAGES`, `QUICK_REPLIES`, `DEFAULT_PROFILE`, NPCs (`generateOpponents`/`simulateOpponentActivity`), estados simulados de liga e `computeSeasonOutcome`.
+- `player-profile-data.ts` + `PlayerProfileModal.tsx` + `MemberPopover.tsx` — perfil do jogador sem clã/liga fictícia: mostra XP do mês, posição no ranking global, nível e ofensiva reais; estatísticas detalhadas (horas, exercícios feitos, favorito) e último treino só existem para o próprio jogador, porque são dados privados do aparelho.
+- `scheduler.ts` + `messages.ts` — o aviso de fim de liga dispara para quem **treinou dentro da janela** (não mais por `joined` de um estado simulado) e o texto cita a posição no ranking global em vez de “Divisão X”.
+- `DashboardFeature.tsx`, `MobileDrawer.tsx` e `DesktopSidebar.tsx` — o módulo **Missões DEMO** ficou parqueado: card do Início, item da drawer e atalho da sidebar só aparecem com `isDevMode()`.
+- `MissoesRecompensasModal.tsx` — a linha **SIMULADOR** (+10 Coroas / Max / Reset) também só aparece no modo desenvolvedor.
+- `InicioMenuModal.tsx` — o item **Ajuda** deixou o toast “em breve” e abre a Central de Ajuda (`openProfileHelp` no `App.tsx`).
+- `SettingsFeature.tsx` — novo tile raiz **Ajuda e Tutoriais** com tela própria.
+
+### Removed
+- `src-app/src/features/social/GuildPanel.tsx`, `guild-data.ts`, `GuildEmblem.tsx` e `social-data.ts` — sistema de guildas, chat de guilda, doações/guerra e os mocks da aba Social (`LEADERBOARD`, `FRIENDS`, `TROPHY_STEPS`…). `guild.css` permanece apenas como casca de overlays compartilhados (`OverlayShell`, `MemberPopover`, `ExitConfirmDialog`).
+- Do Fit ID: restos do protótipo de jogos (abas “Meus Jogos”, `PRESET_ACCOUNTS`, `window.alert` promocional, FAQ com “Tetris/copas/clã” e os emojis 👾👑👤) — a tela virou identidade real da conta.
+
+### Verificação
+- `npx tsc -b` OK · `npx oxlint src` 0 erros (38 avisos, todos pré-existentes) · `npm run build` OK · `npm run lint:docs` OK (`system_map.json` @ 4.66.0).
+- Runtime (dev server + navegador): aba Social renderiza o cabeçalho “Ranking global · mês”, as abas Amigos/Ranking e os estados vazios reais (sem guilda, sem amigos fictícios, sem ligas simuladas); console sem erros novos.
+
+### Limitações honestas
+- O ranking global depende de conta + Supabase configurado e da migração `20261101_social_ranking_friends.sql` aplicada; sem isso as telas mostram o estado vazio (os dados locais seguem intactos).
+- Não há ainda pareamento de ligas por divisão no servidor: a disputa é o ranking global do mês, e a subida/queda entre divisões fica para quando houver atribuição de liga no backend.
+- Missões/Passe continuam um módulo à parte, agora visível só no modo dev; um painel de metas reais (ligado ao histórico) substitui o mock numa próxima fase.
+
+## [v4.65.0] - 2026-11-01
+
+**Login por QR Code passa a transferir a sessão de verdade e o app ganha um sistema de notificações (motivacional diária, lembrete de treino e fim de liga).**
+
+### Added
+- `src-app/src/features/auth/qr-pairing.ts` + `PairingAuthorizeDialog.tsx` — **pareamento real de sessão**: o aparelho sem conta gera `PLN-XXXX-XXXX` (aleatório, sem 0/O/1/I), desenha o QR com `origin/#qr=CODIGO` (fragmento não trafega para o servidor) e assina o canal Realtime `evofit-login-pair:CODIGO`; o aparelho já conectado autoriza pelo link do QR (`PairingGate` no `App.tsx`) ou por **Configurações → Segurança → Autorizar Outro Aparelho**, publicando `access_token`/`refresh_token`; o receptor chama `supabase.auth.setSession` e entra sem senha. Expiração de 5 min encerra o canal, e o QR é rotativo a cada abertura.
+- `src-app/src/features/notifications/` — **sistema de notificações**: `notification-center.ts` (permissão, envio pelo Service Worker com fallback para `Notification`, log local `academia_notification_log_v1` e poda), `scheduler.ts` (tick de 1 min + `visibilitychange`/`online`/`focus`/`prefs-changed`) e `messages.ts` (frases do dia a partir de `FRASES_PRESET`).
+- `src-app/src/features/social/league-window.ts` — **calendário oficial das ligas**: semanal de **domingo 19:00 a domingo 18:59:59** e mensal do **dia 1º às 06:00 ao último dia às 21:00**, com `leagueWindow`, `isInsideWindow`, `nextLeagueWindow`, `msUntilEnd`, `formatWindowEnd` e `formatTimeLeft` — fonte única para o aviso de fim de liga e para a futura implementação real das ligas.
+
+### Changed
+- `AuthScreen.tsx` — a tela de QR deixou de ser decorativa: mostra o estado real do pareamento (“Aguardando autorização…”, “Sessão recebida — entrando…”, expirado, indisponível), exibe o código para digitação no outro aparelho e cancela o canal ao sair ou expirar.
+- `SettingsFeature.tsx` — em **Notificações**: saíram os selos **EM BREVE** de *Lembretes de treino*, *Ligas* e *Mensagens motivacionais* (só *Novidades e atualizações* segue pendente); ligar qualquer um deles pede permissão e ativa o mestre; o botão **Testar** passou a usar o mesmo caminho de envio; e a tela mostra **“Próximo aviso: …”** (`describeNextNotice`) além da limitação de entrega com o app fechado.
+- `App.tsx` — `PairingGate` (link `#qr=`) e `NotificationScheduler` (liga o agendador uma vez no boot e desliga no unmount).
+
+### Regras implementadas
+- **Motivacional** — 1× por dia a partir das 12:00, com a frase do dia; em dia sem treino o texto cobra a ofensiva.
+- **Lembrete de treino** — no horário de `workoutReminderTime`, 1× por dia e **apenas se ainda não houver treino concluído hoje**.
+- **Fim de liga** — 45 min antes do fim da semanal e 1 h antes do fim da mensal, somente para quem está `joined`; a mensagem traz divisão, posição e tempo restante.
+
+### Verificado
+- `npx tsc -b`: OK. `npx oxlint src`: 0 erros (nenhum aviso novo nos arquivos criados/alterados).
+- **Ligas (teste de fronteira com esbuild + node)**: domingo 18:59 → janela anterior terminando 18:59:59; domingo 19:00 → nova janela; dia 1º 05:00 → mês anterior; 06:00 → mês corrente; 30/11 21:00 → fim; ano bissexto → 29/02 21:00.
+- **Pareamento (runtime, Chrome CDP + Vite)**: tela de QR gerou `PLN-SAF7-JX9U` com imagem PNG e estado “Aguardando autorização”; em duas abas independentes o remetente assinou o canal (`statuses=SUBSCRIBED send=ok`) e o aparelho 1 **saiu do estado de espera** ao receber o broadcast — com tokens falsos ele caiu no tratamento de erro esperado (`setSession` inválido), provando a entrega ponta a ponta do canal.
+- **Notificações (runtime, permissão concedida via CDP)**: tick simulado às 13:00 disparou `motivation:2026-11-01`; às 20:45 (lembrete 20:30) disparou `reminder:2026-11-01`; às 18:30 de domingo disparou `league-weekly`; às 20:15 do último dia disparou `league-monthly`; repetir o tick não reenviou nada (dedupe por chave).
+- Configurações → Notificações exibiu **“Próximo aviso: hoje às 12:00 · Mensagem motivacional”** e apenas 1 selo EM BREVE na tela.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.65.0.
+
+### Limitações conhecidas
+- O pareamento usa um canal público e o código é a única credencial: não há revogação de uso único sem um endpoint de servidor (documentado no cabeçalho de `qr-pairing.ts`). O login cruzado completo não foi exercitado com uma conta real (exige credenciais e dois aparelhos).
+- Notificações com o app totalmente fechado exigem push de servidor; hoje a entrega acontece com o app aberto/em segundo plano e o tick recupera avisos vencidos ao reabrir.
+## [v4.64.1] - 2026-11-01
+
+**Relatório de pendências: mapa do que é placeholder, demonstrativo e o que é funcionalidade real.**
+
+### Added
+- `Diretrizes/RELATORIO-PENDENCIAS.md` — auditoria de 2026-11-01 com evidência por arquivo: placeholders declarados (Loja, Ajuda, Desativar conta, 4 controles de Notificações, Guias), módulos demonstrativos (Social/Ligas/Rankings/Guilda, Missões e Passe com simulador visível, Notícias estáticas de outro produto, Mensagens fixas, restos do protótipo no Fit ID), fluxos incompletos (QR de login gerado mas nunca consumido, amizades sem backend, chat sem Realtime, nuvem dependente de chaves) e o backlog priorizado P0/P1/P2.
+
+### Verificado
+- `npm run lint:docs`: OK.
+## [v4.64.0] - 2026-11-01
+
+**Perfil sem Identidade/Frase/Título; Perfil de Saúde passa a refletir o formulário pós-login (sexo e nascimento só leitura) e a receber peso/altura das métricas corporais.**
+
+### Changed
+- `src-app/src/features/profile/ProfileFeature.tsx` — o grupo **Personalizar** ficou só com **Em Destaque**: saíram os tiles e as telas **Identidade**, **Frase de Assinatura** (e os `FRASES_PRESET`) e **Título**, junto com `saveIdentity`, `PersSub` reduzido a `destaque`, imports/ícones que ficaram sem uso e a ação antiga de salvar customização. O botão de editar do cartão (`#btnEditarPerfil`) agora abre a lista de tiles do grupo Perfil (`setNavStack(['perfil'])`), já que a pilha antiga `personalizar/identidade` não existia mais.
+- `src-app/src/features/settings/HealthProfile.tsx` — **Sexo** e **Data de nascimento** viraram campos **somente leitura** (`.hp-locked` com cadeado e dica de idade): vêm do formulário pós-login e não são mais editáveis. Continuam editáveis apenas **Altura** e **Peso**. A gravação passou a usar `mergeHealthProfile`, então salvar peso/altura não apaga sexo/nascimento.
+- `src-app/src/features/settings/HealthProfile.tsx` — prop opcional `seed` (`gender`, `nascimento`, `weightKg`, `heightCm` da customização, passada em `ProfileFeature`) cobre perfis antigos que nunca gravaram o Perfil de Saúde; e um efeito em `academia:health-profile-changed` reidrata peso/altura quando os dados mudam fora da tela.
+- `src-app/src/features/training/BodyMetricsOverlay.tsx` + `src-app/src/features/training/body-metrics.ts` — novo campo **Altura (cm)** na folha “Registrar medidas”: peso e altura registrados na aba Progresso são espelhados no Perfil de Saúde (`mergeHealthProfile`), mantendo os dois lados sincronizados.
+- `src-app/src/features/auth/OnboardingScreen.tsx` — a etapa **idade** virou **nascimento** (input `type="date"` com idade derivada) e entrou a etapa **altura** (cm): o assistente passa a ter **11 etapas** e cada resposta grava em `mergeHealthProfile`, preenchendo o Perfil de Saúde desde o cadastro.
+- `src-app/src/core/db/schema.ts` — `ProfileCustomization.nascimento` (YYYY-MM-DD) e `BodyMeasurement.heightCm`.
+- `src-app/src/features/search/search-index.ts` — o item “Personalizar” da busca descreve só o destaque do cartão.
+
+### Fixed
+- `src-app/src/features/auth/OnboardingScreen.tsx` — o arquivo estava **truncado** (stub que renderizava apenas `ok`, 198 linhas) desde um commit anterior; restaurada a última versão que compila (686 linhas) antes de implementar as etapas de nascimento e altura.
+
+### Verificado
+- `npx tsc -b` (src-app): OK. `npx oxlint src`: 0 erros (só os avisos de linha de base, nenhum nos arquivos alterados).
+- Runtime (Vite + Chrome headless/CDP, modo teste):
+- Perfil → grupo Perfil mostra apenas **Cartão do Perfil, Ofensivas dos Amigos, Medalhas, Perfil de Saúde, Progressão, Em Destaque** (sem Identidade/Frase/Título).
+- Métricas corporais → “Registrar medidas” lista **Data, Peso, Altura, Gordura corporal, Cintura**; salvar **83 kg / 178 cm** gravou `academia_health_profile_v1` com `{"alturaCm":"178","pesoKg":"83"}` preservando `sexo` e `nascimento`.
+- Perfil de Saúde abriu com **sexo e nascimento bloqueados** (`Masculino`, `20/05/1990`), apenas 2 `input` (altura 178, peso 83), **0 `select`** e **0 `input[type=date]`**, sem exceções no console.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.64.0.
+- **Limitação:** as etapas novas do onboarding não puderam ser exercitadas em runtime (o assistente não abre no modo teste); validação por tipo + revisão do fluxo.
 ## [v4.63.0] - 2026-10-31
 
 **Aviso de modo offline vira toast de 5 s e a troca lateral entre abas fica mais suave.**

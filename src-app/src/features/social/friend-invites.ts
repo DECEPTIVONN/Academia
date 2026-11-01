@@ -214,7 +214,6 @@ function createFriendItem(invite: FriendInvite): FriendItem {
     id: friendIdForCode(invite.code),
     name: invite.name,
     trophies: 0,
-    clan: null,
     online: false,
     avatarColor: AVATAR_COLORS[hash % AVATAR_COLORS.length],
     avatarInitial: invite.name.charAt(0).toUpperCase() || 'A',
@@ -246,7 +245,6 @@ function sanitizeStoredFriend(value: unknown): FriendItem | null {
     id,
     name,
     trophies: Number.isFinite(raw.trophies) ? Math.max(0, Math.floor(raw.trophies as number)) : 0,
-    clan: typeof raw.clan === 'string' ? raw.clan : null,
     online: Boolean(raw.online),
     avatarColor: typeof raw.avatarColor === 'string' && raw.avatarColor
       ? raw.avatarColor

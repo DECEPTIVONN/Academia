@@ -97,6 +97,16 @@ export function saveHealthProfile(data: HealthProfileData): HealthProfileData {
   return next;
 }
 
+/**
+ * Atualiza SÓ os campos informados, preservando o resto do perfil. Usado pelo
+ * onboarding (sexo/nascimento/peso/altura) e pelas métricas corporais (peso):
+ * cada origem conhece apenas parte dos dados e não pode zerar o restante.
+ */
+export function mergeHealthProfile(partial: Partial<HealthProfileData>): HealthProfileData {
+  const current = readHealthProfile();
+  return saveHealthProfile({ ...current, ...partial });
+}
+
 /** Idade em anos completos a partir da data de nascimento (YYYY-MM-DD). */
 export function healthAge(nascimento: string, today = new Date()): number | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(nascimento)) return null;

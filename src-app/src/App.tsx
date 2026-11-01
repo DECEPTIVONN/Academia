@@ -54,6 +54,11 @@ import { OfflineSyncBanner } from '@/features/sync/OfflineSyncBanner';
 import { isEngineRunning, startSyncEngine, stopSyncEngine, restartSyncEngine } from '@/core/sync/sync-manager';
 import { getSyncKey, setSyncKey, deriveSyncKeyForUser } from '@/core/sync/supabase-client';
 import { AuthScreen } from '@/features/auth/AuthScreen';
+import { PairingAuthorizeDialog } from '@/features/auth/PairingAuthorizeDialog';
+import { RealEventsFeed } from '@/features/notifications/RealEventsFeed';
+import { startPushSync } from '@/features/notifications/push';
+import { clearPairingCodeFromUrl, readPairingCodeFromUrl } from '@/features/auth/qr-pairing';
+import { startNotificationScheduler } from '@/features/notifications/scheduler';
 import { BootErrorBoundary } from '@/main';
 /* Ordem canônica das seções (ordem dos slides na fita + swipe) */
 
@@ -394,6 +399,18 @@ function AppShell() {
     setIsPerfilOverlayOpen(true);
     window.setTimeout(() => {
       document.dispatchEvent(new CustomEvent('academia:profile-nav', { detail: [] }));
+    }, 0);
+  }, []);
+
+  /* v4.66.0 — Ajuda (menu do Início) → mesmo hub, já na Central de Ajuda. */
+  const openProfileHelp = useCallback(() => {
+    setIsDrawerOpen(false);
+    setIsPerfilClosing(false);
+    setIsPerfilOverlayOpen(true);
+    window.setTimeout(() => {
+      document.dispatchEvent(
+        new CustomEvent('academia:profile-nav', { detail: ['ajuda'] }),
+      );
     }, 0);
   }, []);
 
@@ -930,6 +947,7 @@ function AppShell() {
                 onOpenFicha={handleOpenFicha}
                 onOpenPerfil={() => setIsSelfProfileOpen(true)}
                 onOpenSettings={openProfileSettings}
+                onOpenHelp={openProfileHelp}
                 overlay={dashOverlay}
                 onOverlayChange={setDashOverlay}
               />
@@ -1187,6 +1205,10 @@ function AppShell() {
             }}
           />
           <OnboardingGate />
+          <PairingGate />
+          <NotificationScheduler />
+          <PushSync />
+          <RealEventsFeed />
           <RemoteSyncToast />
            <OfflineSyncBanner />
 
@@ -1209,6 +1231,54 @@ function AppShell() {
         {/* Container de toasts (treino.html L1326 — herda animações do CSS legado) */}
         <div className="toast-container" id="toastContainer" />
       </div>
+  );
+}
+
+/**
+ * PairingGate — link de login por QR (`/#qr=CODIGO`) aberto num aparelho já
+ * conectado: pergunta se autoriza a sessão para o outro dispositivo.
+ * Sem sessão, o link é ignorado (o AuthScreen cuida do login normal).
+ */
+/**
+ * NotificationScheduler — liga o agendador de avisos (motivacional diário,
+ * lembrete de treino e fim de liga) enquanto o app está aberto.
+ */
+function NotificationScheduler() {
+  useEffect(() => startNotificationScheduler(), []);
+  return null;
+}
+
+/**
+ * PushSync — mantém a assinatura de push do servidor alinhada com o aparelho
+ * e com as preferências (horário do lembrete, fuso, o que receber).
+ */
+function PushSync() {
+  useEffect(() => startPushSync(), []);
+  return null;
+}
+
+function PairingGate() {
+  const { user } = useAuth();
+  /* Só monta (e lê a URL) quando há sessão: o estado nasce no primeiro render
+     do aparelho conectado, sem setState dentro de efeito. */
+  return user ? <PairingGateInner /> : null;
+}
+
+function PairingGateInner() {
+  const [code, setCode] = useState<string | null>(() => readPairingCodeFromUrl());
+
+  /* Tira o código do histórico assim que a tela abre (o state já o guardou). */
+  useEffect(() => {
+    if (code) clearPairingCodeFromUrl();
+  }, [code]);
+
+  if (!code) return null;
+  return (
+    <PairingAuthorizeDialog
+      open
+      initialCode={code}
+      onClose={() => setCode(null)}
+    />
   );
 }
 

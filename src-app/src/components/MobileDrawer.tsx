@@ -15,6 +15,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { SPRING_SETTLE } from '@/lib/motion-presets';
 import { useLocalData } from '@/hooks/useLocalData';
 import { useProfileState } from '@/features/profile/useProfileState';
+import { isDevMode } from '@/features/profile/profile-data';
 import { getLevel, getStreak, getXp } from '@/core/db/queries';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
 import { SvgMaximize, SvgMinimize, SvgSearch } from '@/components/nav-items';
@@ -156,13 +157,18 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
       icon: SvgNews,
       onClick: onOpenNews,
     },
-    {
-      id: 'missoes',
-      label: 'Missões',
-      desc: 'Metas diárias e recompensas',
-      icon: SvgMissions,
-      onClick: onOpenMissions,
-    },
+    /* v4.66.0 — Missões DEMO parqueadas: só no modo desenvolvedor. */
+    ...(isDevMode()
+      ? [
+          {
+            id: 'missoes',
+            label: 'Missões',
+            desc: 'Metas diárias e recompensas',
+            icon: SvgMissions,
+            onClick: onOpenMissions,
+          },
+        ]
+      : []),
     {
       id: 'musicas',
       label: 'Músicas',

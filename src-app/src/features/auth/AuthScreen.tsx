@@ -19,7 +19,7 @@
  * z-index 1150 — abaixo do LockScreen (1200), contrato do App.tsx mantido.
  */
 
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import QRCode from 'qrcode';
 import {
@@ -43,7 +43,14 @@ import {
   FlaskConical,
 } from 'lucide-react';
 import { useAuth } from '@/core/auth/use-auth';
-import { isSupabaseConfigured } from '@/core/supabase';
+import { isSupabaseConfigured, supabase } from '@/core/supabase';
+import {
+  buildPairingUrl,
+  createPairingCode,
+  isPairingSupported,
+  listenForPairingTokens,
+  registerPairingCode,
+} from './qr-pairing';
 import { isUsernameAvailable } from '@/core/auth/profiles';
 import { setSyncKey } from '@/core/sync/supabase-client';
 import { showToast } from '@/lib/toast';
@@ -322,6 +329,11 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
   const [qrSession, setQrSession] = useState<{ pin: string } | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [qrTimer, setQrTimer] = useState(QR_TTL_SECONDS);
+  /* v4.65.0 — estado do pareamento real (canal Realtime do código). */
+  const [pairingStatus, setPairingStatus] = useState<
+    'idle' | 'waiting' | 'unsupported' | 'connected' | 'error' | 'expired'
+  >('idle');
+  const pairingStopRef = useRef<null | (() => void)>(null);
 
   const [legalModal, setLegalModal] = useState<Legal>(null);
   const [loading, setLoading] = useState<'google' | 'login' | 'signup' | 'reset' | null>(null);
@@ -346,14 +358,39 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
     return () => window.removeEventListener('keydown', onKey);
   }, [close]);
 
-  /* Cronômetro regressivo da sessão QR (5 minutos). */
+  /* Cronômetro regressivo da sessão QR (5 minutos). Ao chegar a zero o
+     pareamento é cancelado — o código deixa de aceitar autorização. */
   useEffect(() => {
     if (mode !== 'qrcode' || !qrSession) return;
     const timer = setInterval(() => {
-      setQrTimer((prev) => (prev <= 1 ? 0 : prev - 1));
+      setQrTimer((prev) => {
+        if (prev <= 1) {
+          pairingStopRef.current?.();
+          pairingStopRef.current = null;
+          setPairingStatus('expired');
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(timer);
   }, [mode, qrSession]);
+
+  /* Saiu da tela de QR: ninguém mais deve conseguir parear por este código. */
+  useEffect(() => {
+    if (mode === 'qrcode') return;
+    pairingStopRef.current?.();
+    pairingStopRef.current = null;
+  }, [mode]);
+
+  /* Desmontou (fechou o login): encerra a escuta do canal. */
+  useEffect(
+    () => () => {
+      pairingStopRef.current?.();
+      pairingStopRef.current = null;
+    },
+    []
+  );
 
   /* Cadastro com confirmação de e-mail: sem sessão em ~900ms → orienta e
      volta para o login. Se a sessão chegar (auto-confirm), o efeito acima
@@ -521,17 +558,25 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
     }
   }
 
+  /**
+   * Abre a tela de QR e começa a esperar a autorização de outro aparelho.
+   * O código vai no fragmento da URL (`#qr=…`), que não é enviado ao servidor.
+   */
   async function startQrLogin() {
+    pairingStopRef.current?.();
+    pairingStopRef.current = null;
+
     setMode('qrcode');
     setErrorMsg(null);
     setInfoMsg(null);
-    const pin = `PLN-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const pin = createPairingCode();
     setQrSession({ pin });
     setQrTimer(QR_TTL_SECONDS);
     setQrDataUrl('');
+
     try {
-      const payload = `${window.location.origin}/?qr=${pin}&exp=${Date.now() + QR_TTL_SECONDS * 1000}`;
-      const url = await QRCode.toDataURL(payload, {
+      const url = await QRCode.toDataURL(buildPairingUrl(pin), {
         width: 320,
         margin: 2,
         color: { dark: '#09090b', light: '#ffffff' },
@@ -540,6 +585,48 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
     } catch {
       setErrorMsg('Não foi possível gerar o código QR. Tente novamente.');
     }
+
+    if (!isPairingSupported()) {
+      setPairingStatus('unsupported');
+      return;
+    }
+
+    /* v4.67.0 — registra o código no servidor para ele valer UMA vez só.
+       Sem rede, o pareamento segue em modo degradado (sem revogação). */
+    const registered = await registerPairingCode(pin);
+    if (!registered) {
+      /* Apenas informa: o QR continua funcionando pelo canal Realtime. */
+      setInfoMsg('Sem conexão com o servidor de pareamento: o código vale por 5 minutos e não poderá ser revogado.');
+    }
+
+    setPairingStatus('waiting');
+    pairingStopRef.current = listenForPairingTokens(pin, {
+      onTokens: (tokens) => {
+        pairingStopRef.current?.();
+        pairingStopRef.current = null;
+        void supabase.auth
+          .setSession({
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+          })
+          .then(({ error }) => {
+            if (error) {
+              setPairingStatus('error');
+              setErrorMsg('Não foi possível concluir o login neste aparelho.');
+              return;
+            }
+            /* A sessão chega pelo onAuthStateChange e o efeito de `user`
+               fecha a tela de login. */
+            setPairingStatus('connected');
+          });
+      },
+      onExpired: () => {
+        pairingStopRef.current?.();
+        pairingStopRef.current = null;
+        setPairingStatus('expired');
+      },
+      onUnavailable: () => setPairingStatus('error'),
+    });
   }
 
   const mmss = `${Math.floor(qrTimer / 60)}:${(qrTimer % 60).toString().padStart(2, '0')}`;
@@ -1006,9 +1093,11 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
 
                 {errorMsg && <ErrorBanner msg={errorMsg} />}
 
-                <h3 className="text-lg font-bold text-white mb-1">Escanear para entrar</h3>
+                <h3 className="text-lg font-bold text-white mb-1">Entrar sem senha</h3>
                 <p className="text-xs text-zinc-400 max-w-xs mx-auto mb-4">
-                  Aponte a câmera ou use o Evo Fit conectado no seu celular.
+                  No aparelho que já está conectado, abra Configurações → Segurança →{' '}
+                  <strong className="text-zinc-200">Autorizar outro aparelho</strong> e informe o
+                  código abaixo.
                 </p>
 
                 {/* Container do QR Code */}
@@ -1042,9 +1131,42 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
                   )}
                 </div>
 
+                {/* Status do pareamento (canal Realtime) */}
+                <div className="mt-3 min-h-[36px] flex items-center justify-center">
+                  {pairingStatus === 'waiting' && (
+                    <span className="flex items-center gap-2 text-[11px] font-semibold text-emerald-300">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                      </span>
+                      Aguardando autorização do outro aparelho…
+                    </span>
+                  )}
+                  {pairingStatus === 'connected' && (
+                    <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Sessão recebida — entrando…
+                    </span>
+                  )}
+                  {pairingStatus === 'expired' && (
+                    <span className="text-[11px] font-semibold text-amber-300">
+                      Código expirado. Toque em Renovar para gerar outro.
+                    </span>
+                  )}
+                  {pairingStatus === 'unsupported' && (
+                    <span className="text-[11px] leading-snug text-amber-300">
+                      O pareamento precisa do Supabase configurado (Configurações → Nuvem).
+                    </span>
+                  )}
+                  {pairingStatus === 'error' && (
+                    <span className="text-[11px] text-rose-300">
+                      Falha de conexão com o servidor de pareamento.
+                    </span>
+                  )}
+                </div>
+
                 {/* Código de pareamento (alternativa ao QR) */}
-                <div className="mt-4 flex items-center justify-between px-3.5 py-2.5 bg-[#09090b] border border-zinc-800 rounded-xl text-xs">
-                  <span className="text-zinc-400">Código de Pareamento:</span>
+                <div className="mt-1 flex items-center justify-between px-3.5 py-2.5 bg-[#09090b] border border-zinc-800 rounded-xl text-xs">
+                  <span className="text-zinc-400">Código:</span>
                   <span className="font-mono text-[13px] font-bold tracking-wider bg-zinc-800 px-2.5 py-1 rounded-lg text-white">
                     {qrSession?.pin ?? '—'}
                   </span>

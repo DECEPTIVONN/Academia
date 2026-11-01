@@ -17,6 +17,7 @@
 import React, { useState } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
 import { useProfileState } from '@/features/profile/useProfileState';
+import { isDevMode } from '@/features/profile/profile-data';
 import { getLevel, getStreak, getXp } from '@/core/db/queries';
 import type { SectionType } from '@/components/BottomNav';
 import { NavSectionItems } from '@/components/nav-section-items';
@@ -233,21 +234,24 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           </button>
         ))}
 
-        {/* v4.12.0 — atalhos Missões/Configurações (parity com drawer mobile) */}
-        <button
-          type="button"
-          className="side-hud__item"
-          onClick={onOpenMissions}
-          title="Missões"
-        >
-          <span className="side-hud__icon" aria-hidden="true">
-            {SvgMissions}
-          </span>
-          <span className="side-hud__label">
-            <span className="side-hud__label-main">Missões</span>
-            <span className="side-hud__label-desc">Metas e recompensas</span>
-          </span>
-        </button>
+        {/* v4.12.0 — atalho de Configurações (parity com drawer mobile).
+            v4.66.0 — Missões DEMO parqueadas: só no modo desenvolvedor. */}
+        {isDevMode() && (
+          <button
+            type="button"
+            className="side-hud__item"
+            onClick={onOpenMissions}
+            title="Missões"
+          >
+            <span className="side-hud__icon" aria-hidden="true">
+              {SvgMissions}
+            </span>
+            <span className="side-hud__label">
+              <span className="side-hud__label-main">Missões</span>
+              <span className="side-hud__label-desc">Metas e recompensas</span>
+            </span>
+          </button>
+        )}
         <button
           type="button"
           className="side-hud__item"

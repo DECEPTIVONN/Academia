@@ -69,7 +69,9 @@ const CONFIGS: SearchItem[] = [
   { id: 'cfg:telas', kind: 'config', title: 'Telas Personalizadas', desc: 'Imagens da tela de bloqueio e da splash', stack: ['telas'], keywords: ['telas', 'imagem', 'wallpaper', 'splash', 'carregamento', 'upload', 'fundo'] },
   { id: 'cfg:perfil', kind: 'config', title: 'Perfil', desc: 'Cartão, ofensivas e medalhas', stack: ['perfil'], keywords: ['cartao', 'ofensivas', 'medalhas', 'amigos'] },
   { id: 'cfg:progressao', kind: 'config', title: 'Progressão', desc: 'Visão geral, nível/XP e conquistas', stack: ['progressao'], keywords: ['nivel', 'xp', 'conquistas', 'progresso'] },
-  { id: 'cfg:personalizar', kind: 'config', title: 'Personalizar', desc: 'Identidade, frase, destaque e título', stack: ['personalizar'], keywords: ['identidade', 'frase', 'titulo', 'emoji', 'destaque'] },
+  { id: 'cfg:personalizar', kind: 'config', title: 'Personalizar', desc: 'Estatística em destaque no cartão', stack: ['personalizar'], keywords: ['destaque', 'showcase', 'estatistica', 'streak', 'cartao'] },
+  /* v4.66.0 — Central de Ajuda (FAQ/tutoriais) */
+  { id: 'cfg:ajuda', kind: 'config', title: 'Ajuda e Tutoriais', desc: 'Perguntas frequentes sobre treino, ficha, progresso, ranking e conta', stack: ['ajuda'], keywords: ['ajuda', 'faq', 'tutorial', 'duvida', 'dúvida', 'como', 'suporte', 'ranking', 'amigos', 'offline', 'nuvem', 'backup', 'notificacoes', 'notificações', 'conta', 'seguranca', 'segurança', 'instalar', 'pwa'] },
 ];
 
 /** Monta o índice de exercícios + fichas a partir dos dados locais. */

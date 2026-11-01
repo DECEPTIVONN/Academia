@@ -41,13 +41,15 @@ import { RankingsOverlay } from '@/features/social/RankingsOverlay';
 import { MessagesModal } from '@/features/dashboard/MessagesModal';
 import { NewsOverlay } from '@/features/news/NewsOverlay';
 import { useProfileState } from '@/features/profile/useProfileState';
-import { IDENTITY_EMBLEMS, SPRITESHEET_URL, tituloNome } from '@/features/profile/profile-data';
+import { IDENTITY_EMBLEMS, SPRITESHEET_URL, isDevMode, tituloNome } from '@/features/profile/profile-data';
 
 interface DashboardFeatureProps {
   onOpenFicha: (letter: SheetKey) => void;
   onOpenPerfil: () => void;
   /** Hub de configurações do Perfil (usado pelo menu e pelo Fit ID). */
   onOpenSettings: () => void;
+  /** Central de Ajuda (mesmo hub, na tela de FAQ/tutoriais). */
+  onOpenHelp: () => void;
   /* v4.8.3-navbars: estado dos overlays Missões/Notícias liftado para o App
      (a drawer mobile consegue abri-los de qualquer seção) */
   overlay: 'missions' | 'news' | null;
@@ -58,6 +60,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   onOpenFicha,
   onOpenPerfil,
   onOpenSettings,
+  onOpenHelp,
   overlay,
   onOverlayChange,
 }) => {
@@ -323,34 +326,39 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                 </button>
               </div>
             </div>
-            {/* Missões — sem o rótulo "Missões" (v4.30.0) */}
-            <div
-              className="dash-missions"
-              id="dashBtnMissoes"
-              role="button"
-              onClick={(e) => {
-                stop(e);
-                onOverlayChange('missions');
-              }}
-            >
-              <div className="dash-missions-pill flex items-center bg-black/60 backdrop-blur-md rounded-full">
-                <div className="dash-missions-hexagon bg-[#d97706] hexagon flex items-center justify-center shadow-[0_0_10px_rgba(217,119,6,0.6)]">
-                  <span className="material-symbols-outlined text-white">crown</span>
-                </div>
-                <div className="dash-missions-body">
-                  <span className="dash-missions-val font-data-mono text-white" id="dashEmblemsValue">
-                    {cycle.done}/{cycle.total}
-                  </span>
-                  <div className="dash-missions-progress-bar bg-surface-variant rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-prestige-gold to-[#d97706] rounded-full shadow-[0_0_8px_rgba(253,224,71,0.5)] progress-fill"
-                      id="dashMissionsProgressFill"
-                      style={{ width: `${cycle.percent}%` }}
-                    />
+            {/* v4.66.0 — Missões DEMO: o módulo é um jogo à parte (baús,
+                moedas e coroas) sem dados reais de treino. Fica parqueado,
+                acessível só no modo desenvolvedor, até ser reescrito como
+                metas reais (ver RELATORIO-PENDENCIAS.md). */}
+            {isDevMode() && (
+              <div
+                className="dash-missions"
+                id="dashBtnMissoes"
+                role="button"
+                onClick={(e) => {
+                  stop(e);
+                  onOverlayChange('missions');
+                }}
+              >
+                <div className="dash-missions-pill flex items-center bg-black/60 backdrop-blur-md rounded-full">
+                  <div className="dash-missions-hexagon bg-[#d97706] hexagon flex items-center justify-center shadow-[0_0_10px_rgba(217,119,6,0.6)]">
+                    <span className="material-symbols-outlined text-white">crown</span>
+                  </div>
+                  <div className="dash-missions-body">
+                    <span className="dash-missions-val font-data-mono text-white" id="dashEmblemsValue">
+                      {cycle.done}/{cycle.total}
+                    </span>
+                    <div className="dash-missions-progress-bar bg-surface-variant rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-prestige-gold to-[#d97706] rounded-full shadow-[0_0_8px_rgba(253,224,71,0.5)] progress-fill"
+                        id="dashMissionsProgressFill"
+                        style={{ width: `${cycle.percent}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -504,6 +512,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
         onClose={() => setMenuOpen(false)}
         onOpenRankings={() => setRankingsOpen(true)}
         onOpenMessages={() => setMessagesOpen(true)}
+        onOpenHelp={onOpenHelp}
         onOpenSettings={onOpenSettings}
         onOpenFitId={() => setFitIdOpen(true)}
         onOpenCycles={() => setCycleModalOpen(true)}

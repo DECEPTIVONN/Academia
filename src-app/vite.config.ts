@@ -100,6 +100,11 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        /* v4.67.0 — PUSH COM O APP FECHADO: `public/push-sw.js` (copiado para
+           a raiz do build) é injetado no SW gerado, adicionando os handlers
+           `push`, `notificationclick` e `pushsubscriptionchange`. O SW de
+           offline continua sendo o do Workbox; este arquivo só acrescenta. */
+        importScripts: ['push-sw.js'],
         /* v4.56.21 — precache do APP SHELL (o que garante abrir offline):
            JS/CSS/HTML/SVG/ICO + fontes + PNGs (ícones e artes de loading).
            JPG/WEBP (wallpapers, backgrounds) e as mídias pesadas (GIFs de

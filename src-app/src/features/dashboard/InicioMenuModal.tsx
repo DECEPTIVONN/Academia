@@ -29,8 +29,8 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { MODAL_EXIT_MS, useModalPresence } from '@/hooks/useModalPresence';
-import { showToast } from '@/lib/toast';
 import { useCrossBrowserFullscreen } from '@/lib/fullscreen';
+import { useInbox } from '@/features/notifications/useInbox';
 import './inicio-menu.css';
 
 const toBody = (node: React.ReactNode) => createPortal(node, document.body);
@@ -121,6 +121,8 @@ interface MenuItem {
   label: string;
   icon: React.ReactNode;
   action: () => void;
+  /** Contador à direita (v4.67.0 — mensagens não lidas). */
+  badge?: number;
 }
 
 interface InicioMenuModalProps {
@@ -130,6 +132,8 @@ interface InicioMenuModalProps {
   onOpenRankings: () => void;
   /** Caixa de Mensagens. */
   onOpenMessages: () => void;
+  /** Central de Ajuda (Configurações → Ajuda e Tutoriais). */
+  onOpenHelp: () => void;
   /** Hub de configurações do Perfil. */
   onOpenSettings: () => void;
   /** Tela de identidade Fit ID. */
@@ -143,6 +147,7 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
   onClose,
   onOpenRankings,
   onOpenMessages,
+  onOpenHelp,
   onOpenSettings,
   onOpenFitId,
   onOpenCycles,
@@ -153,6 +158,8 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
      (MobileDrawer/Sidebar HUD), então o estado/botão ficam em sincronia com
      qualquer outra entrada de tela cheia do app. */
   const { isFullscreen, toggleFullscreen } = useCrossBrowserFullscreen();
+  /* v4.67.0 — contador real de mensagens não lidas no item Mensagens. */
+  const { unread } = useInbox();
 
   /* Esc fecha + trava o scroll do body enquanto aberto (padrão dos overlays) */
   useEffect(() => {
@@ -201,12 +208,6 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
 
   if (!mounted) return null;
 
-  /* Ajuda ainda não existe: avisa (só no TOQUE — v4.32.0) e fecha. */
-  const soon = (label: string) => {
-    onClose();
-    showToast(`${label} — em breve.`, 'info');
-  };
-
   /* "Registro de Treinos" abre o modal de Ciclos de Treino (o mesmo do card
      CICLO). Espera o fade de saída do menu (MODAL_EXIT_MS) para o overlay do
      menu não cobrir o modal que tem z-index menor. Mesmo padrão para Rankings
@@ -253,9 +254,17 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
         label: 'Mensagens',
         icon: IcoMensagens,
         action: () => openAfterClose(onOpenMessages),
+        badge: unread,
       },
     ],
-    [{ key: 'ajuda', label: 'Ajuda', icon: IcoAjuda, action: () => soon('Ajuda') }],
+    [
+      {
+        key: 'ajuda',
+        label: 'Ajuda',
+        icon: IcoAjuda,
+        action: () => openAfterClose(onOpenHelp),
+      },
+    ],
     [
       {
         key: 'fitid',
@@ -290,6 +299,11 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
               >
                 <span className="inicio-menu__icon">{item.icon}</span>
                 <span className="inicio-menu__label">{item.label}</span>
+                {item.badge ? (
+                  <span className="inicio-menu__badge" aria-label={`${item.badge} não lidas`}>
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                ) : null}
               </button>
             ))}
           </React.Fragment>

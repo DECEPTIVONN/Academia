@@ -113,6 +113,37 @@
   pointer-events: none;
 }
 
+/* ---------- Campos bloqueados (Sexo / Nascimento vêm do cadastro) ---------- */
+
+.hp-locked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px dashed rgba(var(--overlay-rgb, 255, 255, 255), 0.16);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.03);
+  color: var(--text-primary, #fff);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.hp-locked svg {
+  flex-shrink: 0;
+  color: var(--set-dim-2);
+  opacity: 0.75;
+}
+
+.hp-locked .hp-locked__empty {
+  color: var(--set-dim);
+  font-weight: 600;
+  font-style: italic;
+}
+
 /* ---------- Data de nascimento ---------- */
 
 .hp-date {

@@ -29,6 +29,7 @@ import { useModalPresence } from '@/hooks/useModalPresence';
 import { today } from '@/core/db/queries';
 import { showToast } from '@/lib/toast';
 import { fileToDataUrl } from '@/lib/image';
+import { mergeHealthProfile } from '@/features/settings/health-profile';
 import {
   convertKgToDisplay,
   getWeightUnit,
@@ -98,6 +99,7 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
   const [form, setForm] = useState({
     date: today(),
     weight: '',
+    height: '',
     bodyFat: '',
     waist: '',
   });
@@ -190,19 +192,30 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
       return Number.isFinite(n) && n > 0 ? n : undefined;
     };
     const weight = parse(form.weight);
+    const height = parse(form.height);
     const fat = parse(form.bodyFat);
     const waist = parse(form.waist);
-    if (weight === undefined && fat === undefined && waist === undefined) {
+    if (weight === undefined && height === undefined && fat === undefined && waist === undefined) {
       showToast('Informe ao menos uma medida', 'error');
       return;
     }
+    const weightKg = weight !== undefined ? displayToKg(weight, unit) : undefined;
     void upsertMeasurement({
       date: form.date || today(),
-      weightKg: weight !== undefined ? displayToKg(weight, unit) : undefined,
+      weightKg,
+      heightCm: height,
       bodyFat: fat,
       waistCm: waist,
     });
-    setForm({ date: today(), weight: '', bodyFat: '', waist: '' });
+    /* v4.65.0 — peso e altura registrados aqui também alimentam o Perfil de
+       Saúde (Configurações → Perfil), que os mantém sincronizados. */
+    if (weightKg !== undefined || height !== undefined) {
+      mergeHealthProfile({
+        ...(weightKg !== undefined ? { pesoKg: String(weightKg) } : {}),
+        ...(height !== undefined ? { alturaCm: String(height) } : {}),
+      });
+    }
+    setForm({ date: today(), weight: '', height: '', bodyFat: '', waist: '' });
     setSheet(null);
     showToast('Medidas registradas');
   };
@@ -476,6 +489,16 @@ export const BodyMetricsOverlay: React.FC<BodyMetricsOverlayProps> = ({
                       placeholder="Ex: 75"
                       value={form.weight}
                       onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                    />
+                  </label>
+                  <label className="bm-field">
+                    <span>Altura (cm)</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Ex: 175"
+                      value={form.height}
+                      onChange={(e) => setForm({ ...form, height: e.target.value })}
                     />
                   </label>
                   <label className="bm-field">
