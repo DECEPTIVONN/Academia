@@ -3,7 +3,9 @@
  *
  * Espelha o OfflineNotificationBanner do guia §8:
  *   • status reativo vindo da fila IndexedDB (`subscribeToMutationQueue`);
- *   • offline: mostra quantas alterações estão salvas localmente;
+ *   • offline: mostra quantas alterações estão salvas localmente — só por
+ *     **5 segundos** (v4.63.0); o app continua offline normalmente, o aviso
+ *     apenas não fica fixo na tela;
  *   • online com pendências: mostra o envio em andamento e o botão manual
  *     **Sincronizar** (`syncNow`), que também esvazia a fila;
  *   • some sozinho quando online e sem pendências.
@@ -17,6 +19,9 @@ import {
 import { syncNow } from '@/core/sync/sync-manager';
 import { useModalPresence } from '@/hooks/useModalPresence';
 import './sync.css';
+
+/** Quanto tempo o aviso de modo offline fica na tela (v4.63.0). */
+const OFFLINE_NOTICE_MS = 5_000;
 
 const WifiOffIcon = (
   <svg
@@ -83,9 +88,44 @@ export function OfflineSyncBanner() {
   const [manualSyncing, setManualSyncing] = useState(false);
   const [reconnected, setReconnected] = useState(false);
   const reconnectedTimer = useRef<number | null>(null);
+  /* v4.63.0 — o aviso de modo offline é um TOAST, não um selo permanente:
+     aparece na transição online → offline e sai sozinho depois de 5 s. O
+     estado nasce já correto quando o app abre sem rede. */
+  const [offlineNotice, setOfflineNotice] = useState(
+    () => typeof navigator !== 'undefined' && !navigator.onLine
+  );
+  const offlineNoticeTimer = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+
+    const clearOfflineNotice = () => {
+      if (offlineNoticeTimer.current) {
+        window.clearTimeout(offlineNoticeTimer.current);
+        offlineNoticeTimer.current = null;
+      }
+    };
+    /* Abre a janela de 5 s. Chamado só pelos eventos de rede (e uma vez no
+       boot se o app já nasce offline), então mudanças da fila não reiniciam
+       a contagem. */
+    const armOfflineNotice = () => {
+      setOfflineNotice(true);
+      clearOfflineNotice();
+      offlineNoticeTimer.current = window.setTimeout(() => {
+        setOfflineNotice(false);
+        offlineNoticeTimer.current = null;
+      }, OFFLINE_NOTICE_MS);
+    };
+
+    if (!navigator.onLine) {
+      /* Já offline no boot: o estado inicial já mostra o aviso, aqui só
+         agendamos a saída (o setState acontece no timer, não no efeito). */
+      offlineNoticeTimer.current = window.setTimeout(() => {
+        setOfflineNotice(false);
+        offlineNoticeTimer.current = null;
+      }, OFFLINE_NOTICE_MS);
+    }
+
     const applyStatus = (next: QueueStatus) => {
       if (!cancelled) setStatus(next);
     };
@@ -97,6 +137,8 @@ export function OfflineSyncBanner() {
     };
 
     const onOnline = () => {
+      clearOfflineNotice();
+      setOfflineNotice(false);
       setReconnected(true);
       refresh();
       if (reconnectedTimer.current) window.clearTimeout(reconnectedTimer.current);
@@ -107,6 +149,7 @@ export function OfflineSyncBanner() {
     };
     const onOffline = () => {
       setReconnected(false);
+      armOfflineNotice();
       refresh();
     };
 
@@ -124,6 +167,7 @@ export function OfflineSyncBanner() {
       window.removeEventListener('offline', onOffline);
       window.clearInterval(interval);
       if (reconnectedTimer.current) window.clearTimeout(reconnectedTimer.current);
+      clearOfflineNotice();
     };
   }, []);
 
@@ -139,7 +183,11 @@ export function OfflineSyncBanner() {
   }, [manualSyncing]);
 
   const busy = status.isProcessing || manualSyncing;
-  const show = !status.isOnline || status.pendingCount > 0 || busy || reconnected;
+  /* Offline: só enquanto a janela de 5 s está aberta. Online: continua
+     mostrando pendências/reenvio (comportamento que não é um aviso de rede). */
+  const show =
+    (!status.isOnline && offlineNotice) ||
+    (status.isOnline && (status.pendingCount > 0 || busy || reconnected));
   /* v4.57.0 — o banner sai com fade (syToastOut) em vez de desaparecer de uma
      vez quando as pendências acabam. */
   const { mounted, closing } = useModalPresence(show);

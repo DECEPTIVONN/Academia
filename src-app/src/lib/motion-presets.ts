@@ -40,13 +40,19 @@ export const SPRING_SOFT: Transition = {
   mass: 0.9,
 };
 
-/** Slide lateral da fita mobile (1 viewport) — ~350ms, quase crítico.
+/** Slide lateral da fita mobile (1 viewport) — glide de ~430 ms, crítico.
  *  v4.8.3.2: a fita pré-monta as 5 seções (paridade legado) e o x move
- *  entre índices de viewport; essa mola cobre a distância com glide e
- *  sem overshoot visível. */
+ *  entre índices de viewport.
+ *
+ *  v4.63.0 — troca de aba mais suave/profissional: a mola antiga
+ *  (380/38, ωn≈19.5 rad/s) completava em ~340 ms e, num toque na barra
+ *  inferior, partia e parava quase secas. A nova (230/30, ζ≈0.99,
+ *  ωn≈15.2 rad/s) parte mais macia, desacelera por mais tempo e continua
+ *  sendo criticamente amortecida (sem quique/overshoot, o que dava
+ *  impressão de "borracha" no meio da tela). */
 export const SPRING_SLIDE: Transition = {
   type: 'spring',
-  stiffness: 380,
-  damping: 38,
+  stiffness: 230,
+  damping: 30,
   mass: 1,
 };

@@ -16,7 +16,12 @@
  * retargeta a mesma mola a partir da posição E velocidade atuais.
  */
 
-import { animate, type AnimationPlaybackControls, type MotionValue } from 'motion/react';
+import {
+  animate,
+  type AnimationPlaybackControls,
+  type MotionValue,
+  type Transition,
+} from 'motion/react';
 import { flushSync } from 'react-dom';
 import { SPRING_SLIDE } from '@/lib/motion-presets';
 
@@ -24,19 +29,48 @@ import { SPRING_SLIDE } from '@/lib/motion-presets';
 let swapEpoch = 0;
 let running: AnimationPlaybackControls[] = [];
 
+/** Limite do impulso herdado do gesto (px/s) — evita disparada exagerada. */
+const MAX_CARRY_VELOCITY = 2400;
+
 function stopRunning(): void {
   running.forEach((c) => c.stop());
   running = [];
+}
+
+/** Respeita a preferência do sistema por menos movimento (DESIGN.md §12). */
+function prefersReducedMotion(): boolean {
+  try {
+    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  } catch {
+    return false;
+  }
+}
+
+/** Spring do slide com a velocidade do gesto embutida (interrupção natural). */
+function slideTransition(velocity: number): Transition {
+  const carried = Math.max(
+    -MAX_CARRY_VELOCITY,
+    Math.min(MAX_CARRY_VELOCITY, velocity || 0)
+  );
+  return carried ? { ...SPRING_SLIDE, velocity: carried } : SPRING_SLIDE;
 }
 
 /**
  * Assenta a fita em repouso (snap para a seção base).
  * Usado pelo arrasto cancelado e pelo clique na seção ativa.
  */
-export function snapSlideHome(x: MotionValue<number>, targetX: number): void {
+export function snapSlideHome(
+  x: MotionValue<number>,
+  targetX: number,
+  velocity = 0
+): void {
   const epoch = ++swapEpoch;
   stopRunning();
-  const a = animate(x, targetX, SPRING_SLIDE);
+  if (prefersReducedMotion()) {
+    x.jump(targetX);
+    return;
+  }
+  const a = animate(x, targetX, slideTransition(velocity));
   running = [a];
   a.finished.then(() => {
     if (epoch !== swapEpoch) return;
@@ -61,7 +95,8 @@ export function holdSlide(): void {
 export function slideSwap(
   x: MotionValue<number>,
   targetX: number,
-  updateCallback: () => void
+  updateCallback: () => void,
+  velocity = 0
 ): void {
   const epoch = ++swapEpoch;
   stopRunning();
@@ -69,7 +104,15 @@ export function slideSwap(
   // Commit no início: activeSection/destaque da nav atualizam junto ao slide
   flushSync(updateCallback);
 
-  const a = animate(x, targetX, SPRING_SLIDE);
+  if (prefersReducedMotion()) {
+    x.jump(targetX);
+    return;
+  }
+
+  /* v4.63.0 — o impulso do swipe vai junto: ao soltar a fita, a mola continua
+     na velocidade do dedo em vez de reiniciar do zero (era o "engasgo"
+     sentido na troca por gesto). */
+  const a = animate(x, targetX, slideTransition(velocity));
   running = [a];
   a.finished.then(() => {
     if (epoch !== swapEpoch) return;

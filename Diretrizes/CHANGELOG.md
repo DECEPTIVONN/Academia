@@ -2,6 +2,25 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.63.0] - 2026-10-31
+
+**Aviso de modo offline vira toast de 5 s e a troca lateral entre abas fica mais suave.**
+
+### Changed
+- `src-app/src/features/sync/OfflineSyncBanner.tsx` — o aviso **“Modo Offline Ativo”** deixou de ser um selo permanente: aparece na transição online → offline e sai sozinho depois de **5 s** (`OFFLINE_NOTICE_MS`), com a saída animada que já existia. A janela é aberta pelos eventos `online`/`offline` (e uma vez no boot se o app já nasce sem rede), então atualizações da fila não reiniciam a contagem. Pendências de sincronização continuam aparecendo quando há conexão.
+- `src-app/src/lib/motion-presets.ts` — **`SPRING_SLIDE` 380/38 → 230/30** (ζ≈0.99, ωn≈15.2 rad/s): a troca lateral parte mais macia, desacelera por mais tempo (~430 ms em vez de ~340 ms) e continua criticamente amortecida, sem quique.
+- `src-app/src/lib/animations.ts` + `src-app/src/App.tsx` — **`slideSwap`/`snapSlideHome` aceitam a velocidade do gesto** (px/s, limitada a 2400) e a repassam ao spring: ao soltar o swipe, a mola continua na velocidade do dedo em vez de reiniciar do zero. As duas funções passam a respeitar **`prefers-reduced-motion`** (salto direto, sem animação).
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (72 avisos de linha de base, nenhum novo).
+- `npm run build`: OK — precache com 54 entradas únicas.
+- Teste runtime (Chrome headless + CDP, `npm run dev` em modo teste):
+  - offline emulado: banner visível de **9 ms a 5159 ms** e depois desmontado (`stillVisibleAtEnd: false`);
+  - clique de aba: `data-active` muda, a fita chega ao destino (**100%**, `overshoot: 0 px`) sem erros de console.
+  - **Limitação:** o headless renderiza por software e entrega ~30 fps (mesmo visível), com quedas durante o slide — a *curva* percebida não é mensurável ali. A suavidade precisa ser conferida em aparelho real.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.63.0.
+
 ## [v4.62.0] - 2026-10-31
 
 **Modo offline consertado: o precache do Service Worker falhava no install por causa de ícones duplicados.**

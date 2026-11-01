@@ -272,7 +272,10 @@ function AppShell() {
      (verticalSwap, transitionguide.md). SEM guarda de re-entrada: um clique
      no meio da animação retargeta a mesma mola (interrupção natural). */
   const navigateSection = useCallback(
-    (sec: SectionType) => {
+    /* v4.63.0 — `flingVelocity` (px/s) vem do swipe: a mola do slide herda o
+       impulso do dedo em vez de partir do repouso. Toques na nav/teclado
+       passam 0. */
+    (sec: SectionType, flingVelocity = 0) => {
       /* v4.8.3: sair do Início descarta o overlay pendente */
       if (sec !== 'dashboard') setDashOverlay(null);
       if (sec === activeSection) {
@@ -292,7 +295,7 @@ function AppShell() {
           document.querySelector<HTMLElement>(`.section-slide[data-section="${sec}"]`)
         );
       } else {
-        slideSwap(stripX, slideBaseX(to), commit);
+        slideSwap(stripX, slideBaseX(to), commit, flingVelocity);
       }
     },
     [activeSection, repairSectionRaster, stripX]
@@ -573,10 +576,12 @@ function AppShell() {
       const idx = SECTIONS_ORDER.indexOf(activeSection);
       const blocked = (goingNext && idx >= SECTIONS_ORDER.length - 1) || (!goingNext && idx <= 0);
 
+      /* Velocidade do gesto acompanha a mola (avanço e retorno): sem isso o
+         slide "reiniciava" ao soltar o dedo. */
       if ((passed || flung) && !blocked) {
-        navigateSection(SECTIONS_ORDER[goingNext ? idx + 1 : idx - 1]);
+        navigateSection(SECTIONS_ORDER[goingNext ? idx + 1 : idx - 1], velocity);
       } else {
-        snapSlideHome(stripX, slideBaseX(idx)); // volta pro lugar (spring)
+        snapSlideHome(stripX, slideBaseX(idx), velocity); // volta pro lugar (spring)
       }
     };
 

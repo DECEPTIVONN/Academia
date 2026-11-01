@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.62.0",
+  "version": "4.63.0",
   "last_updated": "2026-10-31",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -828,11 +828,11 @@
       },
       {
         "file": "src-app/src/lib/animations.ts",
-        "purpose": "Presets de motion (fadeIn, fadeSwap, slideUp, scaleIn, stagger) + hooks useMotion; durações/ezings centralizadas para consistência cross-component."
+        "purpose": "Presets de motion (fadeIn, fadeSwap, slideUp, scaleIn, stagger) + hooks useMotion; durações/ezings centralizadas para consistência cross-component. Também concentra a fita lateral: slideSwap/snapSlideHome animam o MotionValue x com SPRING_SLIDE, herdam a velocidade do gesto (fling, limitada a 2400 px/s) para não reiniciar do zero ao soltar o dedo e, com prefers-reduced-motion, saltam direto para o destino sem animar."
       },
       {
         "file": "src-app/src/lib/motion-presets.ts",
-        "purpose": "Springs compartilhados do Motion v12 (SPRING_SETTLE/SPRING_EXIT/SPRING_SOFT) usados por animations.ts, MobileDrawer e demais animações. v4.8.3.1: recalibrados pelo transitionguide.md — SETTLE 260/28/1 (periodo ~390ms, zeta ~0.87, overshoot <1px), EXIT 340/32/1, SOFT 220/24/0.9 — fluidez premium com interrupção natural preservada. v4.8.3.2: novo SPRING_SLIDE { stiffness: 380, damping: 38, mass: 1 } usado pelo slideSwap lateral da fita pré-montada."
+        "purpose": "Springs compartilhados do Motion v12 (SPRING_SETTLE/SPRING_EXIT/SPRING_SOFT/SPRING_SLIDE) usados por animations.ts, MobileDrawer e demais animações. Calibrados pelo transitionguide.md: SETTLE 260/28/1 (período ~390 ms, ζ≈0.87, overshoot <1 px), EXIT 340/32/1, SOFT 220/24/0.9. SPRING_SLIDE 230/30/1 (ζ≈0.99, ωn≈15.2 rad/s) é a mola da troca lateral de abas: glide sem quique, partida macia e desaceleração longa (~430 ms) — subir a rigidez ou baixar o damping traz de volta a sensação de “borracha”."
       },
       {
         "file": "src-app/src/hooks/useModalPresence.ts",
@@ -908,7 +908,7 @@
       },
       {
         "file": "src-app/src/features/sync/OfflineSyncBanner.tsx",
-        "purpose": "Banner de status offline/sincronização (dados.md §5.4), montado no App.tsx: status reativo da fila via subscribeToMutationQueue (offline/pendências/sincronizando), contagem de alterações salvas localmente e botão manual Sincronizar (syncNow). Entra com syToastIn e sai com syToastOut (.is-closing via useModalPresence)."
+        "purpose": "Banner de status offline/sincronização (dados.md §5.4), montado no App.tsx: status reativo da fila via subscribeToMutationQueue (offline/pendências/sincronizando), contagem de alterações salvas localmente e botão manual Sincronizar (syncNow). Entra com syToastIn e sai com syToastOut (.is-closing via useModalPresence). O aviso de MODO OFFLINE é um toast com janela de 5 s (OFFLINE_NOTICE_MS), aberta pelos eventos online/offline — pendências sem rede não o mantêm fixo na tela; pendências/sincronização aparecem quando há conexão."
       }
     ],
     "core_db": [
