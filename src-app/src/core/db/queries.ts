@@ -418,6 +418,50 @@ export function toggleCheckEntry(
   return { entry: e, rest: 'stop' };
 }
 
+/**
+ * Marca uma série PREENCHENDO as anteriores (Modo Foco).
+ *
+ * Tocar na série 3 marca 1–3; tocar de novo na 3 desmarca dela em diante.
+ * Mantém as séries sempre contíguas (sem buraco no meio) e aplica a mesma
+ * regra de descanso/check do `toggleSetEntry`.
+ */
+export function toggleSeriesUpToEntry(
+  base: WorkoutHistory,
+  exId: string,
+  setIdx: number,
+  exercise: Pick<Exercise, 'sets' | 'rest'>
+): FichaMutation {
+  const e = cloneEntry(base);
+  const sd = e.seriesDone!;
+  const total = Math.max(1, exercise.sets || 0, setIdx + 1);
+  const arr = [...(sd[exId] ?? [])];
+  while (arr.length < total) arr.push(false);
+  if (arr.length > total) arr.length = total;
+
+  const wasDone = Boolean(arr[setIdx]);
+  for (let i = 0; i < total; i++) {
+    if (wasDone ? i >= setIdx : i <= setIdx) arr[i] = !wasDone;
+  }
+  sd[exId] = arr;
+
+  const allSetsDone = total > 0 && arr.every(Boolean);
+  const idx = e.checks.indexOf(exId);
+
+  if (allSetsDone) {
+    if (idx === -1) e.checks.push(exId);
+    return { entry: e, rest: 60 };
+  }
+
+  if (idx !== -1) e.checks.splice(idx, 1);
+  if (!wasDone) {
+    const secs = exercise.rest !== undefined && exercise.rest !== null
+      ? parseInt(String(exercise.rest), 10)
+      : 30;
+    if (secs > 0) return { entry: e, rest: secs };
+  }
+  return { entry: e };
+}
+
 /** Espelha `toggleSeriesSet` (db.js): marcar/desmarcar uma série. */
 export function toggleSetEntry(
   base: WorkoutHistory,

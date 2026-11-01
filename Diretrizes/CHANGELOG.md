@@ -2,6 +2,23 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.61.0] - 2026-10-31
+
+**Modo Foco: séries preenchem as anteriores, conclusão das séries avança de exercício e a navegação some nas pontas.**
+
+### Added
+- `src-app/src/core/db/queries.ts` — **`toggleSeriesUpToEntry(base, exId, setIdx, exercise)`**: marca a série tocada **preenchendo as anteriores** (tocar na 3 marca 1–3) e, ao tocar numa série já feita, desmarca dela em diante. Mantém as séries contíguas e devolve o mesmo `rest`/check do `toggleSetEntry` (tempo do exercício ou 60 s na última).
+- `src-app/src/legacy-style/treino/3-foco-badges.css` — `.f-nav-btn--placeholder`: espaço invisível que mantém o rótulo PRÓXIMO centralizado quando um dos botões de navegação não existe.
+
+### Changed
+- `src-app/src/features/workout/FocusModal.tsx` — os botões de série usam `toggleSeriesUpToEntry`; ao completar todas as séries o exercício é marcado e o **auto-avanço** leva ao próximo (com o descanso do exercício). O rodapé **não exibe “Anterior” no primeiro exercício nem “Próximo” no último** (inclusive na etapa de cardio), mantendo o layout equilibrado.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (72 avisos de linha de base, nenhum novo).
+- `npm run build`: OK — precache gerado.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.61.0.
+
 ## [v4.60.0] - 2026-10-31
 
 **Compartilhamento no Firefox Android/PWA entrega a imagem antes do texto e o timer de descanso do Modo Foco passa a ser ativado pelos botões de série.**

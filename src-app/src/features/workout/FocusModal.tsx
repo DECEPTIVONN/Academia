@@ -25,7 +25,7 @@ import {
   getTodayTreino,
   grupoBadgeClass,
   toggleCheckEntry,
-  toggleSetEntry,
+  toggleSeriesUpToEntry,
   type FichaMutation,
 } from '@/core/db/queries';
 import { showToast } from '@/lib/toast';
@@ -309,10 +309,12 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
 
   /* Botões de série (L839-843): toggle + updateFocusUI + renderFicha.
      v4.60.0 — passa pelo MESMO fluxo do check: inicia o descanso com o tempo
-     do exercício (ou 60 s na última série) e avalia conclusão/avanço. */
+     do exercício (ou 60 s na última série) e avalia conclusão/avanço.
+     v4.61.0 — tocar na série N preenche 1..N (séries contíguas); ao completar
+     todas, o exercício é marcado e o auto-avanço leva ao próximo. */
   const onSetToggle = (setIdx: number) => {
     if (!ex) return;
-    runFocusMutation(ex.id, (base) => toggleSetEntry(base, ex.id, setIdx, ex));
+    runFocusMutation(ex.id, (base) => toggleSeriesUpToEntry(base, ex.id, setIdx, ex));
   };
 
   const timerText = restTimeRemaining > 0
@@ -528,29 +530,40 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
             </div>
           </div>
 
+          {/* v4.61.0 — navegação condicional: sem “Anterior” no primeiro
+              exercício e sem “Próximo” no último (o placeholder invisível
+              mantém o rótulo PRÓXIMO centralizado). */}
           <div className="focus-footer">
-            <button
-              type="button"
-              className="f-nav-btn"
-              id="btnFocusPrev"
-              onClick={() => setFocusIndex((i) => (i > 0 ? i - 1 : i))}
-            >
-              ⬅ Anterior
-            </button>
+            {focusIndex > 0 ? (
+              <button
+                type="button"
+                className="f-nav-btn"
+                id="btnFocusPrev"
+                onClick={() => setFocusIndex((i) => (i > 0 ? i - 1 : i))}
+              >
+                ⬅ Anterior
+              </button>
+            ) : (
+              <span className="f-nav-btn f-nav-btn--placeholder" aria-hidden="true" />
+            )}
             <div className="focus-next-info" style={{ opacity: nextLabel === '--' ? 0 : 1 }}>
               <span className="f-next-lbl">PRÓXIMO:</span>
               <span className="f-next-name" id="focusNextName">
                 {nextLabel}
               </span>
             </div>
-            <button
-              type="button"
-              className="f-nav-btn"
-              id="btnFocusNext"
-              onClick={() => setFocusIndex((i) => (i < lastStep ? i + 1 : i))}
-            >
-              Próximo ➡
-            </button>
+            {focusIndex < lastStep ? (
+              <button
+                type="button"
+                className="f-nav-btn"
+                id="btnFocusNext"
+                onClick={() => setFocusIndex((i) => (i < lastStep ? i + 1 : i))}
+              >
+                Próximo ➡
+              </button>
+            ) : (
+              <span className="f-nav-btn f-nav-btn--placeholder" aria-hidden="true" />
+            )}
           </div>
         </div>
       )}

@@ -842,6 +842,13 @@
     border-radius: 10px;
     cursor: pointer;
 }
+/* v4.61.0 — espaço reservado quando o botão de navegação não existe
+   (primeiro exercício sem “Anterior”, último sem “Próximo”), para o rótulo
+   PRÓXIMO continuar centralizado. */
+.f-nav-btn--placeholder {
+    visibility: hidden;
+    pointer-events: none;
+}
 .focus-next-info {
     text-align: center;
 }
