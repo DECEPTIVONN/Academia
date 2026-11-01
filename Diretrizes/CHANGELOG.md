@@ -2,6 +2,23 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.60.0] - 2026-10-31
+
+**Compartilhamento no Firefox Android/PWA entrega a imagem antes do texto e o timer de descanso do Modo Foco passa a ser ativado pelos botões de série.**
+
+### Added
+- `src-app/src/lib/native-share.ts` — **`canShareFiles(file)`**: diz se AQUELE arquivo pode ir pelo Web Share (`canShare({ files })`). Sem `canShare` (= sem suporte a arquivos, caso do Firefox Android) devolve `false`, e o chamador entrega a imagem por download ANTES da folha.
+
+### Changed
+- `src-app/src/features/gamification/ShareModal.tsx` — navegadores sem share de arquivo (Firefox Android, desktop) agora **baixam o PNG primeiro, dentro do clique**, e só então abrem a folha de texto: o Firefox bloqueia downloads disparados depois do compartilhamento, e era por isso que só a mensagem saía. Há cópia para a área de transferência quando suportada e um aviso na interface explicando que a imagem vai para Downloads. No **Firefox Android** a imagem é entregue antes e a folha com `files` ainda é tentada (se o navegador aceitar, sai imagem + texto juntos). No **APK** segue o plugin nativo e, se ele falhar, a imagem é salva em Documentos.
+- `src-app/src/features/workout/FocusModal.tsx` — `runFocusMutation` unifica o fluxo de check e de série: `onSetToggle` passou a aplicar o `rest` devolvido por `toggleSetEntry` (tempo do exercício ou 60 s na última série) **e** a rodar a mesma conclusão/auto-avanço do botão CONCLUIR. Antes o `rest` era descartado e o timer de descanso só iniciava no botão de concluir.
+
+### Verificado
+- `npx tsc -b` (src-app): OK.
+- `npx oxlint src`: 0 erros (72 avisos de linha de base, nenhum novo).
+- `npm run build`: OK — precache gerado.
+- `npm run lint:docs`: OK — `system_map.json` @ 4.60.0.
+
 ## [v4.59.0] - 2026-10-31
 
 **Compartilhamento no Android passou a levar a imagem gerada (Radar Fit e Treino Concluído) junto da mensagem; animação de entrada/saída em modais virou regra obrigatória nas diretrizes.**

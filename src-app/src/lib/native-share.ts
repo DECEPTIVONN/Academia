@@ -131,6 +131,25 @@ export function canNativeShare(): boolean {
 }
 
 /**
+ * A plataforma consegue compartilhar ESTE arquivo pelo Web Share?
+ *
+ * `canShare` só aceita a propriedade `files`; quando ele não existe a
+ * plataforma não suporta arquivos (caso do Firefox Android, que expõe
+ * `share` apenas para texto/URL) e devolver `false` deixa o chamador entregar
+ * a imagem por download ANTES de abrir a folha.
+ */
+export function canShareFiles(file?: File | null): boolean {
+  if (!file || !canNativeShare()) return false;
+  const nav = navigator as Navigator & { canShare?: (d?: ShareData) => boolean };
+  if (!nav.canShare) return false;
+  try {
+    return nav.canShare({ files: [file] });
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Abre a folha de compartilhamento nativa do SO.
  * Retorna o desfecho para o chamador decidir o fallback.
  */

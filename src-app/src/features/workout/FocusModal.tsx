@@ -189,13 +189,24 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
     else if (rest) ws.startRestTimer(rest);
   };
 
-  /** Marca/desmarca uma etapa (exercício ou cardio) e fecha o treino quando
-   *  todas as etapas da ficha estiverem concluídas. */
-  const toggleDone = (exId: string, exercise?: Exercise) => {
+  /**
+   * Aplica uma mutação de check/série do Modo Foco e roda o pós-processamento
+   * comum: conclusão atômica da ficha, **timer de descanso**, auto-avanço e
+   * fechamento com a tela de conclusão.
+   *
+   * v4.60.0 — as SÉRIES passam por aqui também: antes `onSetToggle` chamava
+   * `toggleSetEntry` direto e descartava o `rest` devolvido, então tocar nos
+   * botões de série não iniciava o descanso (o timer só funcionava no botão
+   * CONCLUIR) e a conclusão da ficha só era reavaliada por esse botão.
+   */
+  const runFocusMutation = (
+    exId: string,
+    mutate: (base: WorkoutHistory) => FichaMutation
+  ) => {
     let newChecks: string[] = [];
 
     applyFocus((base) => {
-      const mut = toggleCheckEntry(base, exId, exercise);
+      const mut = mutate(base);
       let next = mut.entry;
 
       /* Conclusão atômica do Modo Foco (L885-915) — agora inclui o cardio
@@ -256,6 +267,10 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
     }
   };
 
+  /** Marca/desmarca uma etapa (exercício ou cardio). */
+  const toggleDone = (exId: string, exercise?: Exercise) =>
+    runFocusMutation(exId, (base) => toggleCheckEntry(base, exId, exercise));
+
   const onCheck = () => {
     if (!ex) return;
     toggleDone(ex.id, ex);
@@ -292,14 +307,12 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
     }, 600);
   };
 
-  /* Botões de série (L839-843): toggle + updateFocusUI + renderFicha — sem
-     timer de descanso (o legado não passa o rest por aqui) */
+  /* Botões de série (L839-843): toggle + updateFocusUI + renderFicha.
+     v4.60.0 — passa pelo MESMO fluxo do check: inicia o descanso com o tempo
+     do exercício (ou 60 s na última série) e avalia conclusão/avanço. */
   const onSetToggle = (setIdx: number) => {
     if (!ex) return;
-    const store = useTodayEntryStore.getState();
-    const { entry: next } = toggleSetEntry(store.entry, ex.id, setIdx, ex);
-    if (!next.sheetKey) next.sheetKey = treino;
-    void store.update(() => next);
+    runFocusMutation(ex.id, (base) => toggleSetEntry(base, ex.id, setIdx, ex));
   };
 
   const timerText = restTimeRemaining > 0

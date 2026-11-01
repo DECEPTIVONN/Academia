@@ -24,6 +24,7 @@ import { averageLoadKg, effectiveLoadKg } from '@/lib/suggested-load';
 import {
   shareNative,
   canNativeShare,
+  canShareFiles,
   isNativeApp,
   saveImageInNativeApp,
   shareImageInNativeApp,
@@ -67,6 +68,8 @@ export function ShareModal() {
   const radarMode = useRadarMode((s) => s.mode);
   const [busy, setBusy] = useState<'share' | 'download' | null>(null);
   const [imageReady, setImageReady] = useState(false);
+  /** v4.60.0 — a plataforma aceita compartilhar o PNG? (Firefox: não) */
+  const [canShareImg, setCanShareImg] = useState(false);
   const radarCloneRef = useRef<HTMLDivElement>(null);
   const canvasFileRef = useRef<File | null>(null);
   const filePromiseRef = useRef<Promise<File | null> | null>(null);
@@ -121,18 +124,16 @@ export function ShareModal() {
   };
 
   /**
-   * v4.52.1-share — entrega o PNG onde a folha nativa não chega: baixa o
-   * arquivo E tenta copiá-lo para a área de transferência (celular sem share
-   * de imagem, desktop, etc.). O download é o seguro: sempre acontece.
+   * v4.60.0 — copia o PNG para a área de transferência quando a plataforma
+   * permite (Firefox não permite imagem no clipboard: cai no catch).
    */
-  const deliverImage = async (file: File): Promise<void> => {
-    downloadFile(file);
+  const copyImageToClipboard = async (file: File): Promise<void> => {
     try {
       if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
         await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
       }
     } catch {
-      /* sem permissão de clipboard: o download já entregou a imagem */
+      /* sem permissão/suporte: o download já entregou a imagem */
     }
   };
 
@@ -212,11 +213,14 @@ export function ShareModal() {
     canvasFileRef.current = null;
     filePromiseRef.current = null;
     setImageReady(false);
+    setCanShareImg(false);
     let alive = true;
     // Deixa o card (e o clone do radar) pintar antes de rasterizar.
     const timer = window.setTimeout(() => {
       void buildShareFile().then((file) => {
-        if (alive) setImageReady(!!file);
+        if (!alive) return;
+        setImageReady(!!file);
+        setCanShareImg(canShareFiles(file));
       });
     }, 150);
     return () => {
@@ -275,8 +279,49 @@ export function ShareModal() {
           return;
         }
         if (native === 'cancelled') return;
-        /* 'unsupported'/'error' → tenta o caminho web abaixo */
+        /* 'unsupported'/'error' → no APK não existe Web Share com arquivo nem
+           download por <a>: salva em Documentos e encerra. */
+        if (await saveImageInNativeApp(file)) {
+          showToast('Imagem salva em Documentos — anexe no app escolhido!', 'success');
+          return;
+        }
       }
+
+      /**
+       * v4.60.0 — a imagem é entregue por DOWNLOAD (dentro do gesto); o
+       * Firefox Android bloqueia downloads disparados depois da folha de
+       * compartilhamento, então baixar primeiro é o que garante que ela saia.
+       */
+      let imageDelivered = false;
+      const deliverImageNow = () => {
+        downloadFile(file);
+        void copyImageToClipboard(file);
+        imageDelivered = true;
+      };
+      /** Fallback dos navegadores sem share de arquivo (Firefox, desktop…). */
+      const finishWithText = async (reason: string) => {
+        console.info('[share]', reason);
+        if (!imageDelivered) deliverImageNow();
+        const textResult = await shareNative({ title: 'Evo Fit', text });
+        if (textResult === 'cancelled') return; // usuário fechou a folha
+        showToast(
+          textResult === 'shared'
+            ? 'Imagem baixada! Anexe no app escolhido junto da mensagem.'
+            : 'Imagem baixada em Downloads — envie junto da mensagem.',
+          'success',
+        );
+      };
+
+      /* Sem suporte a arquivo: entrega a imagem imediatamente (Firefox). */
+      if (!canShareFiles(file)) {
+        await finishWithText('navegador sem share de arquivo — imagem baixada antes do texto');
+        return;
+      }
+
+      /* Firefox Android expõe share/canShare, mas não compartilha arquivos de
+         forma confiável: garante a imagem no aparelho ANTES e ainda tenta a
+         folha com `files` (se funcionar, sai imagem + texto de uma vez). */
+      if (/firefox/i.test(navigator.userAgent)) deliverImageNow();
 
       /* v4.52.1-share — a imagem tem PRIORIDADE: o payload tenta primeiro
          texto + imagem e, se a plataforma recusar a combinação, repete SÓ com
@@ -298,23 +343,9 @@ export function ShareModal() {
         // 'unsupported' (combinação não aceita) → tenta o próximo formato
       }
 
-      // Plataforma sem compartilhamento de arquivos (ex.: Chrome desktop):
-      // entrega a imagem por download + área de transferência e, se der,
-      // manda o texto pela folha nativa.
-      console.info('[share] plataforma sem share de arquivo — imagem entregue por download/clipboard');
-      const textResult = await shareNative({ title: 'Evo Fit', text });
-      if (textResult === 'cancelled') return; // respeita o cancelamento
-      if (isNativeApp() && (await saveImageInNativeApp(file))) {
-        showToast('Imagem salva em Documentos — anexe no app escolhido!', 'success');
-        return;
-      }
-      await deliverImage(file);
-      showToast(
-        textResult === 'shared'
-          ? 'Texto compartilhado. A imagem foi baixada e copiada — cole onde quiser!'
-          : 'Imagem baixada e copiada para a área de transferência!',
-        'success',
-      );
+      // A plataforma aceitou `files` na checagem mas recusou na hora do share:
+      // mesma estratégia — imagem primeiro (download), texto depois.
+      await finishWithText('share de arquivo recusado pela plataforma');
     } catch (err) {
       console.error(err);
       showToast('Erro ao preparar compartilhamento.', 'error');
@@ -624,6 +655,27 @@ export function ShareModal() {
                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">Facebook</a>
              </div>
            )}
+
+          {/* v4.60.0 — Firefox Android não compartilha ARQUIVO pelo Web Share:
+              a imagem vai para Downloads antes de abrir o texto. O aviso deixa
+              a expectativa clara em vez de parecer que “só o texto foi”. */}
+          {imageReady &&
+            !isNativeApp() &&
+            (!canShareImg || /firefox/i.test(navigator.userAgent)) && (
+            <p
+              style={{
+                margin: '4px 0 0',
+                fontSize: '0.72rem',
+                lineHeight: 1.35,
+                textAlign: 'center',
+                color: 'var(--text-secondary)',
+                opacity: 0.85,
+              }}
+            >
+              Neste navegador a imagem é baixada em <strong>Downloads</strong> antes de abrir o
+              compartilhamento — anexe no app de mensagem.
+            </p>
+          )}
 
           <button
             type="button"
