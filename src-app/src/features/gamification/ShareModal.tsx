@@ -284,7 +284,8 @@ export function ShareModal() {
          Antes, uma recusa da combinação derrubava o arquivo e o app mandava
          apenas o texto. */
       const payloads: ShareData[] = [
-        { title: 'Evo Fit', text, files: [file] },
+        { files: [file], text, title: 'Evo Fit' },
+        { files: [file], text },
         { files: [file] },
       ];
       for (const payload of payloads) {

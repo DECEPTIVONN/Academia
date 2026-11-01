@@ -12,8 +12,11 @@
 - `Diretrizes/DESIGN.md` — nova **§12.4**: regra obrigatória de entrada **e saída** animadas para qualquer modal/overlay/sheet/popover/tela condicional, com receita `useModalPresence`/`usePresenceValue` + `.is-closing` e `prefers-reduced-motion`.
 
 ### Changed
-- `src-app/src/features/gamification/ShareModal.tsx` — no app Android o compartilhamento usa o **plugin nativo antes do Web Share** (o WebView não compartilha arquivo pelo `navigator.share`, era o motivo de o Radar Fit e o Treino Concluído saírem só com a mensagem); “Baixar imagem” grava pelo Filesystem no APK; o clone do radar recebeu `width/height` 300×300 explícitos para o html2canvas rasterizar o SVG (antes podia sair vazio); os links de WhatsApp/X/Facebook (que só levam texto) ficam ocultos no APK, onde o share nativo já leva imagem + mensagem.
+- `src-app/src/features/gamification/ShareModal.tsx` — o Radar Fit e o Treino Concluído saíam só com a mensagem porque o WebView do app não compartilha arquivo pelo `navigator.share`. Agora: (a) no **app Android** o plugin nativo roda **antes** do Web Share; (b) na **web/PWA** (inclui Chrome Android) os payloads são tentados em ordem **imagem + texto + título → imagem + texto → imagem** e o erro do Web Share é logado com nome/mensagem; (c) “Baixar imagem” grava pelo Filesystem no APK; (d) o clone do radar recebeu `width/height` 300×300 explícitos para o html2canvas não rasterizar vazio; (e) os links de WhatsApp/X/Facebook (só texto) ficam ocultos no APK, onde o share nativo já leva imagem + mensagem.
 - `Diretrizes/DESIGN.md` (§14 checklist + regra de ouro §15.4) e `Diretrizes/README.md` (**regra 11** do Guia para Agentes de IA) — animação de aparecimento **e** desaparecimento agora é requisito de aceite para toda interface nova; `{open && …}` e `display: none` seco ficam proibidos.
+
+### Fixed
+- **Deploy na Vercel**: o build falhava com `TS2307: Cannot find module '@capacitor/share' / '@capacitor/filesystem'` porque os plugins estavam apenas na raiz e o Vercel instala/compila só `src-app`. `@capacitor/share`, `@capacitor/filesystem` e `@capacitor/core@8.4.2` (pinado na versão do runtime Android) passaram a ser dependências de `src-app/package.json`.
 
 ### Verificado
 - `npx tsc -b` (src-app): OK.

@@ -156,9 +156,12 @@ export async function shareNative(data: NativeSharePayload): Promise<NativeShare
     await navigator.share(data);
     return 'shared';
   } catch (err) {
-    const e = err as { name?: string };
+    const e = err as { name?: string; message?: string };
     if (e?.name === 'AbortError') return 'cancelled';
-    console.warn('[shareNative]', err);
+    /* v4.59.0 — loga nome+mensagem: no Android é comum o share de arquivo
+       recusar o combo (NotSupportedError/TypeError) e aí o chamador tenta o
+       próximo payload (imagem sem texto) antes de cair no texto. */
+    console.warn('[shareNative]', e?.name ?? '', e?.message ?? '', err);
     return 'error';
   }
 }
