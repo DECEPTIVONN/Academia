@@ -514,7 +514,14 @@
         "purpose": "Plano de upgrade do banco de dados local (LocalStorage schemas). Descreve migrações de dados e versioning."
       },
       {
-        "file": "Planos/Progressão/XP.md",
+        "file": "Planos/Noticiacoes.md",
+        "purpose": "Guia operacional das notificações: ordem das migrações, geração das chaves VAPID e do CRON_SECRET, variáveis na Vercel, agendamento dos endpoints de push e expurgo, verificação e testes."
+      },  {
+   "file": "Planos/Modernização.md",
+   "purpose": "Plano (para outro projeto de mesma stack legada) de migração HTML/CSS/JS vanilla para React + Vite com design idêntico: congelamento em Legacy/, scaffolding do src-app, espelho de CSS, assets, shell, fatiamento do JS por feature, protocolo de paridade visual, PWA completo (manifest, precache, runtime cache e armadilhas do Workbox), deploy na Vercel e exclusão de Supabase/OAuth desta fase."
+  },
+  {
+   "file": "Planos/Progressão/XP.md",
         "purpose": "Tabela de progressão e fórmulas do sistema de XP e níveis."
       },
       {
@@ -564,7 +571,7 @@
       },
       {
         "file": "src-app/src/main.tsx",
-        "purpose": "Importa CSS na ordem legacy → globals → design-tokens → shell.css (último, v4.6.0 — vence empates com CSS legado), dispara bootstrap() e renderiza <App/> em StrictMode. v4.4.0: initPwaInstall() + initAutoFullscreen() são chamados antes do render (captura do beforeinstallprompt e tela cheia automática no primeiro gesto); v4.18.0-music: initBackgroundMusic() também é chamado antes do render (música de fundo MAIN.mp3 — aplica prefs e arma autoplay no primeiro gesto); v4.19.0-music: initAudioEngine() roda ANTES de initBackgroundMusic() e chama claimMusicPlayback() (o motor multi-contexto assume a reprodução; o módulo v4.18 fica só com prefs — sem áudio duplicado). v4.16.0-boot-resilience: apos o createRoot, markReady() (via window.__academiaBoot) quando o root tem filhos e, se houver erro de render na montagem, BootErrorBoundary captura e exibe o overlay de boot do shell com o diagnostic (antes: #root vazio = tela preta)."
+        "purpose": "Importa CSS na ordem legacy → globals → design-tokens → shell.css → modal-motion.css → mobile-fit.css (o ÚLTIMO: só media queries de telas estreitas, para vencer a cascata legada), dispara bootstrap() e renderiza <App/> em StrictMode. v4.4.0: initPwaInstall() + initAutoFullscreen() são chamados antes do render (captura do beforeinstallprompt e tela cheia automática no primeiro gesto); v4.18.0-music: initBackgroundMusic() também é chamado antes do render (música de fundo MAIN.mp3 — aplica prefs e arma autoplay no primeiro gesto); v4.19.0-music: initAudioEngine() roda ANTES de initBackgroundMusic() e chama claimMusicPlayback() (o motor multi-contexto assume a reprodução; o módulo v4.18 fica só com prefs — sem áudio duplicado). v4.16.0-boot-resilience: apos o createRoot, markReady() (via window.__academiaBoot) quando o root tem filhos e, se houver erro de render na montagem, BootErrorBoundary captura e exibe o overlay de boot do shell com o diagnostic (antes: #root vazio = tela preta)."
       },
       {
         "file": "src-app/src/App.tsx",
@@ -989,7 +996,8 @@
       "src-app/public/vendor/ — fonts.css, fonts/ (24), fontawesome.min.css e webfonts/ (6), copiados de www/vendor/ para manter offline-first."
     ],
     "styles": [
-      "src-app/src/styles/legacy.css: agregador @import do CSS legado espelhado (ordem idêntica ao index.html legado: 1-core → 2-modals → 3-foco-badges → 4-gamificacao → 5-cards → 6-maestria → 7-nav-icons → secoes/*).",
+      "src-app/src/styles/mobile-fit.css: ajuste responsivo de telas estreitas (≤600/430/360 px) importado por último em main.tsx: cronômetro global compacto e liberação do título no Modo Foco (via :has), rodapé de métricas da Minha Ficha sem estouro (min-width 0), cards do deck com tipografia fluida e nome em 2 linhas no modo royale, sub-abas sem corte, cabeçalho da ficha com quebra de linha e Modo Foco com espaçamentos menores.",
+ "src-app/src/styles/legacy.css: agregador @import do CSS legado espelhado (ordem idêntica ao index.html legado: 1-core → 2-modals → 3-foco-badges → 4-gamificacao → 5-cards → 6-maestria → 7-nav-icons → secoes/*).",
       "src-app/src/features/training/progresso.css: seções novas da aba Progresso (.prog-*: cabeçalho sem botão +, pontuação de força, cards de Atividade, heatmap anual de séries, tendências, corpo, conquistas e o dropdown escuro .prog-select). O heatmap distribui as semanas do ANO INTEIRO em colunas `1fr` (12 meses sempre visíveis, sem rolagem horizontal; rótulos sem overflow oculto) e usa células em proporção 1:2 (mais altas verticalmente); `.progresso-grid > * { min-width: 0 }` impede que qualquer filho estique o track do grid (regra em 2-modals.css).",
       "src-app/src/features/training/ofensivas.css: Central de Ofensivas (.of-*) — tela cheia, z-index 900.",
       "src-app/src/features/training/metricas-corporais.css: métricas corporais e comparar métricas (.bm-*) — tela cheia, z-index 900.",

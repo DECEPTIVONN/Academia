@@ -98,7 +98,9 @@ create or replace function public.global_monthly_ranking(
   p_limit  integer default 50
 )
 returns table (
-  position      bigint,
+  -- `position` é palavra reservada no Postgres: precisa das aspas duplas em
+  -- TODAS as referências (aqui, no alias do row_number e no order by).
+  "position"    bigint,
   id            uuid,
   username      text,
   display_name  text,
@@ -116,7 +118,7 @@ stable
 as $$
   with ranked as (
     select
-      row_number() over (order by p.monthly_xp desc, p.updated_at asc) as position,
+      row_number() over (order by p.monthly_xp desc, p.updated_at asc) as "position",
       p.id,
       p.username,
       coalesce(nullif(trim(p.display_name), ''), p.username) as display_name,
@@ -132,7 +134,7 @@ as $$
   )
   select *
     from ranked
-   order by position
+   order by "position"
    limit greatest(1, least(coalesce(p_limit, 50), 100));
 $$;
 
@@ -176,9 +178,12 @@ as $$
     end as state,
     coalesce(f.responded_at, f.created_at) as since
   from public.friendships f
+  -- `me` precisa vir ANTES do join: o ON de um JOIN só enxerga as relações
+  -- já presentes no FROM até aquele ponto (referenciar me.uid antes dava
+  -- "missing FROM-clause entry for table me").
+  cross join me
   join public.profiles p
     on p.id = case when f.requester = me.uid then f.addressee else f.requester end
-  cross join me
   where me.uid is not null
     and (f.requester = me.uid or f.addressee = me.uid)
   order by

@@ -2,6 +2,37 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.68.1] - 2026-11-02
+
+**Documentado o plano de modernização para o outro site que ainda usa HTML/CSS/JS vanilla.**
+
+### Added
+- `Planos/Modernização.md` — receita faseada (inventário → congelamento em `Legacy/` → scaffolding `src-app` → espelho de CSS → assets → shell → fatiamento do JS por feature → paridade visual em 7 viewports → PWA → deploy → docs), com regras invioláveis de design idêntico, instruções completas de PWA (manifest, precache enxuto, `runtimeCaching`, `beforeinstallprompt`, iOS, teste offline) e a lista de armadilhas do Workbox já enfrentadas aqui; Supabase/OAuth ficam de fora com os pontos de extensão preparados.
+
+### Changed
+- `Diretrizes/system_map.json` — plano registrado em `plans`.
+
+### Verificação
+- `npm run lint:docs` OK (caminho e propósito do novo plano validados).
+
+---
+
+## [v4.68.0] - 2026-11-02
+
+**Layout deixa de estourar em telas estreitas (A54 ≈ 384–412 px, Poco F7 ≈ 412–430 px): rodapé de métricas, cards do deck, sub-abas e cronômetro global se ajustam entre 360 e 430 px.**
+
+### Added
+- `src-app/src/styles/mobile-fit.css` — folha só de media queries (600/430/360 px), sem tocar em telas largas: (1) `.global-timer` compacto no celular e, com o Modo Foco aberto, reposicionado via `body:has(#modalFocus)` para o título não ficar coberto; (2) `.deck-footer`/`.footer-stat` com `min-width: 0` e espaçamentos menores — os widgets de Volume, Maestria e Cardio tinham `min-width: 140px` cada e estouravam a largura (~508 px) cortando o CARDIO à direita; (3) cards do deck com tipografia fluida (`clamp`), `deck-card-meta-row` com quebra de linha (fim do “Carga: Peso do / Corpo” em três pedaços) e nome em 2 linhas no modo royale; (4) prévia do Início com nome em até 2 linhas no lugar das reticências; (5) sub-abas PERSONALIZAR/MINHA FICHA sem corte à direita; (6) cabeçalho da ficha com `flex-wrap` nos controles; (7) Modo Foco com paddings, título e barras de volume proporcionais; (8) ajustes extras em ≤360 px.
+
+### Changed
+- `src-app/src/main.tsx` — importa `styles/mobile-fit.css` por **último** (depois de `shell.css` e `modal-motion.css`), para vencer a cascata legada sem espalhar `!important`.
+
+### Verificação
+- `npm --prefix src-app run build` OK e as regras novas presentes no CSS gerado (`assets/*.css`).
+- Sem verificação visual em aparelho nesta rodada: as correções atacam causas de estouro medidas no CSS (min-width, width 100% + padding, nowrap) e o clearance do cronômetro por `:has`.
+
+---
+
 ## [v4.67.0] - 2026-11-01
 
 **Notificações saem do navegador: push real com VAPID, Mensagens alimentadas por eventos reais, desativação de conta com 30 dias de carência e login por QR de uso único.**
@@ -25,13 +56,18 @@
 - `App.tsx` — monta `<PushSync />` (sincronização da assinatura) e `<RealEventsFeed />` (eventos → Mensagens).
 - `MessagesModal`/`InicioMenuModal`: CSS novo para não lidas (`.is-unread`), `.msg-badge`, `.msg-empty`, `.msg-foot`, `.msg-action`, tons `--achievement`/`--league`/`--account` e `.inicio-menu__badge`.
 
+### Fixed
+- `supabase/migrations/20261101_social_ranking_friends.sql` — a coluna `position` é **palavra reservada** no Postgres: `returns table (position bigint, …)` abortava com `42601: syntax error at or near "position"` e, como o SQL Editor executa o script em **uma transação**, nada da migração era aplicado. Agora a coluna aparece entre aspas (`"position"`) no `RETURNS TABLE`, no alias do `row_number()` e no `ORDER BY`. O nome devolvido ao cliente continua `position`, então **nenhuma mudança no app**.
+- `supabase/migrations/20261101_social_ranking_friends.sql` — `friends_overview` referenciava `me.uid` no `ON` do join antes de `cross join me` (`42P01: missing FROM-clause entry for table "me"`, pois o `ON` só enxerga as relações já presentes no `FROM`). O `cross join me` passou para antes do `join public.profiles`.
+
 ### Configuração necessária (fora do código)
 - Vercel → Environment Variables: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `CRON_SECRET`.
 - Agendar `GET /api/push-dispatch?action=cron` a cada 5–15 min (Vercel Cron no plano Pro ou agendador externo, que é o necessário no Hobby) e `GET /api/account-purge?action=cron` ao menos 1× por dia, sempre com `Authorization: Bearer $CRON_SECRET`.
+- Passo a passo completo (migração pendente, geração das chaves, cadastro na Vercel, agendadores, verificação com `curl`, testes de push/pareamento/expurgo e problemas comuns) em `Planos/Noticiacoes.md`.
 
 ### Verificação
 - `npx tsc -b` sem erros · `npx oxlint src` 0 erros · `npm run build` OK · `npm run lint:docs` OK.
-- Push e expurgo não foram executados contra o Supabase real (faltam as chaves VAPID e a migração aplicada); o pareamento de uso único depende da migração.
+- Push e expurgo não foram executados contra o Supabase real (faltam as chaves VAPID e o agendador). No projeto Supabase, `20261020` e `20261102` foram aplicadas; `20261101` segue pendente (rode o arquivo corrigido).
 
 ---
 
