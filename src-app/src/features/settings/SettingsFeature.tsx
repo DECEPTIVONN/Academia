@@ -64,7 +64,6 @@ import {
   setMusicEnabled,
   setMusicVolume,
 } from '@/lib/background-music';
-import { WALL_PRESETS } from '@/features/lock/lock-wallpapers';
 import {
   getCollectionCardsMode,
   getDistanceUnit,
@@ -117,7 +116,6 @@ import {
 } from '@/features/lock/lock-store';
 import type { HubScreen, HubTile } from './HubShell';
 import { SyncSettingsPanel } from '@/features/sync/SyncSettingsPanel';
-import { ScreensCustomizationPanel } from '@/features/sync/ScreensCustomizationPanel';
 import { ConnectedDevices } from '@/features/sync/ConnectedDevices';
 import {
   cancelAccountDeletion,
@@ -495,13 +493,6 @@ const SvgFingerprint = (
   </svg>
 );
 
-const SvgSmartphone = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-    <rect x="7" y="2" width="10" height="20" rx="2" ry="2" />
-    <line x1="12" y1="18" x2="12.01" y2="18" />
-  </svg>
-);
-
 const SvgLaptop = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
     <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9" />
@@ -515,17 +506,12 @@ const SvgPlay = (
   </svg>
 );
 
-/* WALL_PRESETS agora vem de @/features/lock/lock-wallpapers (v4.6.0-shell —
-   fonte única compartilhada com a tela de bloqueio). */
-
 const LOCK_PREF_MAP = {
   enabled: 'appLockEnabled',
   biometric: 'appLockBiometric',
   /* v4.13.0 — solicitação automática da biometria (default 'true') */
   bioAuto: 'appLockBioAuto',
   timeout: 'appLockTimeout',
-  wallV: 'lockWallVertical',
-  wallH: 'lockWallHorizontal',
   reminder: 'workoutReminder',
   reminderTime: 'workoutReminderTime',
 } as const;
@@ -646,8 +632,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     /* Ausente = 'true' — mantém o comportamento atual (auto ao entrar). */
     bioAuto: readLS(PREF_KEYS.appLockBioAuto) === 'false' ? 'false' : 'true',
     timeout: readLS(PREF_KEYS.appLockTimeout) || '300',
-    wallV: readLS(PREF_KEYS.lockWallVertical) || 'neon',
-    wallH: readLS(PREF_KEYS.lockWallHorizontal) || 'grafite',
     reminder: readLS(PREF_KEYS.workoutReminder) === 'true' ? 'true' : 'false',
     reminderTime: readLS(PREF_KEYS.workoutReminderTime) || '18:00',
   }));
@@ -1157,38 +1141,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     }
   };
 
-  const wallCard = (kind: 'v' | 'h') => {
-    const key: LockKey = kind === 'v' ? 'wallV' : 'wallH';
-    const current = WALL_PRESETS.find((p) => p.id === lock[key]) ?? WALL_PRESETS[0];
-    return (
-      <div className="set-wall-card">
-        <div className="set-wall-card__head">
-          <span className="set-wall-card__title">
-            {kind === 'v' ? SvgSmartphone : SvgLaptop}
-            {kind === 'v' ? 'Vertical (9:16)' : 'Horizontal (16:9)'}
-          </span>
-        </div>
-        <div
-          className={`set-wall-preview set-wall-preview--${kind}`}
-          style={{ background: current.bg }}
-        />
-        <div className="set-wall-presets">
-          {WALL_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              title={p.name}
-              aria-label={`Wallpaper ${p.name}`}
-              className={`set-wall-dot ${lock[key] === p.id ? 'set-wall-dot--active' : ''}`}
-              style={{ background: p.bg }}
-              onClick={() => updateLock(key, p.id)}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   /* ── Telas: Sua Conta (grupo) ── */
 
   const contaTiles: HubTile[] = [
@@ -1254,12 +1206,12 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     {
       id: 'seguranca',
       title: 'Segurança e Acesso à Conta',
-      desc: 'Bloqueio do app, biometria, inatividade e wallpaper',
+      desc: 'Bloqueio do app, biometria e inatividade',
       icon: SvgShield,
       badge: lock.enabled === 'true' && pinLen > 0 ? 'Bloqueio Ativo' : 'Desativado',
       keywords: [
         'seguranca', 'bloqueio', 'senha', 'pin', 'biometria', 'digital',
-        'impressao', 'inatividade', 'wallpaper', 'tela de bloqueio',
+        'impressao', 'inatividade', 'tela de bloqueio',
         'dispositivos', 'sessoes', 'aparelhos', 'privacidade',
       ],
     },
@@ -2199,93 +2151,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             )}
           </section>
 
-          {/* Card 6: Wallpapers com Upload/Remover/URL (reference) */}
-          <section className="set-card">
-            <div className="set-card__head">
-              <div>
-                <div className="set-card__eyebrow">PERSONALIZAÇÃO</div>
-                <h3 className="set-card__title">Papéis de Parede da Tela de Bloqueio</h3>
-                <p className="set-card__desc">
-                  Escolha o visual da tela de bloqueio em orientação vertical e horizontal.
-                </p>
-              </div>
-              <span style={{ fontSize: 9, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
-                Desktop & Mobile
-              </span>
-            </div>
-            <div className="set-wall-grid">
-              {wallCard('v')}
-              {wallCard('h')}
-            </div>
-            {/* v4.9.3-settings — Upload/Remover/URL por orientação (reference) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 16 }}>
-              {(['h', 'v'] as const).map((kind) => {
-                const storageKey = kind === 'v' ? 'mbc_lock_mobile' : 'mbc_lock_desktop';
-                const customVal = localStorage.getItem(storageKey) || '';
-                return (
-                  <div key={kind} style={{ padding: 12, background: 'rgba(24, 24, 27, 0.4)', border: '1px solid rgba(63, 63, 70, 0.8)', borderRadius: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <span style={{ fontSize: 10, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                      {kind === 'v' ? 'Celular / Mobile (Vertical)' : 'Computador / Desktop (Horizontal)'}
-                    </span>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <label style={{ flex: 1, padding: '6px 12px', background: 'rgba(39, 39, 42, 0.8)', border: '1px solid rgba(63, 63, 70, 0.6)', borderRadius: 8, textAlign: 'center', fontSize: 10, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                        {SvgUpload}
-                        <span>Upload</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          style={{ display: 'none' }}
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) {
-                              const r = new FileReader();
-                              r.onloadend = () => {
-                                localStorage.setItem(storageKey, r.result as string);
-                                lockPrefsChanged();
-                                showToast('Imagem aplicada!', 'success');
-                              };
-                              r.readAsDataURL(f);
-                            }
-                          }}
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          /* v4.45.0 — marcador vazio: a remoção também precisa
-                             sincronizar (chave apagada = "nunca definida"). */
-                          localStorage.setItem(storageKey, '');
-                          lockPrefsChanged();
-                          showToast('Imagem removida.', 'info');
-                        }}
-                        style={{ padding: '6px 12px', background: 'rgba(127, 29, 29, 0.2)', border: '1px solid rgba(127, 29, 29, 0.3)', color: '#f87171', borderRadius: 8, fontSize: 10, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, cursor: 'pointer' }}
-                      >
-                        Remover
-                      </button>
-                    </div>
-                    <input
-                      type="url"
-                      className="set-input"
-                      placeholder="URL da imagem..."
-                      defaultValue={customVal}
-                      onBlur={(e) => {
-                        const v = e.target.value.trim();
-                        if (v) {
-                          localStorage.setItem(storageKey, v);
-                          lockPrefsChanged();
-                          showToast('URL aplicada!', 'success');
-                        }
-                      }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <p className="set-note" style={{ marginTop: 10 }}>
-              Aplicado na próxima tela de bloqueio, conforme a orientação do dispositivo.
-            </p>
-          </section>
-
           {/* Card 7 (v4.65.0): login por QR em outro aparelho */}
           <section className="set-card">
             <div className="set-card__head">
@@ -2950,19 +2815,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
           </div>
         </section>
 
-        {/* v4.10.0 — Telas Personalizadas movida para dentro de Cores */}
-        <section className="set-card" style={{ marginTop: 14 }}>
-          <div className="set-card__head">
-            <div>
-              <div className="set-card__eyebrow">TELAS PERSONALIZADAS</div>
-              <h3 className="set-card__title">Imagens de Bloqueio e Splash</h3>
-              <p className="set-card__desc">
-                Personalize a tela de bloqueio e a splash de carregamento.
-              </p>
-            </div>
-          </div>
-          <ScreensCustomizationPanel />
-        </section>
         </>
       ),
     },

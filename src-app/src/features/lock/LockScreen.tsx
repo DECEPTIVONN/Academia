@@ -2,8 +2,7 @@
  * LockScreen.tsx — Tela de Bloqueio do App (v4.6.0-shell / v4.9.0-sync / v4.9.3-lock)
  *
  * Port fiel do LockScreenStandalone.tsx com as 17 imagens de referência:
- *   • wallpaper conforme orientação (prefs lockWallVertical/lockWallHorizontal,
- *     presets de lock-wallpapers.ts) + imagem custom (mbc_lock_*) + shade;
+ *   • fundo com a arte padrão por orientação (screen-defaults.ts) + shade;
  *   • REGRA DE OURO UX: modo biometria-only até 3 falhas (esconde senha,
  *     auto-trigger 400ms, contador "Tentativa X de 3", botão "Tentar novamente");
  *   • pill badge dinâmico (fingerprint vs shield) — "DESBLOQUEIO BIOMÉTRICO ATIVO"
@@ -18,13 +17,12 @@
  *   • fundo do app fica inalcançável: overlay fixed z-index 1200.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PREF_KEYS, readLS } from '@/features/profile/profile-data';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
 import { defaultScreenImage, screenBackgroundStyle } from '@/lib/screen-defaults';
 import { useModalPresence } from '@/hooks/useModalPresence';
-import { resolveWallpaper } from './lock-wallpapers';
 import { clearPin, isBiometricEnabled, useLockStore, verifyBiometric, verifyPin } from './lock-store';
 import './lock.css';
 
@@ -115,19 +113,6 @@ const SvgInfo = (
   </svg>
 );
 
-/* v4.9.0-sync — imagem personalizada da tela de bloqueio
-   (Configurações → Telas Personalizadas; usa a da orientação atual com
-   fallback para a outra) */
-function readCustomLockBg(portrait: boolean): string {
-  try {
-    const main = localStorage.getItem(portrait ? 'mbc_lock_mobile' : 'mbc_lock_desktop') || '';
-    if (main) return main;
-    return localStorage.getItem(portrait ? 'mbc_lock_desktop' : 'mbc_lock_mobile') || '';
-  } catch {
-    return '';
-  }
-}
-
 function useOrientationPortrait(): boolean {
   const [portrait, setPortrait] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(orientation: portrait)').matches
@@ -155,37 +140,6 @@ export const LockScreen: React.FC = () => {
   const [bioFailedAttempts, setBioFailedAttempts] = useState(0);
   const hasTriggeredBioRef = useRef(false);
 
-  /* Prefs de wallpaper (reagem a mudanças em sessão) */
-  const [wallId, setWallId] = useState<string>(() =>
-    portrait
-      ? readLS(PREF_KEYS.lockWallVertical) || 'neon'
-      : readLS(PREF_KEYS.lockWallHorizontal) || 'grafite'
-  );
-  /* v4.53.0 — só considera o preset quando o usuário ESCOLHEU um wallpaper.
-     Sem escolha, entra a imagem padrão (LoadingVertical/LoadingHorizontal). */
-  const [wallExplicit, setWallExplicit] = useState<boolean>(() =>
-    Boolean(readLS(portrait ? PREF_KEYS.lockWallVertical : PREF_KEYS.lockWallHorizontal))
-  );
-  /* v4.9.0-sync — imagem personalizada (mbc_lock_desktop/mobile) */
-  const [customBg, setCustomBg] = useState<string>(() => readCustomLockBg(portrait));
-  useEffect(() => {
-    const sync = () => {
-      setWallId(
-        portrait
-          ? readLS(PREF_KEYS.lockWallVertical) || 'neon'
-          : readLS(PREF_KEYS.lockWallHorizontal) || 'grafite'
-      );
-      setWallExplicit(
-        Boolean(readLS(portrait ? PREF_KEYS.lockWallVertical : PREF_KEYS.lockWallHorizontal))
-      );
-      setCustomBg(readCustomLockBg(portrait));
-    };
-    sync();
-    window.addEventListener('academia:lock-prefs-changed', sync);
-    return () => window.removeEventListener('academia:lock-prefs-changed', sync);
-  }, [portrait]);
-
-  const wall = useMemo(() => resolveWallpaper(wallId), [wallId]);
   const biometric = isBiometricEnabled();
   /* v4.13.0 — pref "Solicitação da Digital": 'true' (padrão/ausente) pede a
      biometria sozinha ao travar/entrar; 'false' pede só no botão. */
@@ -288,8 +242,8 @@ export const LockScreen: React.FC = () => {
   if (!mounted) return null;
 
   const nome = (profile?.customization?.nome || '').trim();
-  /* Fundo: imagem custom > imagem padrão (sem preset escolhido) > preset. */
-  const lockBg = customBg || (!wallExplicit ? defaultScreenImage(portrait) : '');
+  /* Fundo: sempre a arte padrão da orientação — sem personalização. */
+  const lockBg = defaultScreenImage(portrait);
 
   return (
     <div
@@ -302,16 +256,10 @@ export const LockScreen: React.FC = () => {
     >
       <div
         className="lock__wall"
-        style={
-          lockBg
-            ? {
-                /* v4.56.20 — arte padrão em `contain` (fundo preto) para não
-                   cortar o personagem; imagem personalizada em `cover`. */
-                ...screenBackgroundStyle(lockBg, Boolean(customBg)),
-                filter: 'brightness(0.78) saturate(1.05)',
-              }
-            : { background: wall.bg }
-        }
+        style={{
+          ...screenBackgroundStyle(lockBg),
+          filter: 'brightness(0.78) saturate(1.05)',
+        }}
       />
       <div className="lock__shade" />
 

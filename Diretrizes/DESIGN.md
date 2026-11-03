@@ -976,16 +976,16 @@ Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) p
 - **Padrões:** player Flexível (painel arrastável) / Fixo (pastilha contador), 6 posições (`PLAYER_POSITIONS`), visibilidade Sempre ativo / Só após trocar, slider de segundos (3–30s), persistência via `player-prefs.ts` + evento `academia:player-prefs-changed`. Contextos de áudio: main (MAIN.mp3 loop) / workout (Black Panther loop) / result (RESULT.mp3 1x) / missions (Revenger Phoenix loop) / workout-user (playlist do usuário).
 
 ### 16.2 Social (Amigos / Ranking)
-- **Componentes:** `features/social/SocialFeature.tsx`, `features/social/LigasFeature.tsx`, `features/social/social-cloud.ts`, `features/social/useSocialCloud.ts`, `features/social/OverlayShell.tsx`, `features/social/MemberPopover.tsx`, `features/social/PlayerProfileModal.tsx`, `features/social/player-profile-data.ts`, `features/social/RankingsOverlay.tsx`, `components/ExitConfirmDialog.tsx`
+- **Componentes:** `features/social/SocialFeature.tsx`, `features/social/LigasFeature.tsx`, `features/social/{GuildPanel,GuildEmblem,guild-data}.tsx`, `features/social/social-cloud.ts`, `features/social/useSocialCloud.ts`, `features/social/OverlayShell.tsx`, `features/social/MemberPopover.tsx`, `features/social/PlayerProfileModal.tsx`, `features/social/player-profile-data.ts`, `features/social/{RankingsOverlay,RankingsSimulator}.tsx`, `components/ExitConfirmDialog.tsx`
 - **CSS:** `features/social/social.css`, `features/social/rankings.css`, `features/social/guild.css` (casca de overlays compartilhados), `features/social/player-profile.css`
 - **Classes:** `.soc-*` (listas/perfil), `.ligas-*` (banner e botões), `.rk-*` (Rankings), `.guild-overlay*`/`.guild-profile*` (overlay e popover compartilhados), `.player-profile*` (perfil do jogador)
-- **Padrões:** overlays fullscreen via `createPortal(document.body)`, sempre com entrada/saída animada (`useModalPresence` + `.is-closing`). **Sem dados fictícios:** o ranking global (`RankingsOverlay` e a aba Ranking) vem de `global_monthly_ranking` e usa a janela da liga mensal (dia 1º 06:00 → último dia 21:00) com XP de treinos concluídos no mês; o cachê de XP é publicado pela própria conta (`publish_monthly_xp`). Amigos vêm de `friendships`/`friends_overview` com estados *aceito*, *recebido* e *enviado*; convite por QR/link (`friend-invites.ts`) e busca por @username (`friend-search.ts`) continuam funcionando offline. Tocar num jogador abre `MemberPopover` (avatar, tag copiável, último acesso, ofensiva) e **Ver perfil** abre `PlayerProfileModal` com XP total, **XP do mês**, posição no ranking, nível e ofensiva; **último treino e estatísticas detalhadas só aparecem para o próprio jogador** (dados privados do aparelho). Guildas, chat de guilda e ligas simuladas foram removidos (v4.66.0). Sair usa um **diálogo de confirmação** central (`.guild-overlay--dialog`), o mesmo desenho do `ExitConfirmDialog` na saída do site pelo histórico.
+- **Padrões:** overlays fullscreen via `createPortal(document.body)`, sempre com entrada/saída animada (`useModalPresence` + `.is-closing`). A aba tem três sub-abas no desenho anterior: **Amigos** (banner da guilda no topo, Aliança com amigos on-line + classificação, linhas com posição em selo redondo, avatar de 32px, nível e XP), **Guilda** (banner da guilda abre os detalhes em modal; chat, entrada/criação em `GuildPanel`) e **Liga** (semanal/mensal com Caminho das Divisões e classificação). Sair usa um **diálogo de confirmação** central (`.guild-overlay--dialog`), o mesmo desenho do `ExitConfirmDialog` na saída do site pelo histórico. O **XP real dos treinos concluídos** entra na classificação das ligas: `weeklyXpFromHistory`/`monthlyXpFromHistory` somam 10 XP por treino na janela da liga. O ranking global real (`RankingsOverlay`) vem de `global_monthly_ranking` (janela mensal, XP publicado pela própria conta via `publish_monthly_xp`); os amigos vêm de `friendships`/`friends_overview` e do QR/link local (`friend-invites.ts`). **Modo desenvolvedor:** o menu do Início abre `RankingsSimulator` — só o simulador (jogadores/clãs/amigos de exemplo), sem misturar com o ranking real; fora dele, o overlay real é o único exibido.
 
 ### 16.3 Bloqueio (Lock)
 - **Componentes:** `features/lock/LockScreen.tsx`
 - **CSS:** `features/lock/lock.css` (z-index 1200)
 - **Classes:** `.lock`, `.lock__*`
-- **Padrões:** PIN alfanumérico 4–6 dígitos (hash djb2, nunca cru), biometria fake 1s, inatividade chips 1/2/5/10/15/30 min + Sempre Logado, wallpapers neon/grafite/violeta/magenta por orientação (`lock-wallpapers.ts`), badge "Bloqueio Ativo" quando enabled + pinLen>0. Modo "Automática"/"Só no Botão" persiste via `LOCK_PREF_MAP.bioAuto`.
+- **Padrões:** PIN alfanumérico 4–6 dígitos (hash djb2, nunca cru), biometria fake 1s, inatividade chips 1/2/5/10/15/30 min + Sempre Logado, fundo com a arte padrão por orientação (`screen-defaults.ts`), badge "Bloqueio Ativo" quando enabled + pinLen>0. Modo "Automática"/"Só no Botão" persiste via `LOCK_PREF_MAP.bioAuto`.
 
 ### 16.4 Busca Global
 - **Componentes:** `features/search/GlobalSearchOverlay.tsx`
@@ -1005,7 +1005,7 @@ Esta seção cataloga os blueprints de marcação (HTML) e estilização (CSS) p
 - **Padrões:** overlay de perfil "Player Card" (Call of Duty style): avatar circular, moldura, banner, títulos desbloqueáveis, emblemas animados. Monta via `createPortal(document.body)`.
 
 ### 16.7 Sync / Conta
-- **Componentes:** `features/sync/SyncSettingsPanel.tsx`, `features/sync/ConnectedDevices.tsx`, `features/sync/ScreensCustomizationPanel.tsx`, `features/sync/AppLoadingScreen.tsx`, `features/sync/RemoteSyncToast.tsx`
+- **Componentes:** `features/sync/SyncSettingsPanel.tsx`, `features/sync/ConnectedDevices.tsx`, `features/sync/RemoteSyncToast.tsx`
 - **CSS:** `features/sync/sync.css`
 - **Classes:** `.sync-*`, `.connected-devices`
 - **Padrões:** sync multi-dispositivo (Supabase), fila offline (IndexedDB), push/pull (fichas, histórico, maestria, prefs), resolução de conflitos last-write-wins por `updatedAt`, registro de dispositivo (deviceId, nome, platform), preferências cross-device.
@@ -1097,7 +1097,7 @@ Caminhos das colunas **Componente/CSS** relativos à raiz do repositório. CSS d
 | **Busca global** | `features/search/GlobalSearchOverlay.tsx` | `features/search/search.css` | Ctrl/Cmd + K, `.gs-*` |
 | **Social / Ligas** | `features/social/SocialFeature.tsx`, `features/social/LigasOverlay.tsx` | `features/social/social.css` | `#social-*`, `.sl-*` |
 | **Fit ID** | `features/dashboard/FitIdOverlay.tsx` | `features/dashboard/fitid-overlay.css` | `.fitid-*` |
-| **Sync / Conta** | `features/sync/SyncSettingsPanel.tsx`, `features/sync/ConnectedDevices.tsx`, `features/sync/ScreensCustomizationPanel.tsx`, `core/auth/account-deletion.ts` | `features/sync/sync.css` | `.sync-*`, `.connected-devices` |
+| **Sync / Conta** | `features/sync/SyncSettingsPanel.tsx`, `features/sync/ConnectedDevices.tsx`, `core/auth/account-deletion.ts` | `features/sync/sync.css` | `.sync-*`, `.connected-devices` |
 | **Notificações / Push** | `features/notifications/{scheduler,notification-center,push,messages}.ts`, `api/push-dispatch.js`, `public/push-sw.js` | — | `academia_push_endpoint_v1`, `academia_notification_log_v1` |
 | **Mensagens da Caixa** | `features/dashboard/MessagesModal.tsx`, `features/notifications/{inbox,useInbox,RealEventsFeed}.*` | `features/dashboard/messages-modal.css` | `.msg-*`, `.msg-card.is-unread`, `.inicio-menu__badge` |
 

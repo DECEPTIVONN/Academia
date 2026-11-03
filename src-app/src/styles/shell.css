@@ -1226,6 +1226,17 @@
   color: var(--text-tertiary);
   white-space: nowrap;
 }
+.mdw__streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--primary-light);
+}
+.mdw__streak svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+}
 
 /* Lista de atalhos */
 .mdw__nav {

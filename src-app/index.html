@@ -26,7 +26,7 @@
     <!-- Material Symbols segue CDN (mesmo comportamento da versão offline) -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
 
-    <!-- v4.9.0-sync — splash com imagem personalizada (mbc_loading_*):
+    <!-- Splash com a arte padrão (LoadingVertical/LoadingHorizontal):
          imagem em tela cheia + barra de progresso no rodapé. v4.27: o logo
          EVO FIT / WORKOUT TRACKER permanece visível (só a saudação é oculta).
          v4.28: o logo fica CENTRADO na tela (como no splash padrão) e a barra
@@ -377,26 +377,19 @@
 
           try {
             var portrait = window.innerHeight > window.innerWidth;
-            /* v4.53.0 — imagem PADRÃO da splash: mobile/retrato →
+            /* v4.70.0 — a splash usa SEMPRE a arte padrão: mobile/retrato →
                LoadingVertical.png, desktop/paisagem → LoadingHorizontal.png
-               (src/assets, orientações conferidas). Uma imagem personalizada
-               (mbc_loading_*) continua tendo prioridade.
-               v4.56.20 — a arte padrão usa CONTAIN sobre fundo preto: com
-               cover o personagem era cortado/ampliado (principalmente no
-               retrato); a arte já tem fundo preto, então as faixas se fundem.
-               Imagem personalizada continua em cover (foto de tela cheia). */
+               (src/assets). CONTAIN sobre fundo preto para não cortar/ampliar
+               o personagem (a arte já tem fundo preto). Personalização de
+               imagem removida do produto. */
             var defaultEl = document.getElementById(
               portrait ? 'splashDefaultPortrait' : 'splashDefaultLandscape'
             );
             var defaultBg = defaultEl && defaultEl.src ? defaultEl.src : '';
-            var storedBg =
-              localStorage.getItem(portrait ? 'mbc_loading_vertical' : 'mbc_loading_horizontal') ||
-              localStorage.getItem(portrait ? 'mbc_loading_horizontal' : 'mbc_loading_vertical');
-            var customBg = storedBg || defaultBg;
-            if (customBg) {
+            if (defaultBg) {
               var bgEl = document.getElementById('splashBg');
-              bgEl.style.backgroundImage = 'url("' + customBg + '")';
-              bgEl.style.backgroundSize = storedBg ? 'cover' : 'contain';
+              bgEl.style.backgroundImage = 'url("' + defaultBg + '")';
+              bgEl.style.backgroundSize = 'contain';
               bgEl.style.backgroundPosition = 'center';
               bgEl.style.backgroundRepeat = 'no-repeat';
               bgEl.style.backgroundColor = '#000';

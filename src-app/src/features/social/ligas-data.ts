@@ -95,6 +95,8 @@ export interface FriendItem {
   id: string;
   name: string;
   trophies: number;
+  /** XP conquistado na janela mensal (ranking global). */
+  monthlyXp?: number;
   clan: string | null;
   online: boolean;
   avatarColor: string;

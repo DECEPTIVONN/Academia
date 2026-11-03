@@ -124,7 +124,6 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
             </span>
             <span className="side-hud__id">
               <span className="side-hud__name">{nome}</span>
-              <span className="side-hud__level">Nível {level}</span>
             </span>
           </button>
           <button
@@ -144,9 +143,6 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
             <div className="side-hud__xp-fill" style={{ width: `${xpInLevel}%` }} />
           </div>
           <div className="side-hud__xp-meta">
-            <span>
-              {xpInLevel}/100 XP · {xp} total
-            </span>
             <span className="side-hud__streak" title={`Ofensiva de ${streak} dia(s)`}>
               {SvgFlame}
               {streak}d

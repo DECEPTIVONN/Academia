@@ -2,6 +2,62 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.70.0] - 2026-11-03
+
+**Tela de bloqueio e carregamento passam a usar somente a arte padrão: a personalização de background (presets, upload e URL) saiu do produto.**
+
+### Changed
+- `src-app/src/features/settings/SettingsFeature.tsx` — saíram o card **Papéis de Parede da Tela de Bloqueio** (presets neon/grafite/violeta/magenta), os campos de upload/URL e a seção **Telas Personalizadas** de Configurações → Cores; o texto do tile de Segurança e a busca não falam mais em wallpaper.
+- `src-app/src/features/lock/LockScreen.tsx` — o fundo é sempre `defaultScreenImage(portrait)` (LoadingVertical no retrato, LoadingHorizontal na paisagem) em `contain` sobre preto; os estados de wallpaper e a leitura de `mbc_lock_*` foram removidos, então valores antigos no `localStorage` são ignorados.
+- `src-app/index.html` — a splash não lê mais `mbc_loading_*`: usa sempre `#splashDefaultPortrait`/`#splashDefaultLandscape` em `contain`.
+- `src-app/src/lib/screen-defaults.ts` — `screenBackgroundStyle(image)` não tem mais o parâmetro `custom` e sempre devolve `contain`.
+- `src-app/src/core/sync/sync-manager.ts` — as imagens `mbc_*` saíram do snapshot de sincronização (`CUSTOM_SCREEN_KEYS` removido); snapshots antigos não afetam mais bloqueio/splash.
+- `src-app/src/features/search/search-index.ts` — removida a entrada **Telas Personalizadas** e “wallpaper” do texto de Segurança.
+- Removidos por ficarem sem uso: `src-app/src/features/sync/ScreensCustomizationPanel.tsx`, `src-app/src/features/sync/AppLoadingScreen.tsx` e `src-app/src/features/lock/lock-wallpapers.ts`.
+- `Diretrizes/system_map.json` (versão **4.70.0**) e `Diretrizes/DESIGN.md` (§16.3/§16.7).
+
+### Verificação
+- `npx tsc -b` OK · `npx oxlint src` 0 erros (38 avisos, linha de base) · `npm run build` OK · `npm run lint:docs` OK.
+- Navegador: Configurações (hub e **Segurança**) sem “Papéis de Parede”, “Telas Personalizadas”, upload/URL ou “wallpaper”; com `mbc_lock_mobile`/`mbc_lock_desktop` apontando para uma URL falsa, o bloqueio renderizou `LoadingVertical.png` em `contain` (sem a URL falsa); o `/index.html` servido não contém mais `mbc_loading` e a splash usa `contain`.
+
+## [v4.69.1] - 2026-11-03
+
+**Social sem contadores zerados e sidebar sem número de XP/nível, com a ofensiva no ícone do site.**
+
+### Changed
+- `src-app/src/features/social/LigasFeature.tsx` — a seção **Amigos on-line** só é renderizada quando existe pelo menos um amigo online (sumiu o texto “Nenhum amigo on-line agora.”) e o contador da **Classificação** só aparece com 1+ amigos — nada de selo “0”.
+- `src-app/src/components/DesktopSidebar.tsx` — o cabeçalho deixou de exibir **“Nível N”** e **“N/100 XP · N total”**; a ofensiva continua no `SvgFlame` do site, com os dias (a barra de progresso do nível permanece, sem números).
+- `src-app/src/components/MobileDrawer.tsx` — o emoji 🔥 virou `SvgFlame` (mesmo ícone stroke do site) e saíram “Nível N” e “N XP”; a meta do perfil mostra só a ofensiva. `styles/shell.css` ajusta `.mdw__streak` (inline-flex, acento) e o SVG em 12 px.
+- `Diretrizes/CHANGELOG.md`, `Diretrizes/system_map.json` (versão **4.69.1**).
+
+### Verificação
+- `npx tsc -b` OK · `npx oxlint src` 0 erros (38 avisos, linha de base) · `npm run build` OK · `npm run lint:docs` OK.
+- Navegador 1440×900: `.side-hud__level` ausente, `.side-hud__xp-meta` = “0d” e o SVG da ofensiva presente; Social sem `.soc-friend-group__count` (0) e sem o texto de amigos on-line vazio.
+- Navegador 390×844: drawer aberto com `.mdw__meta` = “0d”, sem 🔥, com o SVG do site e sem “Nível”/“XP” no cabeçalho do perfil.
+
+## [v4.69.0] - 2026-11-03
+
+**Aba Social volta ao desenho anterior: guilda no topo, classificação de amigos e ligas com o XP real dos treinos; o simulador fica restrito ao modo desenvolvedor.**
+
+### Added
+- `src-app/src/features/social/RankingsSimulator.tsx` — overlay de Rankings do **modo desenvolvedor** (abas Jogadores / Clãs / Amigos com o placar de exemplo e os membros da guilda local), sem nenhuma chamada à nuvem. O Início escolhe este overlay quando `isDevMode()` está ativo e o `RankingsOverlay` real quando não está; os dois nunca aparecem juntos.
+- De volta ao projeto (removidos na v4.66.0): `GuildPanel.tsx`, `GuildEmblem.tsx`, `guild-data.ts` e `social-data.ts`, além das funções de liga de `ligas-data.ts` e do desenho anterior de `MemberPopover.tsx`, `PlayerProfileModal.tsx`, `player-profile-data.ts` e `OverlayShell.tsx`.
+
+### Changed
+- `LigasFeature.tsx` — a aba Social voltou a ter **três sub-abas** (Amigos / Guilda / Liga), com o **banner da guilda no topo** (emblema, nome e membros; sem guilda, o cartão “Sem guilda” com o botão Guilda), a Aliança com **Amigos on-line** e **Classificação** no desenho anterior, o chat/detalhes da guilda e as ligas **semanal/mensal** com o Caminho das Divisões.
+- Amigos da classificação agora são os **reais**: aceitos na nuvem (`friends_overview`) + amigos locais de QR/link. Os `INITIAL_FRIENDS` fictícios não voltaram; o rank, o nível e o XP vêm da conta.
+- `social-cloud.ts` — novo `weeklyXpFromHistory` (10 XP por treino concluído na janela semanal). As ligas somam esse XP real ao placar (`leagueState.playerXp + realWeeklyXp` / `+ realMonthlyXp`), então **um treino concluído já aparece na classificação** mesmo sem partida simulada.
+- `ligas-data.ts` / `useSocialCloud.ts` / `friend-invites.ts` — `FriendItem` voltou a ter `clan` e ganhou `monthlyXp`; os mapeamentos da nuvem e do QR/link preenchem `clan: null`.
+- `DashboardFeature.tsx` — o item **Rankings** do menu do Início abre o simulador no modo desenvolvedor e o ranking real fora dele.
+
+### Fixed
+- **Avatar gigante na classificação de amigos** — a imagem do emblema era renderizada sem um contêiner de tamanho (a v4.66 trocou a linha por um wrapper sem dimensões). O desenho anterior foi restaurado com o avatar de 32 px dentro do círculo de 8×8, então a imagem volta ao tamanho certo em qualquer tela.
+- **Rankings do menu do Início** — voltaram a abrir nos dois modos (simulador com o modo dev ativo; ranking real com ele desligado).
+
+### Verificação
+- `npx tsc -b` OK · `npx oxlint src` 0 erros (38 avisos, linha de base) · `npm run build` OK · `npm run lint:docs` OK.
+- Navegador (modo teste, `http://localhost:5199`): Social com “SEM GUILDA” no topo, navegação Amigos/Guilda/Liga e as seções Aliança/Classificação (um amigo local de teste apareceu com o emblema em 26 px dentro do avatar de 32 px, sem a imagem gigante); a sub-aba Liga abriu a Divisão Bronze com o Caminho das Divisões e o botão Simular Partida, e a sub-aba Guilda abriu o estado vazio + “Procure ou forme uma nova guilda!”. Menu do Início → Rankings com `academia_dev_mode=true` abriu as abas Jogadores/Clãs/Amigos com o placar simulado e, com o modo desligado, abriu o ranking real (Jogadores/Amigos, estado vazio honesto sem conta na nuvem).
+
 ## [v4.68.1] - 2026-11-02
 
 **Documentado o plano de modernização para o outro site que ainda usa HTML/CSS/JS vanilla.**

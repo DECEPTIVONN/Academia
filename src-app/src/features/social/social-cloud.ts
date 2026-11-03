@@ -14,7 +14,7 @@
 import { supabase, isSupabaseConfigured } from '@/core/supabase';
 import { getLevel, getStreak, getXp } from '@/core/db/queries';
 import type { WorkoutHistory } from '@/core/db/schema';
-import { monthlyLeagueWindow } from './league-window';
+import { monthlyLeagueWindow, weeklyLeagueWindow } from './league-window';
 
 /* ── Janela do ranking (mensal) ── */
 
@@ -37,6 +37,17 @@ const XP_PER_COMPLETED_DAY = 10;
 /** XP conquistado dentro da janela mensal da liga (mesma pontuação do app). */
 export function monthlyXpFromHistory(history: WorkoutHistory[], now: Date = new Date()): number {
   const { start, end } = monthlyLeagueWindow(now);
+  return history.filter((entry) => {
+    if (!entry.completed) return false;
+    const date = entryDate(entry);
+    if (!date) return false;
+    return date.getTime() >= start.getTime() && date.getTime() <= end.getTime();
+  }).length * XP_PER_COMPLETED_DAY;
+}
+
+/** XP conquistado dentro da janela semanal da liga (10 XP por treino). */
+export function weeklyXpFromHistory(history: WorkoutHistory[], now: Date = new Date()): number {
+  const { start, end } = weeklyLeagueWindow(now);
   return history.filter((entry) => {
     if (!entry.completed) return false;
     const date = entryDate(entry);

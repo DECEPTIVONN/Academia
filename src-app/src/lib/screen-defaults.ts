@@ -9,12 +9,10 @@
  * (Vite gera a URL final). A splash do `index.html` usa as mesmas imagens por
  * meio de `<img>` ocultos (ver o script inline de boot).
  *
- * v4.56.20 — a arte padrão é uma ilustração com fundo PRETO e recorte próprio:
- * exibi-la com `background-size: cover` cortava o personagem (e no retrato
- * chegava a ampliar ~3× em telas 20:9). O padrão da arte usa `contain` sobre
- * fundo preto — nada é cortado nem ampliado em nenhuma proporção. Imagens
- * personalizadas pelo usuário (mbc_loading_*) continuam em `cover`, por serem
- * fotos/wallpapers de tela cheia.
+ * v4.70.0 — a personalização de imagens saiu do produto: as telas de bloqueio
+ * e de carregamento usam SEMPRE esta arte padrão (`contain` sobre fundo preto,
+ * sem cortar nem ampliar o personagem). Valores antigos de `mbc_*` são
+ * ignorados e não há mais upload/URL/preset de fundo.
  */
 
 import loadingVertical from '@/assets/LoadingVertical.png';
@@ -31,16 +29,14 @@ export function defaultScreenImage(portrait: boolean): string {
 /**
  * Estilo de fundo para uma tela de carregamento/bloqueio.
  *
- * `custom` = imagem personalizada do usuário (cover, tela cheia).
- * Sem imagem personalizada, a arte padrão usa `contain` sobre preto para não
- * cortar/ampliar o personagem — o fundo da própria arte já é preto, então as
- * faixas laterais/superiores se fundem com a imagem.
+ * A arte padrão usa `contain` sobre preto para não cortar/ampliar o personagem
+ * — o fundo da própria arte já é preto, então as faixas se fundem com a imagem.
  */
-export function screenBackgroundStyle(image: string | null | undefined, custom: boolean) {
+export function screenBackgroundStyle(image: string | null | undefined) {
   if (!image) return undefined;
   return {
     backgroundImage: `url("${image}")`,
-    backgroundSize: custom ? 'cover' : 'contain',
+    backgroundSize: 'contain',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
     backgroundColor: '#000',

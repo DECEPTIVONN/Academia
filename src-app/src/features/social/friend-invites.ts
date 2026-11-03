@@ -213,6 +213,7 @@ function createFriendItem(invite: FriendInvite): FriendItem {
   return {
     id: friendIdForCode(invite.code),
     name: invite.name,
+    clan: null,
     trophies: 0,
     online: false,
     avatarColor: AVATAR_COLORS[hash % AVATAR_COLORS.length],
@@ -244,6 +245,7 @@ function sanitizeStoredFriend(value: unknown): FriendItem | null {
   return {
     id,
     name,
+    clan: null,
     trophies: Number.isFinite(raw.trophies) ? Math.max(0, Math.floor(raw.trophies as number)) : 0,
     online: Boolean(raw.online),
     avatarColor: typeof raw.avatarColor === 'string' && raw.avatarColor

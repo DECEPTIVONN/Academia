@@ -38,6 +38,7 @@ import { MissionsOverlay } from '@/features/dashboard/MissionsOverlay';
 import { InicioMenuModal } from '@/features/dashboard/InicioMenuModal';
 import { FitIdOverlay } from '@/features/dashboard/FitIdOverlay';
 import { RankingsOverlay } from '@/features/social/RankingsOverlay';
+import { RankingsSimulator } from '@/features/social/RankingsSimulator';
 import { MessagesModal } from '@/features/dashboard/MessagesModal';
 import { NewsOverlay } from '@/features/news/NewsOverlay';
 import { useProfileState } from '@/features/profile/useProfileState';
@@ -517,8 +518,13 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
         onOpenFitId={() => setFitIdOpen(true)}
         onOpenCycles={() => setCycleModalOpen(true)}
       />
-      {/* v4.56.19 — interface de Rankings (menu do Início) */}
-      <RankingsOverlay open={rankingsOpen} onClose={() => setRankingsOpen(false)} />
+      {/* v4.56.19 — interface de Rankings (menu do Início). No modo
+          desenvolvedor os rankings são só o simulador; fora dele, dados reais. */}
+      {isDevMode() ? (
+        <RankingsSimulator open={rankingsOpen} onClose={() => setRankingsOpen(false)} />
+      ) : (
+        <RankingsOverlay open={rankingsOpen} onClose={() => setRankingsOpen(false)} />
+      )}
       {/* v4.56.19 — caixa de Mensagens (menu do Início) */}
       <MessagesModal open={messagesOpen} onClose={() => setMessagesOpen(false)} />
       <FitIdOverlay

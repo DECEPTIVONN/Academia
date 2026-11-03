@@ -53,7 +53,6 @@ import {
   getLeagueState,
   getMonthlyLeagueState,
   INITIAL_CLAN_MESSAGES,
-  INITIAL_FRIENDS,
   LEAGUE_DIVISIONS,
   saveLeagueState,
   saveMonthlyLeagueState,
@@ -75,6 +74,8 @@ import { GuildEmblem, GuildPanel } from './GuildPanel';
 import { MemberPopover } from './MemberPopover';
 import { PlayerAvatarMedia } from './PlayerAvatar';
 import { getGuild, useGuildState, type GuildPlayer } from './guild-data';
+import { cloudFriendToItem, useSocialCloud } from './useSocialCloud';
+import { monthlyXpFromHistory, weeklyXpFromHistory } from './social-cloud';
 import { compactIds, getLevel, getXp } from '@/core/db/queries';
 import { useLocalData } from '@/hooks/useLocalData';
 import {
@@ -1031,11 +1032,21 @@ export function LigasFeature({
   const [communityTab, setCommunityTab] = useState<'amigos' | 'membros'>('amigos');
   const [sortBy, setSortBy] = useState<'posicao' | 'trofeus' | 'nome'>('posicao');
   const [showFilters, setShowFilters] = useState(false);
-  const [friends, setFriends] = useState<FriendItem[]>(() =>
-    mergeFriends(loadAddedFriends(), INITIAL_FRIENDS),
+  /* Amigos reais: aceitos na nuvem + amigos locais de QR/link. Nada de
+     jogadores fictícios — a classificação segue o desenho anterior, mas só
+     lista quem realmente está na sua lista. */
+  const cloud = useSocialCloud();
+  const cloudFriends = useMemo<FriendItem[]>(
+    () => cloud.accepted.map(cloudFriendToItem),
+    [cloud.accepted],
+  );
+  const [localFriends, setLocalFriends] = useState<FriendItem[]>(() => loadAddedFriends());
+  const friends = useMemo(
+    () => mergeFriends(localFriends, cloudFriends),
+    [localFriends, cloudFriends],
   );
   useEffect(() => {
-    const reload = () => setFriends(mergeFriends(loadAddedFriends(), INITIAL_FRIENDS));
+    const reload = () => setLocalFriends(loadAddedFriends());
     document.addEventListener('academia:db-ready', reload);
     document.addEventListener('academia:friends-updated', reload);
     document.addEventListener('academia:friends-changed', reload);
@@ -1084,6 +1095,10 @@ export function LigasFeature({
   const { history } = useLocalData();
   const playerTrophies = useMemo(() => getXp(history), [history]);
   const playerLevel = useMemo(() => getLevel(playerTrophies), [playerTrophies]);
+  /* XP real dos treinos concluídos nas janelas das ligas: o treino feito no
+     app entra na classificação sem depender de partida simulada. */
+  const realWeeklyXp = useMemo(() => weeklyXpFromHistory(history), [history]);
+  const realMonthlyXp = useMemo(() => monthlyXpFromHistory(history), [history]);
   const guildPlayer = useMemo<GuildPlayer>(
     () => ({
       name: displayName,
@@ -1220,7 +1235,12 @@ export function LigasFeature({
     standaloneSound.playLevelUp();
     const state = getLeagueState();
     if (!state.joined) return;
-    const outcome = computeSeasonOutcome(state, profile);
+    const outcome = computeSeasonOutcome(state, {
+      ...profile,
+      username: displayName,
+      level: playerLevel,
+      trophies: playerTrophies,
+    });
     const nextState: LeagueState = {
       division: outcome!.newDivision,
       joined: false,
@@ -1256,7 +1276,12 @@ export function LigasFeature({
     standaloneSound.playLevelUp();
     const state = getMonthlyLeagueState();
     if (!state.joined) return;
-    const outcome = computeSeasonOutcome(state, profile);
+    const outcome = computeSeasonOutcome(state, {
+      ...profile,
+      username: displayName,
+      level: playerLevel,
+      trophies: playerTrophies,
+    });
     const nextState: LeagueState = {
       division: outcome!.newDivision,
       joined: false,
@@ -1291,9 +1316,9 @@ export function LigasFeature({
       ...prev,
       {
         id: `msg-${Date.now()}`,
-        sender: profile.username || 'GABRIEL GS',
+        sender: displayName,
         role: 'Líder',
-        trophies: profile.trophies || 12710,
+        trophies: playerTrophies,
         text,
         time: timeStr,
         isSelf: true,
@@ -1317,7 +1342,7 @@ export function LigasFeature({
 
       if (result.friend) {
         const accepted = result.friend;
-        setFriends((prev) => mergeFriends([accepted], prev));
+        setLocalFriends((prev) => mergeFriends([accepted], prev));
       }
 
       if (result.status === 'added') {
@@ -1374,7 +1399,7 @@ export function LigasFeature({
   );
   const isSelfFriend = (item: FriendItem) =>
     item.id === 'self' ||
-    (item.friendCode ? item.friendCode === friendCode : item.name === profile.username);
+    (item.friendCode ? item.friendCode === friendCode : item.name === displayName);
 
   /* Abre o popover do jogador (último acesso/ofensiva + Ver perfil). */
   const openPlayer = (item: FriendItem, kind: PlayerKind) => {
@@ -1711,16 +1736,16 @@ export function LigasFeature({
                 )
               ) : (
                 <>
-                  <section className="soc-friend-group" aria-label="Amigos on-line">
-                    <div className="soc-friend-group__head">
-                      <span className="soc-friend-group__title">
-                        <span className="soc-friend-group__pulse" aria-hidden="true" />
-                        Amigos on-line
-                      </span>
-                      <span className="soc-friend-group__count">{onlineFriends.length}</span>
-                    </div>
-                    {onlineFriends.length > 0 ? (
-                      onlineFriends.map((item) => (
+                  {onlineFriends.length > 0 && (
+                    <section className="soc-friend-group" aria-label="Amigos on-line">
+                      <div className="soc-friend-group__head">
+                        <span className="soc-friend-group__title">
+                          <span className="soc-friend-group__pulse" aria-hidden="true" />
+                          Amigos on-line
+                        </span>
+                        <span className="soc-friend-group__count">{onlineFriends.length}</span>
+                      </div>
+                      {onlineFriends.map((item) => (
                         <FriendRow
                           key={`online-${item.id}`}
                           item={item}
@@ -1729,11 +1754,9 @@ export function LigasFeature({
                           showRank={false}
                           onSelect={(selected) => openPlayer(selected, 'amigo')}
                         />
-                      ))
-                    ) : (
-                      <p className="soc-friend-group__empty">Nenhum amigo on-line agora.</p>
-                    )}
-                  </section>
+                      ))}
+                    </section>
+                  )}
 
                   <section className="soc-friend-group" aria-label="Classificação dos amigos">
                     <div className="soc-friend-group__head">
@@ -1741,7 +1764,9 @@ export function LigasFeature({
                         <Trophy size={12} className="text-amber-400" aria-hidden="true" />
                         Classificação
                       </span>
-                      <span className="soc-friend-group__count">{sortedFriends.length}</span>
+                      {sortedFriends.length > 0 && (
+                        <span className="soc-friend-group__count">{sortedFriends.length}</span>
+                      )}
                     </div>
                     {sortedFriends.map((item, index) => (
                       <FriendRow
@@ -1930,14 +1955,16 @@ export function LigasFeature({
             <div className="px-3.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-full flex items-center gap-1.5 shrink-0">
               <Calendar className="w-3.5 h-3.5 ligas-text-accent" />
               <span className="text-xs font-black ligas-text-accent font-mono">
-                {leagueState.joined ? `${leagueState.daysRemaining} DIAS` : '1 SEMANA'}
+                {leagueState.joined || realWeeklyXp > 0
+                  ? `${leagueState.daysRemaining} DIAS`
+                  : '1 SEMANA'}
               </span>
             </div>
           </div>
 
           <DivisionPath currentDivision={leagueState.division} variant="weekly" />
 
-          {!leagueState.joined ? (
+          {!leagueState.joined && realWeeklyXp === 0 ? (
             <JoinPrompt
               division={leagueState.division}
               title="JOGUE E DISPUTE!"
@@ -1949,9 +1976,9 @@ export function LigasFeature({
           ) : (
             <div className="space-y-3">
               <LeagueStandings
-                playerXp={leagueState.playerXp}
+                playerXp={leagueState.playerXp + realWeeklyXp}
                 opponents={leagueState.opponents}
-                profile={{ username: profile.username, level: profile.level }}
+                profile={{ username: displayName, level: playerLevel }}
                 gain={matchGain?.scope === 'weekly' ? matchGain : null}
               />
               <LeagueTestControls onSimulate={handleSimulateMatchXp} onEnd={handleEndWeek} endLabel="Finalizar Semana" />
@@ -1961,7 +1988,7 @@ export function LigasFeature({
       ) : (
         <>
           <DivisionPath currentDivision={monthlyLeagueState.division} variant="monthly" />
-          {!monthlyLeagueState.joined ? (
+          {!monthlyLeagueState.joined && realMonthlyXp === 0 ? (
             <JoinPrompt
               division={monthlyLeagueState.division}
               title="LIGA MENSAL SUPREMA!"
@@ -1973,9 +2000,9 @@ export function LigasFeature({
           ) : (
             <div className="space-y-3">
               <LeagueStandings
-                playerXp={monthlyLeagueState.playerXp}
+                playerXp={monthlyLeagueState.playerXp + realMonthlyXp}
                 opponents={monthlyLeagueState.opponents}
-                profile={{ username: profile.username, level: profile.level }}
+                profile={{ username: displayName, level: playerLevel }}
                 scaleSelf
                 gain={matchGain?.scope === 'monthly' ? matchGain : null}
               />

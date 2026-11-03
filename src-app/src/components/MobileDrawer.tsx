@@ -3,7 +3,7 @@
  *
  * v4.8.3-navbars — aberta pelo item Menu (1º da barra inferior).
  * Port adaptado do MobileDrawer do NavigationShellStandalone.tsx:
- *   • head: avatar do perfil (ProfileEmblem) + nome/nível/XP + fechar;
+ *   • head: avatar do perfil (ProfileEmblem) + nome + ofensiva + fechar;
  *   • nav: Busca Geral, Progresso (atalho da seção), Notícias, Missões,
  *     Configurações;
  *   • rodapé: entrar/sair da tela cheia.
@@ -16,9 +16,9 @@ import { SPRING_SETTLE } from '@/lib/motion-presets';
 import { useLocalData } from '@/hooks/useLocalData';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { isDevMode } from '@/features/profile/profile-data';
-import { getLevel, getStreak, getXp } from '@/core/db/queries';
+import { getStreak } from '@/core/db/queries';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
-import { SvgMaximize, SvgMinimize, SvgSearch } from '@/components/nav-items';
+import { SvgFlame, SvgMaximize, SvgMinimize, SvgSearch } from '@/components/nav-items';
 import type { SectionType } from '@/components/BottomNav';
 
 interface MobileDrawerProps {
@@ -103,8 +103,6 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   const { history } = useLocalData();
 
   const nome = state?.customization?.nome?.trim() || 'Atleta';
-  const xp = getXp(history);
-  const level = getLevel(xp);
   const streak = getStreak(history);
 
   /* Body-lock enquanto aberta (padrão dos overlays do App) */
@@ -225,10 +223,9 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
               <span className="mdw__id">
                 <span className="mdw__name">{nome}</span>
                 <span className="mdw__meta">
-                  <span className="mdw__level">Nível {level}</span>
-                  <span className="mdw__xp">{xp} XP</span>
                   <span className="mdw__streak" title={`Ofensiva de ${streak} dia(s)`}>
-                    🔥 {streak}d
+                    {SvgFlame}
+                    {streak}d
                   </span>
                 </span>
               </span>

@@ -85,6 +85,7 @@ export function cloudFriendToItem(friend: CloudFriend): FriendItem {
   return {
     id: friend.id,
     name: friend.name,
+    clan: null,
     trophies: friend.totalXp,
     monthlyXp: friend.monthlyXp,
     online: false,
@@ -106,6 +107,7 @@ export function rankRowToItem(row: GlobalRankRow): FriendItem {
   return {
     id: row.id,
     name: row.name,
+    clan: null,
     trophies: row.monthlyXp,
     monthlyXp: row.monthlyXp,
     online: false,
