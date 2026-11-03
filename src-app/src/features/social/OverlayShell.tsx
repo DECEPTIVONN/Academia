@@ -2,7 +2,7 @@
  * OverlayShell.tsx — casca dos overlays da aba Social
  *
  * Compartilhada entre o painel da guilda (detalhes, emblema, criação, saída) e
- * o popover do jogador (aba Social) e os Rankings. Monta via
+ * o popover do jogador (GuildPanel + sub-aba Amigos). Monta via
  * `createPortal(document.body)` porque o `.section-strip` (will-change:
  * transform) é containing block do `position: fixed` — causa-raiz histórica de
  * overlays "fora da tela".

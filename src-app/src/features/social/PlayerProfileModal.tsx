@@ -13,14 +13,16 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Crown, Flame, Trophy, X } from 'lucide-react';
+import { ChevronDown, Clock, Crown, Flame, Trophy, X } from 'lucide-react';
 import { FichaDeck } from '@/features/dashboard/FichaDeck';
 import { IDENTITY_EMBLEMS } from '@/features/profile/profile-data';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { useLocalData } from '@/hooks/useLocalData';
 import type { LocalData } from '@/core/db/queries';
-import { FlagIcon } from './ligas-icons';
+import { GuildEmblem } from './GuildPanel';
+import { DivisionIcon, FlagIcon } from './ligas-icons';
 import { PlayerAvatarMedia } from './PlayerAvatar';
+import { DIVISION_COLORS } from './ligas-data';
 import {
   buildPlayerProfile,
   selfPlayerSummary,
@@ -56,6 +58,14 @@ function Avatar({ view }: { view: PlayerProfileView }) {
         size={68}
       />
     </div>
+  );
+}
+
+function LeagueShield({ division, size }: { division: PlayerProfileView['leagues']['current']; size: number }) {
+  return (
+    <span className="player-profile__league-shield">
+      <DivisionIcon kind={DIVISION_COLORS[division].icon} size={size} />
+    </span>
   );
 }
 
@@ -165,7 +175,7 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
                 </div>
                 <span className="player-profile__trophy-pill">
                   <Trophy size={16} />
-                  {NUM(view.monthlyXp)}
+                  {NUM(view.trophies)}
                 </span>
               </div>
             </div>
@@ -182,10 +192,20 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
             )}
           </div>
 
+          {view.clan && (
+            <div className="player-profile__clan">
+              <GuildEmblem emblemId={view.clan.emblemId} size={38} />
+              <div className="player-profile__clan-info">
+                <span className="player-profile__clan-name">{view.clan.name}</span>
+                <span className="player-profile__clan-role">{view.subtitle}</span>
+              </div>
+            </div>
+          )}
+
           <div className="player-profile__duo">
             <div className="player-profile__duo-card">
-              <span className="player-profile__duo-label">XP no mês</span>
-              <strong className="player-profile__duo-value">{NUM(view.monthlyXp)}</strong>
+              <span className="player-profile__duo-label">Total de treinos</span>
+              <strong className="player-profile__duo-value">{NUM(view.totalWorkouts)}</strong>
             </div>
             <div className="player-profile__duo-card">
               <Flame size={16} className="player-profile__duo-icon" aria-hidden="true" />
@@ -197,17 +217,16 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
           </div>
 
           <section className="player-profile__section player-profile__section--trophies">
-            <SectionHead title="Progresso" />
+            <SectionHead title="Caminho de troféus" />
             <div className="player-profile__trophy-row">
               <span className="player-profile__trophy-big" aria-hidden="true">
                 <Trophy size={26} />
               </span>
               <strong className="player-profile__trophy-value">{NUM(view.trophies)}</strong>
-              <span className="player-profile__arena">XP total</span>
+              <span className="player-profile__arena">{view.arena}</span>
             </div>
           </section>
 
-          {view.emblems.length > 0 && (
           <section className="player-profile__section">
             <SectionHead title="Emblemas" />
             <div className="player-profile__emblem-grid">
@@ -243,29 +262,39 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
               <div className="player-profile__collection">
                 {IDENTITY_EMBLEMS.map((emblem) => (
                   <span className="player-profile__collection-item" key={emblem.id} title={emblem.nome}>
-                    <PlayerAvatarMedia emblemId={emblem.id} size={42} />
+                    <GuildEmblem emblemId={emblem.id} size={42} />
                     <span className="player-profile__collection-name">{emblem.nome}</span>
                   </span>
                 ))}
               </div>
             )}
           </section>
-          )}
 
           <section className="player-profile__section player-profile__section--league">
-            <SectionHead title="Ranking global" />
+            <SectionHead title="Liga" />
             <p className="player-profile__season">Temporada mensal</p>
             <div className="player-profile__league-current">
-              <strong className="player-profile__league-name">
-                {view.rank ? `#${view.rank}` : 'Fora do top 50'}
-              </strong>
+              <LeagueShield division={view.leagues.current} size={44} />
+              <strong className="player-profile__league-name">{view.leagues.current}</strong>
             </div>
             <p className="player-profile__league-hint">
-              Posição pelo XP dos treinos concluídos no mês.
+              <Clock size={12} />
+              As ligas são ajustadas ao fim de cada temporada mensal.
             </p>
+            <div className="player-profile__league-grid">
+              <div className="player-profile__league-card">
+                <span className="player-profile__league-label">Temporada anterior</span>
+                <LeagueShield division={view.leagues.previous} size={32} />
+                <strong className="player-profile__league-value">{view.leagues.previous}</strong>
+              </div>
+              <div className="player-profile__league-card">
+                <span className="player-profile__league-label">Melhor temporada</span>
+                <LeagueShield division={view.leagues.best} size={32} />
+                <strong className="player-profile__league-value">{view.leagues.best}</strong>
+              </div>
+            </div>
           </section>
 
-          {view.isSelf && (
           <section className="player-profile__section player-profile__section--workout">
             <SectionHead title="Último treino" />
             {lastWorkout ? (
@@ -289,35 +318,32 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
               <p className="player-profile__empty">Nenhum treino registrado ainda.</p>
             )}
           </section>
-          )}
 
-          {view.stats && (
           <section className="player-profile__section player-profile__section--stats">
             <SectionHead title="Estatísticas" />
             <div className="player-profile__stats">
               <div className="player-profile__stat">
                 <span className="player-profile__stat-label">Treinos</span>
-                <strong className="player-profile__stat-value">{NUM(view.stats?.workouts ?? 0)}</strong>
+                <strong className="player-profile__stat-value">{NUM(view.stats.workouts)}</strong>
               </div>
               <div className="player-profile__stat">
                 <span className="player-profile__stat-label">Total de horas treinadas</span>
-                <strong className="player-profile__stat-value">{decimal(view.stats?.hours ?? 0)} h</strong>
+                <strong className="player-profile__stat-value">{decimal(view.stats.hours)} h</strong>
               </div>
               <div className="player-profile__stat">
                 <span className="player-profile__stat-label">Exercícios feitos</span>
                 <strong className="player-profile__stat-value">
-                  {NUM(view.stats?.exercisesDone ?? 0)}/{NUM(view.stats?.catalogSize ?? 0)}
+                  {NUM(view.stats.exercisesDone)}/{NUM(view.stats.catalogSize)}
                 </strong>
               </div>
               <div className="player-profile__stat">
                 <span className="player-profile__stat-label">Treino favorito atual</span>
                 <strong className="player-profile__stat-value">
-                  {view.stats?.favoriteWorkout ?? '—'}
+                  {view.stats.favoriteWorkout ?? '—'}
                 </strong>
               </div>
             </div>
           </section>
-          )}
         </div>
       </div>
     </div>,
