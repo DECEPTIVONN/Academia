@@ -5,7 +5,9 @@
  * usuário está logado (`user.id`) ou de um código local persistente no
  * localStorage quando o app está em modo offline. O nome vai no payload para
  * que o outro aparelho consiga exibir o amigo mesmo sem consultar o servidor
- * (a lista de amigos do app é local-first; não há tabela de amizades).
+ * (a lista de amigos do app é local-first e replica entre os dispositivos do
+ * mesmo usuário pelo snapshot de sync; a relação bilateral de contas reais usa
+ * a tabela `friendships` + `friends_overview`).
  *
  * Formato do convite:
  *   https://<origem>/?amigo=<codigo>&nome=<nome>

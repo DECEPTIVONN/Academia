@@ -506,7 +506,7 @@ function LeagueTestControls({
         onClick={onSimulate}
         className="flex-1 py-2.5 rounded-xl ligas-bg-soft-strong border border-[rgba(var(--primary-rgb,139,92,246),0.3)] ligas-text-accent font-black text-[11px] uppercase tracking-wide transition-all cursor-pointer block text-center active:scale-95"
       >
-        Simular Partida (+XP)
+        Simular Treino (+XP)
       </button>
       <button
         onClick={onEnd}
@@ -765,10 +765,10 @@ function SeasonEndPortal({
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed font-semibold uppercase tracking-widest px-2">
                 {type === 'promotion'
-                  ? 'Subiu de liga! Continue mandando bala nas arenas para alcançar o topo!'
+                  ? 'Subiu de liga! Continue treinando para alcançar o topo!'
                   : type === 'demotion'
-                    ? 'Não desanime! Com batalhas dedicadas você vai reaver o seu lugar!'
-                    : 'A batalha continua acirrada! Faça mais partidas para subir de nível!'}
+                    ? 'Não desanime! Com treinos dedicados você vai reaver o seu lugar!'
+                    : 'A disputa continua acirrada! Faça mais treinos para subir de nível!'}
               </p>
             </div>
           </div>
@@ -1817,6 +1817,12 @@ export function LigasFeature({
           selfId={user?.id ?? null}
           onAddPlayer={(invite) => {
             applyInvite(invite);
+            /* Resultado da busca é uma conta real: além da lista local,
+               registra o convite em `friendships` para a amizade aparecer
+               nos outros dispositivos (e para o outro lado aceitar). */
+            if (cloud.ready && user?.id && invite.code !== user.id) {
+              void cloud.request(invite.code).catch(() => undefined);
+            }
           }}
           onClose={() => setShowAddFriendModal(false)}
           onScan={() => {
@@ -1967,9 +1973,9 @@ export function LigasFeature({
           {!leagueState.joined && realWeeklyXp === 0 ? (
             <JoinPrompt
               division={leagueState.division}
-              title="JOGUE E DISPUTE!"
-              desc="Jogue e seus pontos ganhos em batalhas somam pontuação para subir posições e chegar ao pódio! Os três primeiros colocados ganham as melhores recompensas."
-              ctaLabel="Simular Partida (+50 XP)"
+              title="TREINE E DISPUTE!"
+              desc="Treine e seus pontos ganhos nos treinos somam pontuação para subir posições e chegar ao pódio! Os três primeiros colocados ganham as melhores recompensas."
+              ctaLabel="Simular Treino (+50 XP)"
               onCta={handleSimulateMatchXp}
               accent="indigo"
             />
@@ -1992,8 +1998,8 @@ export function LigasFeature({
             <JoinPrompt
               division={monthlyLeagueState.division}
               title="LIGA MENSAL SUPREMA!"
-              desc="Participe automaticamente jogando Tetris! Seus pontos também valem para as ligas mensais. Sem pré-inscrição: basta jogar para competir!"
-              ctaLabel="Simular Partida Mensal (+50 XP)"
+              desc="Participe automaticamente treinando! Seus pontos também valem para as ligas mensais. Sem pré-inscrição: basta treinar para competir!"
+              ctaLabel="Simular Treino Mensal (+50 XP)"
               onCta={handleSimulateMonthlyMatchXp}
               accent="amber"
             />

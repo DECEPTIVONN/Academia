@@ -58,6 +58,8 @@ export interface Guild {
 export interface GuildState {
   guilds: Guild[];
   joinedId: string | null;
+  /** Instante da última alteração local (usado no merge entre dispositivos). */
+  updatedAt?: number;
 }
 
 /** Dados do jogador usados na guilda (troféus = XP de treinos do app). */
@@ -416,7 +418,11 @@ export function readGuildState(): GuildState {
       typeof parsed.joinedId === 'string' && guilds.some((g) => g.id === parsed.joinedId)
         ? parsed.joinedId
         : null;
-    return { guilds, joinedId };
+    const updatedAt =
+      typeof parsed.updatedAt === 'number' && Number.isFinite(parsed.updatedAt)
+        ? parsed.updatedAt
+        : 0;
+    return { guilds, joinedId, updatedAt };
   } catch (error) {
     console.error('Erro ao carregar as guildas:', error);
     return seedState();
@@ -425,12 +431,13 @@ export function readGuildState(): GuildState {
 
 function writeGuildState(state: GuildState): void {
   if (typeof window === 'undefined') return;
+  const stamped: GuildState = { ...state, updatedAt: Date.now() };
   try {
-    localStorage.setItem(GUILD_STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(GUILD_STORAGE_KEY, JSON.stringify(stamped));
   } catch (error) {
     console.error('Erro ao salvar as guildas:', error);
   }
-  window.dispatchEvent(new CustomEvent<GuildState>(GUILD_EVENT, { detail: state }));
+  window.dispatchEvent(new CustomEvent<GuildState>(GUILD_EVENT, { detail: stamped }));
 }
 
 function selfMember(player: GuildPlayer, role: GuildRole): GuildMember {

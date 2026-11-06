@@ -4,7 +4,7 @@
  * Adapta as Sections 2–4 do SupabaseSyncSecurityStandalone.tsx ao banco local
  * do Academia (Dexie 'academia-v4'):
  *   • snapshot JSONB dos dados essenciais (exercícios, fichas, histórico,
- *     maestria, perfil e cópia legada) na tabela user_sync;
+ *     maestria, perfil, amigos, guildas e cópia legada) na tabela user_sync;
  *   • sync ultra-rápido entre abas locais via BroadcastChannel (<5 ms);
  *   • realtime multi-dispositivos via canal WebSocket do Supabase;
  *   • fila offline (IndexedDB) com auto-flush ao voltar a conexão;
@@ -48,6 +48,11 @@ import { queueOfflineMutation, flushOfflineQueue, getOfflinePendingCount } from 
 import { safeStringify } from '@/lib/canonical';
 import { applySavedTheme } from '@/features/settings/theme-colors';
 
+/* Chaves do estado social mantido em localStorage (amigos/guildas). */
+const FRIENDS_STORAGE_KEY = 'academia_added_friends_v1';
+const FRIEND_CODE_STORAGE_KEY = 'academia_friend_code_v1';
+const GUILDS_STORAGE_KEY = 'academia_guilds_v1';
+
 /* ── Snapshot sincronizado (payload JSONB de user_sync.data) ── */
 
 export interface AppSnapshot {
@@ -65,6 +70,10 @@ export interface AppSnapshot {
   musicLibrary?: unknown;
   /** Amigos adicionados (lista local-first), sincronizada com a nuvem. */
   friends?: unknown;
+  /** Código permanente do convite de amigo (identidade estável entre aparelhos). */
+  friendCode?: string;
+  /** Guildas e associação do jogador (`academia_guilds_v1`). */
+  guilds?: unknown;
   /** Preferências de UI sincronizadas (tema, player, sidebar, lock, navbar, etc.). */
   prefs?: Record<string, string>;
   updatedAt: string;
@@ -120,6 +129,8 @@ let lastRemoteCheckAt = 0;
 let remoteCheckInFlight = false;
 let applyingRemote = false;
 let pushDebounce: number | null = null;
+/** O merge social manteve dados locais mais novos: publica depois do apply. */
+let socialMergePendingPush = false;
 /* Último snapshot efetivamente salvo (JSON canônico) — evita pushs redundantes
    e loops de sincronização (dados.md §4.4). */
 let lastSavedSnapshotJson = '';
@@ -147,6 +158,50 @@ function emitDevicesUpdated(): void {
 
 /* ── Construção e aplicação de snapshots ── */
 
+function readStoredArray(key: string): unknown[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function readStoredObject(key: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || 'null');
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/** `updatedAt` do estado de guildas (0 quando o snapshot é antigo/sem carimbo). */
+function guildStateUpdatedAt(value: unknown): number {
+  if (!value || typeof value !== 'object') return 0;
+  const raw = (value as { updatedAt?: unknown }).updatedAt;
+  return typeof raw === 'number' && Number.isFinite(raw) ? raw : 0;
+}
+
+/**
+ * Une os amigos remotos com os locais por `id`. A lista local é um conjunto
+ * crescente (não há remoção no app), então a união impede que um snapshot
+ * antigo de outro dispositivo apague um amigo adicionado aqui.
+ */
+function mergeFriendsById(remote: unknown[], local: unknown[]): unknown[] {
+  const seen = new Set<string>();
+  const merged: unknown[] = [];
+  for (const item of [...remote, ...local]) {
+    if (!item || typeof item !== 'object') continue;
+    const id = (item as { id?: unknown }).id;
+    if (typeof id !== 'string' || !id || seen.has(id)) continue;
+    seen.add(id);
+    merged.push(item);
+  }
+  return merged;
+}
+
 export async function buildSnapshot(): Promise<AppSnapshot> {
   const [exercises, sheets, history, mastery, profileState, legacyRow, bodyMeasurements, bodyPhotos] =
     await Promise.all([
@@ -162,6 +217,8 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
 
   let musicLibrary: unknown;
   let friends: unknown;
+  let friendCode: string | undefined;
+  let guilds: unknown;
   try {
     const rawMusic = localStorage.getItem('academia_music_library_v1');
     if (rawMusic) musicLibrary = JSON.parse(rawMusic);
@@ -169,10 +226,21 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     musicLibrary = undefined;
   }
   try {
-    const rawFriends = localStorage.getItem('academia_added_friends_v1');
+    const rawFriends = localStorage.getItem(FRIENDS_STORAGE_KEY);
     if (rawFriends) friends = JSON.parse(rawFriends);
   } catch {
     friends = undefined;
+  }
+  try {
+    friendCode = localStorage.getItem(FRIEND_CODE_STORAGE_KEY) || undefined;
+  } catch {
+    friendCode = undefined;
+  }
+  try {
+    const rawGuilds = localStorage.getItem(GUILDS_STORAGE_KEY);
+    if (rawGuilds) guilds = JSON.parse(rawGuilds);
+  } catch {
+    guilds = undefined;
   }
 
   /* Preferências de UI (tema, player, sidebar, lock, navbar, auto-fullscreen). */
@@ -218,6 +286,8 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     legacy: (legacyRow?.value as Record<string, unknown>) ?? undefined,
     musicLibrary,
     friends,
+    friendCode,
+    guilds,
     prefs,
     updatedAt: new Date().toISOString(),
     originDeviceId: getPersistentDeviceId(),
@@ -289,14 +359,55 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
         /* best-effort */
       }
     }
-    /* Sincroniza lista de amigos (local-first). */
-    if (Array.isArray(snapshot.friends)) {
+    /* Sincroniza lista de amigos (local-first) por união de IDs: um snapshot
+       antigo de outro aparelho não pode apagar um amigo adicionado aqui.
+       Snapshot legado (sem `friends`) também não apaga a lista local — nesse
+       caso o estado local vira o novo remoto. */
+    try {
+      const localFriends = readStoredArray(FRIENDS_STORAGE_KEY);
+      const remoteFriends = Array.isArray(snapshot.friends) ? snapshot.friends : [];
+      if (remoteFriends.length || localFriends.length) {
+        const mergedFriends = mergeFriendsById(remoteFriends, localFriends);
+        localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(mergedFriends));
+        if (
+          !Array.isArray(snapshot.friends) ||
+          safeStringify(mergedFriends) !== safeStringify(snapshot.friends)
+        ) {
+          socialMergePendingPush = true;
+        }
+        /* `bubbles` para alcançar também os ouvintes em `window`. */
+        document.dispatchEvent(new CustomEvent('academia:friends-updated', { bubbles: true }));
+      }
+    } catch {
+      /* best-effort */
+    }
+    /* Código permanente de convite: mantém a mesma identidade em todos os aparelhos. */
+    if (typeof snapshot.friendCode === 'string' && snapshot.friendCode) {
       try {
-        localStorage.setItem('academia_added_friends_v1', JSON.stringify(snapshot.friends));
-        document.dispatchEvent(new CustomEvent('academia:friends-updated'));
+        localStorage.setItem(FRIEND_CODE_STORAGE_KEY, snapshot.friendCode);
       } catch {
         /* best-effort */
       }
+    }
+    /* Sincroniza a guilda (entrar/criar/sair) vinda de outro dispositivo.
+       O estado de guilda mais novo vence (`updatedAt`) e, se o local vencer,
+       ele é republicado. Snapshot legado (sem `guilds`) não apaga a guilda local. */
+    try {
+      const localGuilds = readStoredObject(GUILDS_STORAGE_KEY);
+      const remoteHasGuilds = !!snapshot.guilds && typeof snapshot.guilds === 'object';
+      if (remoteHasGuilds) {
+        if (guildStateUpdatedAt(snapshot.guilds) >= guildStateUpdatedAt(localGuilds)) {
+          localStorage.setItem(GUILDS_STORAGE_KEY, JSON.stringify(snapshot.guilds));
+          /* `guild-data.ts`/`useGuildState` ouvem em `window`. */
+          document.dispatchEvent(new CustomEvent('academia:guild-changed', { bubbles: true }));
+        } else {
+          socialMergePendingPush = true;
+        }
+      } else if (localGuilds) {
+        socialMergePendingPush = true;
+      }
+    } catch {
+      /* best-effort */
     }
     /* Sincroniza preferências de UI (tema, player, sidebar, lock, navbar, ...). */
     if (snapshot.prefs && typeof snapshot.prefs === 'object') {
@@ -318,9 +429,11 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
        recarrega sozinho no db-ready; se existir, o merge é automático. */
     setLastSyncedAt(Date.parse(remoteUpdatedAt || snapshot.updatedAt));
     /* Marca o snapshot recebido como "último salvo" para não re-enviar idêntico
-       (evita loop ping-pong — dados.md §4.4). */
+       (evita loop ping-pong — dados.md §4.4). `updatedAt`/`originDeviceId` são
+       voláteis: ficam fora da assinatura para o snapshot aplicado não voltar
+       como se fosse uma alteração local. */
     try {
-      lastSavedSnapshotJson = safeStringify(snapshot);
+      lastSavedSnapshotJson = snapshotSignature(snapshot);
     } catch {
       /* best-effort */
     }
@@ -328,10 +441,25 @@ async function applySnapshot(snapshot: AppSnapshot, remoteUpdatedAt?: string): P
     document.dispatchEvent(new CustomEvent('academia:profile-updated'));
   } finally {
     applyingRemote = false;
+    /* Havia dado social local mais novo que o remoto: republica o merge. */
+    if (socialMergePendingPush) {
+      socialMergePendingPush = false;
+      schedulePush(0);
+    }
   }
 }
 
 /* ── Push ── */
+
+/**
+ * Assinatura canônica do conteúdo do snapshot, ignorando os campos voláteis
+ * (`updatedAt` gerado a cada build e `originDeviceId` de cada aparelho).
+ * Sem isso, todo snapshot aplicado da nuvem parecia diferente e voltava
+ * para a nuvem, criando ping-pong entre dispositivos.
+ */
+function snapshotSignature(snapshot: AppSnapshot): string {
+  return safeStringify({ ...snapshot, updatedAt: undefined, originDeviceId: undefined });
+}
 
 /** Transmite o snapshot completo para outras abas do mesmo navegador (<5 ms). */
 function broadcastCrossTabSnapshot(snapshot: AppSnapshot, updatedAt: string): void {
@@ -357,7 +485,7 @@ export async function pushSnapshot(): Promise<boolean> {
 
   /* Comparação canônica profunda: se nada mudou em relação ao último salvo,
      cancela o push (evita tráfego redundante e loops — dados.md §4.4). */
-  const canonicalJson = safeStringify(snapshot);
+  const canonicalJson = snapshotSignature(snapshot);
   if (lastSavedSnapshotJson && canonicalJson === lastSavedSnapshotJson) {
     /* Nada a fazer — estado idêntico ao último push. */
     return true;
@@ -790,6 +918,8 @@ export function startSyncEngine(): void {
   document.addEventListener('academia:db-ready', onLocalDataChanged);
   document.addEventListener('academia:music-changed', onLocalDataChanged);
   document.addEventListener('academia:friends-changed', onLocalDataChanged);
+  /* `guild-data.ts` despacha em `window` — ouvir em `document` não recebia nada. */
+  window.addEventListener('academia:guild-changed', onLocalDataChanged);
   document.addEventListener('academia:player-prefs-changed', onLocalDataChanged);
   document.addEventListener('academia:lock-prefs-changed', onLocalDataChanged);
   document.addEventListener('academia:navbar-mode-changed', onLocalDataChanged);
@@ -819,10 +949,12 @@ export function startSyncEngine(): void {
 
   /* Pull inicial + registro no registry.
      Usa a checagem barata: se o dispositivo já está em dia, não baixa o
-     snapshot inteiro; só a linha de updated_at. */
+     snapshot inteiro; só a linha de updated_at. Em seguida publica o snapshot
+     local (inclusive amigos/guildas, que antes só existiam neste aparelho). */
   void (async () => {
     await flushQueueIfNeeded(true);
     await checkRemoteUpdate(0);
+    await pushSnapshot();
     await heartbeatDevices();
     emitStatus();
   })();
@@ -845,6 +977,7 @@ export function stopSyncEngine(): void {
   document.removeEventListener('academia:db-ready', onLocalDataChanged);
   document.removeEventListener('academia:music-changed', onLocalDataChanged);
   document.removeEventListener('academia:friends-changed', onLocalDataChanged);
+  window.removeEventListener('academia:guild-changed', onLocalDataChanged);
   document.removeEventListener('academia:player-prefs-changed', onLocalDataChanged);
   document.removeEventListener('academia:lock-prefs-changed', onLocalDataChanged);
   document.removeEventListener('academia:navbar-mode-changed', onLocalDataChanged);

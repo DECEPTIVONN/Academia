@@ -111,7 +111,7 @@ export function FriendQrModal({
   const [addedCodes, setAddedCodes] = useState<Set<string>>(addedFriendCodes);
   /* v4.53.0 — anima a saída antes de o pai desmontar o modal. */
   const { closing, requestClose } = useModalExit(onClose);
-  /* v4.56.17 — transição entre "Meu QR Code" e "Buscar jogador". */
+  /* v4.56.17 — transição entre "Meu QR Code" e "Buscar usuário". */
   const reduceMotion = useReducedMotion() ?? false;
 
   /* Gera o QR branco sobre fundo transparente (o verde do cartão aparece). */
@@ -166,7 +166,7 @@ export function FriendQrModal({
           setResults([]);
           setSearchError(
             error instanceof PlayerSearchOfflineError
-              ? 'Conecte-se à internet para buscar jogadores.'
+              ? 'Conecte-se à internet para buscar usuários.'
               : 'Não foi possível buscar agora. Tente novamente.',
           );
         })
@@ -201,7 +201,7 @@ export function FriendQrModal({
     standaloneSound.playMove();
     onAddPlayer({
       code: player.id,
-      name: player.displayName || player.username || 'Jogador',
+      name: player.displayName || player.username || 'Usuário',
     });
     setAddedCodes((current) => {
       const next = new Set(current);
@@ -245,7 +245,7 @@ export function FriendQrModal({
 
   const resultsContent = (() => {
     if (searching) {
-      return <p className="friend-qr__empty">Buscando jogadores…</p>;
+      return <p className="friend-qr__empty">Buscando usuários…</p>;
     }
     if (searchError) {
       return <p className="friend-qr__empty">{searchError}</p>;
@@ -253,14 +253,14 @@ export function FriendQrModal({
     if (!canSearch) {
       return (
         <p className="friend-qr__empty">
-          Digite ao menos 2 letras do nome, @username ou tag do jogador.
+          Digite ao menos 2 letras do nome, @username ou tag do usuário.
         </p>
       );
     }
     if (results.length === 0) {
       return (
         <p className="friend-qr__empty">
-          Nenhum jogador encontrado para “{term}”.
+          Nenhum usuário encontrado para “{term}”.
         </p>
       );
     }
@@ -316,7 +316,7 @@ export function FriendQrModal({
             Adicionar Amigos
           </h2>
           <p className="friend-qr__subtitle">
-            Compartilhe seu QR Code ou encontre um jogador pelo nome, @username ou tag.
+            Compartilhe seu QR Code ou encontre um usuário pelo nome, @username ou tag.
           </p>
         </div>
 
@@ -339,7 +339,7 @@ export function FriendQrModal({
             onClick={() => handleSelectPanel('buscar')}
           >
             <SearchIcon size={15} />
-            Buscar jogador
+            Buscar usuário
           </button>
         </div>
 
@@ -394,7 +394,7 @@ export function FriendQrModal({
                       autoCorrect="off"
                       spellCheck={false}
                       onChange={(event) => handleQueryChange(event.target.value)}
-                      aria-label="Pesquisar jogador por nome, username ou tag"
+                      aria-label="Pesquisar usuário por nome, username ou tag"
                     />
                     {query.length > 0 && (
                       <button

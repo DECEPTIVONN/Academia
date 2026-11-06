@@ -2,6 +2,25 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.71.0] - 2026-11-05
+
+**Social com linguagem de treino (sem “partidas”) e amigos/guildas sincronizados entre dispositivos.**
+
+### Changed
+- `src-app/src/features/social/LigasFeature.tsx` — o convite da liga semanal passou de **“JOGUE E DISPUTE!”** para **“TREINE E DISPUTE!”** (com o texto de apoio falando de pontos ganhos nos treinos); **“Simular Partida”** virou **“Simular Treino”** no controle semanal e **“Simular Treino Mensal”** no mensal, e o texto do mensal deixou de citar Tetris/jogar. As mensagens de fim de temporada também falam de treinos em vez de batalhas/partidas. Ao adicionar um resultado da busca de amigos, além da lista local, o app registra o convite em `friendships` (quando há conta + nuvem) para a amizade chegar aos outros dispositivos.
+- `src-app/src/features/social/FriendQrModal.tsx` + `friend-search.ts` — a aba/aria/estados do modal **Adicionar Amigos** falam **“Buscar usuário”**, “Buscando usuários…”, “Nenhum usuário encontrado…” e “Pesquisar usuário…”; o fallback de nome também virou **“Usuário”**.
+- `src-app/src/core/sync/sync-manager.ts` — o snapshot agora inclui o **estado das guildas** (`academia_guilds_v1`) e o **código permanente de convite** (`academia_friend_code_v1`), além dos amigos que já existiam; ao aplicar um snapshot remoto, a guilda e o código são gravados no `localStorage` e os eventos `academia:guild-changed`/`academia:friends-updated` atualizam a UI. O motor escuta `academia:guild-changed` para publicar a mudança, e a assinatura canônica ignora `updatedAt`/`originDeviceId` (campos voláteis), então o snapshot aplicado não volta à nuvem como se fosse alteração local. Amigos são unidos por `id` (um snapshot antigo não apaga um amigo novo) e o estado de guilda carrega `updatedAt` para o merge “mais novo vence” entre aparelhos; se o snapshot remoto for mais antigo, o merge local é republicado.
+- `src-app/src/features/social/guild-data.ts` — `GuildState` ganhou `updatedAt`, carimbado em toda escrita (`writeGuildState`) para o desempate entre dispositivos.
+- `Diretrizes/system_map.json` (versão **4.71.0**), `context.md` e `RELATORIO-PENDENCIAS.md` (amizades/guildas agora sincronizam), além deste CHANGELOG.
+
+### Fixed
+- **Amigos e guildas não apareciam em outros dispositivos** — entrar/criar/sair de guilda e adicionar amigo por QR/link/busca ficava só no `localStorage` do aparelho, porque a guilda não entrava no snapshot e o código de convite não era sincronizado. O snapshot inicial também passou a ser publicado após a checagem remota, garantindo que os dados sociais locais subam mesmo sem uma alteração de treino posterior.
+- **Ping-pong de sincronização** — o snapshot era comparado incluindo `updatedAt` (novo a cada build) e `originDeviceId` (diferente por aparelho), então todo snapshot recebido era reenviado. A comparação agora usa apenas o conteúdo real.
+- **Mudança de guilda não era publicada** — `guild-data.ts` despacha `academia:guild-changed` em `window`, mas o motor escutava em `document` (e o snapshot aplicado despachava em `document`, sem chegar a `useGuildState`). Agora o motor escuta em `window` e o evento aplicado borbulha (`bubbles: true`). Snapshot legado sem `friends`/`guilds` também não apaga mais os dados sociais locais: eles voltam para a nuvem no push seguinte.
+
+### Verificação
+- `npx tsc -b` OK · `npx oxlint src` 0 erros · `npm run build` OK · `npm run lint:docs` OK.
+
 ## [v4.70.0] - 2026-11-03
 
 **Tela de bloqueio e carregamento passam a usar somente a arte padrão: a personalização de background (presets, upload e URL) saiu do produto.**

@@ -1,5 +1,5 @@
 /**
- * friend-search.ts — busca de jogadores pelo nome/tag (tabela public.profiles).
+ * friend-search.ts — busca de usuários pelo nome/tag (tabela public.profiles).
  *
  * A lista de amigos do app é local-first, mas o cadastro (username/display_name)
  * fica no Supabase. A busca só é usada para preencher o convite com o `id` da
@@ -76,7 +76,7 @@ export async function searchPlayers(
         return {
           id: row.id as string,
           username,
-          displayName: displayName || username || 'Jogador',
+          displayName: displayName || username || 'Usuário',
         };
       })
       .filter((player: PlayerSearchResult) => Boolean(player.username || player.displayName));

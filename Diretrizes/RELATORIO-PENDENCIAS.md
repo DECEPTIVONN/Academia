@@ -109,9 +109,10 @@
 - **Limitação:** o canal é público e o código é a única credencial — sem backend não há revogação de uso único; o login cruzado não foi exercitado com conta real (exige credenciais e dois aparelhos).
 - “Vincular Chave” continua existindo e é apenas namespace de sync, não autenticação.
 
-### 4.2 Amizades sem backend
-- `friend-invites.ts`: *“a lista de amigos do app é local-first; não há tabela de amizades”*.
-- Consequência: amigo adicionado não vê você, não há aceite/notificação real, e a lista não sincroniza entre contas (o snapshot de sync leva os amigos por chave, mas é replicação, não relação).
+### 4.2 Amizades: lista local-first + relação na nuvem
+- `friend-invites.ts`: *“a lista de amigos do app é local-first”*; a relação bilateral de contas reais vive na tabela `friendships` (convite/aceite, `friends_overview`).
+- A lista replica entre os aparelhos do mesmo usuário pelo snapshot de sync (`academia_added_friends_v1`, união por `id`), e **Buscar usuário** cria o convite em `friendships` ao adicionar.
+- Consequência restante: convite por QR/link adicionado fora do app não gera o convite em `friendships` — o outro lado não vê a solicitação até um dos dois usar a busca.
 
 ### 4.3 Chat / presença / ranking global
 - Nenhum canal Realtime para chat social; presença “on-line” vem de dados fixos (`online: true/false`).
