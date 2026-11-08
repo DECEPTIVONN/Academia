@@ -39,6 +39,7 @@ import { fadeIn, fadeSwap } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
 import { convertSpeedValue, getSpeedUnitLabel, isFocusModeDefault } from '@/lib/app-prefs';
 import './ficha-focus.css';
+import './ficha-motion.css';
 
 /* v4.22.0 — o modo "Coleção" (deck) saiu; o 3º slot virou o botão FOCO. */
 type ViewMode = 'table' | 'grid';

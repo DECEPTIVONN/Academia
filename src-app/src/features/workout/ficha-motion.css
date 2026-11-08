@@ -1,0 +1,81 @@
+/* ============================================================
+   FICHA — transição de entrada/saída do overlay de treino (v4.72.1)
+   (overlay montado em src-app/src/App.tsx + conteúdo em FichaFeature.tsx)
+
+   A entrada legada era só um fade com scale(0.98) em 0.32 s e o conteúdo
+   aparecia de uma vez, dando a sensação de "troca de página". Aqui o overlay
+   sobe levemente com desaceleração longa e o conteúdo entra em duas etapas
+   (hero → corpo da ficha), sem mexer no layout das seções.
+
+   O CSS legado (legacy-style/treino/secoes/ficha-overlay.css) segue intacto;
+   estas regras são importadas depois e vencem por ordem de cascata.
+   ============================================================ */
+
+.ficha-overlay {
+  animation: fichaOverlayEnter 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Saída alinhada aos 240 ms do `closeFichaAnimated` (App.tsx). */
+.ficha-overlay.is-closing {
+  animation: fichaOverlayLeave 0.24s cubic-bezier(0.4, 0, 0.2, 1) both;
+  pointer-events: none;
+}
+
+@keyframes fichaOverlayEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.994);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fichaOverlayLeave {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.996);
+  }
+}
+
+/* Conteúdo em cascata curta: o hero aparece primeiro, o corpo logo depois. */
+/* `backwards` (e não `both`): o preenchimento só vale antes do início, para o
+   termo não deixar um transform fixo pendurado nos elementos. */
+.ficha-overlay .treino-hero {
+  animation: fichaContentEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: 60ms;
+}
+
+.ficha-overlay .treino-container > .main-section {
+  animation: fichaContentEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: 130ms;
+}
+
+@keyframes fichaContentEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ficha-overlay,
+  .ficha-overlay.is-closing,
+  .ficha-overlay .treino-hero,
+  .ficha-overlay .treino-container > .main-section {
+    animation-duration: 0.01ms;
+    animation-delay: 0ms;
+  }
+}

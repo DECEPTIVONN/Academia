@@ -60,18 +60,12 @@
 .lock__wall {
   position: absolute;
   inset: 0;
-  background-size: cover;
+  background-size: contain;
   background-position: center;
-  animation: lockWallZoom 15s ease-out forwards;
-}
-
-@keyframes lockWallZoom {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.05);
-  }
+  /* v4.72.1 — a arte ficava em zoom lento (scale 1 → 1.05 em 15 s): como é a
+     MESMA arte da splash de carregamento, a imagem parecia "redimensionar"
+     logo no boot. Fica estática, no mesmo enquadramento da splash (contain,
+     como o screenBackgroundStyle aplica inline na v4.70.0). */
 }
 
 .lock__shade {

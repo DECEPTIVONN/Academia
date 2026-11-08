@@ -1,0 +1,300 @@
+/* ============================================================
+   CALCULADORA DE 1RM — aba Progresso (v4.72.1)
+   (src-app/src/features/training/ProgressoFeature.tsx)
+
+   Reformula a interface do cartão legado (.calculator-card): campos com
+   sufixo de unidade, atalhos de repetições, resultado em destaque e a
+   tabela de cargas de trabalho por percentual do 1RM.
+
+   BEM com prefixo `rm-`. Acentos SEMPRE em `rgba(var(--primary-rgb), X)` e
+   `var(--primary)` para acompanhar o tema escolhido em Configurações.
+   ============================================================ */
+
+/* O cartão legado já é um .p-card; aqui só trocamos o gradiente/realce. */
+.rm-calc {
+  background: linear-gradient(
+    150deg,
+    rgba(var(--primary-rgb, 139, 92, 246), 0.16),
+    rgba(0, 0, 0, 0.42) 58%
+  );
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+}
+
+.rm-calc__sub {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.rm-calc__sub strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
+/* ---------- Campos ---------- */
+.rm-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.rm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.rm-field__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rm-field__control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.rm-field__control:focus-within {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.75);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 139, 92, 246), 0.18);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.rm-field__input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  outline: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.rm-field__input::-webkit-outer-spin-button,
+.rm-field__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.rm-field__input::placeholder {
+  color: rgba(255, 255, 255, 0.22);
+  font-weight: 700;
+}
+
+.rm-field__unit {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* ---------- Atalhos de repetições ---------- */
+.rm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.rm-chip {
+  min-width: 42px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease,
+    transform 0.12s ease;
+}
+
+.rm-chip:hover {
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+  color: var(--text);
+}
+
+.rm-chip:active {
+  transform: scale(0.95);
+}
+
+.rm-chip.is-active {
+  background: var(--primary);
+  border-color: transparent;
+  color: #0b0b0f;
+  box-shadow: 0 6px 16px rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+/* ---------- Resultado ---------- */
+/* Mantém a classe legada .calc-result; este bloco refina o visual. */
+.rm-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 16px;
+  padding: 18px 16px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+.rm-result--ready {
+  border-style: solid;
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+  background: radial-gradient(
+    120% 120% at 50% 0%,
+    rgba(var(--primary-rgb, 139, 92, 246), 0.22),
+    rgba(255, 255, 255, 0.02) 70%
+  );
+}
+
+.rm-result__label {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rm-result__value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 2.6rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--primary-light);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
+}
+
+.rm-result__value small {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rm-result__hint {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* ---------- Tabela por percentual ---------- */
+.rm-table {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.rm-table__title {
+  margin: 0 0 10px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rm-table__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rm-row {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.rm-row__pct {
+  font-weight: 800;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rm-row__bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.rm-row__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--primary-rgb, 139, 92, 246), 0.45),
+    var(--primary)
+  );
+  transition: width 0.3s ease;
+}
+
+.rm-row__val {
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rm-note {
+  margin: 14px 0 0;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 360px) {
+  .rm-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .rm-result__value {
+    font-size: 2.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rm-chip,
+  .rm-field__control,
+  .rm-result,
+  .rm-row__fill {
+    transition-duration: 0.01ms;
+  }
+}

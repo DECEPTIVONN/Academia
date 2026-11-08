@@ -158,18 +158,81 @@
     aspect-ratio: 1 / 1.3;
 }
 
-/* v4.58.0 — MINHA COLEÇÃO no modo DECK (Configurações → Preferências do App):
-   os mesmos cards do grid do deck (4 colunas, proporção 1/1.35). */
-.collection-grid--deck {
+/* v4.58.0 — MINHA COLEÇÃO no modo DECK (Configurações → Preferências do App).
+   v4.72.1 — espelha o grid do deck (#deckActiveGrid.royale-view, cards.css):
+   4 colunas em qualquer largura, proporção 1/1.8 e a tipografia do card do
+   deck. Antes a coleção caía para 2 colunas no mobile e usava 1/1.35, então
+   não parecia o deck no celular. */
+.collection-grid.collection-grid--deck {
     grid-template-columns: repeat(4, 1fr);
-}
-
-@media (max-width: 850px) {
-    .collection-grid--deck { grid-template-columns: repeat(2, 1fr); }
+    gap: 8px;
+    align-items: start;
 }
 
 .collection-grid--deck .collection-card {
-    aspect-ratio: 1 / 1.35;
+    aspect-ratio: 1 / 1.8;
+    border-radius: 14px;
+}
+
+/* Mesma hierarquia tipográfica do modo royale. */
+.collection-grid--deck .deck-card-header {
+    font-size: 0.6rem;
+    padding: 2px 4px;
+}
+
+.collection-grid--deck .deck-card-name {
+    font-size: 0.75rem;
+}
+
+.collection-grid--deck .deck-card-level {
+    font-size: 0.65rem;
+}
+
+/* Em 4 colunas não sobra largura para o par de ícones: a linha fica só com
+   "Séries: 3 × 10", como no card do deck. Editar/detalhes seguem acessíveis
+   no modo compacto e na aba EXERCÍCIOS. */
+.collection-grid--deck .deck-card-level-row {
+    gap: 0;
+}
+
+.collection-grid--deck .btn-ex-edit-inline {
+    display: none;
+}
+
+@media (max-width: 430px) {
+    .collection-grid.collection-grid--deck {
+        gap: 6px;
+    }
+
+    .collection-grid--deck .collection-card {
+        border-radius: 12px;
+    }
+
+    .collection-grid--deck .deck-card-header {
+        height: 26px;
+        font-size: 0.62rem;
+        letter-spacing: 0.8px;
+    }
+
+    .collection-grid--deck .deck-card-info {
+        padding: 8px 6px;
+        gap: 3px;
+    }
+
+    .collection-grid--deck .deck-card-name {
+        font-size: clamp(0.62rem, 2.7vw, 0.78rem);
+        letter-spacing: 0.2px;
+        line-height: 1.15;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .collection-grid--deck .deck-card-level {
+        font-size: 0.58rem;
+    }
 }
 
 /* Ghost do arraste coleção → deck: o MESMO card do deck no modo grid

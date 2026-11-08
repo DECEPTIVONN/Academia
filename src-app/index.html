@@ -45,6 +45,17 @@
       /* v4.27 — com imagem personalizada o logo EVO FIT / WORKOUT TRACKER
          continua visível (pedido do usuário); só a saudação fica oculta. */
       .splash-screen--custom .splash-screen__user { display: none; }
+      /* v4.72.1 — a arte padrão entra SEM transição: o `transition: background`
+         de .splash-screen__bg também animava o background-size (auto → contain),
+         então a imagem aparecia em tamanho natural e encolhia nos primeiros
+         300 ms — o "leve redimensionamento" visível no carregamento. */
+      .splash-screen__art {
+        transition: none !important;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-color: #000;
+      }
       /* v4.28 — logo CENTRADO (o conteúdo ocupa a tela toda e centraliza;
          a barra sai do fluxo e vai para o rodapé). */
       .splash-screen--custom .splash-screen__content {
@@ -388,11 +399,12 @@
             var defaultBg = defaultEl && defaultEl.src ? defaultEl.src : '';
             if (defaultBg) {
               var bgEl = document.getElementById('splashBg');
+              /* Tudo aplicado no MESMO passo (classe + URL): a classe
+                 .splash-screen__art fixa contain/center e desliga a
+                 transição do background, então a arte já nasce no tamanho
+                 final — sem reescalar no primeiro paint. */
               bgEl.style.backgroundImage = 'url("' + defaultBg + '")';
-              bgEl.style.backgroundSize = 'contain';
-              bgEl.style.backgroundPosition = 'center';
-              bgEl.style.backgroundRepeat = 'no-repeat';
-              bgEl.style.backgroundColor = '#000';
+              bgEl.classList.add('splash-screen__art');
               bgEl.removeAttribute('data-banner');
               splash.classList.add('splash-screen--custom');
             }

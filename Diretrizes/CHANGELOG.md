@@ -2,6 +2,35 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.72.1] - 2026-11-08
+
+**PWA confiável sem internet (o login deixou de tomar a tela), splash sem o reescalonamento da arte, calculadora de 1RM redesenhada, Sequências acessível pelo Início com transições suaves, Ficha com entrada/saída mais suave e Minha coleção no modo deck igual ao deck no celular.**
+
+### Added
+- `src-app/src/features/social/share-invite.ts` — helper `shareFriendInvite(name?)` com o convite de amigo (Web Share → área de transferência → toast), extraído do card de Atividade porque a mesma tela passou a ser aberta por dois lugares.
+- `src-app/src/features/training/rm-calculator.css` — estilos BEM da calculadora de 1RM (`.rm-calc`, `.rm-fields`/`.rm-field__input`/`__unit`, `.rm-chips`/`.rm-chip`, `.rm-result`, `.rm-table`/`.rm-row`, `.rm-note`), com `prefers-reduced-motion`.
+- `src-app/src/features/workout/ficha-motion.css` — transição do overlay da Ficha: entrada de 0,42 s (fade + subida de 18 px, `cubic-bezier(0.22, 1, 0.36, 1)`), saída de 0,24 s casada com os 240 ms do `closeFichaAnimated` e entrada em cascata do hero e do corpo da ficha (`fill: backwards`, sem deixar `transform` pendurado).
+
+### Changed
+- `src-app/src/core/auth/auth-context.tsx` — boot **offline-first**: o snapshot `mbc_offline_user` assume na hora quando `navigator.onLine === false`; com conta em cache, `getSession()` corre contra um timeout de 2,5 s (8 s sem cache) e, se não houver sessão, uma sonda `HEAD /index.html?ping=` decide entre seguir offline com o snapshot ou pedir login. A promise do `getSession()` continua observada em paralelo e troca a sessão offline pela real quando ela chega; `SIGNED_OUT`, o evento `online` e o `signOut` seguem com o comportamento anterior.
+- `src-app/src/App.tsx` — novo `BootLoading({label})` reaproveitado pela checagem de sessão e pelo bootstrap: durante `authLoading` aparece **"Verificando sua conta"** (com o fundo da arena), nunca a tela de login. `DashboardFeature` recebe `onNavigate` para o link do calendário.
+- `src-app/src/features/training/ProgressoFeature.tsx` + `rm-calculator.css` — calculadora de 1RM refeita: campos com sufixo de unidade (`KG`/`reps`) e `inputMode` numérico, chips de repetições (1/3/5/8/10/12), resultado em destaque com o resumo `80 KG × 10 repetições`, tabela de **Cargas de trabalho** (100 % a 70 % do 1RM com barra proporcional), aviso de Brzycki acima de 12 reps e validação explícita (carga > 0, 1–30 reps; aceita vírgula decimal). Ids `#calcWeight`/`#calcReps`/`#calcResult` mantidos. O convite de amigo passou a usar `shareFriendInvite` e a aba escuta `academia:open-progresso-calendar` para abrir o calendário vindo do Início.
+- `src-app/src/features/training/OfensivasOverlay.tsx` + `ofensivas.css` — transições da tela de Sequências: a troca entre **Sequência Atual** e **Treinos** sai em 150 ms (`.of-panel.is-leaving`, `key` por aba) antes de entrar o novo painel, com `aria-pressed` nas abas; a folha inferior de informações passa a usar `usePresenceValue` e fecha animada (`.of-sheet.is-closing` + `of-sheet-down`, conteúdo preservado durante a saída).
+- `src-app/src/features/dashboard/DashboardFeature.tsx` — o botão de **ofensiva do Início** (`#dashBtnOfensiva`) abre a Central de Ofensivas ("Sequências") com os dados do Dashboard, em vez de não fazer nada; "Abrir calendário" fecha a tela, navega para a Progresso e dispara `academia:open-progresso-calendar`; o convite usa o helper compartilhado.
+- `src-app/src/features/workout/FichaFeature.tsx` — importa `ficha-motion.css`.
+- `src-app/src/legacy-style/treino/secoes/deck-builder.css` — o modo deck da **Minha coleção** espelha o grid do deck (`#deckActiveGrid.royale-view`): **4 colunas em qualquer largura** (antes caía para 2 em ≤850 px), proporção **1/1.8** (era 1/1.35), tipografia do card royale (cabeçalho 0,6 rem, nome 0,75 rem, séries 0,65 rem) e o bloco de ≤430 px (gap 6 px, raio 12, nome em 2 linhas). Os dois ícones inline são ocultados nesse modo para a linha ficar só com "Séries: 3 × 10", como no deck (editar/detalhes seguem no modo compacto e na aba EXERCÍCIOS).
+- `Diretrizes/system_map.json` (versão **4.72.1**) e este CHANGELOG.
+
+### Fixed
+- **Login impossível no modo offline após alguns dias** — o `getSession()` do supabase-js tenta renovar o token com backoff (até ~30 s) e, ao falhar sem rede, emite `SIGNED_OUT`; o `AppContent` renderizava `<AuthScreen />` tanto em `loading` quanto sem usuário, então o PWA instalado abria na tela de login e ficava inutilizável. Agora o snapshot da última conta entra imediatamente quando o navegador está offline, a espera pela sessão tem teto de 2,5 s e o intervalo de checagem mostra um carregamento em vez do login.
+- **Imagem de carregamento "redimensionando" no boot** — duas causas somadas: `.lock__wall` rodava `lockWallZoom` (scale 1 → 1,05 em 15 s) sobre a MESMA arte da splash e o `transition: background .3s` de `.splash-screen__bg` também animava o `background-size` (auto → contain), então a arte aparecia em tamanho natural e encolhia nos primeiros 300 ms. A animação do lock saiu (e o fundo ficou `contain`, igual ao `screenBackgroundStyle`) e a splash aplica `backgroundImage` + a classe `.splash-screen__art` (`contain`/`center`/`no-repeat`/`#000`, `transition: none`) no mesmo passo.
+- **Minha coleção "modo deck" não parecia o deck** — era 2 colunas de 1/1.35 no celular contra 4 colunas de 1/1.8 no deck. Agora as duas grades medem o mesmo (68,4 × 123,1 px na coleção e 67,4 × 122,9 px no deck em 362 px de largura).
+
+### Verificação
+- `npx tsc -b` OK · `npx oxlint src` 0 erros (38 avisos de linha de base) · `npm run build` OK · `npm run lint:docs` OK.
+- Navegador (dev server Vite, modo teste): coleção no modo deck em **4 colunas** de 68,4 × 123,1 px contra 67,4 × 122,9 px do deck; `#dashBtnOfensiva` abre a Central de Ofensivas, a aba Treinos aplica `.of-panel.is-leaving` e troca após 150 ms com `aria-pressed` correto, e a folha inferior fecha com `of-fade-out` + `of-sheet-down` antes de desmontar; o overlay da Ficha entra com `fichaOverlayEnter`/`fichaContentEnter` e sai com `fichaOverlayLeave` (o navegador de teste tem `prefers-reduced-motion: reduce`, então as durações aparecem zeradas pelas regras de acessibilidade).
+- O modo offline real (dias sem rede, token vencido) **não foi reproduzido** nesta sessão: a lógica foi revisada e o caminho online validado; a confirmação final depende de abrir o PWA instalado sem sinal.
+
 ## [v4.72.0] - 2026-11-07
 
 **Layout mobile escalável de 320 a 600 px: a tabela da Ficha passa a caber sem rolagem lateral e hero, deck e rodapé de métricas não estouram mais em telas médias e pequenas.**
@@ -1149,7 +1178,8 @@ Medido no build de produção (`vite preview`): antes, o carregamento da página
 ## [v4.48.0] - 2026-10-25
 
 **Música de fundo (MAIN) não sobrevive mais ao fechamento do site.**
-### Fixed
+
+### Fixed
 - `src-app/src/features/music/audio-engine.ts`: a MAIN — e as demais faixas ocultas (RESULT, Missões), que tocam como `AudioBufferSourceNode` em loop sobre um `AudioContext` — continuava tocando depois de fechar o site; o navegador não suspende Web Audio quando a aba/janela desaparece e, no computador, fechar o painel/vista do app nem sempre destrói a página. Novo tratamento de ciclo de vida no `initAudioEngine()`: `pagehide` (fechar aba/janela, navegar) e `visibilitychange → hidden` pausam tudo (fonte Web Audio + `<audio>` do site + uploads da fila + `pauseVideo()` do YouTube) via `pauseAllForLifecycle()`; `visibilitychange → visible` retoma de onde parou com `resumeAfterVisibility()` (só se a música estava tocando e a pref seguir ligada). A pausa usa `pauseHidden()`, então o ponto da faixa é preservado.
 - `src-app/src/lib/background-music.ts`: o loop legado do `HTMLAudioElement` recebe o mesmo tratamento (`pagehide`/`hidden` pausam; `visible` retoma quando a reprodução é deste módulo) — hoje o `audio-engine` assume a posse no boot, então isto é a rede de segurança caso o motor falhe.
 

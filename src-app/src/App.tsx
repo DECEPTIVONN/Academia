@@ -93,9 +93,36 @@ export function App() {
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
-  if (authLoading) return <AuthScreen />;
+  /* v4.72.1 — durante a checagem da sessão NÃO mostramos a tela de login: ela
+     exige rede e, no modo offline, o usuário ficava preso ali (o refresh do
+     token pode levar até ~30 s sem sinal). Uma tela de carregamento ocupa esse
+     intervalo; o login só aparece quando a sessão é realmente inexistente. */
+  if (authLoading) return <BootLoading label="Verificando sua conta" />;
   if (!user) return <AuthScreen />;
   return <AppShell />;
+}
+
+/* Casca de carregamento compartilhada (sessão + bootstrap do banco local). */
+function BootLoading({ label = 'Carregando Evo Fit...' }: { label?: string }) {
+  return (
+    <div className="h-screen bg-[#0a0514] text-white relative overflow-x-hidden">
+      <div className="cr-bg-container fixed inset-0 pointer-events-none z-0">
+        <div className="cr-bg-layer" />
+        <div className="cr-bg-particles">
+          <div className="cr-particle cr-p1" />
+          <div className="cr-particle cr-p2" />
+          <div className="cr-particle cr-p3" />
+          <div className="cr-particle cr-p4" />
+          <div className="cr-particle cr-p5" />
+        </div>
+        <div className="cr-bg-overlay" />
+      </div>
+      <div className="relative z-10 flex flex-col h-full items-center justify-center gap-2">
+        <p className="text-center text-xl">{label}</p>
+        <p className="text-center text-zinc-400">Por favor, aguarde enquanto seus dados são carregados.</p>
+      </div>
+    </div>
+  );
 }
 
 function AppShell() {
@@ -824,27 +851,7 @@ function AppShell() {
   }, [isPerfilOverlayOpen, isPerfilClosing, closePerfilOverlay, isSearchOpen]);
 
   /* ── Se ainda estiver carregando, mostrar tela de loading ── */
-  if (bootstrapLoading) {
-    return (
-      <div className="h-screen bg-[#0a0514] text-white relative overflow-x-hidden">
-        <div className="cr-bg-container fixed inset-0 pointer-events-none z-0">
-          <div className="cr-bg-layer" />
-          <div className="cr-bg-particles">
-            <div className="cr-particle cr-p1" />
-            <div className="cr-particle cr-p2" />
-            <div className="cr-particle cr-p3" />
-            <div className="cr-particle cr-p4" />
-            <div className="cr-particle cr-p5" />
-          </div>
-          <div className="cr-bg-overlay" />
-        </div>
-        <div className="relative z-10 flex flex-col h-full">
-          <p className="text-center py-20 text-xl">Carregando Evo Fit...</p>
-          <p className="text-center text-zinc-400">Por favor, aguarde enquanto seus dados são carregados.</p>
-        </div>
-      </div>
-    );
-  }
+  if (bootstrapLoading) return <BootLoading />;
 
   /* ── Se houve erro no bootstrap, mostrar tela de erro ── */
   if (bootstrapError) {
@@ -950,6 +957,7 @@ function AppShell() {
                 onOpenHelp={openProfileHelp}
                 overlay={dashOverlay}
                 onOverlayChange={setDashOverlay}
+                onNavigate={navigateSection}
               />
 
               {/* Aba SOCIAL — placeholder de Ligas.html (v4.0.14-social).

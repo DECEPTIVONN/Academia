@@ -49,9 +49,7 @@ import {
 } from '@/lib/app-prefs';
 import { Award, ArrowLeft, ChevronRight, Dumbbell, Flame, Layers, Weight, X, Zap } from 'lucide-react';
 import { getBadgeDefinitions, getProfileStats } from '@/features/profile/profile-data';
-import { buildFriendInviteUrl, getFriendCode } from '@/features/social/friend-invites';
-import { shareNative } from '@/lib/native-share';
-import { showToast } from '@/lib/toast';
+import { shareFriendInvite } from '@/features/social/share-invite';
 import { BodyMetricsOverlay } from './BodyMetricsOverlay';
 import { OfensivasOverlay } from './OfensivasOverlay';
 import { TrendRadarOverlay } from './TrendRadarOverlay';
@@ -73,6 +71,7 @@ import {
 import './progresso.css';
 import './volume-details.css';
 import './calendar-overlay.css';
+import './rm-calculator.css';
 
 type CalView = 'monthly' | 'weekly';
 
@@ -702,13 +701,25 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }, [calView, calendarOpen]);
 
-  /* ===== Calculadora 1RM (Brzycki) ===== */
-  const rmWeight = parseFloat(calcWeight);
+  /* ===== Calculadora 1RM (Brzycki) =====
+     A fórmula só é confiável numa faixa curta de repetições e fica negativa a
+     partir de ~37 reps — por isso a validação explícita em vez de confiar no
+     parseFloat. A tabela de percentuais mostra as cargas de trabalho. */
+  const rmWeight = parseFloat(calcWeight.replace(',', '.'));
   const rmReps = parseFloat(calcReps);
-  const rmResult =
-    rmWeight > 0 && rmReps > 0
-      ? Math.round(rmWeight / (1.0278 - 0.0278 * rmReps))
-      : '--';
+  const rmValid =
+    Number.isFinite(rmWeight) &&
+    rmWeight > 0 &&
+    Number.isFinite(rmReps) &&
+    rmReps >= 1 &&
+    rmReps <= 30;
+  const rmValue = rmValid
+    ? Math.round(rmWeight / (1.0278 - 0.0278 * rmReps))
+    : null;
+  const rmResult = rmValue ?? '--';
+  const rmHighReps = Number.isFinite(rmReps) && rmReps > 12;
+  const RM_PERCENTS = [100, 95, 90, 85, 80, 75, 70];
+  const RM_REP_CHIPS = [1, 3, 5, 8, 10, 12];
 
   /* ===== Modal do dia ===== */
   const dayRow = selectedDate ? histMap.get(selectedDate) : undefined;
@@ -778,6 +789,19 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
     setCalendarOpen(true);
   };
 
+  /* v4.72.1 — a Central de Ofensivas também é aberta pelo Início; o link
+     "Abrir calendário completo" de lá navega para esta aba e pede o calendário
+     por evento (a seção já está montada, então basta abrir a tela). */
+  useEffect(() => {
+    const onOpenCal = () => {
+      setOfensivasOpen(false);
+      setViewDate(new Date());
+      setCalendarOpen(true);
+    };
+    window.addEventListener('academia:open-progresso-calendar', onOpenCal);
+    return () => window.removeEventListener('academia:open-progresso-calendar', onOpenCal);
+  }, []);
+
   /* Fecha o calendário junto com o modal do dia (a célula selecionada não pode
      ficar aberta sozinha depois que a tela sai). */
   const closeCalendar = () => {
@@ -794,24 +818,9 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
 
   const closeVolumeDetail = () => setVolumeDetailGroup(null);
 
-  /* Convite de amigo (fluxo do Social) reaproveitado pelo card de compartilhar. */
-  const inviteFriend = async () => {
-    const code = getFriendCode();
-    const name = legacy?.profileCustomization?.nome || 'Seu amigo';
-    const url = buildFriendInviteUrl(code, name);
-    const result = await shareNative({
-      title: 'Academia',
-      text: 'Treine comigo no Academia — use meu convite de amigo:',
-      url,
-    });
-    if (result === 'shared' || result === 'cancelled') return;
-    try {
-      await navigator.clipboard.writeText(url);
-      showToast('Convite copiado para a área de transferência');
-    } catch {
-      showToast('Não foi possível compartilhar o convite', 'error');
-    }
-  };
+  /* Convite de amigo (fluxo do Social) reaproveitado pelo card de compartilhar
+     — helper compartilhado com o botão de ofensiva do Início. */
+  const inviteFriend = () => shareFriendInvite(legacy?.profileCustomization?.nome);
 
   const shiftMonth = (delta: number) =>
     setViewDate((d) => new Date(d.getFullYear(), d.getMonth() + delta, 1));
@@ -1088,40 +1097,110 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 Tendências (cards Volume e Treinos). */}
 
             {/* ===== Calculadora 1RM ===== */}
-            <div className="p-card calculator-card">
+            <div className="p-card calculator-card rm-calc">
               <div className="p-card-header">
                 <h3>Calculadora de 1RM</h3>
-                <span className="p-card-meta">Estimativa</span>
+                <span className="p-card-meta">Brzycki</span>
               </div>
-              <p style={{ fontSize: '.85rem', marginBottom: 15 }}>
-                Calcule o peso máximo que você conseguiria levantar para 1 repetição.
+              <p className="rm-calc__sub">
+                Informe uma série que você já consegue fazer para estimar a carga máxima
+                de <strong>1 repetição</strong>.
               </p>
-              <div className="calc-row">
-                <div className="form-group">
-                  <label>Carga ({weightUnit})</label>
-                  <input
-                    type="number"
-                    id="calcWeight"
-                    placeholder="Ex: 80"
-                    value={calcWeight}
-                    onChange={(e) => setCalcWeight(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Reps</label>
-                  <input
-                    type="number"
-                    id="calcReps"
-                    placeholder="Ex: 10"
-                    value={calcReps}
-                    onChange={(e) => setCalcReps(e.target.value)}
-                  />
-                </div>
+
+              <div className="rm-fields">
+                <label className="rm-field" htmlFor="calcWeight">
+                  <span className="rm-field__label">Carga levantada</span>
+                  <span className="rm-field__control">
+                    <input
+                      type="number"
+                      id="calcWeight"
+                      className="rm-field__input"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.5"
+                      placeholder="80"
+                      value={calcWeight}
+                      onChange={(e) => setCalcWeight(e.target.value)}
+                    />
+                    <span className="rm-field__unit">{weightUnit}</span>
+                  </span>
+                </label>
+
+                <label className="rm-field" htmlFor="calcReps">
+                  <span className="rm-field__label">Repetições</span>
+                  <span className="rm-field__control">
+                    <input
+                      type="number"
+                      id="calcReps"
+                      className="rm-field__input"
+                      inputMode="numeric"
+                      min="1"
+                      max="30"
+                      placeholder="10"
+                      value={calcReps}
+                      onChange={(e) => setCalcReps(e.target.value)}
+                    />
+                    <span className="rm-field__unit">reps</span>
+                  </span>
+                </label>
               </div>
-              <div className="calc-result" id="calcResult">
-                <div className="res-val">{rmResult}</div>
-                <div className="res-lbl">{weightUnit} Estimados</div>
+
+              <div className="rm-chips" role="group" aria-label="Sugestões de repetições">
+                {RM_REP_CHIPS.map((reps) => (
+                  <button
+                    type="button"
+                    key={reps}
+                    className={`rm-chip${rmReps === reps ? ' is-active' : ''}`}
+                    aria-pressed={rmReps === reps}
+                    onClick={() => setCalcReps(String(reps))}
+                  >
+                    {reps}
+                  </button>
+                ))}
               </div>
+
+              <div
+                className={`calc-result rm-result${rmValue !== null ? ' rm-result--ready' : ''}`}
+                id="calcResult"
+                aria-live="polite"
+              >
+                <span className="rm-result__label">1RM estimado</span>
+                <span className="rm-result__value">
+                  {rmResult}
+                  <small>{weightUnit}</small>
+                </span>
+                <span className="rm-result__hint">
+                  {rmValue !== null
+                    ? `${rmWeight} ${weightUnit} × ${rmReps} repetições`
+                    : 'Preencha a carga e as repetições'}
+                </span>
+              </div>
+
+              {rmValue !== null && (
+                <div className="rm-table">
+                  <h4 className="rm-table__title">Cargas de trabalho</h4>
+                  <ul className="rm-table__list">
+                    {RM_PERCENTS.map((pct) => (
+                      <li className="rm-row" key={pct}>
+                        <span className="rm-row__pct">{pct}%</span>
+                        <span className="rm-row__bar" aria-hidden="true">
+                          <span className="rm-row__fill" style={{ width: `${pct}%` }} />
+                        </span>
+                        <span className="rm-row__val">
+                          {Math.round((rmValue * pct) / 100)} {weightUnit}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <p className="rm-note">
+                Fórmula de Brzycki
+                {rmHighReps
+                  ? ' — acima de 12 repetições a estimativa tende a superestimar o 1RM.'
+                  : ' — mais precisa entre 1 e 12 repetições.'}
+              </p>
             </div>
           </div>
         </div>

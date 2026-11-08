@@ -83,6 +83,13 @@ function createTestUser(): User {
    o snapshot. */
 const OFFLINE_USER_KEY = 'mbc_offline_user';
 
+/** Espera máxima pela sessão do Supabase antes de cair no snapshot offline
+ *  (com conta em cache). Offline o `getSession()` pode gastar ~30 s tentando
+ *  renovar o token — o app não pode ficar preso nesse tempo. */
+const OFFLINE_BOOT_WAIT_MS = 2500;
+/** Sem snapshot: espera um pouco mais pela sessão real antes de desistir. */
+const ONLINE_BOOT_WAIT_MS = 8000;
+
 function readOfflineUser(): User | null {
   try {
     const raw = localStorage.getItem(OFFLINE_USER_KEY);
@@ -117,7 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isTestMode) return;
     if (!isSupabaseConfigured) return;
 
+    /* O efeito é assíncrono (espera a sessão x snapshot offline): o flag evita
+       gravar estado depois do unmount (StrictMode monta duas vezes em dev). */
+    let cancelled = false;
+
     const applySession = (s: Session | null) => {
+      if (cancelled) return;
       if (s?.user) storeOfflineUser(s.user);
       setSession(s);
       setUser(s?.user ?? null);
@@ -126,6 +138,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
          (a RPC roda uma vez por carregamento; o aviso aparece na Caixa de
          Mensagens via evento `academia:account-restored`). */
       if (s?.user) void cancelDeletionIfPending();
+    };
+
+    /* v4.72.1 — assume a conta do snapshot offline JÁ no boot (sem esperar a
+       rede): é o que mantém o PWA instalado utilizável depois de dias sem
+       sinal, quando o access token venceu e o refresh não pode acontecer. */
+    const applyOfflineUser = (cached: User) => {
+      if (cancelled) return;
+      storeOfflineUser(cached);
+      setSession(null);
+      setUser(cached);
+      setLoading(false);
     };
 
     /* Sem sessão válida: offline, cai para o snapshot da última conta em vez
@@ -140,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
       try {
         const controller = new AbortController();
-        const timer = window.setTimeout(() => controller.abort(), 2500);
+        const timer = window.setTimeout(() => controller.abort(), 2000);
         const res = await fetch(`${window.location.origin}/index.html?ping=${Date.now()}`, {
           method: 'HEAD',
           cache: 'no-store',
@@ -157,28 +180,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const cached = readOfflineUser();
       if (!cached) return false;
       if (await reachable()) return false;
-      setSession(null);
-      setUser(cached);
-      setLoading(false);
+      applyOfflineUser(cached);
       return true;
     };
 
-    supabase.auth
+    /* `getSession()` pode demorar (offline ele tenta renovar o token com
+       backoff). A promise é observada em paralelo: qualquer sessão real que
+       chegar depois troca a sessão offline pela verdadeira. */
+    const sessionTask: Promise<Session | null> = supabase.auth
       .getSession()
-      .then(async ({ data: { session } }) => {
-        if (session?.user) {
-          applySession(session);
-          return;
-        }
-        if (await fallbackWhenOffline()) return;
-        applySession(null);
-      })
-      .catch(async () => {
-        if (await fallbackWhenOffline()) return;
-        setSession(null);
-        setUser(null);
-        setLoading(false);
-      });
+      .then(({ data: { session } }) => session ?? null)
+      .catch(() => null);
+
+    const boot = async () => {
+      const cached = readOfflineUser();
+      const offlineNow =
+        typeof navigator !== 'undefined' && navigator.onLine === false;
+
+      /* Offline declarado + conta em cache: entra na hora, sem tocar a rede. */
+      if (cached && offlineNow) {
+        applyOfflineUser(cached);
+        void sessionTask.then((s) => {
+          if (s?.user) applySession(s);
+        });
+        return;
+      }
+
+      const outcome = await Promise.race([
+        sessionTask.then((s) => ({ kind: 'session' as const, session: s })),
+        new Promise<{ kind: 'timeout' }>((resolve) => {
+          window.setTimeout(
+            () => resolve({ kind: 'timeout' as const }),
+            cached ? OFFLINE_BOOT_WAIT_MS : ONLINE_BOOT_WAIT_MS
+          );
+        }),
+      ]);
+
+      if (outcome.kind === 'session' && outcome.session?.user) {
+        applySession(outcome.session);
+        return;
+      }
+
+      /* Sem sessão (ou a checagem demorou): com conta em cache e rede fora do
+         ar, continua logado offline em vez de cair na tela de login. */
+      if (await fallbackWhenOffline()) {
+        void sessionTask.then((s) => {
+          if (s?.user) applySession(s);
+        });
+        return;
+      }
+
+      applySession(null);
+    };
+
+    void boot();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -209,6 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener('online', onOnline);
 
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
       window.removeEventListener('online', onOnline);
     };

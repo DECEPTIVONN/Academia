@@ -10,7 +10,7 @@
  * `will-change: transform` e vira containing block do `position: fixed`).
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
@@ -20,7 +20,7 @@ import {
   Info,
   Users,
 } from 'lucide-react';
-import { useModalPresence } from '@/hooks/useModalPresence';
+import { useModalPresence, usePresenceValue } from '@/hooks/useModalPresence';
 import { getStreak, today, type LocalData } from '@/core/db/queries';
 import { getFirstDayOfWeek, getWeekDayLabels } from '@/lib/app-prefs';
 import {
@@ -82,6 +82,31 @@ export const OfensivasOverlay: React.FC<OfensivasOverlayProps> = ({
   const [monthPicker, setMonthPicker] = useState(false);
   const [sheetId, setSheetId] = useState<SheetId | null>(null);
   const [firstDay, setFirstDay] = useState(() => getFirstDayOfWeek());
+
+  /* v4.72.1 — troca de aba em duas fases: o painel atual sai (fade + subida
+     curta) e só depois o novo entra, evitando o corte seco entre Sequência
+     Atual e Treinos. */
+  const [tabLeaving, setTabLeaving] = useState(false);
+  const tabTimer = useRef<number | null>(null);
+  const changeTab = (next: 'streak' | 'workouts') => {
+    if (next === tab || tabLeaving) return;
+    setTabLeaving(true);
+    tabTimer.current = window.setTimeout(() => {
+      tabTimer.current = null;
+      setTab(next);
+      setTabLeaving(false);
+    }, 150);
+  };
+  useEffect(
+    () => () => {
+      if (tabTimer.current !== null) window.clearTimeout(tabTimer.current);
+    },
+    []
+  );
+
+  /* Folha de informações: mantém o conteúdo na tela durante a saída animada
+     (`usePresenceValue` guarda o último id durante MODAL_EXIT_MS). */
+  const sheetPresence = usePresenceValue(sheetId);
 
   useEffect(() => {
     const sync = () => setFirstDay(getFirstDayOfWeek());
@@ -186,7 +211,7 @@ export const OfensivasOverlay: React.FC<OfensivasOverlayProps> = ({
   };
 
   const sheet = (() => {
-    switch (sheetId) {
+    switch (sheetPresence.value) {
       case 'week':
         return {
           title: 'Treinos esta semana',
@@ -318,21 +343,23 @@ export const OfensivasOverlay: React.FC<OfensivasOverlayProps> = ({
           <button
             type="button"
             className={`of-tab ${tab === 'streak' ? 'is-active' : ''}`}
-            onClick={() => setTab('streak')}
+            aria-pressed={tab === 'streak'}
+            onClick={() => changeTab('streak')}
           >
             Sequência Atual
           </button>
           <button
             type="button"
             className={`of-tab ${tab === 'workouts' ? 'is-active' : ''}`}
-            onClick={() => setTab('workouts')}
+            aria-pressed={tab === 'workouts'}
+            onClick={() => changeTab('workouts')}
           >
             Treinos
           </button>
         </div>
 
         {tab === 'streak' ? (
-          <div className="of-panel">
+          <div key="streak" className={`of-panel${tabLeaving ? ' is-leaving' : ''}`}>
             <div className="of-weeks">
               {recentWeeks.map((w) => {
                 const isCurrent = w.startDate === weeks.weeks[0]?.startDate;
@@ -358,7 +385,7 @@ export const OfensivasOverlay: React.FC<OfensivasOverlayProps> = ({
             </p>
           </div>
         ) : (
-          <div className="of-panel">
+          <div key="workouts" className={`of-panel${tabLeaving ? ' is-leaving' : ''}`}>
             <div className="of-month__head">
               <button
                 type="button"
@@ -468,7 +495,10 @@ export const OfensivasOverlay: React.FC<OfensivasOverlayProps> = ({
 
       {/* ── Folha inferior (explicação das métricas / semana atual) ── */}
       {sheet && (
-        <div className="of-sheet" onClick={() => setSheetId(null)}>
+        <div
+          className={`of-sheet${sheetPresence.closing ? ' is-closing' : ''}`}
+          onClick={() => setSheetId(null)}
+        >
           <div
             className="of-sheet__panel"
             role="dialog"
@@ -479,7 +509,7 @@ export const OfensivasOverlay: React.FC<OfensivasOverlayProps> = ({
             <h3 className="of-sheet__title">{sheet.title}</h3>
             <div className="of-sheet__value">{sheet.value}</div>
 
-            {sheetId === 'week' && (
+            {sheetPresence.value === 'week' && (
               <div className="of-weekrow">
                 {week.days.map((d) => (
                   <div className="of-weekrow__item" key={d.dateStr}>

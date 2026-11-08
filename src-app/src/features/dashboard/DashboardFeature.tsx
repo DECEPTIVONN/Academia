@@ -33,6 +33,10 @@ import {
 } from '@/core/db/queries';
 import { SheetSelectorModal } from '@/features/dashboard/SheetSelectorModal';
 import { CycleModal } from '@/features/dashboard/CycleModal';
+import { OfensivasOverlay } from '@/features/training/OfensivasOverlay';
+import { weeklyTarget } from '@/features/training/progress-stats';
+import { shareFriendInvite } from '@/features/social/share-invite';
+import type { SectionType } from '@/components/BottomNav';
 import { FichaDeck } from '@/features/dashboard/FichaDeck';
 import { MissionsOverlay } from '@/features/dashboard/MissionsOverlay';
 import { InicioMenuModal } from '@/features/dashboard/InicioMenuModal';
@@ -55,6 +59,9 @@ interface DashboardFeatureProps {
      (a drawer mobile consegue abri-los de qualquer seção) */
   overlay: 'missions' | 'news' | null;
   onOverlayChange: (v: 'missions' | 'news' | null) => void;
+  /** v4.72.1 — navegação de seção (link "Abrir calendário" da Central de
+      Ofensivas aberta pelo Início). */
+  onNavigate?: (section: SectionType) => void;
 }
 
 export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
@@ -64,6 +71,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   onOpenHelp,
   overlay,
   onOverlayChange,
+  onNavigate,
 }) => {
   const { exercises, sheets, history, legacy } = useLocalData();
   /* Identidade vem do profileState (fonte única pós-edição no Perfil);
@@ -79,6 +87,9 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
   /* v4.56.19 — Rankings e Mensagens abertos pelo menu do Início. */
   const [rankingsOpen, setRankingsOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
+  /* v4.72.1 — o botão de OFENSIVA do header abre a Central de Ofensivas
+     ("Sequências"), a mesma tela da aba Progresso. Antes ele era decorativo. */
+  const [ofensivasOpen, setOfensivasOpen] = useState(false);
   /* v4.8.3-navbars: overlays Missões/Notícias controlados pelo App */
   const missionsOpen = overlay === 'missions';
   const newsOpen = overlay === 'news';
@@ -290,9 +301,12 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
                 <button
                   className={`dash-header-btn dash-streak-btn${(streak === 0 || (streak > 1 && !completedToday)) ? ' dash-streak-btn--off' : ''} w-12 h-12 rounded-xl bg-surface-container-high/80 backdrop-blur border border-outline-variant/30 flex items-center justify-center transition-all`}
                   id="dashBtnOfensiva"
-                  aria-label={`Ofensiva: ${streak} ${streak === 1 ? 'dia' : 'dias'}`}
+                  aria-label={`Ofensiva: ${streak} ${streak === 1 ? 'dia' : 'dias'} — abrir Sequências`}
                   title={`Ofensiva: ${streak} ${streak === 1 ? 'dia' : 'dias'}`}
-                  onClick={stop}
+                  onClick={(e) => {
+                    stop(e);
+                    setOfensivasOpen(true);
+                  }}
                 >
                   <span className="material-symbols-outlined dash-streak-btn__icon">
                     local_fire_department
@@ -486,6 +500,21 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({
           <div id="dashProgressSegments" />
         </div>
       </div>
+
+      {/* v4.72.1 — Central de Ofensivas ("Sequências") aberta pelo botão de
+          ofensiva do header: mesmas estatísticas/classificação da aba Progresso. */}
+      <OfensivasOverlay
+        open={ofensivasOpen}
+        onClose={() => setOfensivasOpen(false)}
+        data={{ exercises, sheets, history, legacy }}
+        target={weeklyTarget(legacy)}
+        onOpenCalendar={() => {
+          setOfensivasOpen(false);
+          onNavigate?.('progresso');
+          window.dispatchEvent(new CustomEvent('academia:open-progresso-calendar'));
+        }}
+        onInvite={() => void shareFriendInvite(pc?.nome || legacy?.profileCustomization?.nome)}
+      />
 
       {/* Modal seletor de fichas */}
       <SheetSelectorModal

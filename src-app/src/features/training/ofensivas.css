@@ -265,6 +265,37 @@
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   backdrop-filter: blur(12px);
+  /* v4.72.1 — alternância Sequência Atual ⇄ Treinos: o painel que sai roda
+     .is-leaving (fade + subida curta) e o novo entra com o mesmo movimento
+     invertido, sem corte seco entre as abas. */
+  animation: of-panel-in 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.of-panel.is-leaving {
+  animation: of-panel-out 0.15s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes of-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes of-panel-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
 }
 
 /* ---------- Semanas ---------- */
@@ -524,6 +555,28 @@
   animation: of-fade-in 0.18s ease;
 }
 
+/* v4.72.1 — saída animada da folha de informações (antes ela desaparecia no
+   mesmo frame do toque): fade do backdrop + recolhimento do painel. */
+.of-sheet.is-closing {
+  animation: of-fade-out 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+.of-sheet.is-closing .of-sheet__panel {
+  animation: of-sheet-down 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes of-sheet-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0.6;
+  }
+}
+
 .of-sheet__panel {
   width: 100%;
   max-width: 620px;
@@ -605,6 +658,15 @@
 .of-weekrow__day.is-today {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-panel,
+  .of-panel.is-leaving,
+  .of-sheet.is-closing,
+  .of-sheet.is-closing .of-sheet__panel {
+    animation-duration: 0.01ms;
+  }
 }
 
 /* ---------- Desktop ---------- */
