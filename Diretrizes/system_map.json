@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.71.0",
-  "last_updated": "2026-11-05",
+  "version": "4.72.0",
+  "last_updated": "2026-11-07",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
   "entry_points": {
@@ -1000,7 +1000,7 @@
       "src-app/public/vendor/ — fonts.css, fonts/ (24), fontawesome.min.css e webfonts/ (6), copiados de www/vendor/ para manter offline-first."
     ],
     "styles": [
-      "src-app/src/styles/mobile-fit.css: ajuste responsivo de telas estreitas (≤600/430/360 px) importado por último em main.tsx: cronômetro global compacto e liberação do título no Modo Foco (via :has), rodapé de métricas da Minha Ficha sem estouro (min-width 0), cards do deck com tipografia fluida e nome em 2 linhas no modo royale, sub-abas sem corte, cabeçalho da ficha com quebra de linha e Modo Foco com espaçamentos menores.",
+      "src-app/src/styles/mobile-fit.css: escala responsiva de telas estreitas (≤600 px) importado por último em main.tsx — media queries fluidas (clamp/vw) para padding lateral, hero e tipografia; tabela da Ficha com as 5 colunas cabendo sem rolagem em 320–430 px; deck royale de 4 colunas e rodapé de métricas sem estouro (min-width 0 nos cards); cronômetro compacto, sub-abas, Modo Foco e telas baixas (≤560 px de altura).",
  "src-app/src/styles/legacy.css: agregador @import do CSS legado espelhado (ordem idêntica ao index.html legado: 1-core → 2-modals → 3-foco-badges → 4-gamificacao → 5-cards → 6-maestria → 7-nav-icons → secoes/*).",
       "src-app/src/features/training/progresso.css: seções novas da aba Progresso (.prog-*: cabeçalho sem botão +, pontuação de força, cards de Atividade, heatmap anual de séries, tendências, corpo, conquistas e o dropdown escuro .prog-select). O heatmap distribui as semanas do ANO INTEIRO em colunas `1fr` (12 meses sempre visíveis, sem rolagem horizontal; rótulos sem overflow oculto) e usa células em proporção 1:2 (mais altas verticalmente); `.progresso-grid > * { min-width: 0 }` impede que qualquer filho estique o track do grid (regra em 2-modals.css).",
       "src-app/src/features/training/ofensivas.css: Central de Ofensivas (.of-*) — tela cheia, z-index 900.",

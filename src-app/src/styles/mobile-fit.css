@@ -1,5 +1,5 @@
 /* ============================================================================
-   mobile-fit.css — ajuste fino de layout para telas estreitas (v4.68.0)
+   mobile-fit.css — ajuste fino de layout para telas estreitas (v4.71.0)
    ----------------------------------------------------------------------------
    POR QUE ESTE ARQUIVO EXISTE
    O app nasceu com CSS legado pensado em desktop e recebeu media queries
@@ -22,6 +22,21 @@
 
    Referências de largura usadas: 600 px (celular), 430 px (A54/Poco F7 já no
    limite), 390 px (média dos aparelhos) e 360 px (aparelhos estreitos).
+
+   v4.71.0 — ESCALA FLUIDA ENTRE APARELHOS (320 → 600 px)
+   Medições feitas em 360, 384, 412 e 430 px mostraram que o problema não é
+   um único breakpoint: cada aparelho “cai” num ponto diferente da escala.
+   Os ajustes abaixo substituem valores fixos por `clamp()`/`vw` e tratam:
+
+     9.  padding lateral e tipografia do hero (título, subtítulo, 3 stats
+         que quebravam para uma segunda linha em 360 px);
+     10. TABELA da Ficha: exigia ~469 px e cortava Volume/✓ (era preciso
+         rolar de lado) — agora cabe de 320 a 430 px sem rolagem;
+     11. grid do deck (Royale, 4 colunas), rodapé de métricas e busca da
+         coleção — nada mais estoura a largura útil;
+     12. telas baixas (paisagem/teclado aberto);
+     e, no bloco 4/2, o cabeçalho da Ficha (“Treino:” órfão) e a busca da
+     coleção.
    ========================================================================== */
 
 /* ───────────────────────── 1. Cronômetro global ───────────────────────── */
@@ -84,9 +99,26 @@
     flex-wrap: wrap;
     gap: 8px;
     row-gap: 10px;
+    width: 100%;
   }
   .ficha-right .v-divider {
     display: none;
+  }
+  /* v4.71.0 — o rótulo “Treino:” sobrava sozinho numa terceira linha (as
+     letras A/B iam para a direita). Sem ele a linha fica: [ENCERRAR]
+     [tabela/grid] e as letras ao lado — sem espaço morto. */
+  .ficha-right .switch-label {
+    display: none;
+  }
+  .ficha-right .treino-selector {
+    margin-left: auto;
+  }
+  /* v4.71.0 — badge + data numa linha só; quando não couber, a data desce
+     alinhada à esquerda (antes ficava centralizada pelo justify-between). */
+  .ficha-left {
+    flex-wrap: wrap;
+    row-gap: 4px;
+    min-width: 0;
   }
   .ficha-treino-badge {
     padding: 6px 14px;
@@ -294,6 +326,18 @@
   .collection-grid {
     gap: 10px;
   }
+  /* v4.71.0 — a busca tinha `width: 200px` inline e, junto do contador,
+     empurrava a linha para além da tela em 320–360 px. Vira flexível. */
+  #deckCollectionSearch {
+    width: 100% !important;
+    min-width: 0;
+    flex: 1 1 120px;
+  }
+  .collection-header > div {
+    flex-wrap: wrap;
+    gap: 8px !important;
+    width: 100%;
+  }
 }
 
 /* ─────────────────────── 7. Modo Foco ─────────────────────── */
@@ -362,5 +406,314 @@
   }
   .section-subtabs .t-tab-btn {
     font-size: 0.64rem !important;
+  }
+}
+
+/* ============================================================================
+   9. LARGURA ÚTIL E TIPOGRAFIA FLUIDAS (v4.71.0)
+   ----------------------------------------------------------------------------
+   360/384/412/430 px não são “celular pequeno / médio / grande”: são pontos de
+   uma régua contínua. Em vez de um breakpoint por aparelho, o padding lateral
+   e a tipografia do hero passam a acompanhar a largura (clamp + vw), então o
+   mesmo CSS serve do Poco F7 (≈430 px) ao A54 (≈384 px) e a aparelhos de
+   360 px — sem saltos visuais de uma faixa para outra.
+   ========================================================================== */
+
+@media (max-width: 600px) {
+  /* 24 px de padding fixo comiam 48 px de largura num aparelho de 360 px.
+     Fluido: ~12 px em 320–360, ~16 px em 390, 24 px a partir de 600. */
+  .treino-container,
+  .ficha-overlay .treino-container {
+    padding-left: clamp(12px, 4.2vw, 24px);
+    padding-right: clamp(12px, 4.2vw, 24px);
+  }
+
+  /* Hero: 420 px de altura fixa empurrava o conteúdo para fora em telas
+     curtas; agora acompanha a altura da viewport. */
+  .treino-hero {
+    min-height: clamp(300px, 46vh, 420px);
+  }
+  .treino-hero-content {
+    padding: 64px 12px 40px;
+  }
+  .treino-hero-title {
+    font-size: clamp(1.85rem, 8.4vw, 2.6rem);
+    letter-spacing: -0.5px;
+  }
+  .treino-hero-sub {
+    font-size: clamp(0.88rem, 3.6vw, 1.05rem);
+    margin-bottom: 26px;
+    line-height: 1.5;
+  }
+
+  /* Os três números do hero (EXERCÍCIOS · FICHAS · DIAS SEGUIDOS): com os
+     valores fixos (gap 32 px, 2 rem) o terceiro caía para a linha de baixo em
+     360 px. Agora encolhem juntos e continuam lado a lado. */
+  .treino-hero-stats {
+    gap: clamp(8px, 3.6vw, 28px);
+    flex-wrap: nowrap;
+  }
+  .h-stat {
+    min-width: 0;
+  }
+  .h-stat-val {
+    font-size: clamp(1.45rem, 7vw, 2rem);
+  }
+  .h-stat-lbl {
+    font-size: clamp(0.55rem, 2.4vw, 0.72rem);
+    letter-spacing: clamp(0.4px, 0.35vw, 2px);
+  }
+  .h-stat-div {
+    height: clamp(26px, 8vw, 40px);
+  }
+}
+
+/* ============================================================================
+   10. TABELA DA FICHA — caber sem rolagem lateral (v4.71.0)
+   ----------------------------------------------------------------------------
+   As 5 colunas pediam ~469 px (`padding: 14/16 px` por célula + imagem 60 px +
+   volume 100 px + ✓ 56 px). Em 384 px o wrapper tem ~330 px, então VOLUME e ✓
+   ficavam fora da tela e o usuário via “VOLU…” cortado (e precisava arrastar a
+   tabela sem nenhuma indicação de que era rolável). Aqui as colunas encolhem
+   de forma proporcional e a tabela inteira passa a caber.
+   ========================================================================== */
+
+@media (max-width: 430px) {
+  .workout-table th,
+  .workout-table td {
+    padding: 10px 6px;
+  }
+  /* Cabeçalho pode quebrar em duas linhas: “EXERCÍCIO / APARELHO”. */
+  .workout-table th {
+    font-size: 0.58rem;
+    letter-spacing: 0.8px;
+    white-space: normal;
+    line-height: 1.15;
+  }
+  .workout-table .col-n {
+    width: 24px;
+  }
+  .workout-table .col-img {
+    width: 46px;
+  }
+  .workout-table .col-vol {
+    width: 64px;
+  }
+  .workout-table .col-chk {
+    width: 32px;
+  }
+  .workout-table .img-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 7px;
+  }
+  .workout-table .row-num {
+    width: 22px;
+    height: 22px;
+    font-size: 0.7rem;
+  }
+  .workout-table .ex-name {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+  .workout-table .vol-text {
+    font-size: 0.92rem;
+    letter-spacing: 0;
+  }
+  .workout-table .vol-text span {
+    font-size: 0.56rem;
+    letter-spacing: 0;
+    margin-left: 2px;
+  }
+  /* Série/nota: 2×2 de 30 px + 6 px de gap = 66 px só na coluna de volume.
+     Com 24 px + 4 px de gap ela cabe nos 64 px reservados. */
+  .workout-table .series-grid-table {
+    grid-template-columns: repeat(2, 24px);
+    grid-template-rows: repeat(2, 24px);
+    gap: 4px;
+    margin: 8px 0 0;
+    justify-content: center;
+  }
+  .workout-table .series-grid-table .btn-set,
+  .workout-table .series-grid-table .btn-note-toggle-table {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.62rem;
+  }
+  .workout-table .empty-grid-cell {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  .workout-table .check-wrap .check-label {
+    width: 26px;
+    height: 26px;
+    border-width: 1.5px;
+  }
+  .workout-table .check-wrap .check-label .check-mark {
+    font-size: 0.8rem;
+  }
+  .table-scroll-wrap {
+    border-radius: 12px;
+  }
+}
+
+/* Aparelhos realmente pequenos (iPhone SE, Androids 320–340 px): manter as
+   cinco colunas deixaria o nome do exercício com ~65 px. Sem a miniatura a
+   coluna do nome dobra de largura — a imagem continua no grid e no Modo Foco. */
+@media (max-width: 340px) {
+  .workout-table th:nth-child(3),
+  .workout-table td:nth-child(3) {
+    display: none;
+  }
+  .workout-table .col-vol {
+    width: 70px;
+  }
+}
+
+/* ============================================================================
+   11. DECK (4 COLUNAS) E RODAPÉ DE MÉTRICAS (v4.71.0)
+   ----------------------------------------------------------------------------
+   A grade Royale é `repeat(4, 1fr)`, mas os cards internos têm largura mínima
+   própria (paddings + botões de série). Sem `min-width: 0` em toda a cadeia,
+   a coluna 1fr para de encolher e a grade fica mais larga que o container —
+   o deck “vaza” para os dois lados e o rodapé de métricas aparece cortado.
+   ========================================================================== */
+
+@media (max-width: 430px) {
+  .deck-active-grid .deck-slot,
+  .workout-deck-grid .deck-card,
+  .dash-mini-deck__grid .deck-card,
+  .deck-active-grid .deck-card {
+    min-width: 0;
+  }
+  .deck-card,
+  .deck-card-info,
+  .deck-card-name,
+  .deck-card-meta-row,
+  .deck-card-actions,
+  .series-wrap-deck {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .deck-card-actions {
+    padding: 0 6px 8px;
+    gap: 6px;
+  }
+  .series-wrap-deck {
+    justify-content: center;
+    gap: 4px;
+  }
+  .series-wrap-deck .btn-set {
+    width: 22px;
+    height: 22px;
+    font-size: 0.62rem;
+  }
+  /* Cabeçalho do deck: `padding: 10px 20px` + `gap: 20px`/`15px` somavam
+     largura demais em 320–390 px e o último botão do seletor de visualização
+     saía pela borda direita. */
+  .deck-header {
+    padding: 10px 12px;
+  }
+  .deck-header-top {
+    gap: 8px;
+  }
+  .header-right {
+    gap: 8px;
+  }
+  .view-selector {
+    padding: 3px;
+  }
+  /* Rodapé: rótulos longos (“VOLUME MÉDIO DE CARGA”) com letter-spacing 2 px
+     não cabiam em três colunas; agora o espaçamento acompanha a largura. */
+  .deck-footer {
+    padding: 12px 8px;
+    gap: 6px;
+  }
+  .deck-volume,
+  .deck-cardio,
+  .deck-maestria,
+  .deck-maestria-widget {
+    padding: 6px 8px;
+    gap: 6px;
+    min-width: 0;
+  }
+  .volume-val,
+  .cardio-val,
+  .maestria-widget-count {
+    font-size: 1.2rem;
+  }
+  .maestria-widget-sub {
+    font-size: 0.52rem;
+    letter-spacing: 0.4px;
+  }
+  .footer-stat-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.4px;
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 360px) {
+  .deck-active-grid .deck-card-info,
+  .workout-deck-grid .deck-card-info {
+    padding: 7px 4px;
+    gap: 2px;
+  }
+  .deck-active-grid .deck-card-name,
+  .workout-deck-grid .deck-card-name,
+  .dash-mini-deck__grid .deck-card-name {
+    font-size: 0.56rem;
+  }
+  .deck-active-grid .deck-card-header,
+  .workout-deck-grid .deck-card-header {
+    height: 22px;
+    font-size: 0.54rem;
+    letter-spacing: 0.4px;
+  }
+  .series-wrap-deck .btn-set {
+    width: 20px;
+    height: 20px;
+    font-size: 0.58rem;
+  }
+  .volume-val,
+  .cardio-val,
+  .maestria-widget-count {
+    font-size: 1.05rem;
+  }
+  .footer-stat-label {
+    font-size: 0.46rem;
+    letter-spacing: 0.2px;
+  }
+}
+
+/* ============================================================================
+   12. TELAS BAIXAS (paisagem / teclado / janela reduzida) (v4.71.0)
+   ----------------------------------------------------------------------------
+   Em paisagem o hero de 300 px + a barra de navegação deixavam só ~150 px de
+   conteúdo visível. Aqui o hero encolhe e a navegação reduz a altura para o
+   app continuar usável no celular deitado.
+   ========================================================================== */
+
+@media (max-height: 560px) and (max-width: 900px) {
+  .treino-hero {
+    min-height: 0;
+  }
+  .treino-hero-content {
+    padding: 44px 14px 28px;
+  }
+  .treino-hero-title {
+    font-size: clamp(1.6rem, 4.6vw, 2.2rem);
+  }
+  .treino-hero-sub {
+    margin-bottom: 18px;
+  }
+  .bottom-nav {
+    min-height: 56px;
+    padding-top: 4px;
+  }
+  .bottom-nav.bnav-oval {
+    height: 66px;
+    min-height: 66px;
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
   }
 }

@@ -2,6 +2,30 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.72.0] - 2026-11-07
+
+**Layout mobile escalável de 320 a 600 px: a tabela da Ficha passa a caber sem rolagem lateral e hero, deck e rodapé de métricas não estouram mais em telas médias e pequenas.**
+
+### Changed
+- `src-app/src/styles/mobile-fit.css` — saiu a lógica “um breakpoint por aparelho” e entrou escala fluida (`clamp()`/`vw`) para o intervalo 320–600 px:
+  - **largura útil**: `.treino-container` e `.ficha-overlay .treino-container` trocaram o `padding: 0 24px` fixo por `clamp(12px, 4.2vw, 24px)` (ganho de ~18 px de conteúdo em 360–390 px), e o cabeçalho do deck (`.deck-header` 10/12 px, `.deck-header-top` gap 8 px, `.header-right` gap 8 px, `.view-selector` padding 3 px) deixou de empurrar o último botão de visualização para fora da tela;
+  - **hero**: `min-height: clamp(300px, 46vh, 420px)`, título/subtítulo em `clamp()` e as três estatísticas (`.treino-hero-stats` com `gap` fluido + `nowrap`, `.h-stat-val`, `.h-stat-lbl`, `.h-stat-div` proporcionais) param de quebrar “Dias Seguidos” para outra linha;
+  - **cabeçalho da Ficha**: `.ficha-right` ocupa a largura toda e quebra em linhas alinhadas, o rótulo “Treino:” (que sobrava órfão numa terceira linha) fica oculto em ≤430 px, as letras A/B vão para a direita e `.ficha-left` ganha `row-gap`;
+  - **tabela da Ficha (≤430 px)**: `th/td` com `padding: 10px 6px`, `th` com `white-space: normal`, colunas `.col-n 24 / .col-img 46 / .col-vol 64 / .col-chk 32`, miniatura 40 px, `.row-num` 22 px, `.ex-name` 0.8 rem e a grade de séries em 2×2 de 24 px (gap 4) — era ela, em 66 px, que forçava a coluna de volume a ~98 px; em ≤340 px a coluna de imagem é ocultada para o nome do exercício não ficar ilegível;
+  - **deck e rodapé (≤430 / ≤360 px)**: `min-width: 0` em toda a cadeia dos cards (`.deck-card`, `-info`, `-name`, `-meta-row`, `-actions`, `.series-wrap-deck`), botões de série 22→20 px, `.deck-footer`/`.deck-volume`/`.deck-cardio`/`.deck-maestria-widget` com padding menor e `.footer-stat-label` com `letter-spacing` reduzido (o “Volume Médio de Carga” voltou a caber); `#deckCollectionSearch` perdeu o `width: 200px` inline e ocupa a linha;
+  - **telas baixas** (altura ≤560 px, ex. celular deitado com o teclado aberto): hero sem `min-height`, tipografia e `.bottom-nav` compactas.
+- `Diretrizes/system_map.json` (versão **4.72.0** + `styling_manifest`) e este CHANGELOG.
+
+### Fixed
+- **Tabela da Ficha cortada (“VOLU…”)** — as 5 colunas pediam ~469 px e o wrapper tinha 304 px em 360 px (328 px em 384 px), então Volume e ✓ saíam da tela e a tabela só era alcançável arrastando de lado, sem nenhuma indicação visual. Agora a tabela preenche exatamente o wrapper: 285 px em 320, 322 px em 360, 344 px em 384 e 386 px em 430 — sem rolagem horizontal.
+- **Estatísticas do hero quebradas** — com `gap: 32px` e valores em `2rem` fixos o terceiro número descia para uma segunda linha em 360–390 px; agora as três ficam na mesma linha em todas as larguras testadas.
+- **Deck mais largo que a tela** — a grade Royale é `repeat(4, 1fr)`, mas sem `min-width: 0` nos filhos a coluna parava de encolher e o deck vazava para os dois lados (as bordas dos cards apareciam cortadas nas imagens do A54); o rodapé de métricas também voltou a caber inteiro.
+- **Cabeçalho do deck com o botão de visualização cortado** em 320 px (`header-right` terminava 2 px fora da viewport).
+
+### Verificação
+- `npx tsc -b` OK · `npm run build` OK · `npm run lint:docs` OK.
+- Medições no navegador (dev server Vite): em **430 px** tabela 386/386 px, hero em 1 linha; em **384 px** tabela 344/344 px, grade do deck 316 px sem overflow, hero em 1 linha; em **360 px** tabela 322/322 px; em **320 px** tabela 285/285 px (coluna de imagem oculta), `scrollWidth === 320` no documento e nenhum elemento da aba Treinos fora da viewport.
+
 ## [v4.71.0] - 2026-11-05
 
 **Social com linguagem de treino (sem “partidas”) e amigos/guildas sincronizados entre dispositivos.**
