@@ -87,6 +87,40 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* v4.73.1 — descanso do Modo Foco: o visual escolhido (radar/ampulheta)
+   aparece logo abaixo do GIF, com o tempo ao lado. */
+.focus-main .focus-rest-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px 6px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--gym-green, #22c55e);
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.1), rgba(255, 255, 255, 0.03));
+  box-shadow: 0 0 22px rgba(34, 197, 94, 0.18);
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-main .focus-rest-timer__visual {
+  display: block;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.focus-main .focus-rest-timer__visual .timer-radar,
+.focus-main .focus-rest-timer__visual .timer-hourglass {
+  width: 100%;
+  height: 100%;
+}
+
+.focus-main .focus-rest-timer__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
 .focus-main .f-timer-val {
   font-size: 1.55rem;
   font-weight: 900;

@@ -613,7 +613,7 @@ export const BAR_SKINS: { key: string; nome: string; unlock: Unlock | null; hint
 /* ── Skins de card (CARD_SKINS — L160–167) ── */
 
 export const CARD_SKINS: { key: string; nome: string; unlock: Unlock | null; hint: string }[] = [
-  { key: 'default', nome: 'Padrão', unlock: null, hint: 'Padrão' },
+  { key: 'none', nome: 'Nenhum', unlock: null, hint: 'Sem skin' },
   { key: 'neon', nome: 'Neon Cyber', unlock: { tipo: 'treinos', val: 20 }, hint: '20 treinos' },
   { key: 'militar', nome: 'Militar', unlock: { tipo: 'treinos', val: 40 }, hint: '40 treinos' },
   { key: 'ouro', nome: 'Ouro Elite', unlock: { tipo: 'maestria', val: 'ouro' }, hint: 'Maestria Ouro' },
@@ -695,7 +695,8 @@ export function barSkinPreviewStyle(skinKey: string): { background?: string; box
 /** Aplica atributos globais da customização (body + banners) — idem L341–411. */
 export function applyCustomizationGlobals(pc: ProfileCustomization): void {
   document.body.setAttribute('data-bar-skin', pc.barSkin || 'default');
-  document.body.setAttribute('data-card-skin', pc.cardSkin || 'default');
+  /* v4.73.1 — 'none' (ou o antigo 'default') não pinta nenhum card. */
+  document.body.setAttribute('data-card-skin', !pc.cardSkin || pc.cardSkin === 'default' ? 'none' : pc.cardSkin);
   document.querySelectorAll<HTMLElement>('.dash-profile-banner-card').forEach((b) => {
     b.setAttribute('data-banner', pc.banner || 'roxo-neon');
   });
@@ -725,8 +726,11 @@ export function revertLockedCustomizations(
   const bar = BAR_SKINS.find((x) => x.key === pc.barSkin);
   if (bar && locked(bar.unlock)) pc.barSkin = 'default';
 
+  /* v4.73.1 — a opção "Nenhum" substituiu o antigo "Padrão": normaliza o
+     valor salvo para que o seletor marque a opção certa. */
+  if (!pc.cardSkin || pc.cardSkin === 'default') pc.cardSkin = 'none';
   const card = CARD_SKINS.find((x) => x.key === pc.cardSkin);
-  if (card && locked(card.unlock)) pc.cardSkin = 'default';
+  if (card && locked(card.unlock)) pc.cardSkin = 'none';
 
   const timer = TIMER_SKINS.find((x) => x.key === pc.timerSkin);
   /* v4.73.0 — Cyber Relógio e Arcade Bit saíram do jogo: uma skin antiga

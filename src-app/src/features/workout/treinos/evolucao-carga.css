@@ -233,8 +233,8 @@
   gap: 10px;
   padding: 12px;
   border-radius: 14px;
-  border: 1px dashed rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.025);
+  /* v4.73.1 — sem o pontilhado ao redor do estado vazio. */
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .exevo__empty-icon {

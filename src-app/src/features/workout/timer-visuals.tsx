@@ -10,6 +10,16 @@ import React from 'react';
 
 export type TimerStyle = 'radar' | 'hourglass';
 
+/** Estilo salvo pelo usuário em Configurações/customização (radar = padrão). */
+export function readTimerStyle(): TimerStyle {
+  try {
+    if (localStorage.getItem('timerStyle') === 'hourglass') return 'hourglass';
+  } catch {
+    /* storage indisponível */
+  }
+  return 'radar';
+}
+
 interface VisualProps {
   /** Fração restante, 0–100. */
   pct: number;

@@ -113,6 +113,15 @@
 
 /* v4.72.5 — ao segurar o card para arrastar até o deck o card mantém o
    tamanho original (antes o scale(0.95) encolhia o card sob o dedo). */
+/* v4.73.1 — o mesmo vale no deck da Minha Ficha e na visão em lista: ao
+   segurar o card ele fica translúcido, mas NUNCA menor (antes o clique/
+   arraste podia disparar o scale de hover e encolher o card sob o dedo). */
+.deck-card.dragging,
+.deck-list-item.dragging,
+.deck-slot .deck-card:active {
+    transform: none !important;
+}
+
 .collection-card.dragging {
     opacity: 0.6;
     transform: none;

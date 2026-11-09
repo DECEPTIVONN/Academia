@@ -51,6 +51,7 @@ import { Award, ArrowLeft, ChevronRight, Dumbbell, Flame, Layers, Weight, X, Zap
 import { getBadgeDefinitions, getProfileStats } from '@/features/profile/profile-data';
 import { shareFriendInvite } from '@/features/social/share-invite';
 import { BodyMetricsOverlay } from './BodyMetricsOverlay';
+import { EstandartesOverlay } from './EstandartesOverlay';
 import { OfensivasOverlay } from './OfensivasOverlay';
 import { TrendRadarOverlay } from './TrendRadarOverlay';
 import { latestMeasurementDate, latestValues, useBodyMetrics } from './body-metrics';
@@ -241,12 +242,7 @@ function VolumeBreakdown({ entries, total, mode, onOpenGroup }: VolumeBreakdownP
 
 /* ── Feature ── */
 
-interface ProgressoFeatureProps {
-  /** Abre o overlay do Perfil (tela de Emblemas/Conquistas). */
-  onOpenPerfil?: () => void;
-}
-
-export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil }) => {
+export const ProgressoFeature: React.FC = () => {
   const { exercises, sheets, history, legacy } = useLocalData();
 
   const [calView, setCalView] = useState<CalView>('monthly');
@@ -264,6 +260,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   const [weightUnit, setWeightUnit] = useState<WeightUnit>(() => getWeightUnit());
   /* v4.55.0 — telas cheias abertas pela aba e filtros das seções novas */
   const [ofensivasOpen, setOfensivasOpen] = useState(false);
+  const [emblemasOpen, setEmblemasOpen] = useState(false);
   const [bodyMetricsOpen, setBodyMetricsOpen] = useState(false);
   /* v4.56.3 — novas interfaces abertas pelos cards (calendário+ciclo,
      volume geral e Radar Fit/Tendências) */
@@ -1075,7 +1072,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
             {/* ===== Conquistas (v4.55.0) ===== */}
             <h3 className="prog-section__title">Conquistas</h3>
             <div className="prog-badges">
-              <button type="button" className="prog-badges__row" onClick={() => onOpenPerfil?.()}>
+              <button type="button" className="prog-badges__row" onClick={() => setEmblemasOpen(true)}>
                 <span className="prog-badges__title">Emblemas</span>
                 <ChevronRight className="prog-badges__chev" size={18} aria-hidden="true" />
               </button>
@@ -1624,6 +1621,13 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
           </div>
         </div>
       </div>)}
+      {/* ===== Conquistas: Estandartes do Perfil (v4.73.1) ===== */}
+      <EstandartesOverlay
+        open={emblemasOpen}
+        onClose={() => setEmblemasOpen(false)}
+        data={localData}
+      />
+
       {/* ===== Central de Ofensivas (v4.55.0) ===== */}
       <OfensivasOverlay
         open={ofensivasOpen}

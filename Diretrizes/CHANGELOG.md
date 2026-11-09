@@ -2,6 +2,38 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.73.1] - 2026-11-09
+
+**Estandartes do perfil sem faixas pretas, Maestria Geral e Sequências repaginadas, conquistas de Emblemas na aba Progresso, skins dos cards em Cartões, Modo Desenvolvedor na nuvem e cronômetro escolhido no Modo Foco.**
+
+### Added
+
+- **Progresso → Emblemas**: o card **Emblemas** agora abre a interface de **Conquistas de Estandartes** (`features/training/EstandartesOverlay.tsx` + `estandartes-achievements.css`), em vez do Perfil. A tela mostra “X de 16 estandartes”, barra da coleção, seções **Conquistados** e **Bloqueados** e o requisito completo de cada estandarte ao tocar nele — treinos concluídos, dias de ofensiva, XP ou maestria (Bronze/Prata/Ouro), com valor atual, meta, barra de progresso e quanto falta. Usa as mesmas regras de `isUnlocked` do jogo e respeita o Modo Desenvolvedor.
+- **Maestria Geral**: novo hero de rank (título, nível e progresso em pontos), resumo de emblemas Bronze/Prata/Ouro por exercício e cards com selo do tier, nome, barra de sessões até o próximo marco e estado **Maestria plena**. Um componente local de imagem passou a tratar `onError`/URL ausente com placeholder “Sem imagem” (antes o card ficava com o ícone quebrado do navegador).
+- **Arquivos novos**: `features/training/EstandartesOverlay.tsx`, `features/training/estandartes-achievements.css` e `legacy-style/treino/maestria-geral.css`.
+
+### Changed
+
+- **Estandartes do perfil**: a galeria ficou compacta (2 colunas no mobile, cards de ~129×147 px com ícone de 46 px) e sem as faixas pretas no topo/rodapé — o fundo agora é o próprio tema, com o círculo do ícone em degradê suave. Estandartes bloqueados não escurecem o card inteiro: só o ícone fica apagado, mantendo nome e requisito legíveis.
+- **Skin dos Cards**: saiu da sub-aba **Skins de Torre** (removida) e passou para **Cartões**, logo abaixo dos banners. A opção **Nenhum** é a primeira e o padrão; `default`/vazio são normalizados para `none`. A skin vale para `.ex-card` (Exercícios), `.deck-card` (deck da ficha e coleção), `.deck-list-item` (visão em lista) e `.profile-header` (cartão do Perfil), incluindo o mobile.
+- **Sequências (Central de Ofensivas)**: acentos roxos substituídos por preto/branco e fundo em camadas (brilho quente, malha fina e vinheta). O hero deixou de ser esmagado pelo flex da lista (50 px) e voltou a mostrar chama, contador, título e subtítulo completos.
+- **Modo Foco**: com o descanso rodando, o timer exibido abaixo do GIF usa o estilo escolhido pelo usuário em Personalizar (Radar Tático ou Ampulheta) via `TimerVisual`/`readTimerStyle`, mantendo o tempo mm:ss e o rótulo DESCANSO.
+- **Modo Desenvolvedor**: `academia_dev_mode` entrou em `PREF_KEYS_TO_SYNC`; o snapshot leva a configuração para a nuvem e, ao receber um pull, o Perfil reage a `academia:prefs-changed` atualizando o toggle.
+
+### Fixed
+
+- **Segurar um exercício em Minha Ficha**: o card não encolhe mais (`transform: none` em `.deck-card.dragging`, `.deck-list-item.dragging` e no toque do slot).
+- **Maestria individual**: a base do emblema não é mais cortada — o escudo ganhou respiro inferior e a imagem usa `object-position: center top`.
+- **Detalhes do exercício**: o estado “Nenhuma carga registrada ainda” perdeu o pontilhado ao redor.
+
+### Verificação
+
+`npx tsc -b` OK · `npx oxlint src` 0 erros (39 avisos) · `npm run build` OK · `npm run lint:docs` OK.
+
+No navegador: a interface de Conquistas abriu com **1/16** estandartes, seções Conquistados/Bloqueados e a folha de requisitos de “Dedicado” (0/10 treinos, “Faltam 10 treinos”); a Maestria Geral mostrou rank PRATICANTE, 0 pts, resumo 0/0/0 de 66 exercícios e cards com tier/progresso, e forçar uma URL inválida trocou a imagem pelo placeholder; a galeria de Estandartes computou cards de 129×147 px com ícone de 46 px e sem faixas pretas; a sub-aba Cartões exibiu **Nenhum** ativo e seis skins, sem nenhum bloco de Skins de Torre; com `data-card-skin="neon"` os `.deck-card` e `.ex-card` passaram a computar borda `rgba(6, 182, 212, 0.35)`; e a Sequências voltou a renderizar o hero completo (190 px) após o `flex-shrink: 0`.
+
+**Limitações**: o Modo Foco não foi aberto nesta rodada — o timer foi validado por código/CSS (renderiza só com `restTimeRemaining > 0`, abaixo do GIF, a 52 px); a sincronização do Modo Desenvolvedor foi conferida na lista de chaves e no listener, sem um ciclo real de pull entre dois dispositivos; e o teste de segurar o card não foi repetido (a correção de `transform` já estava aplicada e o ambiente está com `prefers-reduced-motion`).
+
 ## [v4.73.0] - 2026-11-09
 
 **Cronômetro com prévias reais, evolução de carga no padrão dos Detalhes de Volume, calculadora de carga, aba Emblema repaginada, menu de compartilhamento na prévia do treino e transição suave nas missões.**

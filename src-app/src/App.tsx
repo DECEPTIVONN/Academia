@@ -938,7 +938,7 @@ function AppShell() {
                 legado é anulada em shell.css). */}
             <motion.div className="section-strip" data-active={activeSection} style={{ x: stripX }}>
               <div className="section-slide" data-section="progresso">
-                <ProgressoFeature onOpenPerfil={() => setIsPerfilOverlayOpen(true)} />
+                <ProgressoFeature />
               </div>
 
               {/* .section-slide wrapper 1:1 com o legado (treino.html: cada

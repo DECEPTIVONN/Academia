@@ -35,7 +35,7 @@ import { showToast } from '@/lib/toast';
 import { TimerVisual } from '@/features/workout/timer-visuals';
 import './emblema-tab.css';
 
-export type CustomSubTab = 'itens-magicos' | 'emotes' | 'torres' | 'estandartes' | 'maestrias';
+export type CustomSubTab = 'itens-magicos' | 'emotes' | 'estandartes' | 'maestrias';
 
 const LOCK_SVG = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={16} height={16}>
@@ -452,6 +452,10 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
     : { backgroundColor: 'var(--background-alt)', borderColor: 'rgba(255, 255, 255, 0.15)' };
 
   const previewEmblem = IDENTITY_EMBLEMS.find((e) => e.id === activeEmblemId);
+  /* v4.73.1 — 'Nenhum' substituiu "Padrão"; o valor antigo ainda pode estar
+     salvo em contas existentes. */
+  const activeCardSkin =
+    !pc.cardSkin || pc.cardSkin === 'default' ? 'none' : pc.cardSkin;
 
   return (
     <>
@@ -477,6 +481,34 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
               {masters.map((b) => (
                 <BannerCard key={b.key} b={b} u={u} active={b.key === pc.banner} onClick={() => pickBanner(b)} />
               ))}
+            </div>
+
+            {/* v4.73.1 — Skin dos Cards saiu de "Skins de Torre" e passou a
+                viver junto dos Cartões, que é onde ela de fato aparece. */}
+            <div className="profile-section-title" style={{ marginTop: 24 }}>
+              Skin dos Cards
+            </div>
+            <p className="card-skin-sub">
+              Aplica o acabamento aos cards do treino, da coleção e do perfil.
+            </p>
+            <div className="card-skin-grid" id="cardSkinGrid">
+              {CARD_SKINS.map((s) => {
+                const unlocked = isUnlocked(s.unlock, stats, devMode, maestrias);
+                return (
+                  <div
+                    key={s.key}
+                    className={`card-skin-option card-skin-option--${s.key}${s.key === activeCardSkin ? ' card-skin-option--active' : ''}${!unlocked ? ' card-skin-option--locked' : ''}`}
+                    data-card-skin={s.key}
+                    data-locked={!unlocked ? 'true' : undefined}
+                    onClick={() => pickCardSkin(s.key, unlocked)}
+                  >
+                    {!unlocked && LOCK_SVG_SM}
+                    <div className="card-skin-option__preview" />
+                    <span className="card-skin-option__label">{s.nome}</span>
+                    {!unlocked && <span className="card-skin-option__hint">{s.hint}</span>}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -540,35 +572,6 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
                     </div>
                     <div style={{ fontWeight: 700, fontSize: '0.8rem', textAlign: 'center' }}>{s.nome}</div>
                     {!unlocked && <span className="bar-skin-option__hint">{s.hint}</span>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </SubTabContent>
-
-      {/* ── Skins de Torre: card skin ── */}
-      <SubTabContent id="torres" active={subtab === 'torres'}>
-        <div className="theme-section theme-cinza-castelo">
-          <div className="theme-bg" />
-          <div className="theme-content">
-            <div className="profile-section-title">Skin dos Cards</div>
-            <div className="card-skin-grid" id="cardSkinGrid">
-              {CARD_SKINS.map((s) => {
-                const unlocked = isUnlocked(s.unlock, stats, devMode, maestrias);
-                return (
-                  <div
-                    key={s.key}
-                    className={`card-skin-option card-skin-option--${s.key}${s.key === pc.cardSkin ? ' card-skin-option--active' : ''}${!unlocked ? ' card-skin-option--locked' : ''}`}
-                    data-card-skin={s.key}
-                    data-locked={!unlocked ? 'true' : undefined}
-                    onClick={() => pickCardSkin(s.key, unlocked)}
-                  >
-                    {!unlocked && LOCK_SVG_SM}
-                    <div className="card-skin-option__preview" />
-                    <span className="card-skin-option__label">{s.nome}</span>
-                    {!unlocked && <span className="card-skin-option__hint">{s.hint}</span>}
                   </div>
                 );
               })}

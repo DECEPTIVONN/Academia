@@ -275,6 +275,8 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     'academia_pref_player_drawer_vp',
     'academia_lang',
     'academia_music_sort_v1',
+    /* v4.73.1 — Modo Desenvolvedor também acompanha a conta. */
+    'academia_dev_mode',
     ...Object.values(PREF_KEYS),
   ];
   const prefs: Record<string, string> = {};

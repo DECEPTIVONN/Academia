@@ -601,27 +601,34 @@
 
 /* ---- EMBLEM GALLERY ---- */
 
+/* v4.73.1 — a galeria ocupava a largura toda (cards de 250 px com um ícone
+   minúsculo no centro, sobrando faixas escuras em cima/embaixo). Agora os
+   estandartes têm tamanho de card de coleção e fundo com profundidade. */
 .emblem-gallery {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
   gap: 10px;
   margin-bottom: 24px;
 }
 
 .emblem-gallery__item {
   position: relative;
-  aspect-ratio: 1;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.04);
-  border: 2px solid rgba(255,255,255,0.07);
+  aspect-ratio: 0.88;
+  min-height: 106px;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.22), transparent 62%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015) 58%, rgba(0, 0, 0, 0.28));
+  border: 2px solid rgba(255, 255, 255, 0.09);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 7px;
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: 6px;
+  padding: 10px 6px 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 6px 18px rgba(0, 0, 0, 0.28);
 }
 .emblem-gallery__item:hover:not(.emblem-gallery__item--locked) {
   border-color: rgba(139,92,246,0.5);
@@ -648,16 +655,25 @@
   border: 1.5px solid #fff;
 }
 .emblem-gallery__item--locked {
-  filter: grayscale(1) brightness(0.4);
   cursor: not-allowed;
 }
+/* v4.73.1 — sem escurecer o card inteiro: o nome/requisito continua legível
+   sobre o tema dourado; apenas o ícone fica apagado. */
 .emblem-gallery__item--locked::before {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.3);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
   z-index: 1;
+}
+.emblem-gallery__item--locked .emblem-gallery__icon {
+  filter: grayscale(1) brightness(0.72);
+  opacity: 0.55;
+}
+.emblem-gallery__item--locked .emblem-gallery__name {
+  color: rgba(255, 255, 255, 0.62);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
 }
 
 .emblem-gallery__icon {
@@ -681,26 +697,46 @@
 /* v4.56.15 — o ícone do estandarte usa o mesmo círculo escuro dos avatares
    dos membros da guilda (PlayerAvatar / .guild-emblem). */
 .emblem-gallery .emblem-gallery__icon {
-  width: 38px;
-  height: 38px;
+  width: 46px;
+  height: 46px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 50%;
+  /* Sem faixas pretas: o degradê termina num grafite arroxeado, não em #000. */
   background:
-    radial-gradient(120% 120% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.35), rgba(8, 6, 16, 0.94) 72%);
+    radial-gradient(120% 120% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.5), rgba(38, 32, 58, 0.96) 76%);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 -6px 14px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.35),
     0 4px 10px rgba(0, 0, 0, 0.4);
 }
+.emblem-gallery .emblem-gallery__icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+@media (min-width: 768px) {
+  .emblem-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(112px, 132px));
+  }
+
+  .emblem-gallery .emblem-gallery__icon {
+    width: 54px;
+    height: 54px;
+  }
+}
 .emblem-gallery__name {
-  font-size: 0.5rem;
-  font-weight: 700;
-  letter-spacing: 0.8px;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.7px;
   text-transform: uppercase;
   color: var(--text-secondary);
   text-align: center;
   line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .emblem-gallery__item--locked .emblem-gallery__lock {
   position: absolute;
@@ -2371,11 +2407,16 @@ body[data-bar-skin="diamante-elite"] .cycle-xp-fill::after {
   color: rgba(255,255,255,0.3);
   text-align: center;
 }
+.card-skin-sub {
+  margin: -6px 0 12px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
 
 /* Previews das skins */
-.card-skin-option--default .card-skin-option__preview {
-  border-color: rgba(139,92,246,0.4);
-  background: rgba(139,92,246,0.06);
+.card-skin-option--none .card-skin-option__preview {
+  border-color: rgba(255,255,255,0.12);
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 6px, transparent 6px 12px);
 }
 .card-skin-option--neon .card-skin-option__preview {
   border-color: #06b6d4;
@@ -2401,65 +2442,90 @@ body[data-bar-skin="diamante-elite"] .cycle-xp-fill::after {
   background: rgba(0,0,0,0.4);
 }
 
-/* ---- OVERRIDES GLOBAIS DOS CARDS (via body data-card-skin) ---- */
+/* ---- OVERRIDES GLOBAIS DOS CARDS (via body data-card-skin) ----
+   v4.73.1 — a skin vale para TODOS os cards de exercício do app: grid de
+   Exercícios (.ex-card), deck da ficha/coleção (.deck-card), visão em lista
+   (.deck-list-item) e o cartão do Perfil (.profile-header). No mobile os
+   mesmos cards são usados, então a skin acompanha automaticamente. "none"
+   (e o antigo "default") não pinta nada. */
 
 /* Neon */
-body[data-card-skin="neon"] .ex-card {
+body[data-card-skin="neon"] :is(.ex-card, .deck-card, .deck-list-item) {
   border-color: rgba(6,182,212,0.35) !important;
   box-shadow: 0 0 0 1px rgba(6,182,212,0.15), inset 0 0 20px rgba(6,182,212,0.04);
 }
-body[data-card-skin="neon"] .ex-card:hover {
+body[data-card-skin="neon"] :is(.ex-card, .deck-card, .deck-list-item):hover {
   border-color: #06b6d4 !important;
   box-shadow: 0 0 0 1px #06b6d4, 0 8px 32px rgba(6,182,212,0.25) !important;
 }
+body[data-card-skin="neon"] .profile-header {
+  border-color: rgba(6,182,212,0.4) !important;
+  box-shadow: 0 0 0 1px rgba(6,182,212,0.18), 0 18px 44px rgba(0,0,0,0.45);
+}
 
 /* Militar */
-body[data-card-skin="militar"] .ex-card {
-  border-color: rgba(77,124,15,0.4) !important;
+body[data-card-skin="militar"] :is(.ex-card, .deck-card, .deck-list-item) {
+  border-color: rgba(132,204,22,0.42) !important;
   border-radius: 8px !important;
-  background: rgba(10,20,5,0.75) !important;
+  background: rgba(10,20,5,0.85) !important;
   background-image: repeating-linear-gradient(
-    45deg, rgba(77,124,15,0.04), rgba(77,124,15,0.04) 3px,
+    45deg, rgba(132,204,22,0.05), rgba(132,204,22,0.05) 3px,
     transparent 3px, transparent 9px
   ) !important;
 }
-body[data-card-skin="militar"] .ex-card:hover {
-  border-color: #4d7c0f !important;
-  box-shadow: 0 6px 24px rgba(77,124,15,0.2) !important;
+body[data-card-skin="militar"] :is(.ex-card, .deck-card, .deck-list-item):hover {
+  border-color: #84cc16 !important;
+  box-shadow: 0 6px 24px rgba(77,124,15,0.24) !important;
+}
+body[data-card-skin="militar"] .profile-header {
+  border-color: rgba(132,204,22,0.42) !important;
+  background-image: repeating-linear-gradient(45deg, rgba(132,204,22,0.04) 0 3px, transparent 3px 10px);
 }
 
 /* Ouro */
-body[data-card-skin="ouro"] .ex-card {
-  border-color: rgba(217,119,6,0.4) !important;
-  box-shadow: 0 0 0 1px rgba(217,119,6,0.1);
+body[data-card-skin="ouro"] :is(.ex-card, .deck-card, .deck-list-item) {
+  border-color: rgba(251,191,36,0.42) !important;
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.12), 0 6px 22px rgba(0,0,0,0.35);
 }
-body[data-card-skin="ouro"] .ex-card:hover {
+body[data-card-skin="ouro"] :is(.ex-card, .deck-card, .deck-list-item):hover {
   border-color: #fbbf24 !important;
-  box-shadow: 0 8px 32px rgba(251,191,36,0.2) !important;
+  box-shadow: 0 8px 32px rgba(251,191,36,0.24) !important;
 }
 body[data-card-skin="ouro"] .ex-card-num {
   background: linear-gradient(135deg, #b45309, #fbbf24) !important;
 }
+body[data-card-skin="ouro"] .profile-header {
+  border-color: rgba(251,191,36,0.45) !important;
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.16), 0 18px 44px rgba(0,0,0,0.45);
+}
 
 /* Gelo */
-body[data-card-skin="gelo"] .ex-card {
-  border-color: rgba(56,189,248,0.3) !important;
-  background: rgba(8,28,50,0.65) !important;
+body[data-card-skin="gelo"] :is(.ex-card, .deck-card, .deck-list-item) {
+  border-color: rgba(56,189,248,0.34) !important;
+  background: rgba(8,28,50,0.78) !important;
 }
-body[data-card-skin="gelo"] .ex-card:hover {
+body[data-card-skin="gelo"] :is(.ex-card, .deck-card, .deck-list-item):hover {
   border-color: #38bdf8 !important;
-  box-shadow: 0 8px 32px rgba(56,189,248,0.15) !important;
+  box-shadow: 0 8px 32px rgba(56,189,248,0.18) !important;
+}
+body[data-card-skin="gelo"] .profile-header {
+  border-color: rgba(56,189,248,0.38) !important;
+  box-shadow: 0 0 0 1px rgba(56,189,248,0.12), 0 18px 44px rgba(0,0,0,0.45);
 }
 
 /* Sombra */
-body[data-card-skin="sombra"] .ex-card {
-  border-color: rgba(255,255,255,0.04) !important;
-  background: rgba(5,3,10,0.85) !important;
+body[data-card-skin="sombra"] :is(.ex-card, .deck-card, .deck-list-item) {
+  border-color: rgba(255,255,255,0.06) !important;
+  background: rgba(5,3,10,0.9) !important;
   box-shadow: none;
 }
-body[data-card-skin="sombra"] .ex-card:hover {
-  border-color: rgba(255,255,255,0.1) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+body[data-card-skin="sombra"] :is(.ex-card, .deck-card, .deck-list-item):hover {
+  border-color: rgba(255,255,255,0.12) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.55) !important;
+}
+body[data-card-skin="sombra"] .profile-header {
+  border-color: rgba(255,255,255,0.08) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.6);
 }
 
 

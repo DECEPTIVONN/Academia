@@ -126,6 +126,14 @@ export function ProfileFeature() {
 
   const [devMode, setDevMode] = useState(() => isDevMode());
 
+  /* v4.73.1 — o Modo Desenvolvedor vem da nuvem junto das preferências:
+     aplica o valor remoto sem precisar recarregar a página. */
+  useEffect(() => {
+    const syncDevMode = () => setDevMode(isDevMode());
+    document.addEventListener('academia:prefs-changed', syncDevMode);
+    return () => document.removeEventListener('academia:prefs-changed', syncDevMode);
+  }, []);
+
   /* Pilha de navegação do hub raiz (raiz → grupo → leaf) */
   const [navStack, setNavStack] = useState<string[]>([]);
 
@@ -242,6 +250,8 @@ export function ProfileFeature() {
   const toggleDevMode = async (checked: boolean) => {
     writeLS('academia_dev_mode', String(checked));
     setDevMode(checked);
+    /* Agenda o push do snapshot/cloud (o sync escuta o evento). */
+    document.dispatchEvent(new CustomEvent('academia:prefs-changed'));
 
     if (!checked && profile) {
       const reverted = revertLockedCustomizations(

@@ -358,7 +358,7 @@ export const DEFAULT_PROFILE_CUSTOMIZATION: ProfileCustomization = {
   avatarFrame: null,
   assinatura: '',
   barSkin: 'default',
-  cardSkin: 'default',
+  cardSkin: 'none',
   showcaseStat: 'streak',
   mainEmblem: 'prestigio-1',
   mainEmblemPulse: true,

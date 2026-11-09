@@ -30,6 +30,7 @@ import {
 } from '@/core/db/queries';
 import { showToast } from '@/lib/toast';
 import { formatSpeed } from '@/lib/app-prefs';
+import { TimerVisual, readTimerStyle, type TimerStyle } from './timer-visuals';
 
 interface FocusModalProps {
   open: boolean;
@@ -49,6 +50,22 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
   const { exercises, sheets, history, legacy } = useLocalData();
   const entry = useTodayEntryStore((s) => s.entry);
   const restTimeRemaining = useWorkoutStore((s) => s.restTimeRemaining);
+  const restTotalDuration = useWorkoutStore((s) => s.restTotalDuration);
+
+  /* v4.73.1 — o descanso no Modo Foco usa o MESMO visual escolhido pelo
+     usuário no cronômetro (radar/ampulheta), abaixo do GIF. */
+  const [timerStyle, setTimerStyle] = useState<TimerStyle>(readTimerStyle);
+  useEffect(() => {
+    const sync = () => setTimerStyle(readTimerStyle());
+    document.addEventListener('academia:timer-style-changed', sync);
+    document.addEventListener('academia:prefs-changed', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      document.removeEventListener('academia:timer-style-changed', sync);
+      document.removeEventListener('academia:prefs-changed', sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
 
   const [focusIds, setFocusIds] = useState<string[]>([]);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -419,9 +436,18 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
                   uma série); parado em 00:00 ele poluía a tela em todo
                   exercício. */}
               {restTimeRemaining > 0 && (
-                <div className="f-timer-display is-running" id="focusTimerVal">
-                  <span className="f-timer-val">{timerText}</span>
-                  <span className="f-timer-lbl">DESCANSO</span>
+                <div className="focus-rest-timer is-running" id="focusTimerVal">
+                  <span className="focus-rest-timer__visual" aria-hidden="true">
+                    <TimerVisual
+                      style={timerStyle}
+                      pct={restTotalDuration > 0 ? (restTimeRemaining / restTotalDuration) * 100 : 0}
+                      idPrefix="focus-rest"
+                    />
+                  </span>
+                  <span className="focus-rest-timer__meta">
+                    <span className="f-timer-val">{timerText}</span>
+                    <span className="f-timer-lbl">DESCANSO</span>
+                  </span>
                 </div>
               )}
             </div>

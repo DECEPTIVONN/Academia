@@ -17,17 +17,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useWorkoutStore } from '@/store/workout-store';
-import { TimerVisual, type TimerStyle } from './timer-visuals';
-
-function readTimerStyle(): TimerStyle {
-  try {
-    const raw = localStorage.getItem('timerStyle');
-    if (raw === 'hourglass') return raw;
-  } catch {
-    /* storage indisponível */
-  }
-  return 'radar';
-}
+import { TimerVisual, readTimerStyle, type TimerStyle } from './timer-visuals';
 
 function formatRest(seconds: number): string {
   const m = Math.floor(Math.max(0, seconds) / 60)

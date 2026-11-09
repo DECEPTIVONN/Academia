@@ -19,7 +19,6 @@ export type SubTab =
   | 'exercicios-lista'
   | 'itens-magicos'
   | 'emotes'
-  | 'torres'
   | 'estandartes'
   | 'maestrias';
 
