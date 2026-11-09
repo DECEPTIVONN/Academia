@@ -460,6 +460,8 @@ export const AVATAR_FRAMES: {
   { key: 'prata', nome: 'Prata', classe: 'frame-option--prata', unlock: null },
   { key: 'ouro', nome: 'Ouro', classe: 'frame-option--ouro', unlock: null },
   { key: 'elite', nome: 'Elite', classe: 'frame-option--elite', unlock: null },
+  /* v4.74.0 — moldura diamante: anel em losango, exclusiva da sub-aba Emblema. */
+  { key: 'diamante', nome: 'Diamante', classe: 'frame-option--diamante', unlock: null },
 ];
 
 /* ── Emblemas de identidade do avatar (IDENTITY_EMBLEMS — L105–120) ── */

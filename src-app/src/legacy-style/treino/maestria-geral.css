@@ -739,3 +739,120 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ============================================================
+   v4.74.0 — Emblema de maestria no topo dos cards
+   Crista circular com aro metálico, estrela central e glow do tier.
+   ============================================================ */
+.maestria-geral-container .mg-card__crest {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.22), transparent 58%),
+    linear-gradient(180deg, #2a2a30, #101014);
+  color: rgba(255, 255, 255, 0.46);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.maestria-geral-container .mg-card__crest::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  pointer-events: none;
+}
+
+.maestria-geral-container .mg-card__crest svg {
+  position: relative;
+  z-index: 2;
+  width: 19px;
+  height: 19px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+}
+
+.maestria-geral-container .mg-card__crest-glow {
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  opacity: 0;
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.maestria-geral-container .mg-card__crest--bronze {
+  border-color: rgba(251, 146, 60, 0.72);
+  color: #fdba74;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 237, 213, 0.32), transparent 56%),
+    linear-gradient(180deg, #7c2d12, #1c0d06);
+}
+.maestria-geral-container .mg-card__crest--bronze .mg-card__crest-glow {
+  opacity: 0.6;
+  background: rgba(249, 115, 22, 0.55);
+}
+
+.maestria-geral-container .mg-card__crest--prata {
+  border-color: rgba(226, 232, 240, 0.78);
+  color: #f1f5f9;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.42), transparent 58%),
+    linear-gradient(180deg, #64748b, #111827);
+}
+.maestria-geral-container .mg-card__crest--prata .mg-card__crest-glow {
+  opacity: 0.55;
+  background: rgba(203, 213, 225, 0.5);
+}
+
+.maestria-geral-container .mg-card__crest--ouro {
+  border-color: rgba(249, 230, 184, 0.85);
+  color: #fef3c7;
+  background:
+    radial-gradient(circle at 50% 26%, rgba(255, 251, 235, 0.55), transparent 56%),
+    linear-gradient(180deg, #b45309, #1f1204);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(230, 192, 115, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.maestria-geral-container .mg-card__crest--ouro .mg-card__crest-glow {
+  opacity: 0.8;
+  background: rgba(230, 192, 115, 0.6);
+}
+
+.maestria-geral-container .mg-card__crest.is-locked {
+  filter: grayscale(0.8);
+  opacity: 0.62;
+}
+
+.maestria-geral-container .royale-card {
+  overflow: visible;
+}
+
+.maestria-geral-container .royale-card:hover .mg-card__crest,
+.maestria-geral-container .royale-card:focus-visible .mg-card__crest {
+  transform: translateX(-50%) translateY(-1px) scale(1.06);
+}
+
+@media (max-width: 520px) {
+  .maestria-geral-container .mg-card__crest {
+    width: 34px;
+    height: 34px;
+    top: -8px;
+  }
+  .maestria-geral-container .mg-card__crest svg {
+    width: 17px;
+    height: 17px;
+  }
+}

@@ -33,6 +33,11 @@ export interface InboxMessage {
   /** epoch ms */
   at: number;
   read: boolean;
+  /* v4.74.0 — convites de ofensiva acionáveis dentro das Mensagens. */
+  action?: 'streak-invite';
+  inviteId?: string;
+  inviteStatus?: 'pending' | 'accepted' | 'declined';
+  fromName?: string;
 }
 
 export interface InboxInput {
@@ -42,6 +47,10 @@ export interface InboxInput {
   /** Chave estável — evita repetir o mesmo evento entre recarregamentos. */
   key?: string;
   at?: number;
+  action?: InboxMessage['action'];
+  inviteId?: string;
+  inviteStatus?: InboxMessage['inviteStatus'];
+  fromName?: string;
 }
 
 /* ── Leitura/escrita ── */
@@ -96,10 +105,26 @@ export function pushMessage(input: InboxInput): InboxMessage | null {
     body: input.body,
     at: input.at ?? Date.now(),
     read: false,
+    action: input.action,
+    inviteId: input.inviteId,
+    inviteStatus: input.inviteStatus,
+    fromName: input.fromName,
   };
 
   writeInbox([message, ...list]);
   return message;
+}
+
+/** Atualiza uma mensagem existente pela chave estável (não cria duplicata). */
+export function patchMessageByKey(
+  key: string,
+  patch: Partial<Omit<InboxMessage, 'id' | 'kind'>>,
+): boolean {
+  const id = `k:${key}`;
+  const list = readInbox();
+  if (!list.some((message) => message.id === id)) return false;
+  writeInbox(list.map((message) => (message.id === id ? { ...message, ...patch } : message)));
+  return true;
 }
 
 export function markRead(id: string): void {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.73.1",
+  "version": "4.74.0",
   "last_updated": "2026-11-09",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -955,12 +955,36 @@
         "purpose": "Hook da aba Social: carrega ranking e amigos, republica o XP quando o histórico muda, escuta eventos de dados/visibilidade e expõe refresh/request/accept/remove. Converte as linhas da nuvem para FriendItem das listas."
       },
       {
+        "file": "src-app/src/features/social/streak-invites.ts",
+        "purpose": "Convites reais de ofensiva entre amizades confirmadas: fetch (streak_invites_overview), enviar (send_streak_invite), aceitar/recusar (respond_streak_invite), cancelar (cancel_streak_invite), evento academia:streak-invites-changed e `syncStreakInviteMessages`, que transforma convites pendentes em cartões acionáveis nas Mensagens do Início sem duplicar."
+      },
+      {
+        "file": "src-app/src/features/social/FriendStreaksPanel.tsx",
+        "purpose": "Painel Ofensivas dos Amigos no Perfil: hero laranja, duplas ativas, convites recebidos (Aceitar/Recusar), enviados (Cancelar), slots Convidar amigo e seletor de amizades confirmadas. Usa `streak-invites.ts` + `social-cloud.ts`; offline mostra aviso honesto em vez de dados fictícios."
+      },
+      {
+        "file": "src-app/src/features/social/StreakInviteWatcher.tsx",
+        "purpose": "Observador montado no App: consulta convites de ofensiva ao abrir, na visibilidade e a cada 45 s e injeta/atualiza as mensagens do Início. Não consulta sem Supabase configurado."
+      },
+      {
+        "file": "src-app/src/features/social/friend-streaks.css",
+        "purpose": "Estilos do painel de convites de ofensiva (.fsp-*): hero laranja, lista de duplas, slots tracejados, picker de amigos, estados de carregamento/erro e responsividade."
+      },
+      {
         "file": "src-app/src/features/help/HelpCenter.tsx",
-        "purpose": "Central de Ajuda (FAQ/tutoriais) em Configurações → Ajuda e Tutoriais: grupos Começando, Minha Ficha/coleção, Progresso, Social/ranking, Nuvem/offline, Notificações, Privacidade e Instalar, com busca e acordeão animado. Conteúdo derivado de DESIGN.md/README.md."
+        "purpose": "Conteúdo da Central de Ajuda (FAQ/tutoriais): grupos Começando, Minha Ficha/coleção, Progresso, Social/ranking, Nuvem/offline, Notificações, Privacidade e Instalar, com busca e acordeões animados. Desde a v4.74.0 é renderizado pelo HelpOverlay standalone, fora de Configurações; cada grupo tem `id=help-group-*` para os atalhos."
+      },
+      {
+        "file": "src-app/src/features/help/HelpOverlay.tsx",
+        "purpose": "Interface própria de Ajuda e Tutoriais (v4.74.0): overlay fullscreen com hero, chips de atalho para categorias, busca, HelpCenter e rodapé de suporte. Aberta pelo menu do Início, pelo Perfil, pela busca geral (action open-help) e pelo evento academia:open-help; fecha com ESC/backdrop com animação curta."
       },
       {
         "file": "src-app/src/features/help/help.css",
-        "purpose": "Estilos da Central de Ajuda: grupos com o HUD set-*, acordeão com transição grid-rows/opacidade e respeito a prefers-reduced-motion."
+        "purpose": "Estilos do HelpOverlay e dos acordeões: hero, chips, header sticky, grupos com HUD set-*, pergunta com marcador “?”, chevron circular, abertura grid-rows/opacidade e prefers-reduced-motion."
+      },
+      {
+        "file": "supabase/migrations/20261109_streak_invites.sql",
+        "purpose": "SQL dos convites de ofensiva: tabela public.streak_invites (pending/accepted/declined, RLS de leitura para as partes), índice único de pendente por par e RPCs send/respond/cancel/overview; só amizades confirmadas podem convidar."
       },
       {
         "file": "supabase/migrations/20261101_social_ranking_friends.sql",

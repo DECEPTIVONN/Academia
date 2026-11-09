@@ -1073,7 +1073,7 @@ export const ProgressoFeature: React.FC = () => {
             <h3 className="prog-section__title">Conquistas</h3>
             <div className="prog-badges">
               <button type="button" className="prog-badges__row" onClick={() => setEmblemasOpen(true)}>
-                <span className="prog-badges__title">Emblemas</span>
+                <span className="prog-badges__title">Conquistas</span>
                 <ChevronRight className="prog-badges__chev" size={18} aria-hidden="true" />
               </button>
               <div className="prog-badges__body">
@@ -1082,10 +1082,10 @@ export const ProgressoFeature: React.FC = () => {
                 </span>
                 <span className="prog-badges__text">
                   {badgesEarned > 0
-                    ? `${badgesEarned} emblema${badgesEarned > 1 ? 's' : ''} conquistado${
+                    ? `${badgesEarned} conquista${badgesEarned > 1 ? 's' : ''} desbloqueada${
                         badgesEarned > 1 ? 's' : ''
                       }`
-                    : 'Nenhum emblema conquistado ainda'}
+                    : 'Nenhuma conquista desbloqueada ainda'}
                 </span>
               </div>
             </div>

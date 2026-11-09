@@ -1,0 +1,657 @@
+/* ============================================================
+   OFENSIVAS DOS AMIGOS — convites reais (v4.74.0)
+   ============================================================ */
+
+.friend-streaks-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 12px;
+}
+
+/* ---------- Hero laranja ---------- */
+.fsp-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+  padding: 20px 18px 16px;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 160% at 100% 0%, #fb923c 0%, transparent 58%),
+    linear-gradient(135deg, #f97316 0%, #ea580c 58%, #c2410c 100%);
+  box-shadow: 0 12px 28px rgba(234, 88, 12, 0.28);
+}
+
+.fsp-hero__glow {
+  position: absolute;
+  right: -34px;
+  top: -46px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.fsp-hero__copy {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.fsp-hero__eyebrow {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.14);
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: #fff7ed;
+}
+
+.fsp-hero__title {
+  margin: 7px 0 4px;
+  font-size: 1.22rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(124, 45, 18, 0.35);
+}
+
+.fsp-hero__desc {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 0.67rem;
+  line-height: 1.5;
+  color: rgba(255, 247, 237, 0.9);
+}
+
+.fsp-hero__art {
+  position: relative;
+  width: 92px;
+  height: 86px;
+  flex-shrink: 0;
+}
+
+.fsp-hero__avatar {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(124, 45, 18, 0.35);
+}
+
+.fsp-hero__avatar--back {
+  left: 0;
+  bottom: 10px;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(160deg, #84cc16, #4d7c0f);
+}
+
+.fsp-hero__avatar--front {
+  left: 31px;
+  bottom: 18px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(160deg, #7c3aed, #4c1d95);
+}
+
+.fsp-hero__flame {
+  position: absolute;
+  right: 0;
+  top: 4px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 48px;
+  color: #fde047;
+  filter: drop-shadow(0 0 12px rgba(253, 224, 71, 0.65));
+  transform: rotate(-8deg);
+}
+
+.fsp-hero__stats {
+  position: absolute;
+  right: 16px;
+  bottom: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.fsp-hero__stats span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+}
+
+.fsp-hero__stats strong {
+  font-size: 0.92rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.fsp-hero__stats small {
+  margin-top: 2px;
+  font-size: 0.42rem;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: rgba(255, 247, 237, 0.72);
+}
+
+/* ---------- Section header ---------- */
+.fsp-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fsp-section-head__eyebrow {
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.fsp-section-head__title {
+  margin: 2px 0 0;
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.fsp-edit {
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #38bdf8;
+  font-family: inherit;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+}
+
+.fsp-edit:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+/* ---------- Lista ---------- */
+.fsp-list {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  background: #0c0c10;
+}
+
+.fsp-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fsp-row:last-of-type {
+  border-bottom: 0;
+}
+
+.fsp-row.is-accepted {
+  background:
+    linear-gradient(90deg, rgba(249, 115, 22, 0.1), transparent 55%);
+}
+
+.fsp-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(160deg, #334155, #0f172a);
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.fsp-row.is-accepted .fsp-avatar {
+  border-color: rgba(251, 146, 60, 0.65);
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.28);
+}
+
+.fsp-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fsp-row__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.fsp-row__name-line {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+}
+
+.fsp-row__name-line strong {
+  overflow: hidden;
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fsp-row__name-line > span {
+  overflow: hidden;
+  font-size: 0.56rem;
+  color: var(--text-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fsp-row__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+  font-size: 0.6rem;
+  color: var(--text-tertiary);
+}
+
+.fsp-row.is-accepted .fsp-row__status {
+  color: #fb923c;
+  font-weight: 800;
+}
+
+.fsp-row__actions {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.fsp-accept,
+.fsp-decline,
+.fsp-cancel,
+.fsp-retry,
+.fsp-picker__send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+}
+
+.fsp-accept {
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.16);
+  color: #4ade80;
+}
+
+.fsp-accept:hover { background: #16a34a; color: #fff; }
+
+.fsp-decline,
+.fsp-cancel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-tertiary);
+}
+
+.fsp-decline:hover,
+.fsp-cancel:hover {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.fsp-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.fsp-status-pill.is-active {
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+
+/* ---------- Slots ---------- */
+.fsp-slot {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 13px 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.fsp-slot:last-of-type { border-bottom: 0; }
+
+.fsp-slot:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.fsp-slot__plus {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: 2px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.fsp-slot:hover .fsp-slot__plus {
+  border-color: #fb923c;
+  color: #fb923c;
+}
+
+.fsp-slot__copy {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.fsp-slot__copy strong {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.fsp-slot:hover .fsp-slot__copy strong {
+  color: var(--text);
+}
+
+.fsp-slot__copy small {
+  font-size: 0.55rem;
+  color: var(--text-tertiary);
+}
+
+.fsp-slot__send {
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+
+.fsp-slot:hover .fsp-slot__send {
+  opacity: 1;
+  color: #fb923c;
+}
+
+.fsp-list__empty {
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+/* ---------- Estados ---------- */
+.fsp-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+.fsp-loading i {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #fb923c;
+  border-radius: 50%;
+  animation: fspSpin 0.8s linear infinite;
+}
+
+@keyframes fspSpin { to { transform: rotate(360deg); } }
+
+.fsp-notice,
+.fsp-empty-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 15px;
+  border: 1px solid rgba(250, 204, 21, 0.24);
+  border-radius: 16px;
+  background: rgba(250, 204, 21, 0.06);
+  color: #facc15;
+}
+
+.fsp-empty-state {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-tertiary);
+}
+
+.fsp-empty-state__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(249, 115, 22, 0.14);
+  color: #fb923c;
+}
+
+.fsp-empty-state h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.fsp-empty-state p,
+.fsp-notice p {
+  margin: 3px 0 0;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.fsp-notice strong {
+  display: block;
+  font-size: 0.74rem;
+  color: #fde68a;
+}
+
+.fsp-retry {
+  margin-top: 8px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  background: rgba(250, 204, 21, 0.12);
+  color: #fde68a;
+}
+
+/* ---------- Picker ---------- */
+.fsp-picker {
+  padding: 14px;
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  border-radius: 16px;
+  background:
+    radial-gradient(110% 150% at 100% 0%, rgba(56, 189, 248, 0.12), transparent 62%),
+    #0b0b10;
+  animation: fspPickerIn 0.22s ease both;
+}
+
+@keyframes fspPickerIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fsp-picker__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.fsp-picker__eyebrow {
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #38bdf8;
+}
+
+.fsp-picker__head h4 {
+  margin: 2px 0 0;
+  font-size: 0.84rem;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.fsp-picker__close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.fsp-picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fsp-picker__friend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.fsp-picker__friend-copy {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.fsp-picker__friend-copy strong {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.fsp-picker__friend-copy span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.56rem;
+  color: var(--text-tertiary);
+}
+
+.fsp-picker__send {
+  flex-shrink: 0;
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  background: rgba(249, 115, 22, 0.14);
+  color: #fb923c;
+}
+
+.fsp-picker__send:hover:not(:disabled) {
+  background: #ea580c;
+  color: #fff;
+}
+
+.fsp-picker__send:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.fsp-picker__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 18px;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.fsp-picker__empty p {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 0.64rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .fsp-hero__art {
+    display: none;
+  }
+  .fsp-hero__stats {
+    display: none;
+  }
+  .fsp-hero {
+    padding: 16px;
+  }
+  .fsp-row {
+    flex-wrap: wrap;
+  }
+  .fsp-row__actions {
+    width: 100%;
+    padding-left: 53px;
+  }
+  .fsp-accept,
+  .fsp-decline {
+    flex: 1;
+    padding: 7px 8px;
+  }
+}

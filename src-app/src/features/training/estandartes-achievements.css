@@ -684,3 +684,11 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* v4.74.0 — coleção completa em vez de "0 bloqueados" */
+.est-hero__foot .is-master {
+  color: #fbbf24;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.45);
+}

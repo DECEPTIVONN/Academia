@@ -35,6 +35,8 @@ import { bootstrap } from '@/core/db/bootstrap';
 import { ShareModal } from '@/features/gamification/ShareModal';
 /* v4.19.0-music — interface de Músicas e Playlists (overlay estilo YT Music) */
 import { MusicOverlay } from '@/features/music/MusicOverlay';
+import { HelpOverlay } from '@/features/help/HelpOverlay';
+import { StreakInviteWatcher } from '@/features/social/StreakInviteWatcher';
 import { FloatingMiniPlayer } from '@/features/music/FloatingMiniPlayer';
 import { RestTimerWidget } from '@/features/workout/RestTimerWidget';
 import { ExitConfirmDialog } from '@/components/ExitConfirmDialog';
@@ -383,6 +385,8 @@ function AppShell() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   /* v4.19.0-music — overlay de Músicas e Playlists (aberto pela Busca/Config) */
   const [isMusicOpen, setIsMusicOpen] = useState(false);
+  /* v4.74.0 — Ajuda agora é interface própria, fora de Configurações. */
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   /* Sidebar HUD fixada expandida (pref academia_pref_sidebar_pinned) */
   const [sidebarPinned, setSidebarPinned] = useState(
     () => readLS(PREF_KEYS.sidebarPinned) === 'true'
@@ -429,16 +433,17 @@ function AppShell() {
     }, 0);
   }, []);
 
-  /* v4.66.0 — Ajuda (menu do Início) → mesmo hub, já na Central de Ajuda. */
+  /* v4.74.0 — Ajuda virou overlay próprio (não é mais um tile de Perfil). */
   const openProfileHelp = useCallback(() => {
     setIsDrawerOpen(false);
-    setIsPerfilClosing(false);
-    setIsPerfilOverlayOpen(true);
-    window.setTimeout(() => {
-      document.dispatchEvent(
-        new CustomEvent('academia:profile-nav', { detail: ['ajuda'] }),
-      );
-    }, 0);
+    setIsHelpOpen(true);
+  }, []);
+
+  /* Menu do Início / Supercell ID / busca disparam este evento. */
+  useEffect(() => {
+    const onOpen = () => setIsHelpOpen(true);
+    window.addEventListener('academia:open-help', onOpen);
+    return () => window.removeEventListener('academia:open-help', onOpen);
   }, []);
 
   /* Ctrl/Cmd+K abre/fecha a Busca Geral (não enquanto o app estiver travado) */
@@ -467,6 +472,16 @@ function AppShell() {
   const handleSearchPick = useCallback(
     (item: SearchItem) => {
       setIsSearchOpen(false);
+
+      /* v4.74.0 — atalho da Busca → Central de Ajuda standalone */
+      if (item.action === 'open-help') {
+        if (isPerfilOverlayOpen) {
+          setIsPerfilClosing(false);
+          setIsPerfilOverlayOpen(false);
+        }
+        setIsHelpOpen(true);
+        return;
+      }
 
       /* v4.19.0-music — atalho da Busca → interface de Músicas e Playlists */
       if (item.action === 'open-music') {
@@ -561,6 +576,7 @@ function AppShell() {
         t.closest('.guild-overlay') ||
         t.closest('.msg-overlay') ||
         t.closest('.of-root') ||
+        t.closest('.help-ov') ||
         t.closest('.bm-root') ||
         t.closest('.cal-ov') ||
         t.closest('.tr-overlay') ||
@@ -1217,12 +1233,18 @@ function AppShell() {
           <NotificationScheduler />
           <PushSync />
           <RealEventsFeed />
+          <StreakInviteWatcher />
           <RemoteSyncToast />
            <OfflineSyncBanner />
 
           {/* ====== INTERFACE DE MÚSICAS E PLAYLISTS (v4.19.0-music) ======
               Aberta pelo card de Configurações ('academia:open-music'). */}
           <MusicOverlay open={isMusicOpen} onClose={() => setIsMusicOpen(false)} />
+
+          {/* ====== AJUDA E TUTORIAIS (v4.74.0) ======
+              Interface própria, aberta pelo menu do Início, pelo Perfil e
+              pelo evento 'academia:open-help'. */}
+          <HelpOverlay open={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 
           {/* ====== MINIPLAYER FLUTUANTE (v4.20.0-music) ======
               Global: arrastável/redimensionável, com retroceder/avançar —

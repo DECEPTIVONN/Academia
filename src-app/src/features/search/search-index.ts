@@ -35,7 +35,7 @@ export interface SearchItem {
   /** Exercícios */
   exerciseName?: string;
   /** Ações especiais interpretadas pelo App (ex.: abrir a interface de Músicas) */
-  action?: 'open-music';
+  action?: 'open-music' | 'open-help';
 }
 
 export interface RankedGroup {
@@ -69,8 +69,8 @@ const CONFIGS: SearchItem[] = [
   { id: 'cfg:perfil', kind: 'config', title: 'Perfil', desc: 'Cartão, ofensivas e medalhas', stack: ['perfil'], keywords: ['cartao', 'ofensivas', 'medalhas', 'amigos'] },
   { id: 'cfg:progressao', kind: 'config', title: 'Progressão', desc: 'Visão geral, nível/XP e conquistas', stack: ['progressao'], keywords: ['nivel', 'xp', 'conquistas', 'progresso'] },
   { id: 'cfg:personalizar', kind: 'config', title: 'Personalizar', desc: 'Estatística em destaque no cartão', stack: ['personalizar'], keywords: ['destaque', 'showcase', 'estatistica', 'streak', 'cartao'] },
-  /* v4.66.0 — Central de Ajuda (FAQ/tutoriais) */
-  { id: 'cfg:ajuda', kind: 'config', title: 'Ajuda e Tutoriais', desc: 'Perguntas frequentes sobre treino, ficha, progresso, ranking e conta', stack: ['ajuda'], keywords: ['ajuda', 'faq', 'tutorial', 'duvida', 'dúvida', 'como', 'suporte', 'ranking', 'amigos', 'offline', 'nuvem', 'backup', 'notificacoes', 'notificações', 'conta', 'seguranca', 'segurança', 'instalar', 'pwa'] },
+  /* v4.74.0 — Central de Ajuda standalone (não é mais tile de Configurações) */
+  { id: 'cfg:ajuda', kind: 'config', title: 'Ajuda e Tutoriais', desc: 'Perguntas frequentes sobre treino, ficha, progresso, ranking e conta', action: 'open-help', keywords: ['ajuda', 'faq', 'tutorial', 'duvida', 'dúvida', 'como', 'suporte', 'ranking', 'amigos', 'offline', 'nuvem', 'backup', 'notificacoes', 'notificações', 'conta', 'seguranca', 'segurança', 'instalar', 'pwa'] },
 ];
 
 /** Monta o índice de exercícios + fichas a partir dos dados locais. */

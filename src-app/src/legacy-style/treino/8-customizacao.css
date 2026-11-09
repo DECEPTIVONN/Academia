@@ -3538,3 +3538,38 @@ body[data-card-skin="sombra"] .profile-header {
   z-index: 3; box-shadow: 0 0 6px rgba(245,158,11,.6);
   text-transform: uppercase;
 }
+
+/* v4.74.0 — Moldura Diamante: anel em losango ao redor do avatar. */
+.profile-avatar[data-frame="diamante"]::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  z-index: 3;
+  border: 2px solid rgba(165, 243, 252, 0.92);
+  border-radius: 24%;
+  transform: rotate(45deg);
+  box-shadow:
+    0 0 18px rgba(34, 211, 238, 0.55),
+    inset 0 0 12px rgba(34, 211, 238, 0.25);
+  pointer-events: none;
+}
+.profile-avatar[data-frame="diamante"] img,
+.profile-avatar[data-frame="diamante"] svg,
+.profile-avatar[data-frame="diamante"] .profile-avatar__emblem-wrapper {
+  outline: 2px solid rgba(34, 211, 238, 0.55);
+  outline-offset: 1px;
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.38);
+}
+
+/* v4.74.0 — Cartões, Barras e Emblemas usam exatamente a mesma superfície. */
+.theme-section.customization-surface {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.055), transparent 62%),
+    linear-gradient(180deg, #17171b 0%, #101013 100%);
+}
+
+.theme-section.customization-surface > .theme-bg {
+  opacity: 0.42;
+  filter: saturate(0) brightness(0.72);
+}

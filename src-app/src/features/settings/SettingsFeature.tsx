@@ -27,7 +27,6 @@ import { MousePointerClick } from 'lucide-react';
 import { useProfileState } from '@/features/profile/useProfileState';
 import { patchLegacyProfileCustomization } from '@/core/db/legacy-state';
 import { PairingAuthorizeDialog } from '@/features/auth/PairingAuthorizeDialog';
-import { HelpCenter } from '@/features/help/HelpCenter';
 import { describeNextNotice } from '@/features/notifications/scheduler';
 import {
   disablePush,
@@ -404,20 +403,23 @@ const SvgChat = (
   </svg>
 );
 
+/* v4.74.0 — Cronograma: distribuição visual dos dias de treino na semana. */
+const CRONO_DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+const CRONO_PATTERNS: Record<number, number[]> = {
+  1: [3],
+  2: [2, 5],
+  3: [0, 2, 4],
+  4: [0, 1, 3, 5],
+  5: [0, 1, 2, 4, 5],
+  6: [0, 1, 2, 3, 4, 5],
+  7: [0, 1, 2, 3, 4, 5, 6],
+};
+
 const SvgGlobe = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
     <circle cx="12" cy="12" r="10" />
     <line x1="2" y1="12" x2="22" y2="12" />
     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-  </svg>
-);
-
-/* v4.66.0 — ícone da Central de Ajuda (igual traço dos demais) */
-const SvgHelp = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
   </svg>
 );
 
@@ -1373,20 +1375,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         'trilha', 'fundo', 'efeitos', 'sonoros', 'vibracao', 'vibração',
         'treino', 'playlist', 'playlists', 'youtube', 'spotify', 'upload',
         'faixa', 'player', 'músicas',
-      ],
-    },
-    /* v4.66.0 — Central de Ajuda (FAQ/tutoriais a partir das diretrizes) */
-    {
-      id: 'ajuda',
-      title: 'Ajuda e Tutoriais',
-      desc: 'Perguntas frequentes sobre treino, ficha, progresso, ranking e conta',
-      icon: SvgHelp,
-      badge: 'FAQ',
-      keywords: [
-        'ajuda', 'faq', 'tutorial', 'duvida', 'dúvida', 'como', 'suporte',
-        'treino', 'ficha', 'colecao', 'coleção', 'progresso', 'ranking',
-        'amigos', 'offline', 'nuvem', 'backup', 'notificacoes', 'notificações',
-        'conta', 'seguranca', 'segurança', 'instalar', 'pwa',
       ],
     },
     /* v4.10.0 — nuvem movida para dentro de Sua Conta (ProfileFeature);
@@ -2612,46 +2600,121 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       eyebrow: 'ACADEMIA • CRONOGRAMA',
       title: 'Cronograma',
       content: (
-        <section className="set-card">
-          <div className="set-card__head">
-            <div>
-              <div className="set-card__eyebrow">FREQUÊNCIA ESPERADA</div>
-              <h3 className="set-card__title">Quantos dias por semana você pretende treinar?</h3>
-              <p className="set-card__desc">
-                A mesma pergunta do formulário de entrada: o valor que você já respondeu
-                aparece selecionado aqui e vira a meta do progresso semanal.
+        <div className="cronograma-page">
+          <section className="cr-hero">
+            <div
+              className="cr-hero__ring"
+              style={{
+                background: `conic-gradient(#22d3ee ${Math.round(
+                  (trainingFrequencyDays / 7) * 100,
+                )}%, rgba(255,255,255,0.08) 0)`,
+              }}
+            >
+              <span>
+                {trainingFrequencyDays}
+                <small>/7</small>
+              </span>
+            </div>
+            <div className="cr-hero__copy">
+              <span className="cr-hero__eyebrow">Plano semanal</span>
+              <h3 className="cr-hero__title">
+                {trainingFrequencyDays === 7
+                  ? 'Treino todos os dias'
+                  : `${trainingFrequencyDays} ${trainingFrequencyDays === 1 ? 'treino' : 'treinos'} por semana`}
+              </h3>
+              <p>
+                Essa é a meta usada no progresso semanal, no calendário e nos lembretes. Você
+                pode mudar quando quiser — o histórico não é afetado.
               </p>
             </div>
-          </div>
+          </section>
 
-          <div className="set-pref-options" role="group" aria-label="Frequência esperada">
-            {(
-              [
-                { days: 1, label: '1 dia por semana' },
-                { days: 2, label: '2 dias por semana', badge: 'Recomendado' },
-                { days: 3, label: '3 dias por semana', badge: 'Recomendado' },
-                { days: 4, label: '4 dias por semana' },
-                { days: 5, label: '5 dias por semana' },
-                { days: 6, label: '6 dias por semana' },
-                { days: 7, label: 'Todos os dias' },
-              ] as { days: number; label: string; badge?: string }[]
-            ).map((option) => (
-              <button
-                key={option.days}
-                type="button"
-                className={`set-pref-option${trainingFrequencyDays === option.days ? ' is-active' : ''}`}
-                aria-pressed={trainingFrequencyDays === option.days}
-                onClick={() => void changeTrainingFrequency(option.days)}
-              >
-                {trainingFrequencyDays === option.days && SvgCheck}
-                {option.label}
-                {option.badge && (
-                  <span className="set-pref-option__badge">{option.badge}</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </section>
+          <section className="set-card">
+            <div className="set-card__head">
+              <div>
+                <div className="set-card__eyebrow">DISTRIBUIÇÃO DA SEMANA</div>
+                <h3 className="set-card__title">Escolha quantos dias pretende treinar</h3>
+                <p className="set-card__desc">
+                  A mesma pergunta do formulário de entrada. O valor atual fica em destaque.
+                </p>
+              </div>
+            </div>
+
+            <div className="cr-week" aria-label="Dias planejados de treino">
+              {CRONO_DAYS.map((day, index) => {
+                const planned = (CRONO_PATTERNS[trainingFrequencyDays] ?? []).includes(index);
+                return (
+                  <span
+                    key={day}
+                    className={`cr-week__day${planned ? ' is-planned' : ''}`}
+                  >
+                    <em>{day.slice(0, 1)}</em>
+                    <i />
+                    <small>{day}</small>
+                  </span>
+                );
+              })}
+            </div>
+
+            <div className="cr-options" role="group" aria-label="Frequência esperada">
+              {(
+                [
+                  { days: 1, label: '1 dia por semana', note: 'Retomada leve' },
+                  { days: 2, label: '2 dias por semana', note: 'Rotina inicial', badge: 'Recomendado' },
+                  { days: 3, label: '3 dias por semana', note: 'Equilíbrio ideal', badge: 'Recomendado' },
+                  { days: 4, label: '4 dias por semana', note: 'Progressão constante' },
+                  { days: 5, label: '5 dias por semana', note: 'Alta frequência' },
+                  { days: 6, label: '6 dias por semana', note: 'Intensidade alta' },
+                  { days: 7, label: 'Todos os dias', note: 'Sem dia de descanso' },
+                ] as { days: number; label: string; note: string; badge?: string }[]
+              ).map((option) => {
+                const active = trainingFrequencyDays === option.days;
+                return (
+                  <button
+                    key={option.days}
+                    type="button"
+                    className={`cr-option${active ? ' is-active' : ''}`}
+                    aria-pressed={active}
+                    onClick={() => void changeTrainingFrequency(option.days)}
+                  >
+                    <span className="cr-option__days">
+                      {option.days}
+                      <small>{option.days === 1 ? 'dia' : 'dias'}</small>
+                    </span>
+                    <span className="cr-option__copy">
+                      <strong>
+                        {option.label}
+                        {option.badge && <em>{option.badge}</em>}
+                      </strong>
+                      <span>{option.note}</span>
+                    </span>
+                    <span className="cr-option__check" aria-hidden="true">
+                      {active ? SvgCheck : null}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="cr-insights">
+            <div className="cr-insight">
+              <span className="cr-insight__eyebrow">Meta mensal</span>
+              <strong>{Math.round(trainingFrequencyDays * 4.3)} treinos</strong>
+              <p>Estimativa de sessões em um mês completo.</p>
+            </div>
+            <div className="cr-insight">
+              <span className="cr-insight__eyebrow">Descanso</span>
+              <strong>{7 - trainingFrequencyDays} {7 - trainingFrequencyDays === 1 ? 'dia' : 'dias'}</strong>
+              <p>Dias sem treino programado para recuperação.</p>
+            </div>
+            <div className="cr-insight">
+              <span className="cr-insight__eyebrow">Consistência</span>
+              <strong>{Math.round((trainingFrequencyDays / 7) * 100)}%</strong>
+              <p>Da semana coberta pelo seu plano atual.</p>
+            </div>
+          </section>
+        </div>
       ),
     },
 
@@ -3768,12 +3831,6 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       ),
     },
 
-    /* ================= AJUDA (v4.66.0) ================= */
-    ajuda: {
-      eyebrow: 'ACADEMIA • AJUDA',
-      title: 'Ajuda e Tutoriais',
-      content: <HelpCenter />,
-    },
   };
 
   const modals = (

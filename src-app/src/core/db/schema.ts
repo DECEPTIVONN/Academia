@@ -177,7 +177,7 @@ export type BannerSkin =
 
 export type BarSkin = 'default' | 'radar' | 'hourglass';
 
-export type AvatarFrame = 'none' | 'bronze' | 'prata' | 'ouro' | 'elite';
+export type AvatarFrame = 'none' | 'bronze' | 'prata' | 'ouro' | 'elite' | 'diamante';
 
 export type Archetype =
   | 'Guerreiro'

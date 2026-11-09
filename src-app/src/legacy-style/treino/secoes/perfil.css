@@ -378,3 +378,540 @@
 .profile-action-btn--gold:active {
     transform: translateY(0) !important;
 }
+
+/* ============================================================
+   v4.74.0 — Progressão, Medalhas e Em Destaque
+   Interfaces que faltavam no hub "Meu Perfil".
+   ============================================================ */
+
+/* ---------- Progressão: cabeçalho de jornada ---------- */
+.prog-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.prog-hub__hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.3);
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 150% at 0% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.24), transparent 66%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.prog-hub__ring {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+.prog-hub__ring::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: #101014;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.prog-hub__level {
+  position: relative;
+  z-index: 1;
+  font-size: 1.7rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+}
+
+.prog-hub__level-label {
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.prog-hub__copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.prog-hub__eyebrow {
+  font-size: 0.53rem;
+  font-weight: 900;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--primary-light);
+}
+
+.prog-hub__title {
+  margin: 3px 0 4px;
+  font-size: 1.08rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.prog-hub__desc {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: var(--text-tertiary);
+}
+
+.prog-hub__bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.prog-hub__bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary-dark, #6d28d9), var(--primary-light, #a78bfa));
+  box-shadow: 0 0 12px rgba(var(--primary-rgb, 139, 92, 246), 0.6);
+}
+
+.prog-hub__pct {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: var(--text-tertiary);
+}
+
+.prog-hub__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.prog-hub__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.prog-hub__stat-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 4px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.prog-hub__stat-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.prog-hub__stat-icon--flame { color: #fb923c; background: rgba(251, 146, 60, 0.12); }
+.prog-hub__stat-icon--star { color: #fbbf24; background: rgba(251, 191, 36, 0.12); }
+.prog-hub__stat-icon--medal { color: #a5f3fc; background: rgba(34, 211, 238, 0.12); }
+
+.prog-hub__stat strong {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.prog-hub__stat > span:last-child {
+  font-size: 0.56rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-tertiary);
+}
+
+.prog-hub__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.42);
+  border-radius: 12px;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.prog-hub__cta svg { width: 14px; height: 14px; }
+
+.prog-hub__cta:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* ---------- Medalhas ---------- */
+.medals-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid rgba(251, 191, 36, 0.26);
+  border-radius: 18px;
+  background:
+    radial-gradient(110% 150% at 0% 0%, rgba(251, 191, 36, 0.18), transparent 64%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.medals-hero__ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.medals-hero__ring::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: #14110a;
+}
+
+.medals-hero__ring > span {
+  position: relative;
+  z-index: 1;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #fef3c7;
+}
+
+.medals-hero__ring small {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: rgba(254, 243, 199, 0.6);
+}
+
+.medals-hero__eyebrow {
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.medals-hero__title {
+  margin: 3px 0 4px;
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.medals-hero__copy p {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.medals-catalog {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.medal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.028);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.medal-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(90% 70% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 70%);
+  pointer-events: none;
+}
+
+.medal-card:hover {
+  transform: translateY(-2px);
+}
+
+.medal-card--bronze.is-unlocked { border-color: rgba(251, 146, 60, 0.4); }
+.medal-card--prata.is-unlocked { border-color: rgba(203, 213, 225, 0.4); }
+.medal-card--ouro.is-unlocked { border-color: rgba(251, 191, 36, 0.42); }
+
+.medal-card.is-locked {
+  opacity: 0.78;
+}
+
+.medal-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.medal-card__disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(160deg, #2a2a31, #0f0f13);
+  font-size: 1.2rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 5px 12px rgba(0, 0, 0, 0.4);
+}
+
+.medal-card--bronze .medal-card__disc {
+  border-color: rgba(251, 146, 60, 0.6);
+  background: linear-gradient(160deg, #7c2d12, #170b05);
+}
+.medal-card--prata .medal-card__disc {
+  border-color: rgba(203, 213, 225, 0.6);
+  background: linear-gradient(160deg, #475569, #0b1220);
+}
+.medal-card--ouro .medal-card__disc {
+  border-color: rgba(251, 191, 36, 0.7);
+  background: linear-gradient(160deg, #92400e, #1a1003);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 16px rgba(251, 191, 36, 0.25);
+}
+
+.medal-card__tier {
+  padding: 2px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: 0.46rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.medal-card__name {
+  position: relative;
+  font-size: 0.76rem;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.medal-card__desc {
+  position: relative;
+  flex: 1;
+  margin: 2px 0 9px;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
+.medal-card__progress {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.medal-card__progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #b45309, #fbbf24);
+}
+
+.medal-card--prata .medal-card__progress i {
+  background: linear-gradient(90deg, #64748b, #e2e8f0);
+}
+.medal-card--bronze .medal-card__progress i {
+  background: linear-gradient(90deg, #9a3412, #fb923c);
+}
+
+.medal-card__meta {
+  margin-top: 5px;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.medal-card.is-unlocked .medal-card__meta {
+  color: #4ade80;
+}
+
+/* ---------- Em Destaque ---------- */
+.showcase-live {
+  margin-bottom: 12px;
+  padding: 14px;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  border-radius: 18px;
+  background:
+    radial-gradient(110% 150% at 100% 0%, rgba(251, 191, 36, 0.16), transparent 62%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.showcase-live__eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.showcase-live__body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.showcase-live__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+}
+
+.showcase-live__label {
+  display: block;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.showcase-live__value {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.showcase-live__value small {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.showcase-live__badge {
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.1);
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.showcase-stat-option__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.showcase-stat-option__badge {
+  padding: 2px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: 0.46rem;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  color: var(--text-tertiary);
+}
+
+.showcase-stat-option__check {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.showcase-stat-option--active .showcase-stat-option__check {
+  border-color: #fbbf24;
+  background: #fbbf24;
+  color: #1a1204;
+}
+
+.showcase-stat-option__check svg {
+  width: 12px;
+  height: 12px;
+}
+
+button.showcase-stat-option--rich {
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (max-width: 520px) {
+  .prog-hub__hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .prog-hub__stats {
+    grid-template-columns: 1fr;
+  }
+  .medals-hero {
+    align-items: flex-start;
+  }
+  .medals-catalog {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

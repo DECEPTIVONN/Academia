@@ -1,7 +1,7 @@
 /**
- * EstandartesOverlay.tsx — Conquistas de Estandartes do Perfil (v4.73.1)
+ * EstandartesOverlay.tsx — Conquistas do Perfil (v4.74.0)
  *
- * Aberta pelo card "Emblemas" da aba Progresso. Reúne os mesmos estandartes
+ * Aberta pelo card "Conquistas" da aba Progresso. Reúne os mesmos emblemas
  * do Personalizar > Estandartes, mas como uma galeria de CONQUISTAS: mostra
  * quantos foram desbloqueados e, ao tocar em um deles, os requisitos exatos
  * (com progresso atual) para liberar o estandarte.
@@ -207,13 +207,13 @@ export function EstandartesOverlay({ open, onClose, data }: EstandartesOverlayPr
       className={`est-root${closing ? ' is-closing' : ''}`}
       role="dialog"
       aria-modal="true"
-      aria-label="Estandartes do Perfil"
+      aria-label="Conquistas do Perfil"
     >
       <header className="est-head">
         <button type="button" className="est-icon-btn" onClick={handleClose} aria-label="Voltar">
           <X size={20} />
         </button>
-        <h2 className="est-head__title">Estandartes</h2>
+        <h2 className="est-head__title">Conquistas</h2>
         <span className="est-chip" title={`${unlocked.length} de ${cards.length} desbloqueados`}>
           <Award size={14} aria-hidden="true" />
           {unlocked.length}/{cards.length}
@@ -227,10 +227,10 @@ export function EstandartesOverlay({ open, onClose, data }: EstandartesOverlayPr
             </span>
             <span className="est-hero__eyebrow">Conquistas do perfil</span>
             <h3 className="est-hero__title">
-              {unlocked.length} de {cards.length} estandartes
+              {unlocked.length} de {cards.length} conquistas
             </h3>
             <p className="est-hero__text">
-              Cada estandarte conta um marco da sua jornada. Toque em um deles para ver
+              Cada conquista conta um marco da sua jornada. Toque em uma delas para ver
               exatamente o que falta para desbloquear.
             </p>
             <div className="est-progress" aria-hidden="true">
@@ -238,7 +238,11 @@ export function EstandartesOverlay({ open, onClose, data }: EstandartesOverlayPr
             </div>
             <div className="est-hero__foot">
               <span>{pct}% da coleção</span>
-              <span>{cards.length - unlocked.length} bloqueado{cards.length - unlocked.length === 1 ? '' : 's'}</span>
+              <span className={locked.length === 0 ? 'is-master' : undefined}>
+                {locked.length === 0
+                  ? 'Mestre das conquistas'
+                  : `${locked.length} bloqueado${locked.length === 1 ? '' : 's'}`}
+              </span>
             </div>
         </section>
 

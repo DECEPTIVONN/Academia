@@ -377,7 +377,19 @@ export const MaestriaGeralModal: React.FC<{
                     }}
                   >
                     <div className="royale-card-inner">
-                      {state.badgeLevel > 0 && <div className="royale-diamond" />}
+                      {/* v4.74.0 — emblema de maestria no topo do card:
+                          crista com aro metálico + estrela, em vez do losango
+                          plano que quase desaparecia sobre a foto. */}
+                      <span
+                        className={`mg-card__crest mg-card__crest--${bc}${state.badgeLevel === 0 ? ' is-locked' : ''}`}
+                        aria-hidden="true"
+                      >
+                        <span className="mg-card__crest-glow" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2.6 14.8 8l6 .9-4.3 4.2 1 6-5.5-2.9-5.5 2.9 1-6L3.2 8.9l6-.9z" />
+                          <path d="M12 17.2v4.2" />
+                        </svg>
+                      </span>
                       <div className="royale-img-container">
                         <MasteryThumb key={ex.imageUrl ?? 'placeholder'} src={ex.imageUrl} alt={ex.name} />
                         <span className={`mg-card__tier mg-card__tier--${bc}`}>{TIER_LABEL[state.badgeLevel]}</span>

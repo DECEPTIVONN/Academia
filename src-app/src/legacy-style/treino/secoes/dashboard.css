@@ -1779,3 +1779,23 @@
 .hexagon {
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)
 }
+
+/* v4.74.0 — Moldura Diamante no avatar do Início. */
+.dash-profile-avatar.profile-avatar[data-frame="diamante"] {
+  overflow: visible !important;
+  border-color: #a5f3fc !important;
+  box-shadow:
+    0 0 0 2px rgba(34, 211, 238, 0.28),
+    0 0 26px rgba(34, 211, 238, 0.55) !important;
+}
+.dash-profile-avatar.profile-avatar[data-frame="diamante"]::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  z-index: 3;
+  border: 2px solid rgba(165, 243, 252, 0.9);
+  border-radius: 22%;
+  transform: rotate(45deg);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.5);
+  pointer-events: none;
+}

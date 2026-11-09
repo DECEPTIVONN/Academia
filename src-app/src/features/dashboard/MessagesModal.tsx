@@ -10,7 +10,7 @@
  * e um contador de não lidas aparece no topo enquanto houver pendências.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   CheckCheck,
@@ -29,9 +29,12 @@ import {
   clearInbox,
   markAllRead,
   markRead,
+  patchMessageByKey,
   type InboxKind,
   type InboxMessage,
 } from '@/features/notifications/inbox';
+import { respondStreakInvite } from '@/features/social/streak-invites';
+import { showToast } from '@/lib/toast';
 import './messages-modal.css';
 
 const ICONS: Record<InboxKind, LucideIcon> = {
@@ -67,6 +70,36 @@ function relativeTime(at: number): string {
 
 function MessageCard({ message }: { message: InboxMessage }) {
   const Icon = ICONS[message.kind] ?? Sparkles;
+  const [busy, setBusy] = useState(false);
+  const canRespond =
+    message.action === 'streak-invite' &&
+    message.inviteStatus === 'pending' &&
+    Boolean(message.inviteId);
+
+  const respond = async (accept: boolean) => {
+    if (!message.inviteId || busy) return;
+    setBusy(true);
+    try {
+      await respondStreakInvite(message.inviteId, accept);
+      const key = message.id.startsWith('k:') ? message.id.slice(2) : message.id;
+      patchMessageByKey(key, {
+        read: true,
+        inviteStatus: accept ? 'accepted' : 'declined',
+        title: accept
+          ? `Ofensiva com ${message.fromName || 'seu amigo'} ativa`
+          : 'Convite de ofensiva recusado',
+        body: accept
+          ? 'Vocês agora aparecem juntos em Ofensivas dos amigos. Mantenha a sequência treinando todos os dias.'
+          : 'Você recusou o convite. Pode enviar outro quando quiser pelo Perfil → Ofensivas dos Amigos.',
+      });
+      showToast(accept ? 'Convite de ofensiva aceito!' : 'Convite recusado.', 'success');
+    } catch {
+      showToast('Não foi possível responder agora. Verifique sua conexão.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <article
       className={`msg-card msg-card--${TONES[message.kind] ?? 'news'}${
@@ -90,6 +123,30 @@ function MessageCard({ message }: { message: InboxMessage }) {
         <span className="msg-card__time">{relativeTime(message.at)}</span>
       </div>
       <p className="msg-card__text">{message.body}</p>
+      {canRespond && (
+        <div
+          className="msg-card__actions"
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="msg-card__action msg-card__action--accept"
+            disabled={busy}
+            onClick={() => void respond(true)}
+          >
+            Aceitar
+          </button>
+          <button
+            type="button"
+            className="msg-card__action msg-card__action--decline"
+            disabled={busy}
+            onClick={() => void respond(false)}
+          >
+            Recusar
+          </button>
+        </div>
+      )}
     </article>
   );
 }

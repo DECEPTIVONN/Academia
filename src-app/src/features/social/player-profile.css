@@ -839,3 +839,9 @@
   }
 
 }
+
+/* v4.74.0 — moldura Diamante no perfil público. */
+.player-profile__avatar[data-frame='diamante'] {
+  border-color: #a5f3fc;
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.28), 0 0 24px rgba(34, 211, 238, 0.5);
+}

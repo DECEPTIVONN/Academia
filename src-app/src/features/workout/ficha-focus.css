@@ -42,8 +42,38 @@
   outline-offset: 1px;
 }
 
+/* v4.74.0 — segurar o card no celular NÃO pode encolher o exercício. O
+   `:active` do GIF e o hover/active do card ficavam alternando escala;
+   na Minha Ficha o card agora mantém sempre o mesmo tamanho. */
 .ficha-gif-focus:active img {
-  transform: scale(0.98);
+  transform: none;
+}
+
+.workout-deck-grid .deck-card,
+.workout-deck-grid .deck-card:hover,
+.workout-deck-grid .deck-card:active,
+.workout-deck-grid .deck-card:focus,
+.workout-deck-grid .deck-card:focus-within,
+.workout-deck-grid .deck-card.menu-active {
+  transform: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.workout-deck-grid .deck-card:hover .deck-card-img img,
+.workout-deck-grid .deck-card:active .deck-card-img img {
+  transform: none;
+}
+
+@media (hover: none) {
+  .workout-deck-grid .deck-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* O timer global some enquanto o Modo Foco está aberto (o interno já
+   mostra o descanso abaixo do GIF). */
+body.focus-mode-active .rest-timer {
+  display: none !important;
 }
 
 /* ============================================================

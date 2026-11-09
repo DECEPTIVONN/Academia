@@ -5,7 +5,7 @@
  * montar a ficha, treinar no modo foco, entender o progresso, usar o Social
  * (ranking global + amigos), funcionar offline e cuidar da conta.
  *
- * A tela fica dentro de Configurações → Ajuda e Tutoriais (tile raiz).
+ * v4.74.0 — a tela tem interface própria (`HelpOverlay`), fora de Configurações.
  */
 
 import { useMemo, useState } from 'react';
@@ -245,7 +245,7 @@ export function HelpCenter() {
       )}
 
       {groups.map((group) => (
-        <section className="set-card help-group" key={group.id}>
+        <section className="set-card help-group" key={group.id} id={`help-group-${group.id}`}>
           <div className="help-group__head">
             <span className="help-group__icon" aria-hidden="true">
               {group.icon}

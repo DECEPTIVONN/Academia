@@ -159,10 +159,9 @@ const MasterHeader: React.FC = () => (
 
 const IdentityEmblemCard: React.FC<{
   e: (typeof IDENTITY_EMBLEMS)[number];
-  active: boolean;
   onClick: () => void;
-}> = ({ e, active, onClick }) => (
-  <div className={`emblem-card${active ? ' active' : ''}`} data-identity-emblem={e.id} onClick={onClick}>
+}> = ({ e, onClick }) => (
+  <div className="emblem-card" data-identity-emblem={e.id} onClick={onClick}>
     <div className="holoShine" />
     <div style={{ position: 'absolute', top: 0, left: 0, width: 24, height: 2, background: 'rgba(255,255,255,0.15)', zIndex: 20 }} />
     <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: 2, zIndex: 20, opacity: 0.4 }}>
@@ -182,6 +181,42 @@ const IdentityEmblemCard: React.FC<{
       )}
     </div>
   </div>
+);
+
+/* v4.74.0 — a foto de perfil é a ÚLTIMA opção do Ícone Legado do Prestígio.
+   Ao tocar, abre as ações de usar a imagem atual, enviar/trocar a imagem. */
+const IdentityPhotoCard: React.FC<{
+  photo?: string;
+  active: boolean;
+  onClick: () => void;
+}> = ({ photo, active, onClick }) => (
+  <button
+    type="button"
+    className={`emblem-card emblem-card--photo${active ? ' is-open' : ''}`}
+    data-identity-photo="true"
+    onClick={onClick}
+    aria-label="Foto de perfil"
+    aria-expanded={active}
+  >
+    {photo ? (
+      <img src={photo} alt="Foto de perfil atual" className="emblem-card__photo" />
+    ) : (
+      <span className="emblem-card__photo-empty" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width={26} height={26}>
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span>Sem foto</span>
+      </span>
+    )}
+    <span className="emblem-card__photo-badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={12} height={12}>
+        <path d="M14.5 4h-5L8 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z" />
+        <circle cx="12" cy="13" r="3" />
+      </svg>
+    </span>
+    <span className="emblem-card__photo-label">Foto de perfil</span>
+  </button>
 );
 
 const IdentityPreview: React.FC<{
@@ -418,6 +453,7 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
      só do avatar do Google ou do emblema equipado. */
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoPanelOpen, setPhotoPanelOpen] = useState(false);
 
   const pickProfilePhoto = async (file: File | null | undefined) => {
     if (!file) return;
@@ -463,7 +499,7 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
       <SubTabContent id="itens-magicos" active={subtab === 'itens-magicos'}>
         {/* v4.72.5 — Cartões usa o mesmo fundo da sub-aba Estilo das Barras
             de Progresso (theme-cinza-castelo), antes era theme-roxo. */}
-        <div className="theme-section theme-cinza-castelo">
+        <div className="theme-section theme-cinza-castelo customization-surface">
           <div className="theme-bg" />
           <div className="theme-content">
             <div className="profile-section-title">Cartões</div>
@@ -516,7 +552,7 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
 
       {/* ── Emotes: barras de progresso + cronômetro ── */}
       <SubTabContent id="emotes" active={subtab === 'emotes'}>
-        <div className="theme-section theme-cinza-castelo">
+        <div className="theme-section theme-cinza-castelo customization-surface">
           <div className="theme-bg" />
           <div className="theme-content">
             <div className="profile-section-title">Estilo das Barras de Progresso</div>
@@ -585,9 +621,9 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
         <div className="theme-section theme-ouro">
           <div className="theme-bg" />
           <div className="theme-content">
-            <div className="profile-section-title">Estandartes do Perfil</div>
+            <div className="profile-section-title">Conquistas do Perfil</div>
             <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: 12 }}>
-              Selecione até 3 emblemas para exibir no seu cartão.
+              Selecione até 3 conquistas para exibir no seu cartão.
             </p>
             <div className="emblem-gallery" id="emblemGallery">
               {EMBLEMAS.map((e) => {
@@ -625,7 +661,7 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
 
       {/* ── Emblema: foto de perfil + emblema de identificação + moldura ── */}
       <SubTabContent id="maestrias" active={subtab === 'maestrias'}>
-        <div className="theme-section theme-cinza-castelo">
+        <div className="theme-section theme-cinza-castelo customization-surface">
           <div className="theme-bg" />
           <div className="theme-content">
             {/* v4.73.0 — cabeçalho da aba Emblema (antes ela começava direto na
@@ -643,64 +679,16 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
               </div>
             </div>
 
-            <div className="profile-section-title">Foto de Perfil</div>
-
-            <div className="profile-photo-picker" id="identityPhotoPicker">
-              <div
-                className="profile-photo-picker__preview"
-                id="identityPhotoPreview"
-                data-frame={pc.avatarFrame ?? ''}
-              >
-                <ProfileEmblem customization={pc} />
-              </div>
-
-              <div className="profile-photo-picker__body">
-                <span
-                  className={`profile-photo-picker__status${pc.photo ? ' is-custom' : ''}`}
-                >
-                  {pc.photo ? 'Personalizada' : 'Padrão'}
-                </span>
-                <div className="profile-photo-picker__text">
-                  {pc.photo ? 'Sua foto está ativa' : 'Seu emblema é o avatar'}
-                </div>
-                <p className="profile-photo-picker__hint">
-                  {pc.photo
-                    ? 'Ela substitui o emblema no avatar do Início, da sidebar e do Fit ID.'
-                    : 'Envie uma imagem para usar no lugar do emblema equipado.'}
-                </p>
-                <div className="profile-photo-picker__actions">
-                  <button
-                    type="button"
-                    className="btn-profile-photo"
-                    id="btnAvatarPhotoUpload"
-                    disabled={photoBusy}
-                    onClick={() => photoInputRef.current?.click()}
-                  >
-                    {photoBusy ? 'Carregando…' : 'Carregar foto'}
-                  </button>
-                  <input
-                    ref={photoInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      void pickProfilePhoto(e.target.files?.[0]);
-                      e.target.value = '';
-                    }}
-                  />
-                  {pc.photo && (
-                    <button
-                      type="button"
-                      className="btn-profile-photo-remove"
-                      id="btnAvatarPhotoRemove"
-                      onClick={removeProfilePhoto}
-                    >
-                      Remover foto
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                void pickProfilePhoto(e.target.files?.[0]);
+                e.target.value = '';
+              }}
+            />
 
             <div className="profile-section-title">Emblema de Identificação</div>
 
@@ -716,12 +704,18 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
                   <h3 className="emblem-picker__grid-title" style={{ margin: 0 }}>
                     Ícone Legado do Prestígio
                   </h3>
-                  <div
-                    className="emblem-picker__grid-controls"
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}
-                  >
-                    <label className="pulse-toggle-label" style={{ marginBottom: 0 }}>
-                      <span>Pulsar</span>
+                  <div className="emblem-pulse">
+                    <span className="emblem-pulse__spark" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={13} height={13}>
+                        <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
+                      </svg>
+                    </span>
+                    <span className="emblem-pulse__copy">
+                      <span className="emblem-pulse__title">Pulsar emblema</span>
+                      <span className="emblem-pulse__desc">Brilho suave no avatar</span>
+                    </span>
+                    <label className="pulse-toggle-label emblem-pulse__control" style={{ marginBottom: 0 }}>
+                      <span className="sr-only">Pulsar emblema</span>
                       <div className="pulse-toggle-switch" id="pulseToggleBg" style={pulseSwitchStyle}>
                         <input
                           type="checkbox"
@@ -729,25 +723,9 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
                           checked={pulse}
                           onChange={(e) => onPulseChange(e.target.checked)}
                         />
-                        <span
-                          className="pulse-toggle-dot"
-                          id="pulseToggleDot"
-                          style={{ transform: pulse ? 'translateX(16px)' : 'translateX(0)' }}
-                        />
+                        <span className="pulse-toggle-dot" id="pulseToggleDot" />
                       </div>
                     </label>
-                    <span
-                      className="emblem-filter-text"
-                      style={{
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        color: 'var(--text-tertiary)',
-                        letterSpacing: '0.5px',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      Filtra: <span style={{ color: '#c084fc', cursor: 'pointer' }}>Todas</span>
-                    </span>
                   </div>
                 </div>
                 <div className="identity-emblems-grid" id="identityEmblemGrid">
@@ -755,11 +733,72 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
                     <IdentityEmblemCard
                       key={e.id}
                       e={e}
-                      active={e.id === activeEmblemId}
                       onClick={() => setActiveEmblemId(e.id)}
                     />
                   ))}
+                  <IdentityPhotoCard
+                    photo={pc.photo || undefined}
+                    active={photoPanelOpen}
+                    onClick={() => setPhotoPanelOpen((value) => !value)}
+                  />
                 </div>
+
+                {photoPanelOpen && (
+                  <div className="identity-photo-sheet" id="identityPhotoSheet">
+                    <div className="identity-photo-sheet__preview">
+                      <ProfileEmblem customization={pc} />
+                    </div>
+                    <div className="identity-photo-sheet__body">
+                      <span className={`identity-photo-sheet__status${pc.photo ? ' is-custom' : ''}`}>
+                        {pc.photo ? 'Foto personalizada em uso' : 'Nenhuma foto enviada'}
+                      </span>
+                      <p className="identity-photo-sheet__hint">
+                        A foto substitui o emblema no avatar do Início, da sidebar e do Fit ID.
+                      </p>
+                      <div className="identity-photo-sheet__actions">
+                        <button
+                          type="button"
+                          className="identity-photo-action"
+                          disabled={!pc.photo}
+                          onClick={() => {
+                            setPhotoPanelOpen(false);
+                            showToast('Imagem atual mantida no perfil.', 'success');
+                          }}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={15} height={15}>
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                          Usar imagem atual
+                        </button>
+                        <button
+                          type="button"
+                          className="identity-photo-action identity-photo-action--primary"
+                          disabled={photoBusy}
+                          onClick={() => photoInputRef.current?.click()}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={15} height={15}>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                          {photoBusy ? 'Carregando…' : pc.photo ? 'Alterar imagem' : 'Fazer upload'}
+                        </button>
+                        {pc.photo && (
+                          <button
+                            type="button"
+                            className="identity-photo-action identity-photo-action--danger"
+                            onClick={() => {
+                              removeProfilePhoto();
+                              setPhotoPanelOpen(false);
+                            }}
+                          >
+                            Remover foto
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

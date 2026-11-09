@@ -121,13 +121,17 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- efeito só na transição open
   }, [open, data, sheets]);
 
-  /* Lock de body (openModal/closeModal legado abre/fecha este modal também) */
+  /* Lock de body (openModal/closeModal legado abre/fecha este modal também).
+     v4.74.0 — `focus-mode-active` esconde o cronômetro flutuante global:
+     o Foco já mostra o MESMO descanso abaixo do GIF, sem timer duplicado. */
   useEffect(() => {
     if (!open) return undefined;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('focus-mode-active');
     return () => {
       document.body.style.overflow = prev;
+      document.body.classList.remove('focus-mode-active');
     };
   }, [open]);
 

@@ -18,6 +18,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalData } from '@/hooks/useLocalData';
 import { useAuth } from '@/core/auth/use-auth';
 import { loadAddedFriends } from '@/features/social/friend-invites';
+import { FriendStreaksPanel } from '@/features/social/FriendStreaksPanel';
 import { fadeIn } from '@/lib/animations';
 import { useProfileState } from '@/features/profile/useProfileState';
 import {
@@ -170,6 +171,23 @@ export function ProfileFeature() {
   const badges = useMemo(
     () => getBadgeDefinitions(data, stats, conquistas, devMode),
     [data, stats, conquistas, devMode]
+  );
+  const unlockedBadgeCount = useMemo(
+    () => badges.filter((b) => b.check || conquistas.includes(b.id)).length,
+    [badges, conquistas]
+  );
+
+  /* v4.74.0 — catálogo real das Medalhas (antes era um preview estático). */
+  const medalCatalog = useMemo(
+    () => [
+      { id: 'primeiro', icon: '🆕', name: 'Primeiro Passo', desc: 'Conclua seu primeiro treino', current: stats.totalTreinos, target: 1, tier: 'bronze' },
+      { id: 'constancia', icon: '🔥', name: 'Constância', desc: 'Mantenha 7 dias de ofensiva', current: stats.streak, target: 7, tier: 'bronze' },
+      { id: 'veterano', icon: '🏆', name: 'Veterano', desc: 'Conclua 30 treinos', current: stats.totalTreinos, target: 30, tier: 'prata' },
+      { id: 'foco', icon: '⚡', name: 'Foco Total', desc: 'Alcance o nível 10', current: stats.nivel, target: 10, tier: 'prata' },
+      { id: 'maestria', icon: '💎', name: 'Mestre da Maestria', desc: 'Domine 5 maestrias nível 1', current: stats.maestriasN1, target: 5, tier: 'ouro' },
+      { id: 'lendario', icon: '👑', name: 'Lendário', desc: 'Alcance o nível 25', current: stats.nivel, target: 25, tier: 'ouro' },
+    ].map((m) => ({ ...m, unlocked: m.current >= m.target, pct: Math.min(100, Math.round((m.current / m.target) * 100)) })),
+    [stats],
   );
 
   /* renderBadges (secao-progresso.js L1248): fadeIn no grid a cada re-render
@@ -358,15 +376,15 @@ export function ProfileFeature() {
       title: 'Ofensivas dos Amigos',
       desc: 'Sequências de treino dos seus amigos',
       icon: FlameSvg(20, 'currentColor'),
-      badge: '3 amigos',
+      badge: `${addedFriends.length} ${addedFriends.length === 1 ? 'amigo' : 'amigos'}`,
       keywords: ['ofensivas', 'amigos', 'streak', 'sequencia'],
     },
     {
       id: 'medalhas',
       title: 'Medalhas',
-      desc: 'Prévia das medalhas conquistadas',
+      desc: 'Catálogo de medalhas e progresso de cada uma',
       icon: SvgAward20,
-      badge: '3 de 4',
+      badge: `${medalCatalog.filter((m) => m.unlocked).length} de ${medalCatalog.length}`,
       keywords: ['medalhas', 'premios', 'ouro', 'prata', 'bronze'],
     },
     {
@@ -569,57 +587,7 @@ export function ProfileFeature() {
       title: 'Ofensivas dos Amigos',
       content: (
         <div className="perf-sub-content" id="perf-subtab-ofensivas">
-          <div className="theme-section theme-turquesa">
-            <div className="theme-bg" />
-            <div className="theme-content">
-              <div className="profile-section-title">OFENSIVAS DOS AMIGOS</div>
-                <div className="friends-streaks">
-                  {addedFriends.length === 0 && (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                      Nenhum amigo adicionado ainda.
-                    </span>
-                  )}
-                  {addedFriends.map((f) => (
-                    <div className="friend-avatar" key={f.id}>
-                      {f.avatarInitial}
-                      <span
-                        className="friend-streak-badge"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '2px',
-                          padding: '2px 6px',
-                        }}
-                      >
-                        {FlameSvg(10)} 0
-                      </span>
-                    </div>
-                  ))}
-                  <div
-                    className="friend-add-slot"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      width="14"
-                      height="14"
-                    >
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                  </div>
-                </div>
-            </div>
-          </div>
+          <FriendStreaksPanel />
         </div>
       ),
     },
@@ -648,25 +616,63 @@ export function ProfileFeature() {
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </div>
-              <div className="medals-preview">
-                <div className="medal-item">
-                  <div className="medal-circle">🥇</div>
-                  <span className="medal-name">Veterano</span>
+              <div className="medals-hero">
+                <div
+                  className="medals-hero__ring"
+                  style={{
+                    background: `conic-gradient(${
+                      medalCatalog.filter((m) => m.unlocked).length === 0
+                        ? 'rgba(255,255,255,0.08)'
+                        : '#fbbf24'
+                    } ${Math.round(
+                      (medalCatalog.filter((m) => m.unlocked).length / medalCatalog.length) * 100,
+                    )}%, rgba(255,255,255,0.08) 0)`,
+                  }}
+                >
+                  <span>
+                    {medalCatalog.filter((m) => m.unlocked).length}
+                    <small>/{medalCatalog.length}</small>
+                  </span>
                 </div>
-                <div className="medal-item">
-                  <div className="medal-circle">🥈</div>
-                  <span className="medal-name">Foco Total</span>
+                <div className="medals-hero__copy">
+                  <span className="medals-hero__eyebrow">Sua coleção</span>
+                  <h3 className="medals-hero__title">
+                    {medalCatalog.filter((m) => m.unlocked).length === medalCatalog.length
+                      ? 'Coleção completa'
+                      : 'Cada treino vale uma medalha'}
+                  </h3>
+                  <p>
+                    As medalhas usam seu histórico real: treinos concluídos, ofensiva, nível e
+                    maestrias. Toque em uma medalha bloqueada para ver o quanto falta.
+                  </p>
                 </div>
-                <div className="medal-item">
-                  <div className="medal-circle">🥉</div>
-                  <span className="medal-name">Madrugador</span>
-                </div>
-                <div className="medal-item">
-                  <div className="medal-circle" style={{ opacity: 0.3, filter: 'grayscale(1)' }}>
-                    🔒
-                  </div>
-                  <span className="medal-name">Lendário</span>
-                </div>
+              </div>
+
+              <div className="medals-catalog">
+                {medalCatalog.map((m) => (
+                  <article
+                    key={m.id}
+                    className={`medal-card medal-card--${m.tier}${m.unlocked ? ' is-unlocked' : ' is-locked'}`}
+                    title={m.unlocked ? 'Medalha conquistada' : `${m.current} de ${m.target}`}
+                  >
+                    <div className="medal-card__top">
+                      <div className="medal-card__disc">
+                        <span>{m.unlocked ? m.icon : '🔒'}</span>
+                      </div>
+                      <span className="medal-card__tier">
+                        {m.tier === 'ouro' ? 'Ouro' : m.tier === 'prata' ? 'Prata' : 'Bronze'}
+                      </span>
+                    </div>
+                    <strong className="medal-card__name">{m.name}</strong>
+                    <p className="medal-card__desc">{m.desc}</p>
+                    <div className="medal-card__progress">
+                      <i style={{ width: `${m.pct}%` }} />
+                    </div>
+                    <span className="medal-card__meta">
+                      {m.unlocked ? 'Conquistada' : `${Math.min(m.current, m.target)} / ${m.target}`}
+                    </span>
+                  </article>
+                ))}
               </div>
             </div>
           </div>
@@ -712,7 +718,7 @@ export function ProfileFeature() {
       title: 'Conquistas',
       desc: 'Badges desbloqueados e bloqueados',
       icon: SvgStar20,
-      badge: `${badges.filter((b) => b.check || conquistas.includes(b.id)).length} de ${badges.length}`,
+      badge: `${unlockedBadgeCount} de ${badges.length}`,
       keywords: ['conquistas', 'badges', 'medalhas', 'premios'],
     },
   ];
@@ -882,6 +888,73 @@ export function ProfileFeature() {
     },
   };
 
+  /* v4.74.0 — o tile "Progressão" do Perfil não tinha tela correspondente.
+     Agora é um grupo real, com um cabeçalho de jornada e os três painéis. */
+  const progressaoScreen: HubScreen = {
+    eyebrow: 'ACADEMIA • PROGRESSÃO',
+    title: 'Progressão',
+    head: (
+      <div className="prog-hub">
+        <div className="prog-hub__hero">
+          <div
+            className="prog-hub__ring"
+            style={{
+              background: `conic-gradient(var(--primary) ${stats.xpPct}%, rgba(255,255,255,0.08) 0)`,
+            }}
+          >
+            <span className="prog-hub__level">{stats.nivel}</span>
+            <span className="prog-hub__level-label">nível</span>
+          </div>
+          <div className="prog-hub__copy">
+            <span className="prog-hub__eyebrow">Sua jornada</span>
+            <h3 className="prog-hub__title">{stats.nivelName}</h3>
+            <p className="prog-hub__desc">
+              {stats.xp} XP acumulados · faltam {Math.max(stats.xpNext - stats.xp, 0)} XP para o
+              próximo nível.
+            </p>
+            <div className="prog-hub__bar">
+              <i style={{ width: `${stats.xpPct}%` }} />
+            </div>
+            <span className="prog-hub__pct">{stats.xpPct}% da barra do nível</span>
+          </div>
+        </div>
+
+        <div className="prog-hub__stats">
+          <div className="prog-hub__stat">
+            <span className="prog-hub__stat-icon prog-hub__stat-icon--flame">
+              {FlameSvg(17, '#fb923c')}
+            </span>
+            <strong>{stats.streak}</strong>
+            <span>dias de ofensiva</span>
+          </div>
+          <div className="prog-hub__stat">
+            <span className="prog-hub__stat-icon prog-hub__stat-icon--star">{SvgStar20}</span>
+            <strong>{unlockedBadgeCount}</strong>
+            <span>conquistas abertas</span>
+          </div>
+          <div className="prog-hub__stat">
+            <span className="prog-hub__stat-icon prog-hub__stat-icon--medal">{SvgAward20}</span>
+            <strong>{medalCatalog.filter((m) => m.unlocked).length}</strong>
+            <span>medalhas ganhas</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="prog-hub__cta"
+          onClick={() => setNavStack(['perfil', 'progressao', 'conquistas'])}
+        >
+          Ver todas as conquistas
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+    ),
+    tiles: progTiles,
+    screens: progScreens,
+  };
+
   /* ── Telas de grupo: Personalizar ── */
 
   const persTiles: HubTile[] = [
@@ -905,35 +978,67 @@ export function ProfileFeature() {
             <div className="theme-content">
               <div className="profile-section-title">Em Destaque no Perfil</div>
               <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
-                Escolha 1 conquista para exibir no seu cartão.
+                Escolha a estatística que aparece em destaque no seu cartão de visitas.
               </p>
-              <div className="showcase-stat-list" id="showcaseStatList">
-                {SHOWCASE_STATS.map((s) => (
+
+              <div className="showcase-live">
+                <span className="showcase-live__eyebrow">Prévia no cartão</span>
+                <div className="showcase-live__body">
                   <div
-                    key={s.key}
-                    className={`showcase-stat-option ${
-                      (draft.showcaseStat || 'streak') === s.key
-                        ? 'showcase-stat-option--active'
-                        : ''
-                    }`}
-                    data-showcase={s.key}
-                    onClick={() => {
-                      setDraft((d) => ({ ...d, showcaseStat: s.key }));
-                      void update((d) => {
-                        d.customization = { ...d.customization, showcaseStat: s.key };
-                      });
-                      showToast('Destaque atualizado!', 'success');
-                    }}                  >
-                    <div
-                      className="showcase-stat-option__icon"
-                      dangerouslySetInnerHTML={{ __html: s.icon }}
-                    />
-                    <span className="showcase-stat-option__label">{s.label}</span>
-                    <span className="showcase-stat-option__value">
-                      {s.compute(stats)} {s.unit}
-                    </span>
+                    className="showcase-live__icon"
+                    dangerouslySetInnerHTML={{ __html: showcaseDef?.icon ?? '' }}
+                  />
+                  <div>
+                    <span className="showcase-live__label">{showcaseDef?.label}</span>
+                    <strong className="showcase-live__value">
+                      {showcaseVal}
+                      <small>{showcaseDef?.unit}</small>
+                    </strong>
                   </div>
-                ))}
+                  <span className="showcase-live__badge">{showcaseDef?.badge}</span>
+                </div>
+              </div>
+
+              <div className="showcase-stat-list" id="showcaseStatList">
+                {SHOWCASE_STATS.map((s) => {
+                  const active =
+                    (draft.showcaseStat || pc.showcaseStat || 'streak') === s.key;
+                  return (
+                    <button
+                      type="button"
+                      key={s.key}
+                      className={`showcase-stat-option showcase-stat-option--rich${active ? ' showcase-stat-option--active' : ''}`}
+                      data-showcase={s.key}
+                      aria-pressed={active}
+                      onClick={() => {
+                        setDraft((d) => ({ ...d, showcaseStat: s.key }));
+                        void update((d) => {
+                          d.customization = { ...d.customization, showcaseStat: s.key };
+                        });
+                        showToast('Destaque atualizado!', 'success');
+                      }}
+                    >
+                      <div
+                        className="showcase-stat-option__icon"
+                        dangerouslySetInnerHTML={{ __html: s.icon }}
+                      />
+                      <div className="showcase-stat-option__copy">
+                        <span className="showcase-stat-option__label">{s.label}</span>
+                        <span className="showcase-stat-option__value">
+                          {s.compute(stats)} {s.unit}
+                        </span>
+                      </div>
+                      <span className="showcase-stat-option__badge">{s.badge}</span>
+                      <span className="showcase-stat-option__check" aria-hidden="true">
+                        {active ? (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                        ) : null}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1012,7 +1117,7 @@ export function ProfileFeature() {
       eyebrow: 'ACADEMIA • PERFIL',
       title: 'Perfil',
       tiles: perfilTilesV2,
-      screens: { ...perfilScreens, ...progScreens, ...persScreens },
+      screens: { ...perfilScreens, progressao: progressaoScreen, ...progScreens, ...persScreens },
     },
     /* v4.10.0 — Sua Conta com Nuvem aninhada */
     conta: {

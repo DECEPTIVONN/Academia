@@ -1611,3 +1611,321 @@
     font-size: 0.8rem;
   }
 }
+
+/* ============================================================
+   v4.74.0 — Cronograma
+   ============================================================ */
+.cronograma-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cr-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 150% at 0% 0%, rgba(34, 211, 238, 0.18), transparent 64%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+}
+
+.cr-hero__ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 90px;
+  height: 90px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.cr-hero__ring::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: #0b0f12;
+}
+
+.cr-hero__ring > span {
+  position: relative;
+  z-index: 1;
+  font-size: 1.75rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #ecfeff;
+}
+
+.cr-hero__ring small {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(236, 254, 255, 0.55);
+}
+
+.cr-hero__eyebrow {
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: #22d3ee;
+}
+
+.cr-hero__title {
+  margin: 4px 0 5px;
+  font-size: 1.06rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.cr-hero__copy p {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.cr-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.cr-week__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 2px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cr-week__day em {
+  font-style: normal;
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: var(--text-tertiary);
+}
+
+.cr-week__day i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cr-week__day small {
+  margin-top: 1px;
+  font-size: 0.47rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.cr-week__day.is-planned {
+  border-color: rgba(34, 211, 238, 0.3);
+  background: rgba(34, 211, 238, 0.08);
+}
+
+.cr-week__day.is-planned i {
+  background: #22d3ee;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.7);
+}
+
+.cr-week__day.is-planned em,
+.cr-week__day.is-planned small {
+  color: #a5f3fc;
+}
+
+.cr-week__day.is-today {
+  outline: 1px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 1px;
+}
+
+.cr-options {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cr-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-secondary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.cr-option:hover {
+  border-color: rgba(34, 211, 238, 0.3);
+  background: rgba(34, 211, 238, 0.06);
+}
+
+.cr-option.is-active {
+  border-color: rgba(34, 211, 238, 0.55);
+  background:
+    linear-gradient(90deg, rgba(34, 211, 238, 0.14), rgba(34, 211, 238, 0.04));
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.15);
+}
+
+.cr-option__days {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+}
+
+.cr-option__days small {
+  margin-top: 2px;
+  font-size: 0.4rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.cr-option.is-active .cr-option__days {
+  border-color: rgba(34, 211, 238, 0.5);
+  background: rgba(34, 211, 238, 0.18);
+  color: #ecfeff;
+}
+
+.cr-option__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cr-option__copy strong {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.cr-option__copy strong em {
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  background: rgba(34, 211, 238, 0.12);
+  font-style: normal;
+  font-size: 0.42rem;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: #67e8f9;
+}
+
+.cr-option__copy > span {
+  font-size: 0.6rem;
+  color: var(--text-tertiary);
+}
+
+.cr-option__check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #041014;
+}
+
+.cr-option.is-active .cr-option__check {
+  border-color: #22d3ee;
+  background: #22d3ee;
+}
+
+.cr-option__check svg {
+  width: 13px;
+  height: 13px;
+}
+
+.cr-insights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cr-insight {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.cr-insight__eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.47rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.cr-insight strong {
+  display: block;
+  font-size: 0.87rem;
+  font-weight: 900;
+  color: #a5f3fc;
+}
+
+.cr-insight p {
+  margin: 3px 0 0;
+  font-size: 0.57rem;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 560px) {
+  .cr-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .cr-insights {
+    grid-template-columns: 1fr;
+  }
+  .cr-week {
+    gap: 4px;
+  }
+  .cr-week__day {
+    padding: 6px 1px;
+  }
+  .cr-week__day small {
+    font-size: 0.42rem;
+  }
+}

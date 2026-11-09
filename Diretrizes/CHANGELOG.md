@@ -2,6 +2,48 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.74.0] - 2026-11-09
+
+**Emblema com moldura Diamante e foto no fim do Ícone Legado, fundo único em Cartões/Barras/Emblema, convites reais de ofensiva, Progressão/Destaque/Medalhas com interface, Ajuda standalone redesenhada, Cronograma repaginado, Ofensivas AMOLED, crest da Maestria e timer do Foco sem duplicação.**
+
+### Added
+
+- **Emblema → Moldura Diamante**: novo tipo `diamante` em `AvatarFrame`, opção em `AVATAR_FRAMES` e anel em losango (ciano) no card de escolha e no avatar do Início/Perfil. O avatar do Início ganhou `overflow: visible` nessa moldura para o losango não ser cortado.
+- **Foto de perfil no Ícone Legado**: a foto passou a ser a **última opção** do grid de emblemas (`IdentityPhotoCard`). Ao tocar, abre um painel com **Usar imagem atual**, **Fazer upload/Alterar imagem** e **Remover foto**; o `<input type=file>` fica fora do grid e a prévia usa o mesmo `ProfileEmblem`.
+- **Progressão no hub Meu Perfil**: o tile não tinha `screen` correspondente. Agora `progressao` é um grupo real com cartão de jornada (anel do nível, barra de XP, ofensiva, conquistas e medalhas), os tiles Visão Geral/Nível e XP/Conquistas e atalho “Ver todas as conquistas”.
+- **Medalhas**: substituído o preview estático por um catálogo de 6 medalhas calculadas do histórico real (`totalTreinos`, `streak`, `nivel`, `maestriasN1`), com tier Bronze/Prata/Ouro, estado bloqueada/conquistada, barra de progresso e contador `atual/meta`.
+- **Convites reais de ofensiva**: `features/social/streak-invites.ts` + `FriendStreaksPanel.tsx` + `friend-streaks.css`. Amizades confirmadas podem convidar; o amigo recebe uma mensagem nas Mensagens do Início com **Aceitar/Recusar**, e convites aceitos mostram a sequência atual na lista “Ofensivas dos amigos”. O remetente pode cancelar um convite pendente. `StreakInviteWatcher` consulta ao abrir, ao voltar para a aba e a cada 45 s, sem duplicar mensagens.
+- **SQL**: `supabase/migrations/20261109_streak_invites.sql` cria `public.streak_invites`, RLS, índice único de pendente por par e as RPCs `send_streak_invite`, `respond_streak_invite`, `cancel_streak_invite` e `streak_invites_overview` (com nome/nível/streak/foto do outro lado).
+- **Ajuda standalone**: `HelpOverlay.tsx` é uma interface fullscreen própria (hero, chips de atalho, busca, grupos e rodapé de suporte), aberta pelo menu do Início, pelo card de Ajuda do Perfil, pela busca geral (`action: 'open-help'`) e pelo evento `academia:open-help`. O tile “Ajuda e Tutoriais” saiu de Configurações e a Busca Geral passou a abrir o overlay.
+- **Arquivos novos**: `features/help/HelpOverlay.tsx`, `features/social/streak-invites.ts`, `features/social/FriendStreaksPanel.tsx`, `features/social/StreakInviteWatcher.tsx`, `features/social/friend-streaks.css`, `supabase/migrations/20261109_streak_invites.sql`.
+
+### Changed
+
+- **Botão Pulsar**: virou um controle `emblem-pulse` com ícone de brilho, título “Pulsar emblema”, descrição e switch maior (50×26), com estado ativo em degradê primário. O texto “Filtra: Todas” saiu.
+- **Destaque do emblema escolhido**: removido do grid do Ícone Legado; a seleção continua no preview grande, sem aro/realce no card escolhido.
+- **Fundo das sub-abas**: Cartões, Estilo das Barras e Emblema receberam a mesma classe `customization-surface`, com a mesma superfície escura e o mesmo tratamento do `theme-bg`.
+- **Ofensivas (Central de Ofensivas)**: `#000` AMOLED no `.of-root` e no header, com a malha decorativa bem mais discreta; os painéis continuam em `#08080a`.
+- **Maestria Geral**: o losango plano no topo dos cards virou uma crista circular com aro metálico, estrela central, glow por tier (Bronze/Prata/Ouro) e estado bloqueado cinza.
+- **Cronograma**: novo hero com anel da meta semanal, faixa Seg–Dom com os dias planejados, escolha da frequência em cartões com dias/nota/check e três cartões de leitura (meta mensal, descanso e consistência).
+- **Conquistas**: a interface de estandartes passou a se chamar **Conquistas** nos títulos, no hero, na vitrine do Perfil e no card da aba Progresso; ids internos (`EstandartesOverlay`, `est-*`) foram mantidos para não quebrar dados. Com `locked.length === 0`, o rodapé do hero mostra **“Mestre das conquistas”** (dourado) em vez de “0 bloqueados”.
+- **Ajuda e Tutoriais**: os acordeões ganharam ícone “?”, chevron em círculo, borda/realce de abertura, barra de accent, grupo com cabeçalho próprio e overlay com `scroll-margin` para os atalhos.
+- **Mensagens do Início**: `InboxMessage` ganhou `action/inviteId/inviteStatus/fromName`; cartões de convite de ofensiva exibem Aceitar/Recusar e atualizam o próprio cartão após a resposta. `patchMessageByKey` permite atualizar sem duplicar.
+- **Timer no Modo Foco**: o widget global `RestTimerWidget` fica oculto enquanto `body.focus-mode-active`; resta apenas o timer de descanso interno do Foco.
+- **Documentação**: `system_map.json` atualizado para 4.74.0 e novos módulos registrados.
+
+### Fixed
+
+- **Segurar um exercício em Minha Ficha**: `scale(0.98)` do `:active` removido e `transform: none !important` aplicado a `.workout-deck-grid .deck-card` em hover/active/focus/menu-active, incluindo o reset do zoom da imagem. O card não encolhe mais ao segurar.
+- **Timer duplicado no Modo Foco**: correção definitiva via `body.focus-mode-active` (o timer global não aparece mais por baixo do interno).
+- **Ajuda presa em Configurações**: a Central saiu do hub e não depende mais de `stack: ['ajuda']`; o antigo tile morto e o ícone `SvgHelp` foram removidos.
+- **Progressão / Em Destaque / Medalhas sem tela**: o grupo Progressão agora resolve para conteúdo real; Destaque ganhou prévia ao vivo e cartões de estatística com check; Medalhas deixaram de ser um mock de 4 emojis.
+
+### Verificação
+
+`npx tsc -b` OK · `npx oxlint src` 0 erros · `npm run build` OK · `npm run lint:docs` OK. No navegador (modo teste), o hub Meu Perfil abriu na raiz, a busca filtrou “Perfil” e o tile Ajuda não aparece mais em Configurações.
+
+**Limitações**: a revisão visual das novas telas ficou incompleta porque a aba do navegador estava `hidden` (as animações do `AnimatePresence` não avançaram); os convites de ofensiva dependem de aplicar `20261109_streak_invites.sql` no Supabase e de duas contas amigas para o ciclo completo convite → mensagem → aceite. Sem nuvem/sessão, o painel mostra o aviso de conexão e não inventa convites.
+
 ## [v4.73.1] - 2026-11-09
 
 **Estandartes do perfil sem faixas pretas, Maestria Geral e Sequências repaginadas, conquistas de Emblemas na aba Progresso, skins dos cards em Cartões, Modo Desenvolvedor na nuvem e cronômetro escolhido no Modo Foco.**
