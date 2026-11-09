@@ -562,7 +562,10 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [timerSound, setTimerSoundState] = useState(() => isTimerSoundEnabled());
   const [focusDefault, setFocusDefaultState] = useState(() => isFocusModeDefault());
 
-  const [timerStyle, setTimerStyle] = useState(() => readLS('timerStyle') || 'radar');
+  /* v4.73.0 — só existem Radar e Ampulheta; valor antigo (cyber/arcade) cai no Radar. */
+  const [timerStyle, setTimerStyle] = useState(() =>
+    readLS('timerStyle') === 'hourglass' ? 'hourglass' : 'radar'
+  );
   const [navbarMode, setNavbarMode] = useState<string>(
     () => readLS(PREF_KEYS.navbarMode) || 'fixed'
   );
@@ -634,7 +637,7 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         notifyLeagues: readLS(PREF_KEYS.notifyLeagues) === 'true',
       });
       setLanguage(readLS('academia_lang') || 'pt');
-      setTimerStyle(readLS('timerStyle') || 'radar');
+      setTimerStyle(readLS('timerStyle') === 'hourglass' ? 'hourglass' : 'radar');
       setNavbarMode(readLS(PREF_KEYS.navbarMode) || 'fixed');
       setNavbarShape(readLS(PREF_KEYS.navbarShape) || 'straight');
       setAutoFullscreen(readLS(PREF_KEYS.autoFullscreen) === 'true');

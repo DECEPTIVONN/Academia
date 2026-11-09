@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.72.5",
+  "version": "4.73.0",
   "last_updated": "2026-11-09",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
@@ -624,7 +624,19 @@
       },
       {
         "file": "src-app/src/features/workout/RestTimerWidget.tsx",
-        "purpose": "Cronômetro flutuante de descanso com paridade legacy (secao-ficha.js L572–750 + treino.html L1684–1691): widget fixo .rest-timer (z 990, acima da Ficha e abaixo dos modais), visuais radar/hourglass/cyber/arcade movidos pela fração restante, tempo mm:ss, clique reinicia em 60s, ✕ encerra sem bipe, e ao zerar toca o bipe de 800 Hz + vibração (pref 'Som do temporizador') e mostra o toast de fim do descanso. É o ÚNICO assinante do tick de 1s (montado no App), então o cronômetro corre mesmo com a Ficha/Foco fechados."
+        "purpose": "Cronômetro flutuante de descanso com paridade legacy (secao-ficha.js L572–750 + treino.html L1684–1691): widget fixo .rest-timer (z 990, acima da Ficha e abaixo dos modais), tempo mm:ss, clique reinicia em 60s, ✕ encerra sem bipe, e ao zerar toca o bipe de 800 Hz + vibração (pref 'Som do temporizador') e mostra o toast de fim do descanso. É o ÚNICO assinante do tick de 1s (montado no App), então o cronômetro corre mesmo com a Ficha/Foco fechados. v4.73.0 — restam só os visuais Radar Tático e Ampulheta (Cyber Relógio e Arcade Bit removidos); os desenhos vêm de timer-visuals.tsx, o MESMO componente usado nas prévias da customização."
+      },
+      {
+        "file": "src-app/src/features/workout/timer-visuals.tsx",
+        "purpose": "Visuais compartilhados do cronômetro de descanso (v4.73.0): RadarVisual (conic-gradient com --progress) e HourglassVisual (SVG com clip-path do pct restante, ids prefixados por idPrefix) mais o wrapper TimerVisual. Usado pelo RestTimerWidget e pelas prévias reais da sub-aba Emotes (TimerVisual com pct fixo), garantindo que a prévia seja igual ao timer em execução."
+      },
+      {
+        "file": "src-app/src/features/workout/treinos/EvolucaoCargaPanel.tsx",
+        "purpose": "Aba Evolução de Força (Carga) do detalhe do exercício (v4.73.0): cards de Carga atual/Recorde/Variação, gráfico de linha em SVG (buildVolumeLineChartSvg) e histórico em lista com barra e delta por registro; sem histórico mostra o estado vazio + campo Carga (com a sugerida como placeholder) que grava pelo onSaveLoad, no mesmo padrão dos Detalhes de Volume da Progresso. CSS em evolucao-carga.css."
+      },
+      {
+        "file": "src-app/src/features/workout/treinos/evolucao-carga.css",
+        "purpose": "Estilos do EvolucaoCargaPanel (.exevo*): resumo em três cards compactos, card do gráfico, lista de histórico com barras/deltas e estado vazio + formulário de primeira carga; acompanha os tokens de tema e limita a altura com rolagem própria."
       },
       {
         "file": "src-app/src/features/workout/FichaFeature.tsx",

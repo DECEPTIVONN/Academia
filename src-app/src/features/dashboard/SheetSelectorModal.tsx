@@ -12,10 +12,12 @@
  * via onLetterChange e aplicada pelo DashboardFeature.
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { Exercise, SheetKey, WorkoutSheet } from '@/core/db/schema';
 import { compactIds, SHEET_ORDER, type LegacyRaw } from '@/core/db/queries';
 import { FichaDeck } from '@/features/dashboard/FichaDeck';
+import { MontarMenuModal } from '@/features/workout/treinos/MontarMenuModal';
+import { showToast } from '@/lib/toast';
 import { useModalPresence } from '@/hooks/useModalPresence';
 
 interface SheetSelectorModalProps {
@@ -41,6 +43,8 @@ export const SheetSelectorModal: React.FC<SheetSelectorModalProps> = ({
   const activeLetter = letter;
   /* v4.53.0 — mantém o modal montado durante o fade de saída. */
   const { mounted, closing } = useModalPresence(open);
+  /* v4.73.0 — menu de compartilhamento da prévia (Copiar/Guilda/Link). */
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const exerciseMap = useMemo(
     () => new Map(exercises.map((e) => [e.id, e])),
@@ -77,6 +81,52 @@ export const SheetSelectorModal: React.FC<SheetSelectorModalProps> = ({
     selectTab(next);
   };
 
+  /* ── Ações do menu da prévia (mesmas da aba Minha Ficha) ── */
+  const sheetIds = compactIds(sheet?.exerciseIds);
+
+  const copySheet = () => {
+    try {
+      localStorage.setItem('academia_clipboard_sheet', JSON.stringify(sheetIds));
+      showToast('Ficha copiada! Cole na aba Minha Ficha.', 'success');
+    } catch {
+      showToast('Não foi possível copiar a ficha.', 'error');
+    }
+  };
+
+  const showInGuild = () => {
+    try {
+      const shared = {
+        id: `shared-${Date.now()}`,
+        sheetKey: activeLetter,
+        exerciseIds: [...sheetIds],
+        author: 'Você',
+        timestamp: Date.now(),
+      };
+      const raw = localStorage.getItem('academia_guild_shared');
+      const list = raw ? (JSON.parse(raw) as unknown[]) : [];
+      list.unshift(shared);
+      localStorage.setItem('academia_guild_shared', JSON.stringify(list.slice(0, 20)));
+      window.dispatchEvent(new CustomEvent('academia:guild-shared-updated'));
+      showToast('Ficha enviada para a guilda!', 'success');
+    } catch {
+      showToast('Não foi possível enviar para a guilda.', 'error');
+    }
+  };
+
+  const copyLink = () => {
+    try {
+      const payload = btoa(JSON.stringify({ k: activeLetter, ids: [...sheetIds] }));
+      const url = `${window.location.origin}/?share=${payload}`;
+      if (!navigator.clipboard) throw new Error('clipboard indisponível');
+      void navigator.clipboard
+        .writeText(url)
+        .then(() => showToast('Link copiado!', 'success'))
+        .catch(() => showToast('Não foi possível copiar o link.', 'error'));
+    } catch {
+      showToast('Não foi possível copiar o link.', 'error');
+    }
+  };
+
   if (!mounted) return null;
 
   return (
@@ -90,9 +140,16 @@ export const SheetSelectorModal: React.FC<SheetSelectorModalProps> = ({
       aria-hidden={closing}
     >
       <div className="dash-mini-deck">
-        {/* Header: menu + abas A–J + swap + view toggle */}
+        {/* Header: menu (compartilhar) + abas A–J + alternar ficha */}
         <div className="dash-mini-deck__header">
-          <button className="dash-mini-deck__menu-btn" id="dashMiniMenuBtn" title="Menu">
+          <button
+            className="dash-mini-deck__menu-btn"
+            id="dashMiniMenuBtn"
+            title="Menu"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width={18} height={18}>
               <line x1="4" y1="12" x2="20" y2="12" strokeLinecap="round" />
               <line x1="4" y1="6" x2="20" y2="6" strokeLinecap="round" />
@@ -129,31 +186,28 @@ export const SheetSelectorModal: React.FC<SheetSelectorModalProps> = ({
             </svg>
           </button>
 
-          <div className="dash-mini-deck__view-toggle">
-            <button className="dash-mini-deck__view-btn active" id="dashMiniViewGrid" title="Grid View">
-              <svg viewBox="0 0 24 24" fill="currentColor" width={18} height={18}>
-                <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                <rect x="14" y="14" width="7" height="7" rx="1.5" />
-              </svg>
-            </button>
-            <button className="dash-mini-deck__view-btn" id="dashMiniViewList" title="List View">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width={18} height={18}>
-                <line x1="8" y1="6" x2="21" y2="6" />
-                <line x1="8" y1="12" x2="21" y2="12" />
-                <line x1="8" y1="18" x2="21" y2="18" />
-                <line x1="3" y1="6" x2="3.01" y2="6" />
-                <line x1="3" y1="12" x2="3.01" y2="12" />
-                <line x1="3" y1="18" x2="3.01" y2="18" />
-              </svg>
-            </button>
-          </div>
         </div>
 
         {/* Corpo + rodapé de métricas (grid Royale, linha de aeróbico, stats) */}
         <FichaDeck sheet={sheet} exercises={sheetExercises} legacy={legacy} />
       </div>
+
+      {/* Menu de compartilhamento da prévia (mesmo painel do menu da ficha) */}
+      <MontarMenuModal
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        mode="share"
+        anchorId="dashMiniMenuBtn"
+        onAddSheet={() => undefined}
+        onDeleteSheet={() => undefined}
+        onCopySheet={copySheet}
+        onPasteSheet={() => undefined}
+        onShowInGuild={showInGuild}
+        onLink={copyLink}
+        canAdd={false}
+        canDelete={false}
+        hasClipboard={false}
+      />
     </div>
   );
 };

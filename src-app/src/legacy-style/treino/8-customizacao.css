@@ -1082,6 +1082,48 @@
   text-align: center;
 }
 
+/* v4.73.0 — Estilo do Cronômetro: duas opções (Radar/Ampulheta) com a
+   PRÉVIA REAL, desenhada pelo mesmo componente do timer flutuante. */
+#timerSkinGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
+.timer-skin-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 82px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(var(--primary-rgb, 139, 92, 246), 0.12), transparent 70%),
+    rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+}
+.timer-skin-preview__visual {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.timer-skin-preview--hourglass .timer-skin-preview__visual {
+  width: 56px;
+  height: 66px;
+}
+.timer-skin-preview .timer-radar {
+  width: 100%;
+  height: 100%;
+}
+.timer-skin-preview .timer-hourglass {
+  width: 100%;
+  height: 100%;
+}
+.timer-skin-preview .timer-hourglass svg {
+  width: 100%;
+  height: 100%;
+}
+
 /* Fills de preview por skin */
 .bar-skin-option--default .bar-skin-option__fill {
   background: linear-gradient(90deg, #dbfcff, #00dbe9);

@@ -2,6 +2,32 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.73.0] - 2026-11-09
+
+**Cronômetro com prévias reais, evolução de carga no padrão dos Detalhes de Volume, calculadora de carga, aba Emblema repaginada, menu de compartilhamento na prévia do treino e transição suave nas missões.**
+
+### Added
+
+- **Prévia do treino (Início) → menu**: o botão de menu do seletor de fichas agora abre as ações **Copiar Ficha**, **Mostrar na Guilda** e **Link** (mesmas funções da aba Minha Ficha: clipboard `academia_clipboard_sheet`, `academia_guild_shared` e URL `?share=`), com toasts de confirmação. O menu reutiliza o painel `MontarMenuModal` (novo `mode="share"` + `anchorId`).
+- **Aba Emblema**: cabeçalho “Sua identidade” com prévia do avatar, card de foto com selo **Padrão/Personalizada** e molduras apresentadas como **miniaturas reais do avatar** (anel Bronze/Prata/Ouro/Elite, check na equipada), com contagem de estilos. Em telas estreitas o card de foto empilha para o botão não quebrar.
+- **Transição das missões**: a troca entre **Diárias / Semanais / Passe Royale** usa `AnimatePresence` com fade + deslize curto (0,22 s) em vez do corte seco.
+- **Arquivos novos**: `features/workout/timer-visuals.tsx` (visuais compartilhados do cronômetro), `features/workout/treinos/EvolucaoCargaPanel.tsx` e `evolucao-carga.css`.
+
+### Changed
+
+- **Estilo do Cronômetro**: **Cyber Relógio** e **Arcade Bit** foram removidos da customização (sobram Radar Tático e Ampulheta); uma skin antiga salva cai no Radar. As prévias deixaram de ser ícones/fallback e usam o **mesmo componente do cronômetro real** — o Radar mostra o arco verde de 68% e a Ampulheta mostra a areia no nível correspondente.
+- **Detalhes do exercício → Evolução de Força (Carga)**: refeita no padrão dos **Detalhes de Volume** da aba Progresso — três cards de resumo (Carga atual, Recorde e Variação %), gráfico de linha em SVG com média/recorde e lista do histórico (data, barra proporcional, carga e delta por registro). Sem histórico, o estado vazio explica a evolução e mantém o campo **Carga** com a sugerida como placeholder.
+- **Calculadora de 1RM** passou a se chamar **Calculadora de Carga** (resultado “Carga máxima estimada (1RM)”). Os atalhos de repetições agora são **1, 3, 5, 10, 15, 20 e 30** (saíram 8 e 12); acima de 12 repetições o aviso de superestimativa continua aparecendo.
+- **Prévia do treino (Início)**: o alternador **Grid/Lista** foi removido do cabeçalho do seletor; ficam apenas as abas A–J, o botão de alternar ficha e o menu.
+
+### Verificação
+
+`npx tsc -b` OK · `npx oxlint src` 0 erros · `npm run build` OK · `npm run lint:docs` OK.
+
+No navegador: a customização mostrou **2** estilos de cronômetro (sem Cyber/Arcade) com Radar computando `conic-gradient(... 68%)` e Ampulheta com `clip-path: inset(32% 0 0 )`; a Evolução de Força exibiu 3 registros (45/40/35 kg), variação **+29%**, 3 pontos no SVG e linhas “09/11 45 kg +5 kg”, “26/10 40 kg +5 kg”, “12/10 35 kg inicial”; a calculadora mostrou o título novo e os chips 1/3/5/10/15/20/30; a prévia do treino não tinha mais `#dashMiniViewGrid`/`#dashMiniViewList` e o menu abriu Copiar Ficha / Mostrar na Guilda / Link (copiar gravou os 5 ids da ficha e a guilda recebeu a ficha A); a aba Emblema renderizou o hero, as 5 molduras com avatar/anel/check em 3 colunas; e as 3 abas de missões alternaram sem erros no console. Dados de teste (histórico de `ex-a1`, entrada na guilda e modo desenvolvedor) foram revertidos.
+
+**Limitações**: este ambiente está com `prefers-reduced-motion`, então a animação de fade/deslize das missões não pode ser observada visualmente (o código respeita a preferência e troca na hora); e **Skin dos Cards** continua sem efeito na coleção/deck ou no mobile — ela só pinta os `.ex-card` do modo **Grid** da sub-aba Exercícios no desktop.
+
 ## [v4.72.5] - 2026-11-09
 
 **Segurar o exercício sem encolher, carga registrada direto na Evolução de Força, preferências completas na nuvem, estandartes em SVG branco e o preto único de Minha ficha / Personalizar.**

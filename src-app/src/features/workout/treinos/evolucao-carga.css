@@ -1,0 +1,347 @@
+/* ============================================================
+   evolucao-carga.css — Aba "Evolução de Força (Carga)" do detalhe
+   do exercício (v4.73.0). Mesmo vocabulário visual dos Detalhes de
+   Volume da Progresso: resumo em cards, gráfico de linha e lista.
+   ============================================================ */
+
+.exevo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  /* Limita o painel (histórico de até 15 cargas) sem estourar o modal em
+     telas baixas; a lista rola dentro dele. */
+  max-height: min(380px, 46vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 3px;
+  scrollbar-width: thin;
+}
+
+.exevo::-webkit-scrollbar {
+  width: 5px;
+}
+.exevo::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.exevo__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.exevo__eyebrow {
+  display: block;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.exevo__title {
+  margin: 2px 0 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.4px;
+  color: var(--text);
+  text-shadow: 0 0 14px rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+.exevo__badge {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.28);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--primary-light);
+  white-space: nowrap;
+}
+
+/* ── Resumo: atual / recorde / variação ── */
+.exevo__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.exevo__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.015) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.exevo__stat-label {
+  overflow: hidden;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exevo__stat-value {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.exevo__stat-value--peak {
+  color: #fbbf24;
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.35);
+}
+
+.exevo__stat-value--trend {
+  color: var(--text-secondary);
+}
+.exevo__stat-value--trend.is-up {
+  color: #34d399;
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.35);
+}
+.exevo__stat-value--trend.is-down {
+  color: #f87171;
+}
+
+/* ── Gráfico ── */
+.exevo__chart-card {
+  padding: 9px 11px 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.exevo__chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.exevo__chart-title {
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.exevo__chart {
+  width: 100%;
+  height: 128px;
+}
+
+/* ── Histórico ── */
+.exevo__list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.exevo__row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 9px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.exevo__row-date {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.exevo__row-bar {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.exevo__row-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  box-shadow: 0 0 8px rgba(var(--primary-rgb, 139, 92, 246), 0.55);
+}
+
+.exevo__row-load {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.exevo__row-delta {
+  min-width: 44px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  font-size: 0.52rem;
+  font-weight: 800;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+.exevo__row-delta.is-up {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34d399;
+}
+.exevo__row-delta.is-down {
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+}
+
+/* ── Estado vazio + primeiro registro ── */
+.exevo--empty {
+  max-height: none;
+  overflow: visible;
+  gap: 12px;
+}
+
+.exevo__empty-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.exevo__empty-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.3);
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.12);
+  color: var(--primary-light);
+}
+.exevo__empty-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.exevo__empty-title {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.exevo__empty-text {
+  margin: 3px 0 0;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
+.exevo__form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exevo__form-label {
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.exevo__form-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exevo__input-wrap {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 11px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+  background: #0e0e14;
+}
+
+.exevo__input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 0;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 0.85rem;
+  outline: none;
+}
+.exevo__input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.exevo__input-unit {
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: var(--text-tertiary);
+}
+
+.exevo__save {
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 11px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease,
+    opacity 0.2s ease;
+}
+.exevo__save:hover:not(:disabled) {
+  background: var(--primary-light);
+}
+.exevo__save:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.exevo__save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

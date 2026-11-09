@@ -626,8 +626,6 @@ export const CARD_SKINS: { key: string; nome: string; unlock: Unlock | null; hin
 export const TIMER_SKINS: { key: string; nome: string; unlock: Unlock | null; hint: string }[] = [
   { key: 'radar', nome: 'Radar Tático', unlock: null, hint: 'Padrão' },
   { key: 'hourglass', nome: 'Ampulheta', unlock: { tipo: 'treinos', val: 10 }, hint: '10 treinos' },
-  { key: 'cyber', nome: 'Cyber Relógio', unlock: { tipo: 'treinos', val: 20 }, hint: '20 treinos' },
-  { key: 'arcade', nome: 'Arcade Bit', unlock: { tipo: 'treinos', val: 30 }, hint: '30 treinos' },
 ];
 
 /* ── Aplicação imperativa (paridade com applyProfileCustomization) ── */
@@ -731,7 +729,9 @@ export function revertLockedCustomizations(
   if (card && locked(card.unlock)) pc.cardSkin = 'default';
 
   const timer = TIMER_SKINS.find((x) => x.key === pc.timerSkin);
-  if (timer && locked(timer.unlock)) {
+  /* v4.73.0 — Cyber Relógio e Arcade Bit saíram do jogo: uma skin antiga
+     (ou bloqueada) volta para o Radar Tático. */
+  if (!timer || locked(timer.unlock)) {
     pc.timerSkin = 'radar';
     writeLS('timerStyle', 'radar');
   }

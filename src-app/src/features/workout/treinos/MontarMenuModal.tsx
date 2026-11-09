@@ -81,6 +81,11 @@ interface MontarMenuModalProps {
   canAdd: boolean;
   canDelete: boolean;
   hasClipboard: boolean;
+  /** v4.73.0 — a prévia do treino (Início) usa o mesmo painel, só com as
+   *  ações de compartilhamento: Copiar Ficha, Mostrar na Guilda e Link. */
+  mode?: 'full' | 'share';
+  /** Botão que ancora o painel (padrão: menu da aba Minha Ficha). */
+  anchorId?: string;
 }
 
 export const MontarMenuModal: React.FC<MontarMenuModalProps> = ({
@@ -95,6 +100,8 @@ export const MontarMenuModal: React.FC<MontarMenuModalProps> = ({
   canAdd,
   canDelete,
   hasClipboard,
+  mode = 'full',
+  anchorId = 'btnDeckMenu',
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   /* v4.56.16 — mantém o painel montado durante o fade de saída (.is-closing). */
@@ -119,7 +126,7 @@ export const MontarMenuModal: React.FC<MontarMenuModalProps> = ({
     const place = () => {
       const panel = panelRef.current;
       if (!panel) return;
-      const btn = document.getElementById('btnDeckMenu');
+      const btn = document.getElementById(anchorId);
       const rect = btn?.getBoundingClientRect();
       // Painel abaixo do botão Menu, alinhado à direita do botão.
       const top = rect ? Math.min(rect.bottom + 10, window.innerHeight - 200) : 72;
@@ -137,24 +144,33 @@ export const MontarMenuModal: React.FC<MontarMenuModalProps> = ({
       window.removeEventListener('resize', place);
       window.removeEventListener('orientationchange', place);
     };
-  }, [open]);
+  }, [open, anchorId]);
 
   if (!mounted) return null;
 
-  const groups: MenuItem[][] = [
-    [
-      { key: 'add', label: 'Adicionar Ficha', icon: IcoPlus, action: () => { onClose(); onAddSheet(); }, },
-      { key: 'delete', label: 'Excluir Ficha', icon: IcoTrash, action: () => { onClose(); onDeleteSheet(); }, danger: true },
-    ],
-    [
-      { key: 'copy', label: 'Copiar Ficha', icon: IcoCopy, action: () => { onClose(); onCopySheet(); } },
-      { key: 'paste', label: 'Colar Ficha', icon: IcoPaste, action: () => { onClose(); onPasteSheet(); } },
-    ],
-    [
-      { key: 'guild', label: 'Mostrar na Guilda', icon: IcoShare, action: () => { onClose(); onShowInGuild(); } },
-      { key: 'link', label: 'Link', icon: IcoLink, action: () => { onClose(); onLink(); } },
-    ],
-  ];
+  const groups: MenuItem[][] =
+    mode === 'share'
+      ? [
+          [
+            { key: 'copy', label: 'Copiar Ficha', icon: IcoCopy, action: () => { onClose(); onCopySheet(); } },
+            { key: 'guild', label: 'Mostrar na Guilda', icon: IcoShare, action: () => { onClose(); onShowInGuild(); } },
+            { key: 'link', label: 'Link', icon: IcoLink, action: () => { onClose(); onLink(); } },
+          ],
+        ]
+      : [
+          [
+            { key: 'add', label: 'Adicionar Ficha', icon: IcoPlus, action: () => { onClose(); onAddSheet(); }, },
+            { key: 'delete', label: 'Excluir Ficha', icon: IcoTrash, action: () => { onClose(); onDeleteSheet(); }, danger: true },
+          ],
+          [
+            { key: 'copy', label: 'Copiar Ficha', icon: IcoCopy, action: () => { onClose(); onCopySheet(); } },
+            { key: 'paste', label: 'Colar Ficha', icon: IcoPaste, action: () => { onClose(); onPasteSheet(); } },
+          ],
+          [
+            { key: 'guild', label: 'Mostrar na Guilda', icon: IcoShare, action: () => { onClose(); onShowInGuild(); } },
+            { key: 'link', label: 'Link', icon: IcoLink, action: () => { onClose(); onLink(); } },
+          ],
+        ];
 
   // Desabilita itens quando não aplicável
   const isDisabled = (key: string) => {

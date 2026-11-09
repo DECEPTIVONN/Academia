@@ -851,12 +851,21 @@ export default function MissoesRecompensasStandalone({
                 {/* Scrollable Main Content Container */}
                 <main className="flex-1 overflow-y-auto pb-24 md:pb-8 pt-4 px-4 flex flex-col gap-4 scrollbar-thin w-full max-w-xl md:max-w-4xl mx-auto">
 
-                    {/* Active Views */}
-                    <div className="flex flex-col gap-3">
+                    {/* Active Views — v4.73.0: a troca de aba entra/sai com fade +
+                        leve deslize (AnimatePresence), em vez do corte seco. */}
+                    <AnimatePresence mode="wait" initial={false}>
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                        className="flex flex-col gap-3"
+                    >
 
                         {/* ====== DAILY MISSIONS (EXACTLY 3) ====== */}
                         {activeTab === 'daily' && (
-                            <div className="flex flex-col md:grid md:grid-cols-12 md:gap-5 animate-fade-in">
+                            <div className="flex flex-col md:grid md:grid-cols-12 md:gap-5">
 
                                 {/* Daily Rewards Promo Header */}
                                 <div className="md:col-span-4 bg-purple-950/20 border border-purple-500/15 rounded-2xl p-4 flex justify-between items-center relative overflow-hidden flex-col text-center justify-center min-h-[220px]">
@@ -1016,7 +1025,7 @@ export default function MissoesRecompensasStandalone({
 
                         {/* ====== WEEKLY & MONTHLY TAB ====== */}
                         {activeTab === 'weekly' && (
-                            <div className="flex flex-col md:grid md:grid-cols-12 md:gap-5 animate-fade-in">
+                            <div className="flex flex-col md:grid md:grid-cols-12 md:gap-5">
 
                                 {/* PERSISTENT MONTHLY MISSION COUNTER CARD */}
                                 <section className="md:col-span-4 bg-[#0b0b10] border-2 border-amber-500/40 rounded-2xl p-4.5 shadow-[0_8px_30px_rgba(0,0,0,0.6)] relative overflow-hidden group flex flex-col justify-between min-h-[300px]">
@@ -1259,7 +1268,7 @@ export default function MissoesRecompensasStandalone({
 
                         {/* ====== PASSE ROYALE TAB ====== */}
                         {activeTab === 'passe' && (
-                            <div className="flex flex-col gap-3 animate-fade-in flex-1 min-h-0">
+                            <div className="flex flex-col gap-3 flex-1 min-h-0">
 
                                 {/* Clash Royale Style Header Banner */}
                                 <div className="relative overflow-hidden bg-gradient-to-r from-purple-900 via-[#451254] to-red-900 rounded-2xl p-3 border-2 border-yellow-500/40 shadow-[0_8px_20px_rgba(0,0,0,0.5)] select-none">
@@ -1587,7 +1596,8 @@ export default function MissoesRecompensasStandalone({
                             </div>
                         )}
 
-                    </div>
+                    </motion.div>
+                    </AnimatePresence>
 
                 </main>
             </motion.div>

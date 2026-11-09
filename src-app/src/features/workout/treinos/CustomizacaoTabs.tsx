@@ -32,6 +32,7 @@ import {
   writeLS,
 } from '@/features/profile/profile-data';
 import { showToast } from '@/lib/toast';
+import { TimerVisual } from '@/features/workout/timer-visuals';
 import './emblema-tab.css';
 
 export type CustomSubTab = 'itens-magicos' | 'emotes' | 'torres' | 'estandartes' | 'maestrias';
@@ -517,25 +518,25 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
             <div className="bar-skin-grid" id="timerSkinGrid">
               {TIMER_SKINS.map((s) => {
                 const unlocked = isUnlocked(s.unlock, stats, devMode, maestrias);
+                /* v4.73.0 — só Radar/Ampulheta existem; valor antigo cai no radar. */
+                const activeTimer = pc.timerSkin === 'hourglass' ? 'hourglass' : 'radar';
                 return (
                   <div
                     key={s.key}
-                    className={`bar-skin-option bar-skin-option--${s.key}${s.key === (pc.timerSkin || 'radar') ? ' bar-skin-option--active' : ''}${!unlocked ? ' bar-skin-option--locked' : ''}`}
+                    className={`bar-skin-option bar-skin-option--${s.key}${s.key === activeTimer ? ' bar-skin-option--active' : ''}${!unlocked ? ' bar-skin-option--locked' : ''}`}
                     data-timer-skin={s.key}
                     data-locked={!unlocked ? 'true' : undefined}
                     onClick={() => pickTimerSkin(s.key, unlocked)}
                   >
                     {!unlocked && LOCK_SVG_SM}
                     <div className={`timer-skin-preview timer-skin-preview--${s.key}`} aria-hidden="true">
-                      {s.key === 'radar' && <div className="timer-radar" style={{ width: 44, height: 44 }} />}
-                      {s.key === 'hourglass' && (
-                        <div className="timer-hourglass" style={{ width: 44, height: 44 }}>
-                          <span>0:30</span>
-                        </div>
-                      )}
-                      {(s.key === 'cyber' || s.key === 'arcade') && (
-                        <div className="timer-skin-preview__fallback">{s.key === 'cyber' ? '00:30' : '0:30'}</div>
-                      )}
+                      <div className="timer-skin-preview__visual">
+                        <TimerVisual
+                          style={s.key === 'hourglass' ? 'hourglass' : 'radar'}
+                          pct={68}
+                          idPrefix={`preview-${s.key}`}
+                        />
+                      </div>
                     </div>
                     <div style={{ fontWeight: 700, fontSize: '0.8rem', textAlign: 'center' }}>{s.nome}</div>
                     {!unlocked && <span className="bar-skin-option__hint">{s.hint}</span>}
@@ -624,6 +625,21 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
         <div className="theme-section theme-cinza-castelo">
           <div className="theme-bg" />
           <div className="theme-content">
+            {/* v4.73.0 — cabeçalho da aba Emblema (antes ela começava direto na
+                foto de perfil, sem contexto visual). */}
+            <div className="identity-hero">
+              <div className="identity-hero__text">
+                <span className="identity-hero__eyebrow">Sua identidade</span>
+                <h3 className="identity-hero__title">Avatar, emblema e moldura</h3>
+                <p className="identity-hero__desc">
+                  O que você escolher aqui aparece no seu cartão de perfil, na sidebar e no Fit ID.
+                </p>
+              </div>
+              <div className="identity-hero__preview">
+                <ProfileEmblem customization={pc} />
+              </div>
+            </div>
+
             <div className="profile-section-title">Foto de Perfil</div>
 
             <div className="profile-photo-picker" id="identityPhotoPicker">
@@ -636,8 +652,13 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
               </div>
 
               <div className="profile-photo-picker__body">
+                <span
+                  className={`profile-photo-picker__status${pc.photo ? ' is-custom' : ''}`}
+                >
+                  {pc.photo ? 'Personalizada' : 'Padrão'}
+                </span>
                 <div className="profile-photo-picker__text">
-                  {pc.photo ? 'Foto personalizada aplicada' : 'Sem foto personalizada'}
+                  {pc.photo ? 'Sua foto está ativa' : 'Seu emblema é o avatar'}
                 </div>
                 <p className="profile-photo-picker__hint">
                   {pc.photo
@@ -739,8 +760,11 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
               </div>
             </div>
 
-            <div className="profile-section-title" style={{ marginTop: 24 }}>
-              Moldura de Avatar
+            <div className="identity-section-head" style={{ marginTop: 24 }}>
+              <div className="profile-section-title" style={{ marginBottom: 0 }}>
+                Moldura de Avatar
+              </div>
+              <span className="identity-section-meta">{AVATAR_FRAMES.length} estilos</span>
             </div>
             <div className="frame-grid" id="frameGrid">
               {AVATAR_FRAMES.map((f) => {
@@ -754,11 +778,26 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
                     data-locked={!unlocked ? 'true' : undefined}
                     onClick={() => pickFrame(f)}
                   >
-                    <span className="frame-option__label">{f.nome}</span>
-                    {!unlocked && (
-                      <span className="frame-option__hint" style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', display: 'block' }}>
-                        {unlockHint(f.unlock)}
+                    <span className="frame-option__ring">
+                      <span className="frame-option__avatar">
+                        <ProfileEmblem customization={pc} />
                       </span>
+                    </span>
+                    <span className="frame-option__label">{f.nome}</span>
+                    {active && (
+                      <span className="frame-option__check" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                      </span>
+                    )}
+                    {!unlocked && (
+                      <>
+                        {LOCK_SVG_SM}
+                        <span className="frame-option__hint" style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', display: 'block' }}>
+                          {unlockHint(f.unlock)}
+                        </span>
+                      </>
                     )}
                   </div>
                 );

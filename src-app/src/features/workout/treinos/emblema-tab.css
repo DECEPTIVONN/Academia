@@ -78,6 +78,7 @@
 .btn-profile-photo,
 .btn-profile-photo-remove {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   justify-content: center;
   gap: 6px;
@@ -116,3 +117,252 @@
 .btn-profile-photo-remove:hover {
   background: rgba(239, 68, 68, 0.25);
 }
+
+/* ============================================================
+   v4.73.0 — upgrade visual da aba Emblema
+   Hero de identidade, card de foto com status e molduras
+   apresentadas como miniaturas reais do avatar.
+   ============================================================ */
+
+.identity-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.22);
+  background:
+    radial-gradient(120% 160% at 100% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.2), transparent 62%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.identity-hero__text {
+  min-width: 0;
+}
+
+.identity-hero__eyebrow {
+  display: block;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--primary-light);
+}
+
+.identity-hero__title {
+  margin: 3px 0 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.18rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.3px;
+  color: var(--text);
+}
+
+.identity-hero__desc {
+  margin: 5px 0 0;
+  max-width: 420px;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
+.identity-hero__preview {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  padding: 2px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  background: #0b0b10;
+  box-shadow: 0 0 18px rgba(var(--primary-rgb, 139, 92, 246), 0.35);
+}
+
+.identity-hero__preview > * {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.profile-photo-picker {
+  padding: 16px;
+  border-radius: 18px;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.profile-photo-picker__preview {
+  width: 88px;
+  height: 88px;
+  border-width: 2px;
+  box-shadow:
+    inset 0 -10px 20px rgba(0, 0, 0, 0.5),
+    0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.profile-photo-picker__status {
+  align-self: flex-start;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.profile-photo-picker__status.is-custom {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.12);
+  color: #34d399;
+}
+
+/* Em telas estreitas o card de foto vira coluna: a prévia em cima e as ações
+   embaixo, sem o botão "Carregar foto" quebrar em duas linhas. */
+@media (max-width: 560px) {
+  .profile-photo-picker {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .profile-photo-picker__preview {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+.identity-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.identity-section-meta {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* ── Molduras como miniaturas do avatar (não mais círculos vazios) ── */
+.frame-grid .frame-option {
+  aspect-ratio: auto;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 70%),
+    rgba(255, 255, 255, 0.022);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.frame-grid .frame-option:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+}
+.frame-grid .frame-option--active {
+  border-color: var(--primary) !important;
+  background: rgba(var(--primary-rgb, 139, 92, 246), 0.1);
+  box-shadow:
+    0 0 0 1px var(--primary),
+    0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.frame-option__ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Acompanha a largura do card (3 por linha) sem estourar no mobile. */
+  width: min(64%, 96px);
+  height: auto;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  padding: 3px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: #0b0b10;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.frame-option__avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(120% 120% at 50% 0%, rgba(var(--primary-rgb, 139, 92, 246), 0.3), rgba(8, 6, 16, 0.95) 72%);
+}
+.frame-option--active .frame-option__ring {
+  transform: scale(1.04);
+  border-color: var(--primary);
+  box-shadow: 0 0 14px rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+}
+.frame-option--none .frame-option__ring {
+  border-style: dashed;
+  opacity: 0.8;
+}
+.frame-option--bronze .frame-option__ring {
+  border-color: #f97316;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.32);
+}
+.frame-option--prata .frame-option__ring {
+  border-color: #94a3b8;
+  box-shadow: 0 0 12px rgba(148, 163, 184, 0.32);
+}
+.frame-option--ouro .frame-option__ring {
+  border-color: #fbbf24;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.4);
+}
+.frame-option--elite .frame-option__ring {
+  border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(var(--primary-rgb, 139, 92, 246), 0.5);
+}
+
+.frame-grid .frame-option__label {
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+  color: var(--text-secondary);
+}
+.frame-grid .frame-option--active .frame-option__label {
+  color: var(--text);
+}
+
+.frame-option__check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(var(--primary-rgb, 139, 92, 246), 0.55);
+}
+.frame-option__check svg {
+  width: 10px;
+  height: 10px;
+}
+

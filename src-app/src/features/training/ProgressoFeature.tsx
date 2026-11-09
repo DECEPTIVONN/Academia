@@ -719,7 +719,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
   const rmResult = rmValue ?? '--';
   const rmHighReps = Number.isFinite(rmReps) && rmReps > 12;
   const RM_PERCENTS = [100, 95, 90, 85, 80, 75, 70];
-  const RM_REP_CHIPS = [1, 3, 5, 8, 10, 12];
+  const RM_REP_CHIPS = [1, 3, 5, 10, 15, 20, 30];
 
   /* ===== Modal do dia ===== */
   const dayRow = selectedDate ? histMap.get(selectedDate) : undefined;
@@ -1099,7 +1099,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
             {/* ===== Calculadora 1RM ===== */}
             <div className="p-card calculator-card rm-calc">
               <div className="p-card-header">
-                <h3>Calculadora de 1RM</h3>
+                <h3>Calculadora de Carga</h3>
                 <span className="p-card-meta">Brzycki</span>
               </div>
               <p className="rm-calc__sub">
@@ -1164,7 +1164,7 @@ export const ProgressoFeature: React.FC<ProgressoFeatureProps> = ({ onOpenPerfil
                 id="calcResult"
                 aria-live="polite"
               >
-                <span className="rm-result__label">1RM estimado</span>
+                <span className="rm-result__label">Carga máxima estimada (1RM)</span>
                 <span className="rm-result__value">
                   {rmResult}
                   <small>{weightUnit}</small>
