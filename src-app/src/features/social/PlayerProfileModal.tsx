@@ -183,9 +183,11 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
               <div className="player-profile__badges">
                 {badgeEmblems.map((emblem) => (
                   <span className="player-profile__badge" key={emblem.id} title={emblem.nome}>
-                    <span className="player-profile__emblem-icon" aria-hidden="true">
-                      {emblem.icon}
-                    </span>
+                    <span
+                      className="player-profile__emblem-icon"
+                      aria-hidden="true"
+                      dangerouslySetInnerHTML={{ __html: emblem.icon }}
+                    />
                   </span>
                 ))}
               </div>
@@ -233,9 +235,11 @@ export function PlayerProfileModal({ player, onClose }: PlayerProfileModalProps)
               {emblemSlots.map((emblem, index) =>
                 emblem ? (
                   <span className="player-profile__emblem" key={`${emblem.id}-${index}`} title={emblem.nome}>
-                    <span className="player-profile__emblem-icon" aria-hidden="true">
-                      {emblem.icon}
-                    </span>
+                    <span
+                      className="player-profile__emblem-icon"
+                      aria-hidden="true"
+                      dangerouslySetInnerHTML={{ __html: emblem.icon }}
+                    />
                   </span>
                 ) : (
                   <span

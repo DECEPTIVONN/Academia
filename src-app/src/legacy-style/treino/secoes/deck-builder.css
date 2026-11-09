@@ -111,9 +111,11 @@
     transform: scale(1.02);
 }
 
+/* v4.72.5 — ao segurar o card para arrastar até o deck o card mantém o
+   tamanho original (antes o scale(0.95) encolhia o card sob o dedo). */
 .collection-card.dragging {
-    opacity: 0.5;
-    transform: scale(0.95);
+    opacity: 0.6;
+    transform: none;
     cursor: grabbing;
 }
 

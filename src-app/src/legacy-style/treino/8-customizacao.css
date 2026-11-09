@@ -666,6 +666,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* v4.72.5 — estandartes em SVG branco (antes eram emoji). */
+  color: #fff;
+}
+.emblem-gallery__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.profile-emblems .emblem-gallery__icon svg {
+  width: 26px;
+  height: 26px;
 }
 
 /* v4.56.15 — o ícone do estandarte usa o mesmo círculo escuro dos avatares
@@ -823,7 +833,8 @@
 
 .frame-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* v4.72.5 — molduras de avatar: 3 por linha (antes eram 4). */
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 24px;
 }

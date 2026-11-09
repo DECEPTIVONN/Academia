@@ -838,6 +838,8 @@ export interface DetalhesPecaStandaloneProps {
     onMaestria?: (exId: string) => void;
     /** Abre o formulário de edição do exercício. */
     onEdit?: (ex: Exercise) => void;
+    /** v4.72.5 — registra a carga direto na aba Evolução de Força. */
+    onSaveLoad?: (ex: Exercise, carga: string) => void | Promise<void>;
 }
 
 export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
@@ -849,7 +851,8 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
     exercise: exerciseProp,
     description: descriptionProp,
     onMaestria,
-    onEdit
+    onEdit,
+    onSaveLoad
 }) => {
     // State
     const [selectedPieceId, setSelectedPieceId] = useState<TetrominoType>(initialPieceId);
@@ -878,6 +881,9 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [touchStartX, setTouchStartX] = useState<number>(0);
     const [viewportMode, setViewportMode] = useState<'desktop' | 'mobile'>('desktop');
+    /* v4.72.5 — carga digitada na aba Evolução quando ainda não há histórico. */
+    const [loadDraft, setLoadDraft] = useState<string>('');
+    const [savingLoad, setSavingLoad] = useState<boolean>(false);
 
     // Card ref: usado para fechar ao tocar/clicar fora da interface (como V1).
     const cardRef = useRef<HTMLDivElement>(null);
@@ -892,6 +898,24 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
       (exerciseProp ? formatCarga(exerciseProp) : '') ||
       (exerciseProp ? getSuggestedLoad(exerciseProp) : null) ||
       '--';
+    const sugestaoCarga = exerciseProp ? getSuggestedLoad(exerciseProp) : null;
+    const sugestaoNum = sugestaoCarga
+        ? (/^(\d+(?:[.,]\d+)?)/.exec(sugestaoCarga)?.[1] ?? sugestaoCarga)
+        : '';
+
+    /* Salva a carga no mesmo formato do formulário de exercício ("40 kg"). */
+    const handleSaveLoad = async () => {
+        if (!exerciseProp || !onSaveLoad) return;
+        const digits = loadDraft.trim();
+        if (!digits) return;
+        setSavingLoad(true);
+        try {
+            await onSaveLoad(exerciseProp, `${digits} kg`);
+            setLoadDraft('');
+        } finally {
+            setSavingLoad(false);
+        }
+    };
 
     // Toast trigger
     const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -1301,19 +1325,61 @@ export const DetalhesPecaStandalone: React.FC<DetalhesPecaStandaloneProps> = ({
                                         </div>
                                     )}
 
-                                    {/* Page 3: Evolucao de Forca (Carga) */}
+                                    {/* Page 3: Evolução de Força (Carga) */}
                                     {detailSlide === 3 && (
                                         <div className="flex-1 flex flex-col justify-center gap-2">
                                             <h4 className="text-sm font-bold text-white mb-2">
-                                                Evolucao de Forca (Carga)
+                                                Evolução de Força (Carga)
                                             </h4>
                                             {(() => {
                                                 const hist = exerciseProp?.historicoCargas ?? [];
                                                 const maxValor = hist.length ? Math.max(...hist.map((h) => h.valor)) : 0;
                                                 if (hist.length === 0) {
                                                     return (
-                                                        <div className="cr-description-box">
-                                                            Registre sua evolução de carga em Detalhes para ver sua evolução aqui.
+                                                        <div className="flex flex-col gap-3">
+                                                            <div className="cr-description-box">
+                                                                Registre sua evolução de carga em Detalhes para ver sua evolução aqui.
+                                                            </div>
+                                                            {/* v4.72.5 — campo de carga do editar exercício aqui mesmo, para
+                                                                o usuário registrar a primeira carga sem sair do detalhe. */}
+                                                            {exerciseProp && onSaveLoad && (
+                                                                <form
+                                                                    className="flex flex-col gap-1.5"
+                                                                    onSubmit={(e) => { e.preventDefault(); void handleSaveLoad(); }}
+                                                                >
+                                                                    <label
+                                                                        htmlFor="detalhesCarga"
+                                                                        className="text-[10px] font-black uppercase tracking-widest text-slate-400"
+                                                                    >
+                                                                        Carga
+                                                                    </label>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div
+                                                                            className="flex-1 flex items-center rounded-xl bg-[#0e0e14] border px-3"
+                                                                            style={{ borderColor: 'rgba(var(--primary-rgb, 139, 92, 246), 0.45)' }}
+                                                                        >
+                                                                            <input
+                                                                                id="detalhesCarga"
+                                                                                type="text"
+                                                                                inputMode="decimal"
+                                                                                autoComplete="off"
+                                                                                placeholder={sugestaoNum ? `Sugerido: ${sugestaoNum}` : 'Ex: 40'}
+                                                                                value={loadDraft}
+                                                                                onChange={(e) => setLoadDraft(e.target.value.replace(/[^\d.,]/g, ''))}
+                                                                                className="flex-1 bg-transparent text-white text-sm py-2.5 outline-none placeholder:text-slate-500"
+                                                                            />
+                                                                            <span className="text-[11px] font-bold text-slate-400">kg</span>
+                                                                        </div>
+                                                                        <button
+                                                                            type="submit"
+                                                                            disabled={!loadDraft.trim() || savingLoad}
+                                                                            className="px-3.5 py-2.5 rounded-xl bg-[var(--primary)] text-white text-[10px] font-black uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                                                                        >
+                                                                            {savingLoad ? 'Salvando…' : 'Salvar'}
+                                                                        </button>
+                                                                    </div>
+                                                                </form>
+                                                            )}
                                                         </div>
                                                     );
                                                 }

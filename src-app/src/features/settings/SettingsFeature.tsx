@@ -613,7 +613,9 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     notifyLeagues: readLS(PREF_KEYS.notifyLeagues) === 'true',
   }));
 
-  /* v4.44.0 — mantém a UI alinhada quando as preferências chegam do sync. */
+  /* v4.44.0 — mantém a UI alinhada quando as preferências chegam do sync.
+     v4.72.5 — além das notificações, reflete TODAS as prefs que o snapshot
+     agora carrega (lock, música, player, idioma, tema, navbar, etc.). */
   useEffect(() => {
     const syncPrefs = () => {
       setFirstDayState(getFirstDayOfWeek());
@@ -622,15 +624,40 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
       setCollectionCardsState(getCollectionCardsMode());
       setTimerSoundState(isTimerSoundEnabled());
       setFocusDefaultState(isFocusModeDefault());
-      setPrefs((current) => ({
-        ...current,
+      setPrefs({
+        sounds: readLS(PREF_KEYS.sounds) !== 'false',
+        vibration: readLS(PREF_KEYS.vibration) !== 'false',
+        messages: readLS(PREF_KEYS.messages) !== 'false',
+        online: readLS(PREF_KEYS.online) === 'true',
         notifications: readLS(PREF_KEYS.notifications) === 'true',
         notifyUpdates: readLS(PREF_KEYS.notifyUpdates) === 'true',
         notifyLeagues: readLS(PREF_KEYS.notifyLeagues) === 'true',
-      }));
+      });
+      setLanguage(readLS('academia_lang') || 'pt');
+      setTimerStyle(readLS('timerStyle') || 'radar');
+      setNavbarMode(readLS(PREF_KEYS.navbarMode) || 'fixed');
+      setNavbarShape(readLS(PREF_KEYS.navbarShape) || 'straight');
+      setAutoFullscreen(readLS(PREF_KEYS.autoFullscreen) === 'true');
+      setMusicEnabledState(isMusicEnabled());
+      setMusicVolumeState(getMusicVolume());
+      setWorkoutMusicState(readLS(PREF_KEYS.workoutMusic) !== 'false');
+      setPlayerEnabledState(getPlayerEnabled());
+      setPlayerModeState(getPlayerMode());
+      setPlayerPosState(getPlayerPos());
+      setPlayerPersistState(getPlayerPersist());
+      setPlayerSecsState(getPlayerHideSecs());
+      setDrawerOnState(getPlayerDrawer() === 'on');
+      setDrawerThickState(getDrawerThickness());
+      setDrawerVpState(getDrawerVpHeight());
     };
     window.addEventListener('academia:prefs-changed', syncPrefs);
-    return () => window.removeEventListener('academia:prefs-changed', syncPrefs);
+    window.addEventListener('academia:player-prefs-changed', syncPrefs);
+    window.addEventListener('academia:lock-prefs-changed', syncPrefs);
+    return () => {
+      window.removeEventListener('academia:prefs-changed', syncPrefs);
+      window.removeEventListener('academia:player-prefs-changed', syncPrefs);
+      window.removeEventListener('academia:lock-prefs-changed', syncPrefs);
+    };
   }, []);
 
   /* Segurança/Notificações — prefs salvas; o Bloqueio do App passou a ter
@@ -644,6 +671,26 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     reminder: readLS(PREF_KEYS.workoutReminder) === 'true' ? 'true' : 'false',
     reminderTime: readLS(PREF_KEYS.workoutReminderTime) || '18:00',
   }));
+
+  /* v4.72.5 — segurança/notificações também chegam pelo snapshot da nuvem. */
+  useEffect(() => {
+    const syncLock = () => {
+      setLock({
+        enabled: readLS(PREF_KEYS.appLockEnabled) === 'true' ? 'true' : 'false',
+        biometric: readLS(PREF_KEYS.appLockBiometric) === 'true' ? 'true' : 'false',
+        bioAuto: readLS(PREF_KEYS.appLockBioAuto) === 'false' ? 'false' : 'true',
+        timeout: readLS(PREF_KEYS.appLockTimeout) || '300',
+        reminder: readLS(PREF_KEYS.workoutReminder) === 'true' ? 'true' : 'false',
+        reminderTime: readLS(PREF_KEYS.workoutReminderTime) || '18:00',
+      });
+    };
+    window.addEventListener('academia:prefs-changed', syncLock);
+    window.addEventListener('academia:lock-prefs-changed', syncLock);
+    return () => {
+      window.removeEventListener('academia:prefs-changed', syncLock);
+      window.removeEventListener('academia:lock-prefs-changed', syncLock);
+    };
+  }, []);
 
   /* v4.6.0-shell / v4.9.0-sync — fluxo da senha de bloqueio local
      (alfanumérica, 4–32 caracteres) */

@@ -476,7 +476,10 @@ export function ProfileFeature() {
                         }}
                         title={emb.nome}
                       >
-                        <div className={`emblem-gallery__icon ${animClass}`}>{emb.icon}</div>
+                        <div
+                          className={`emblem-gallery__icon ${animClass}`}
+                          dangerouslySetInnerHTML={{ __html: emb.icon }}
+                        />
                       </div>
                     );
                   })}

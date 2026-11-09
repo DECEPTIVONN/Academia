@@ -1623,6 +1623,22 @@
   background: var(--card-bg) !important;
 }
 
+/* v4.72.5 — a aba Minha ficha tinha um tom roxo (var(--card-bg)); passa a
+   usar o MESMO preto da aba Personalizar (#tab-exercicios, #0b0b10), com a
+   mesma hairline. */
+#tab-montar .deck-builder-container,
+#tab-montar .deck-header {
+  background: #0b0b10 !important;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+#tab-montar .deck-active-area,
+#tab-montar .collection-area {
+  background: #0b0b10;
+}
+#tab-montar .collection-area {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
 /* v4.54.x - avatar do Inicio arredondado */
 .dash-profile-avatar.profile-avatar { border-radius: 50% !important; }
 .dash-profile-avatar.profile-avatar img { border-radius: 50% !important; }

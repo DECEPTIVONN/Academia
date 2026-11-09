@@ -18,7 +18,12 @@ import { fadeIn, fadeSwap } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
 import { useMaestriaUi } from '@/features/gamification/maestria-ui';
 import { useTreinosStore, type SubTab } from './treinos-store';
-import { deleteExerciseRecord, saveSheetAerobic } from './treinos-helpers';
+import {
+  buildHistorico,
+  deleteExerciseRecord,
+  saveExerciseRecord,
+  saveSheetAerobic,
+} from './treinos-helpers';
 import { TreinosCollectionCard, TreinosGridCard } from './cards';
 import { CustomizacaoSubTabs } from './CustomizacaoTabs';
 import { MontarTab } from './MontarTab';
@@ -229,6 +234,14 @@ export const TreinosFeature: React.FC = () => {
     setCrExOpen(true);
   }, []);
   const closeCrEx = useCallback(() => setCrExOpen(false), []);
+  /* v4.72.5 — a aba Evolução de Força salva a carga sem abrir o formulário. */
+  const saveCrExLoad = useCallback(async (ex: Exercise, carga: string) => {
+    const { historicoCargas, recordToast } = buildHistorico(ex.historicoCargas, carga, ex.load, true);
+    const updated: Exercise = { ...ex, load: carga, historicoCargas };
+    await saveExerciseRecord(updated, false);
+    setCrEx((cur) => (cur && cur.id === updated.id ? updated : cur));
+    showToast(recordToast ?? 'Carga registrada!', 'success');
+  }, []);
   const [mgOpen, setMgOpen] = useState(false);
   const [aeOpen, setAeOpen] = useState(false);
   /* v4.56.16 — filtro do Personalizar: ao escolher, o menu fecha com fade. */
@@ -600,6 +613,7 @@ export const TreinosFeature: React.FC = () => {
               description={crEx.notes || getExerciseDescription(crEx.name) || `Um exercício focado em fortalecer o ${crEx.muscleGroup}. Mantenha a postura correta para melhores resultados!`}
               onMaestria={(id) => useMaestriaUi.getState().openMaestriaEx(id)}
               onEdit={openEdit}
+              onSaveLoad={saveCrExLoad}
             />
           </div>,
           document.body

@@ -399,7 +399,23 @@ export const TITULOS: { id: string | null; nome: string; unlock: Unlock | null }
   { id: 'imortal', nome: 'Imortal', unlock: { tipo: 'streak', val: 30 } },
 ];
 
-/* ── Emblemas de slot do cartão (EMBLEMAS — L59–77) ── */
+/* ── Emblemas de slot do cartão (EMBLEMAS — L59–77) ──
+   v4.72.5 — os estandartes deixaram de ser emoji: `icon` agora guarda um
+   SVG branco inline (herda a cor via currentColor, então o CSS define
+   #fff). O fundo (tema do Personalizar / círculo do slot) não muda. */
+
+const EMBLEMA_SVG = (body: string): string =>
+  `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+
+const ICON_SHIELD = EMBLEMA_SVG('<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>');
+const ICON_DUMBBELL = EMBLEMA_SVG('<path d="M6.5 6.5h11M6.5 17.5h11M12 6.5v11"/><circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/>');
+const ICON_AWARD = EMBLEMA_SVG('<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>');
+const ICON_CROWN = EMBLEMA_SVG('<path d="M4 18 3 6l5 4 4-7 4 7 5-4-1 12z"/><path d="M5 21h14"/>');
+const ICON_FLAME = EMBLEMA_SVG('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>');
+const ICON_BOLT = EMBLEMA_SVG('<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>');
+const ICON_BARBELL = EMBLEMA_SVG('<path d="M3 10v4M7 7v10M17 7v10M21 10v4M7 12h10"/>');
+const ICON_ACTIVITY = EMBLEMA_SVG('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>');
+const ICON_TROPHY = EMBLEMA_SVG('<path d="M10 14.66v1.63a2 2 0 0 1-.98 1.7A5 5 0 0 0 7 21.98"/><path d="M14 14.66v1.63a2 2 0 0 0 .98 1.7A5 5 0 0 1 17 21.98"/><path d="M18 9h1.5a1 1 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6 9H4.5a1 1 0 0 1 0-5H6"/>');
 
 export const EMBLEMAS: {
   id: string;
@@ -409,22 +425,22 @@ export const EMBLEMAS: {
   animated?: boolean;
   animationType?: string;
 }[] = [
-  { id: 'novato', nome: 'Novato', icon: '🥋', unlock: null },
-  { id: 'dedicado', nome: 'Dedicado', icon: '💪', unlock: { tipo: 'treinos', val: 10 } },
-  { id: 'veterano', nome: 'Veterano', icon: '🎖️', unlock: { tipo: 'treinos', val: 30 } },
-  { id: 'lendario', nome: 'Lendário', icon: '👑', unlock: { tipo: 'treinos', val: 100 } },
-  { id: 'chama7', nome: 'Chama 7', icon: '🔥', unlock: { tipo: 'streak', val: 7 } },
-  { id: 'chama30', nome: 'Chama Eterna', icon: '⚡', unlock: { tipo: 'streak', val: 30 } },
-  { id: 'forca', nome: 'Força', icon: '🏋️', unlock: { tipo: 'xp', val: 100 } },
-  { id: 'cardio', nome: 'Cardio', icon: '🏃', unlock: { tipo: 'xp', val: 250 } },
-  { id: 'bronze', nome: 'Elite Bronze', icon: '🥉', unlock: { tipo: 'maestria', val: 'bronze' } },
-  { id: 'prata', nome: 'Elite Prata', icon: '🥈', unlock: { tipo: 'maestria', val: 'prata' } },
-  { id: 'ouro', nome: 'Elite Ouro', icon: '🥇', unlock: { tipo: 'maestria', val: 'ouro' } },
-  { id: 'academia', nome: 'Academia PRO', icon: '🏆', unlock: { tipo: 'treinos', val: 50 } },
-  { id: 'chama-eterna-anim', nome: 'Chama Eterna', icon: '🔥', unlock: { tipo: 'streak', val: 30 }, animated: true, animationType: 'flicker' },
-  { id: 'lendario-anim', nome: 'O Lendário', icon: '👑', unlock: { tipo: 'treinos', val: 100 }, animated: true, animationType: 'pulse-glow' },
-  { id: 'elite-ouro-anim', nome: 'Maestria Máxima', icon: '🥇', unlock: { tipo: 'maestria', val: 'ouro' }, animated: true, animationType: 'spin-slow' },
-  { id: 'prestige-anim', nome: 'Prestígio', icon: '⭐', unlock: { tipo: 'treinos', val: 100 }, animated: true, animationType: 'pulse-glow' },
+  { id: 'novato', nome: 'Novato', icon: ICON_SHIELD, unlock: null },
+  { id: 'dedicado', nome: 'Dedicado', icon: ICON_DUMBBELL, unlock: { tipo: 'treinos', val: 10 } },
+  { id: 'veterano', nome: 'Veterano', icon: ICON_AWARD, unlock: { tipo: 'treinos', val: 30 } },
+  { id: 'lendario', nome: 'Lendário', icon: ICON_CROWN, unlock: { tipo: 'treinos', val: 100 } },
+  { id: 'chama7', nome: 'Chama 7', icon: ICON_FLAME, unlock: { tipo: 'streak', val: 7 } },
+  { id: 'chama30', nome: 'Chama Eterna', icon: ICON_BOLT, unlock: { tipo: 'streak', val: 30 } },
+  { id: 'forca', nome: 'Força', icon: ICON_BARBELL, unlock: { tipo: 'xp', val: 100 } },
+  { id: 'cardio', nome: 'Cardio', icon: ICON_ACTIVITY, unlock: { tipo: 'xp', val: 250 } },
+  { id: 'bronze', nome: 'Elite Bronze', icon: ICON_MEDAL, unlock: { tipo: 'maestria', val: 'bronze' } },
+  { id: 'prata', nome: 'Elite Prata', icon: ICON_MEDAL, unlock: { tipo: 'maestria', val: 'prata' } },
+  { id: 'ouro', nome: 'Elite Ouro', icon: ICON_MEDAL, unlock: { tipo: 'maestria', val: 'ouro' } },
+  { id: 'academia', nome: 'Academia PRO', icon: ICON_TROPHY, unlock: { tipo: 'treinos', val: 50 } },
+  { id: 'chama-eterna-anim', nome: 'Chama Eterna', icon: ICON_FLAME, unlock: { tipo: 'streak', val: 30 }, animated: true, animationType: 'flicker' },
+  { id: 'lendario-anim', nome: 'O Lendário', icon: ICON_CROWN, unlock: { tipo: 'treinos', val: 100 }, animated: true, animationType: 'pulse-glow' },
+  { id: 'elite-ouro-anim', nome: 'Maestria Máxima', icon: ICON_MEDAL, unlock: { tipo: 'maestria', val: 'ouro' }, animated: true, animationType: 'spin-slow' },
+  { id: 'prestige-anim', nome: 'Prestígio', icon: ICON_STAR, unlock: { tipo: 'treinos', val: 100 }, animated: true, animationType: 'pulse-glow' },
 ];
 
 /* ── Molduras de avatar (AVATAR_FRAMES — L95–101) ──

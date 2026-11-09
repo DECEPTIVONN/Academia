@@ -2,6 +2,29 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.72.5] - 2026-11-09
+
+**Segurar o exercício sem encolher, carga registrada direto na Evolução de Força, preferências completas na nuvem, estandartes em SVG branco e o preto único de Minha ficha / Personalizar.**
+
+### Added
+
+- **Evolução de Força (detalhe do exercício)**: quando o exercício ainda não tem histórico, o campo **Carga** do editar exercício aparece logo abaixo do aviso “Registre sua evolução…” — input numérico com o **kg** fixo ao lado, placeholder com a carga sugerida (“Sugerido: 30”) e botão Salvar. A carga é gravada no exercício junto com a entrada do histórico (mesmo `buildHistorico` do formulário), então o gráfico aparece na hora, sem sair do detalhe.
+- **Preferências na nuvem**: o snapshot de sincronização passou a enviar **todas** as preferências de `PREF_KEYS` (lembrete de treino e horário, música do treino, bloqueio do app, timeout/biometria, papéis de parede do lock, navbar, notificações, sons, vibração, mensagens, online) mais o player flutuante (`enabled`/gaveta/espessura/altura), `academia_lang` e a ordenação de músicas. A tela de Configurações também reflete essas chaves ao receber um pull (`prefs-changed`, `player-prefs-changed`, `lock-prefs-changed`).
+
+### Changed
+
+- **Minha ficha**: o fundo do deck e da coleção passou do roxo translúcido (`var(--card-bg)`) para o **mesmo preto da aba Personalizar** (`#0b0b10`), com a mesma hairline de `#tab-exercicios`.
+- **Estandartes**: os 16 emblemas de perfil deixaram de ser emoji e agora são **SVGs brancos** (`currentColor` + `#fff`), no mesmo círculo escuro do fundo; o tamanho foi ajustado para 22 px (26 px nos 3 slots do cartão de perfil).
+- **Molduras de avatar**: a grade da sub-aba Emblemas passou a mostrar **3 molduras por linha** (antes 4).
+- **Sub-aba Cartões**: usa o fundo `theme-cinza-castelo`, o mesmo da sub-aba **Estilo das Barras de Progresso** (antes `theme-roxo`).
+- **Arrastar da coleção para o deck**: o card não encolhe mais ao ser segurado (`.collection-card.dragging` ficou sem `scale(0.95)`; só o cursor e a leve transparência mudam).
+
+### Verificação
+
+`npx tsc -b` OK · `npx oxlint src` 0 erros (38 avisos de linha de base) · `npm run build` OK · `npm run lint:docs` OK.
+
+No navegador (1280×900): o menu do card no deck abriu com apenas **Detalhes | Remover**; `#tab-montar` (container, header, deck e coleção) computou `rgb(11, 11, 16)`; `.collection-card.dragging` computou `transform: none` e `opacity: 0.6`; a sub-aba Cartões computou `theme-section theme-cinza-castelo`; os 16 estandartes renderizaram `<svg>` com `color: rgb(255, 255, 255)`. Em Detalhes → Evolução de Força de um exercício sem carga, o campo apareceu com “Sugerido: 30”; salvar “45” criou a barra “45 kg · 09/11” no gráfico e a carga foi revertida no IndexedDB depois do teste.
+
 ## [v4.72.4] - 2026-11-09
 
 **Deck enxuto, troca com o exercício em destaque abaixo do deck e Cronograma nas Configurações.**

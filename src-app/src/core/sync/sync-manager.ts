@@ -16,7 +16,7 @@ import { create } from 'zustand';
 import { type RealtimeChannel } from '@supabase/supabase-js';
 import { idb, emitDbReady } from '@/core/db/idb';
 import { LOCAL_USER_ID } from '@/core/db/schema';
-import { APP_PREF_KEYS } from '@/lib/app-prefs';
+import { PREF_KEYS } from '@/features/profile/profile-data';
 import type {
   Exercise,
   WorkoutSheet,
@@ -266,7 +266,16 @@ export async function buildSnapshot(): Promise<AppSnapshot> {
     'academia_pref_online',
     'academia_pref_app_lock_enabled',
     'academia_pref_app_lock_biometric',
-    ...Object.values(APP_PREF_KEYS),
+    /* v4.72.5 — o motor só enviava APP_PREF_KEYS; agora envia TODAS as
+       preferências salvas em localStorage (lock, lembrete de treino, música,
+       player flutuante, idioma, ordenação de músicas, navbar, etc.). */
+    'academia_pref_player_enabled',
+    'academia_pref_player_drawer',
+    'academia_pref_player_drawer_thick',
+    'academia_pref_player_drawer_vp',
+    'academia_lang',
+    'academia_music_sort_v1',
+    ...Object.values(PREF_KEYS),
   ];
   const prefs: Record<string, string> = {};
   for (const k of PREF_KEYS_TO_SYNC) {

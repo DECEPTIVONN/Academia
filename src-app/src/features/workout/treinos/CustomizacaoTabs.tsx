@@ -456,7 +456,9 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
     <>
       {/* ── Itens Mágicos ── */}
       <SubTabContent id="itens-magicos" active={subtab === 'itens-magicos'}>
-        <div className="theme-section theme-roxo">
+        {/* v4.72.5 — Cartões usa o mesmo fundo da sub-aba Estilo das Barras
+            de Progresso (theme-cinza-castelo), antes era theme-roxo. */}
+        <div className="theme-section theme-cinza-castelo">
           <div className="theme-bg" />
           <div className="theme-content">
             <div className="profile-section-title">Cartões</div>
@@ -596,7 +598,10 @@ export const CustomizacaoSubTabs: React.FC<{ subtab: CustomSubTab | 'exercicios-
                     data-locked={!unlocked ? 'true' : undefined}
                     onClick={() => toggleEstandarte(e.id, unlocked)}
                   >
-                    <div className={`emblem-gallery__icon${animClass}`}>{e.icon}</div>
+                    <div
+                      className={`emblem-gallery__icon${animClass}`}
+                      dangerouslySetInnerHTML={{ __html: e.icon }}
+                    />
                     <div className="emblem-gallery__name">{e.nome}</div>
                     {!unlocked && (
                       <span className="emblem-gallery__lock">
