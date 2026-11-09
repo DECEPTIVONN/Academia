@@ -207,44 +207,91 @@
     min-width: 0;
 }
 
-/* Ações do exercício ABAIXO do card, com rótulo — mesmo desenho do menu do
-   card do deck, mas fixas (sem depender do toque no card, que aqui adiciona
-   ao treino). */
-.collection-deck--deck .deck-card-menu--below {
-    position: static !important;
-    top: auto !important;
-    left: auto !important;
-    bottom: auto !important;
-    display: flex;
-    width: 100%;
-    margin: 4px 0 0;
+/* v4.72.3 — o card da coleção no modo deck abre o MENU no toque (como o card
+   do deck) e o menu traz Detalhes + Adicionar ao deck. Densidade menor que a
+   do deck porque o card tem 4 colunas. */
+.collection-grid--deck .deck-card-menu--collection {
     padding: 6px;
     gap: 4px;
-    flex-direction: column;
-    background: rgba(10, 5, 20, 0.92);
-    border: 2px solid rgba(var(--primary-rgb, 139, 92, 246), 0.45);
-    border-radius: 12px;
-    box-shadow: none;
-    animation: none;
-    z-index: 1;
+    border-width: 2px;
+    z-index: 120;
 }
 
-.collection-deck--deck .deck-card-menu--below .btn-card-action {
+.collection-grid--deck .deck-card-menu--collection .btn-card-action {
     height: auto;
     min-height: 0;
-    padding: 5px 2px;
+    padding: 6px 3px;
     gap: 0;
     font-size: 0.7rem;
     letter-spacing: 0.2px;
-    line-height: 1.1;
-    white-space: nowrap;
+    line-height: 1.15;
+    white-space: normal;
     border-radius: 8px;
     animation: none;
 }
 
+.collection-grid--deck .deck-card-menu--collection .btn-card-add-deck {
+    background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
+    border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.4);
+    color: var(--primary-light);
+    font-weight: 800;
+}
+
 @media (hover: hover) {
-    .collection-deck--deck .deck-card-menu--below .btn-card-action:hover {
-        background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
+    .collection-grid--deck .deck-card-menu--collection .btn-card-action:hover {
+        background: rgba(var(--primary-rgb, 139, 92, 246), 0.26);
+    }
+}
+
+/* v4.72.3 — deck cheio: barra de aviso + destaque dos exercícios que podem
+   ser trocados (o toque num deles conclui a substituição). */
+.deck-replace-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(var(--primary-rgb, 139, 92, 246), 0.14);
+    border: 1px solid rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+    color: var(--text);
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+
+.deck-replace-bar b {
+    color: var(--primary-light);
+}
+
+.deck-replace-cancel {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-family);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.deck-active-grid.is-replacing .deck-card {
+    outline: 2px dashed rgba(var(--primary-rgb, 139, 92, 246), 0.85);
+    outline-offset: -3px;
+    animation: deckReplacePulse 1.4s ease-in-out infinite;
+}
+
+@keyframes deckReplacePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+    50% { box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .deck-active-grid.is-replacing .deck-card {
+        animation: none;
     }
 }
 

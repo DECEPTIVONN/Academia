@@ -31,6 +31,7 @@ import {
   dropCollectionAt,
   mutateSheetIds,
   removeFromDeck,
+  replaceAtSlot,
   swapSlots,
 } from './treinos-helpers';
 import { DeckActiveSlot, DeckEmptySlot, DeckGhostCard, TreinosCollectionCard } from './cards';
@@ -332,6 +333,16 @@ export const MontarTab: React.FC<MontarTabProps> = ({
      effect de reset do legado sem set-state-in-effect */
   const [menu, setMenu] = useState<{ letter: SheetKey; view: DeckView; idx: number } | null>(null);
   const menuIdx = menu && menu.letter === deckLetter && menu.view === deckView ? menu.idx : null;
+  /* v4.72.3 — Coleção no modo deck: o TOQUE abre o menu do card (Detalhes /
+     Adicionar ao deck), então tocar num exercício não o adiciona mais ao
+     treino sem intenção. */
+  const [collectionMenuId, setCollectionMenuId] = useState<string | null>(null);
+  /* v4.72.3 — deck cheio + "Adicionar ao deck": guarda o exercício que vai
+     tomar o lugar de um dos 8 (o usuário escolhe qual). A letra vai junto para
+     trocar de ficha invalidar a pendência sem set-state dentro de effect. */
+  const [replace, setReplace] = useState<{ letter: SheetKey; id: string } | null>(null);
+  const replaceTarget = replace && replace.letter === deckLetter ? replace.id : null;
+  const replaceEx = replaceTarget ? exMap.get(replaceTarget) : undefined;
   const tplLock = useRef(false);
   const [confirmTemplateKey, setConfirmTemplateKey] = useState<string | null>(null);
   const activeGridRef = useRef<HTMLDivElement>(null);
@@ -509,7 +520,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
     }
   };
 
-  /* ── Coleção: clique adicionar (L479–504) ── */
+  /* ── Coleção: clique adicionar (L479–504) — modo compacto ── */
   const onCollectionClick = async (ex: Exercise) => {
     if (ids.includes(ex.id)) return;
     const next = addFromCollection(ids, ex.id);
@@ -520,6 +531,69 @@ export const MontarTab: React.FC<MontarTabProps> = ({
     await mutateSheetIds(deckLetter, () => next);
     showToast('Adicionado ao treino!', 'success');
   };
+
+  /* v4.72.3 — modo deck da coleção: o toque abre/fecha o menu do card. */
+  const toggleCollectionMenu = (ex: Exercise) => {
+    setCollectionMenuId((cur) => (cur === ex.id ? null : ex.id));
+  };
+
+  /* v4.72.3 — botão "Adicionar ao deck": com o deck cheio o exercício fica
+     pendente e o próximo toque num exercício do deck define quem sai. */
+  const onCollectionAdd = async (ex: Exercise) => {
+    setCollectionMenuId(null);
+    if (ids.includes(ex.id)) {
+      showToast('Este exercício já está no treino.', 'info');
+      return;
+    }
+    if (deckCount(ids) >= DECK_MAX) {
+      setReplace({ letter: deckLetter, id: ex.id });
+      showToast('Deck cheio: toque no exercício que será substituído.', 'info');
+      return;
+    }
+    const next = addFromCollection(ids, ex.id);
+    if (!next) {
+      showToast(`Máximo de ${DECK_MAX} exercícios atingido!`, 'error');
+      return;
+    }
+    await mutateSheetIds(deckLetter, () => next);
+    showToast('Adicionado ao treino!', 'success');
+  };
+
+  /* v4.72.3 — conclui a troca no slot tocado. */
+  const onReplaceSlot = async (index: number) => {
+    if (!replaceTarget) return;
+    const incoming = replaceEx?.name ?? 'Novo exercício';
+    const outgoing = ids[index] ? exMap.get(ids[index])?.name ?? 'exercício' : null;
+    const next = replaceAtSlot(ids, replaceTarget, index);
+    if (!next) return;
+    setReplace(null);
+    await mutateSheetIds(deckLetter, () => next);
+    showToast(outgoing ? `${outgoing} saiu: entrou ${incoming}.` : 'Exercício adicionado!', 'success');
+  };
+
+  /* ESC cancela a troca; trocar de ficha também. */
+  useEffect(() => {
+    if (!replaceTarget) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setReplace(null);
+      showToast('Troca cancelada.', 'info');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [replaceTarget]);
+
+  /* O menu da coleção fecha ao tocar fora do card. */
+  useEffect(() => {
+    if (!collectionMenuId) return;
+    const onDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('.collection-deck--deck')) return;
+      setCollectionMenuId(null);
+    };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [collectionMenuId]);
 
   /* ── Templates com lock 500ms (app.js L395–405) ── */
   const onTemplate = (key: string) => {
@@ -751,7 +825,13 @@ export const MontarTab: React.FC<MontarTabProps> = ({
           index={i}
           view={deckView}
           menuActive={menuIdx === i}
-          onCardClick={deckView === 'list' ? undefined : () => toggleMenu(i)}
+          onCardClick={
+            deckView === 'list'
+              ? undefined
+              : replaceTarget
+                ? () => void onReplaceSlot(i)
+                : () => toggleMenu(i)
+          }
           onDetails={onOpenCR}
           onEdit={onEdit}
           onMaestria={(e) => useMaestriaUi.getState().openMaestriaEx(e.id)}
@@ -853,9 +933,26 @@ export const MontarTab: React.FC<MontarTabProps> = ({
 
         {/* Área ativa: 8 slots fixos */}
         <div className="deck-active-area" id="deckActiveArea">
+          {/* v4.72.3 — deck cheio: depois de "Adicionar ao deck" o próximo
+              toque num exercício do deck define quem é substituído. */}
+          {replaceTarget && (
+            <div className="deck-replace-bar" id="deckReplaceBar">
+              <span>
+                Trocar por <b>{replaceEx?.name ?? 'exercício'}</b> — toque no exercício do deck que
+                vai sair.
+              </span>
+              <button
+                type="button"
+                className="deck-replace-cancel"
+                onClick={() => setReplace(null)}
+              >
+                Cancelar
+              </button>
+            </div>
+          )}
           <div
             ref={activeGridRef}
-            className={`deck-active-grid${deckView === 'list' ? ' list-view' : ''}${deckView === 'royale' ? ' royale-view' : ''}`}
+            className={`deck-active-grid${deckView === 'list' ? ' list-view' : ''}${deckView === 'royale' ? ' royale-view' : ''}${replaceTarget ? ' is-replacing' : ''}`}
             id="deckActiveGrid"
             onDragOver={onContainerDragOver}
             onDragLeave={onContainerDragLeave}
@@ -964,8 +1061,9 @@ export const MontarTab: React.FC<MontarTabProps> = ({
                 onEdit={onEdit}
                 onDel={onDelete}
                 onDetails={onOpenCR}
-                onMaestria={(e) => useMaestriaUi.getState().openMaestriaEx(e.id)}
-                onCardClick={onCollectionClick}
+                menuActive={deckCards && collectionMenuId === ex.id}
+                onAdd={onCollectionAdd}
+                onCardClick={deckCards ? toggleCollectionMenu : onCollectionClick}
               />
             ))}
           </div>

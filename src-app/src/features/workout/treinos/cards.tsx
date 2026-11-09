@@ -161,10 +161,10 @@ export const TreinosCollectionCard: React.FC<{
   onEdit: (ex: Exercise) => void;
   onDel: (ex: Exercise) => void;
   onDetails?: (ex: Exercise) => void;
-  /** v4.72.2 — maestria do exercício (abre o modal, como no card do deck). */
-  onMaestria?: (ex: Exercise) => void;
+  /** v4.72.3 — botão "Adicionar ao deck" do modo deck da coleção. */
+  onAdd?: (ex: Exercise) => void;
   onCardClick: (ex: Exercise) => void;
-}> = ({ ex, already, menuActive, deck, onDragStart, onEdit, onDel, onDetails, onMaestria, onCardClick }) => (
+}> = ({ ex, already, menuActive, deck, onDragStart, onEdit, onDel, onDetails, onAdd, onCardClick }) => (
   <div className={`collection-deck${deck ? ' collection-deck--deck' : ''}`}>
     <div
       className={`deck-card collection-card card-${ex.muscleGroup}${already ? ' in-deck' : ''}${menuActive ? ' menu-active' : ''}${deck ? ' collection-card--deck' : ''}`}
@@ -272,117 +272,97 @@ export const TreinosCollectionCard: React.FC<{
           )}
         </div>
       </div>
-      <div className="deck-card-menu">
-        <div className="menu-actions-wrap">
-          <button
-            type="button"
-            className="btn-card-action btn-ex-edit"
-            data-id={ex.id}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(ex);
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              width={14}
-              height={14}
+      {/* v4.72.3 — no modo deck o menu abre no TOQUE do card e traz só
+          Detalhes e Adicionar ao deck (edição/maestria/exclusão continuam no
+          modo compacto, abaixo). */}
+      {deck && (
+        <div className="deck-card-menu deck-card-menu--collection">
+          {onDetails && (
+            <button
+              type="button"
+              className="btn-card-action btn-card-details-cr"
+              data-id={ex.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDetails(ex);
+              }}
             >
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-            </svg>{' '}
-            Editar
-          </button>
-          <button
-            type="button"
-            className="btn-card-action btn-ex-del"
-            data-id={ex.id}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onDel(ex);
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              width={14}
-              height={14}
+              Detalhes
+            </button>
+          )}
+          {onAdd && !already && (
+            <button
+              type="button"
+              className="btn-card-action btn-card-add-deck"
+              data-id={ex.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd(ex);
+              }}
             >
-              <path d="M3 6h18" />
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-            </svg>{' '}
-            Excluir
-          </button>
+              Adicionar ao deck
+            </button>
+          )}
         </div>
-      </div>
+      )}
+      {!deck && (
+        <div className="deck-card-menu">
+          <div className="menu-actions-wrap">
+            <button
+              type="button"
+              className="btn-card-action btn-ex-edit"
+              data-id={ex.id}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(ex);
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                width={14}
+                height={14}
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>{' '}
+              Editar
+            </button>
+            <button
+              type="button"
+              className="btn-card-action btn-ex-del"
+              data-id={ex.id}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDel(ex);
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                width={14}
+                height={14}
+              >
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>{' '}
+              Excluir
+            </button>
+          </div>
+        </div>
+      )}
     </div>
-    {/* v4.72.2 — Modo deck da coleção: as ações do exercício aparecem ABAIXO
-        do card, rotuladas, no mesmo desenho do menu do card do deck (Detalhes /
-        Edição / Maestria / Excluir), em vez dos ícones dentro do card. */}
-    {deck && (
-      <div className="deck-card-menu deck-card-menu--below">
-        {onDetails && (
-          <button
-            type="button"
-            className="btn-card-action btn-card-details-cr"
-            data-id={ex.id}
-            onClick={(e) => {
-              e.stopPropagation();
-              onDetails(ex);
-            }}
-          >
-            Detalhes
-          </button>
-        )}
-        <button
-          type="button"
-          className="btn-card-action btn-card-details"
-          data-id={ex.id}
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(ex);
-          }}
-        >
-          Edição
-        </button>
-        {onMaestria && (
-          <button
-            type="button"
-            className="btn-card-action btn-card-maestria-mini"
-            data-id={ex.id}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMaestria(ex);
-            }}
-          >
-            Maestria
-          </button>
-        )}
-        <button
-          type="button"
-          className="btn-card-action btn-ex-del"
-          data-id={ex.id}
-          onClick={(e) => {
-            e.stopPropagation();
-            onDel(ex);
-          }}
-        >
-          Excluir
-        </button>
-      </div>
-    )}
   </div>
 );
 

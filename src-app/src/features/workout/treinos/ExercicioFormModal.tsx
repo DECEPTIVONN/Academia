@@ -191,6 +191,16 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
     setCarga(sugestaoCarga ?? '');
   }, [sugestaoCarga]);
 
+  /* v4.72.3 — o "kg" do campo Carga virou sufixo FIXO do campo: editar o campo
+     mexe só nos números. Carga sem número (ex.: "Peso do Corpo") continua em
+     texto livre, como antes. */
+  const cargaParsed = /^(\d+(?:[.,]\d+)?)\s*(.*)$/.exec(carga.trim());
+  const cargaNum = cargaParsed ? cargaParsed[1] : '';
+  const cargaSuffix = cargaParsed ? cargaParsed[2] : '';
+  const cargaComNumero = Boolean(cargaParsed) || !carga.trim();
+  const cargaUnit = cargaSuffix || 'kg';
+  const sugestaoNum = sugestaoCarga ? (/^(\d+(?:[.,]\d+)?)/.exec(sugestaoCarga)?.[1] ?? sugestaoCarga) : '';
+
   /* Upload (app.js L179–188): click área → input; máx. 2MB; FileReader */
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -419,16 +429,37 @@ export const ExercicioFormModal: React.FC<ExercicioFormModalProps> = ({
             </div>
             <div className="form-group">
               <label htmlFor="inputCarga">Carga</label>
-              <input
-                type="text"
-                id="inputCarga"
-                placeholder={sugestaoCarga ? `Sugerido: ${sugestaoCarga}` : 'Ex: 40kg'}
-                value={carga}
-                onChange={(e) => {
-                  cargaTouchedRef.current = true;
-                  setCarga(e.target.value);
-                }}
-              />
+              {cargaComNumero ? (
+                <div className="input-with-unit">
+                  <input
+                    type="text"
+                    id="inputCarga"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    placeholder={sugestaoNum ? `Sugerido: ${sugestaoNum}` : 'Ex: 40'}
+                    value={cargaNum}
+                    onChange={(e) => {
+                      cargaTouchedRef.current = true;
+                      /* Só números e separador decimal entram no campo; o
+                         sufixo (kg) fica fixo ao lado. */
+                      const digits = e.target.value.replace(/[^\d.,]/g, '');
+                      setCarga(digits ? `${digits} ${cargaUnit}` : '');
+                    }}
+                  />
+                  <span className="input-unit">{cargaUnit}</span>
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  id="inputCarga"
+                  placeholder={sugestaoCarga ? `Sugerido: ${sugestaoCarga}` : 'Ex: 40kg'}
+                  value={carga}
+                  onChange={(e) => {
+                    cargaTouchedRef.current = true;
+                    setCarga(e.target.value);
+                  }}
+                />
+              )}
             </div>
           </div>
 

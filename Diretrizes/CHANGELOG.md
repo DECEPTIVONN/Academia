@@ -2,6 +2,31 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.72.3] - 2026-11-09
+
+**Coleção no modo deck: menu só no toque, com um botão de adicionar que substitui a carta escolhida quando o deck está cheio — e o “kg” do campo Carga virou sufixo fixo.**
+
+### Added
+
+- **Adicionar ao deck**: a coleção no modo deck ganhou um botão explícito para incluir o exercício no treino. Tocar no card não inclui mais nada — abre o menu, como no card do deck.
+- **Troca com o deck cheio**: com os 8 exercícios preenchidos, o botão de adicionar deixa o exercício pendente e a barra “Trocar por X — toque no exercício do deck que vai sair” aparece acima do deck. O toque num card do deck substitui aquele slot (o deck continua com 8), com aviso “Y saiu: entrou X”. `ESC` ou `Cancelar` desfaz.
+
+### Changed
+
+- **Menu do card da coleção**: abre no toque e traz só **Detalhes** e **Adicionar ao deck**. Maestria, Edição e Excluir saíram desse menu — continuam no modo compacto da coleção (ícones e menu de sempre).
+- **Altura dos cards**: com a barra de ações fixa embaixo do card fora de cena, o card da coleção no modo deck voltou a ter exatamente a altura do card do deck (medido: 123 px nos dois, a 362 px de largura).
+- **Campo Carga (novo/editar exercício)**: agora tem a unidade fixa ao lado — digitar troca só os números e o **kg** fica no lugar. A sugestão continua aparecendo no placeholder (“Sugerido: 30”). Cargas sem número (ex.: “Peso do Corpo”) seguem em texto livre.
+
+### Fixed
+
+- **Arrastar para um deck cheio**: soltar um exercício da coleção sobre um slot ocupado substitui o exercício daquele slot, em vez de recusar com “Máximo de 8 exercícios atingido”.
+
+### Verificação
+
+`npx tsc -b` OK · `npx oxlint src` 0 erros (38 avisos de linha de base) · `npm run build` OK · `npm run lint:docs` OK.
+
+No navegador (viewport 362×623, deck em 5 exercícios): tocar num card da coleção abriu o menu abaixo dele sem alterar o deck; “Adicionar ao deck” levou a 6 e marcou o card como “no treino”; preenchendo até 8, o próximo “Adicionar” mostrou a barra de troca e o toque no primeiro card do deck deixou “Supino Articulado saiu: entrou Abdução Solo” com o deck ainda em 8; `Cancelar` fechou a barra sem mudar o deck; tocar fora do card fechou o menu. Alturas: card da coleção 123,1 px × card do deck 122,9 px. No modal de edição, o campo Carga mostrou `30` + `kg` fixo, aceitou “45 kg” digitado virando `45` (com o `kg` no lugar) e o wrapper ficou em 88×45 px sem overflow.
+
 ## [v4.72.2] - 2026-11-08
 
 **Coleção no modo deck com as ações rotuladas abaixo do card, splash no tamanho certo, repetições centralizadas na calculadora e Modo Foco limpo (sem seletor de ficha, descanso só depois da série e GIF maior).**

@@ -155,8 +155,17 @@ export function dropCollectionAt(
   target: number
 ): string[] | null {
   const next = ids.filter((i) => i !== exId);
-  if (deckCount(next) >= DECK_MAX) return null;
   const t = Math.max(0, Math.min(target, DECK_MAX - 1));
+  /* v4.72.3 — deck cheio: soltar sobre um slot OCUPADO substitui o exercício
+     daquele slot (é o que o usuário quer ao arrastar para "trocar"). */
+  if (deckCount(next) >= DECK_MAX) {
+    if (t < next.length && next[t]) {
+      const filled = [...next];
+      filled[t] = exId;
+      return filled;
+    }
+    return null;
+  }
 
   if (t >= next.length || !next[t]) {
     const slots = [...next];
@@ -166,6 +175,20 @@ export function dropCollectionAt(
     return slots;
   }
   return insertAtSlot(next, t, exId);
+}
+
+/**
+ * v4.72.3 — deck cheio + "Adicionar ao deck": o exercício escolhido toma o
+ * lugar do exercício do slot `index` (o deck continua com as 8 posições).
+ */
+export function replaceAtSlot(ids: string[], exId: string, index: number): string[] | null {
+  if (index < 0 || index >= DECK_MAX) return null;
+  if (!ids[index]) return null;
+  if (ids.includes(exId)) return null;
+  const next = [...ids];
+  while (next.length < DECK_MAX) next.push(EMPTY_SLOT);
+  next[index] = exId;
+  return next;
 }
 
 /** Reordenar grid→grid (L379–383): troca source↔target (aceita slots vazios). */
