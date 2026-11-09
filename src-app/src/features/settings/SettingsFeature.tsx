@@ -25,6 +25,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 /* v4.13.0 — ícone do opt "Só no Botão" (fonte autorizada Diretrizes/Ícones.md §11) */
 import { MousePointerClick } from 'lucide-react';
 import { useProfileState } from '@/features/profile/useProfileState';
+import { patchLegacyProfileCustomization } from '@/core/db/legacy-state';
 import { PairingAuthorizeDialog } from '@/features/auth/PairingAuthorizeDialog';
 import { HelpCenter } from '@/features/help/HelpCenter';
 import { describeNextNotice } from '@/features/notifications/scheduler';
@@ -545,6 +546,14 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   const [weightUnit, setWeightUnitState] = useState<WeightUnit>(() => getWeightUnit());
   const [distanceUnit, setDistanceUnitState] = useState<DistanceUnit>(() => getDistanceUnit());
   /* v4.58.0 — modo de exibição da MINHA COLEÇÃO (aba Minha Ficha). */
+  /* v4.72.4 — Cronograma: frequência esperada por semana. É o mesmo campo do
+     formulário pós-login (`trainingFrequencyDays`), então o valor já salvo
+     aparece selecionado aqui. */
+  const trainingFrequencyDays = (() => {
+    const raw = profile?.customization?.trainingFrequencyDays;
+    const value = typeof raw === 'number' && raw > 0 ? Math.round(raw) : 3;
+    return Math.min(7, Math.max(1, value));
+  })();
   const [collectionCards, setCollectionCardsState] = useState<CollectionCardsMode>(() =>
     getCollectionCardsMode()
   );
@@ -901,6 +910,19 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     );
   };
 
+  const changeTrainingFrequency = async (days: number) => {
+    await update((draft) => {
+      draft.customization = { ...draft.customization, trainingFrequencyDays: days };
+    });
+    /* A meta semanal do progresso lê a cópia bruta legada. */
+    await patchLegacyProfileCustomization({ trainingFrequencyDays: days });
+    setOpenPref(null);
+    showToast(
+      days === 7 ? 'Cronograma: todos os dias.' : `Cronograma: ${days} dia(s) por semana.`,
+      'success'
+    );
+  };
+
   const changeLanguage = (value: string) => {
     writeLS('academia_lang', value);
     setLanguage(value);
@@ -1240,6 +1262,17 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
         'som', 'temporizador', 'timer', 'descanso', 'series', 'séries',
         'modo foco', 'foco', 'treino', 'colecao', 'coleção', 'minha ficha',
         'cards', 'cartoes', 'cartões', 'deck', 'grid', 'grade',
+      ],
+    },
+    {
+      id: 'cronograma',
+      title: 'Cronograma',
+      desc: 'Frequência esperada de treino por semana',
+      icon: SvgCalendar,
+      badge: trainingFrequencyDays === 7 ? 'Todos os dias' : `${trainingFrequencyDays}×/semana`,
+      keywords: [
+        'cronograma', 'frequencia', 'frequência', 'dias', 'semana', 'meta',
+        'rotina', 'habito', 'hábito', 'treino', 'planejamento',
       ],
     },
     {
@@ -2521,6 +2554,54 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
             </div>
           </section>
         </>
+      ),
+    },
+
+    /* ================= CRONOGRAMA ================= */
+    cronograma: {
+      eyebrow: 'ACADEMIA • CRONOGRAMA',
+      title: 'Cronograma',
+      content: (
+        <section className="set-card">
+          <div className="set-card__head">
+            <div>
+              <div className="set-card__eyebrow">FREQUÊNCIA ESPERADA</div>
+              <h3 className="set-card__title">Quantos dias por semana você pretende treinar?</h3>
+              <p className="set-card__desc">
+                A mesma pergunta do formulário de entrada: o valor que você já respondeu
+                aparece selecionado aqui e vira a meta do progresso semanal.
+              </p>
+            </div>
+          </div>
+
+          <div className="set-pref-options" role="group" aria-label="Frequência esperada">
+            {(
+              [
+                { days: 1, label: '1 dia por semana' },
+                { days: 2, label: '2 dias por semana', badge: 'Recomendado' },
+                { days: 3, label: '3 dias por semana', badge: 'Recomendado' },
+                { days: 4, label: '4 dias por semana' },
+                { days: 5, label: '5 dias por semana' },
+                { days: 6, label: '6 dias por semana' },
+                { days: 7, label: 'Todos os dias' },
+              ] as { days: number; label: string; badge?: string }[]
+            ).map((option) => (
+              <button
+                key={option.days}
+                type="button"
+                className={`set-pref-option${trainingFrequencyDays === option.days ? ' is-active' : ''}`}
+                aria-pressed={trainingFrequencyDays === option.days}
+                onClick={() => void changeTrainingFrequency(option.days)}
+              >
+                {trainingFrequencyDays === option.days && SvgCheck}
+                {option.label}
+                {option.badge && (
+                  <span className="set-pref-option__badge">{option.badge}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
       ),
     },
 

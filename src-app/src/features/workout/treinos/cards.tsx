@@ -407,36 +407,6 @@ const SLOT_MENU_ICONS = {
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   ),
-  pencil: (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      width={14}
-      height={14}
-    >
-      <path d="M12 20h9" />
-      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-    </svg>
-  ),
-  star: (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      width={14}
-      height={14}
-      style={{ marginRight: '4px' }}
-    >
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
-  ),
   close: (
     <svg
       viewBox="0 0 24 24"
@@ -460,11 +430,9 @@ export const DeckActiveSlot: React.FC<{
   menuActive?: boolean;
   onCardClick?: () => void;
   onDetails: (ex: Exercise) => void;
-  onEdit: (ex: Exercise) => void;
-  onMaestria: (ex: Exercise) => void;
   onRemove: (ex: Exercise) => void;
   onDragStartSource: (e: React.DragEvent, index: number) => void;
-}> = ({ ex, index, view, menuActive, onCardClick, onDetails, onEdit, onMaestria, onRemove, onDragStartSource }) => {
+}> = ({ ex, index, view, menuActive, onCardClick, onDetails, onRemove, onDragStartSource }) => {
   const dragProps = {
     draggable: true,
     onDragStart: (e: React.DragEvent) => onDragStartSource(e, index),
@@ -484,18 +452,6 @@ export const DeckActiveSlot: React.FC<{
             </div>
           </div>
           <div className="dli-actions">
-            <button
-              type="button"
-              className="btn-card-action btn-card-details"
-              data-id={ex.id}
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(ex);
-              }}
-            >
-              {SLOT_MENU_ICONS.pencil}
-            </button>
             <button
               type="button"
               className="btn-card-action btn-card-remove"
@@ -544,29 +500,6 @@ export const DeckActiveSlot: React.FC<{
             }}
           >
             {SLOT_MENU_ICONS.search} Detalhes
-          </button>
-          <button
-            type="button"
-            className="btn-card-action btn-card-details"
-            data-id={ex.id}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(ex);
-            }}
-          >
-            {SLOT_MENU_ICONS.pencil} Edição
-          </button>
-          <button
-            type="button"
-            className="btn-card-action btn-card-maestria-mini"
-            data-id={ex.id}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMaestria(ex);
-            }}
-          >
-            {SLOT_MENU_ICONS.star} Maestria
           </button>
           <button
             type="button"

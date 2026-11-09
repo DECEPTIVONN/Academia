@@ -16,7 +16,6 @@ import type { Exercise, SheetKey } from '@/core/db/schema';
 import { useLocalData } from '@/hooks/useLocalData';
 import { getCollectionCardsMode, type CollectionCardsMode } from '@/lib/app-prefs';
 import { getMaestriaState } from '@/features/gamification/maestria';
-import { useMaestriaUi } from '@/features/gamification/maestria-ui';
 import { fadeIn } from '@/lib/animations';
 import { showToast } from '@/lib/toast';
 import { VolumeKgIcon } from '@/components/VolumeKgIcon';
@@ -347,6 +346,8 @@ export const MontarTab: React.FC<MontarTabProps> = ({
   const [confirmTemplateKey, setConfirmTemplateKey] = useState<string | null>(null);
   const activeGridRef = useRef<HTMLDivElement>(null);
   const collectionGridRef = useRef<HTMLDivElement>(null);
+  const deckAreaRef = useRef<HTMLDivElement>(null);
+  const collectionAreaRef = useRef<HTMLDivElement>(null);
 
   /* fadeIn no grid ativo (renderDeckGrid L449) */
   useEffect(() => {
@@ -569,7 +570,28 @@ export const MontarTab: React.FC<MontarTabProps> = ({
     setReplace(null);
     await mutateSheetIds(deckLetter, () => next);
     showToast(outgoing ? `${outgoing} saiu: entrou ${incoming}.` : 'Exercício adicionado!', 'success');
+    /* Escolhido quem sai, a pendência acaba: volta para a coleção normal. */
+    window.requestAnimationFrame(() => {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      collectionAreaRef.current?.scrollIntoView({
+        behavior: reduce ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
   };
+
+  /* v4.72.4 — deck cheio: rola até o deck para escolher quem é substituído. */
+  useEffect(() => {
+    if (!replaceTarget) return;
+    const raf = window.requestAnimationFrame(() => {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      deckAreaRef.current?.scrollIntoView({
+        behavior: reduce ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [replaceTarget]);
 
   /* ESC cancela a troca; trocar de ficha também. */
   useEffect(() => {
@@ -833,8 +855,6 @@ export const MontarTab: React.FC<MontarTabProps> = ({
                 : () => toggleMenu(i)
           }
           onDetails={onOpenCR}
-          onEdit={onEdit}
-          onMaestria={(e) => useMaestriaUi.getState().openMaestriaEx(e.id)}
           onRemove={onRemoveSlot}
           onDragStartSource={onSlotDragStart}
         />
@@ -932,24 +952,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
         </div>
 
         {/* Área ativa: 8 slots fixos */}
-        <div className="deck-active-area" id="deckActiveArea">
-          {/* v4.72.3 — deck cheio: depois de "Adicionar ao deck" o próximo
-              toque num exercício do deck define quem é substituído. */}
-          {replaceTarget && (
-            <div className="deck-replace-bar" id="deckReplaceBar">
-              <span>
-                Trocar por <b>{replaceEx?.name ?? 'exercício'}</b> — toque no exercício do deck que
-                vai sair.
-              </span>
-              <button
-                type="button"
-                className="deck-replace-cancel"
-                onClick={() => setReplace(null)}
-              >
-                Cancelar
-              </button>
-            </div>
-          )}
+        <div className="deck-active-area" id="deckActiveArea" ref={deckAreaRef}>
           <div
             ref={activeGridRef}
             className={`deck-active-grid${deckView === 'list' ? ' list-view' : ''}${deckView === 'royale' ? ' royale-view' : ''}${replaceTarget ? ' is-replacing' : ''}`}
@@ -960,6 +963,32 @@ export const MontarTab: React.FC<MontarTabProps> = ({
           >
             {slots}
           </div>
+
+          {/* v4.72.4 — deck cheio: o exercício escolhido na coleção fica em
+              destaque ABAIXO do deck, e o toque num exercício do deck define
+              quem é substituído (como na referência do Clash Royale). */}
+          {replaceTarget && replaceEx && (
+            <div className="deck-replace-panel" id="deckReplaceBar">
+              <div className="deck-replace-preview">
+                <DeckGhostCard ex={replaceEx} />
+              </div>
+              <div className="deck-replace-copy">
+                <span className="deck-replace-title">
+                  Selecione o exercício a ser substituído
+                </span>
+                <span className="deck-replace-desc">
+                  <b>{replaceEx.name}</b> entra no lugar do exercício que você tocar.
+                </span>
+              </div>
+              <button
+                type="button"
+                className="deck-replace-cancel"
+                onClick={() => setReplace(null)}
+              >
+                Cancelar
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Footer da área ativa */}
@@ -1005,7 +1034,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
         </div>
 
         {/* Coleção (sempre abaixo) */}
-        <div className="collection-area" id="deckCollectionArea">
+        <div className="collection-area" id="deckCollectionArea" ref={collectionAreaRef}>
           <div className="collection-header">
             <h3>MINHA COLEÇÃO</h3>
             <div style={{ display: 'flex', gap: 15 }}>

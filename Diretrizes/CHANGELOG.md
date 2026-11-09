@@ -2,6 +2,26 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.72.4] - 2026-11-09
+
+**Deck enxuto, troca com o exercício em destaque abaixo do deck e Cronograma nas Configurações.**
+
+### Added
+
+- **Configurações → Cronograma**: novo tile com sete opções de frequência esperada (1 a 7 dias, com 2 e 3 marcados como **Recomendado**) — a mesma pergunta do formulário pós-login. O valor já salvo aparece selecionado e o badge do tile mostra “N×/semana”; a escolha grava em `customization.trainingFrequencyDays` e passa a alimentar a meta semanal do Início/Progresso.
+- **patchLegacyProfileCustomization()** (`core/db/legacy-state.ts`): merge parcial em `profileCustomization` da cópia bruta legada, porque `weeklyTarget` lê `legacy.profileCustomization.trainingFrequencyDays` — `patchLegacyState` sozinho substituiria o objeto inteiro.
+
+### Changed
+
+- **Cards do deck**: o menu do card no deck (grid e Clash Royale) ficou só com **Detalhes** e **Remover** — os botões de **Edição** e **Maestria** foram removidos. No modo lista o item perdeu o lápis e manteve apenas o X de remover. A edição de exercício continua na aba PERSONALIZAR → Exercícios, e a maestria geral segue no rodapé do deck.
+- **Deck cheio (“Adicionar ao deck”)**: a tela agora rola até o deck e o exercício escolhido aparece **em destaque logo abaixo dos 8 slots**, no mesmo desenho do card do deck, com “Selecione o exercício a ser substituído” e o botão Cancelar ao lado. O toque num exercício do deck conclui a troca e a coleção volta a ser exibida no topo da tela; `ESC`/`Cancelar` desfazem sem rolar. A rolagem respeita `prefers-reduced-motion`.
+
+### Verificação
+
+`npx tsc -b` OK · `npx oxlint src` 0 erros (38 avisos de linha de base) · `npm run build` OK · `npm run lint:docs` OK.
+
+No navegador (362×623, deck com 8 exercícios): o menu do card do deck mostrou só “Detalhes” e “Remover”; no modo lista, só o botão de remover. “Adicionar ao deck” com o deck cheio rolou até o deck e o painel abaixo dos slots apareceu com a miniatura de Crucifixo (54×97 px) e o texto de seleção (painel de 119 px, dentro da tela). Tocar no primeiro slot trocou “Supino Articulado” por “Crucifixo” (deck segue com 8) e a coleção voltou ao topo; Cancelar fechou o painel sem alterar o deck. Em Configurações → Cronograma, as 7 opções apareceram com “3 dias por semana” pré-selecionado; escolher 5 mostrou o toast, gravou `trainingFrequencyDays = 5` em `profileState` e em `legacyState` (badge “5×/semana”) e, após recarregar, a opção 5 continuou marcada. Deck e frequência de teste foram restaurados ao estado anterior.
+
 ## [v4.72.3] - 2026-11-09
 
 **Coleção no modo deck: menu só no toque, com um botão de adicionar que substitui a carta escolhida quando o deck está cheio — e o “kg” do campo Carga virou sufixo fixo.**
