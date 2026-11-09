@@ -414,14 +414,16 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
 
               {/* v4.56.21 — TIMER entre o GIF e a linha de séries/reps/carga
                   (pedido do usuário): antes ficava abaixo dos botões de série
-                  e passava despercebido. */}
-              <div
-                className={`f-timer-display${restTimeRemaining > 0 ? ' is-running' : ''}`}
-                id="focusTimerVal"
-              >
-                <span className="f-timer-val">{timerText}</span>
-                <span className="f-timer-lbl">DESCANSO</span>
-              </div>
+                  e passava despercebido.
+                  v4.72.2 — só aparece com o descanso RODANDO (depois de marcar
+                  uma série); parado em 00:00 ele poluía a tela em todo
+                  exercício. */}
+              {restTimeRemaining > 0 && (
+                <div className="f-timer-display is-running" id="focusTimerVal">
+                  <span className="f-timer-val">{timerText}</span>
+                  <span className="f-timer-lbl">DESCANSO</span>
+                </div>
+              )}
             </div>
 
             <div className="focus-info">
@@ -464,12 +466,6 @@ export function FocusModal({ open, onClose, onCompleted }: FocusModalProps) {
                     </div>
                   </div>
                 )
-              )}
-
-              {!isCardioStep && ex && sugestaoCarga && !formatCarga(ex) && (
-                <div className="focus-carga-sugerida">
-                  <span className="carga-sugerida">Peso inicial sugerido: {sugestaoCarga}</span>
-                </div>
               )}
 
               {!isCardioStep && ex && (

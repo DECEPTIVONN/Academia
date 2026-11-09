@@ -49,12 +49,17 @@
          de .splash-screen__bg também animava o background-size (auto → contain),
          então a imagem aparecia em tamanho natural e encolhia nos primeiros
          300 ms — o "leve redimensionamento" visível no carregamento. */
+      /* v4.72.2 — `!important` obrigatório: este <style> vem no <head>, mas o
+         CSS do app (8-customizacao.css) é carregado depois e o shorthand
+         `background` de .splash-screen__bg reseta size/position/repeat para
+         auto/0% 0%/repeat — a arte aparecia em tamanho natural, repetida e
+         cortada. */
       .splash-screen__art {
         transition: none !important;
-        background-size: contain;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-color: #000;
+        background-size: contain !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        background-color: #000 !important;
       }
       /* v4.28 — logo CENTRADO (o conteúdo ocupa a tela toda e centraliza;
          a barra sai do fluxo e vai para o rodapé). */

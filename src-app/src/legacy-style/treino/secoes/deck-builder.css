@@ -188,15 +188,64 @@
     font-size: 0.65rem;
 }
 
-/* Em 4 colunas não sobra largura para o par de ícones: a linha fica só com
-   "Séries: 3 × 10", como no card do deck. Editar/detalhes seguem acessíveis
-   no modo compacto e na aba EXERCÍCIOS. */
+/* Em 4 colunas não sobra largura para os ícones: a linha fica só com
+   "Séries: 3 × 10" e as ações vão para a barra abaixo do card. */
 .collection-grid--deck .deck-card-level-row {
     gap: 0;
 }
 
-.collection-grid--deck .btn-ex-edit-inline {
-    display: none;
+/* v4.72.2 — o card do deck na coleção virou um wrapper (card + ações).
+   Fora do modo deck o wrapper é `display: contents` para não mexer no grid
+   compacto. */
+.collection-deck {
+    display: contents;
+}
+
+.collection-deck--deck {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Ações do exercício ABAIXO do card, com rótulo — mesmo desenho do menu do
+   card do deck, mas fixas (sem depender do toque no card, que aqui adiciona
+   ao treino). */
+.collection-deck--deck .deck-card-menu--below {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    display: flex;
+    width: 100%;
+    margin: 4px 0 0;
+    padding: 6px;
+    gap: 4px;
+    flex-direction: column;
+    background: rgba(10, 5, 20, 0.92);
+    border: 2px solid rgba(var(--primary-rgb, 139, 92, 246), 0.45);
+    border-radius: 12px;
+    box-shadow: none;
+    animation: none;
+    z-index: 1;
+}
+
+.collection-deck--deck .deck-card-menu--below .btn-card-action {
+    height: auto;
+    min-height: 0;
+    padding: 5px 2px;
+    gap: 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.2px;
+    line-height: 1.1;
+    white-space: nowrap;
+    border-radius: 8px;
+    animation: none;
+}
+
+@media (hover: hover) {
+    .collection-deck--deck .deck-card-menu--below .btn-card-action:hover {
+        background: rgba(var(--primary-rgb, 139, 92, 246), 0.18);
+    }
 }
 
 @media (max-width: 430px) {

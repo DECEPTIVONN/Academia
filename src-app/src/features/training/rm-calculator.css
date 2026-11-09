@@ -110,9 +110,12 @@
 }
 
 /* ---------- Atalhos de repetições ---------- */
+/* v4.72.2 — chips centralizados: em telas estreitas eles quebravam em duas
+   linhas alinhadas à esquerda, soltos embaixo do campo de repetições. */
 .rm-chips {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
   margin: 14px 0 0;
 }

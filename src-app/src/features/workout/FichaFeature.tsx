@@ -26,7 +26,6 @@ import {
   getStreak,
   getTodayTreino,
   pickExercises,
-  selectSheetEntry,
   todayLabel,
   toggleCheckEntry,
   toggleSetEntry,
@@ -642,14 +641,6 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
     applyMutation((base) => withCompletion(toggleSetEntry(base, exId, idx, ex)));
   };
 
-  const onSelectSheet = (letter: SheetKey) => {
-    /* app.js L90-96: fadeSwap no container ativo → setTodayTreino → toast */
-    fadeSwap(activeViewRef(), () => {
-      applyMutation((base) => ({ entry: selectSheetEntry(base, letter) }));
-    });
-    showToast(`Treino ${letter} selecionado!`, 'info');
-  };
-
   /* startFocusMode (secao-ficha.js L759-776): valida ficha + marca o início */
   const onStartFocus = () => {
     if (fichaSlotIds.length === 0) {
@@ -935,30 +926,8 @@ export const FichaFeature: React.FC<FichaFeatureProps> = ({
                   {/* v4.56.14 — o botão FOCO saiu do seletor de visualização:
                       o Modo Foco agora abre com DOIS CLIQUES no grid. */}
                 </div>
-                <div className="v-divider" />
-                <span className="switch-label">Treino:</span>
-                <div className="treino-selector">
-                  {(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] as SheetKey[]).map(
-                    (letter) => {
-                      const s = sheets.find((sh) => sh.sheetKey === letter);
-                      const temConteudo =
-                        compactIds(s?.exerciseIds).length > 0 || Boolean(s?.aerobic?.tipo);
-                      return (
-                        <button
-                          key={letter}
-                          type="button"
-                          className={`sel-btn ${treino === letter ? 'active' : ''}`}
-                          data-treino={letter}
-                          id={`selBtn${letter}`}
-                          style={{ display: temConteudo ? 'flex' : 'none' }}
-                          onClick={() => onSelectSheet(letter)}
-                        >
-                          {letter}
-                        </button>
-                      );
-                    }
-                  )}
-                </div>
+                {/* v4.72.2 — o seletor de ficha (Treino: A/B/C…) saiu daqui:
+                    a ficha exibida é sempre a do dia. */}
               </div>
             </div>
 

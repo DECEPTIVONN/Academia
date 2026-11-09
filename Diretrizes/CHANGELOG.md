@@ -2,6 +2,33 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.72.2] - 2026-11-08
+
+**Coleção no modo deck com as ações rotuladas abaixo do card, splash no tamanho certo, repetições centralizadas na calculadora e Modo Foco limpo (sem seletor de ficha, descanso só depois da série e GIF maior).**
+
+### Added
+
+- **Minha coleção (modo deck)**: cada card agora tem, ABAIXO dele, uma barra com as ações rotuladas **Detalhes · Edição · Maestria · Excluir**, no mesmo desenho do menu do card do deck (fundo escuro, borda da cor do tema). A ação de maestria é nova na coleção e abre o mesmo modal do deck (`useMaestriaUi.openMaestriaEx`).
+
+### Changed
+
+- **Calculadora de 1RM**: os atalhos de repetições (1/3/5/8/10/12) ficam centralizados; em tela estreita eles quebravam em duas linhas alinhadas à esquerda.
+- **Modo Foco — GIF**: altura máxima do GIF subiu de 44vh para 56vh (200px → 260px no celular). O `object-fit: contain` continua definindo a proporção, então nada é esticado nem cortado.
+- **Interface de treino**: o seletor de ficha (`Treino: A | B | C…`, ids `#selBtnA`…) saiu do cabeçalho da Ficha — a ficha exibida é sempre a do dia, e a barra ficou com Menu, alternância tabela/grid e INICIAR TREINO.
+
+### Fixed
+
+- **Imagem de carregamento**: a splash usava a arte em tamanho natural, repetida e cortada. O `background-size/position/repeat` da classe `.splash-screen__art` precisa de `!important` porque o `<style>` do `index.html` é lido antes do CSS do app, e o shorthand `background` de `.splash-screen__bg` (8-customizacao.css) resetava esses valores. Agora a arte entra em `contain`, centralizada e sem repetir, já no primeiro paint.
+- **Modo Foco — descanso**: o timer só aparece com o descanso rodando (depois de marcar uma série); antes ficava fixo em `00:00` em todo exercício.
+- **Modo Foco — carga**: a linha “Peso inicial sugerido: X” saiu; a carga sugerida já é mostrada no valor e no rótulo **CARGA SUGERIDA** logo acima.
+- **Coleção no modo deck**: os ícones inline de detalhes/edição continuavam visíveis porque o `display: inline-flex` inline vencia a regra `.collection-grid--deck .btn-ex-edit-inline { display: none }` — agora eles nem são renderizados nesse modo.
+
+### Verificação
+
+`npx tsc -b` OK · `npx oxlint src` 0 erros (38 avisos de linha de base) · `npm run build` OK · `npm run lint:docs` OK.
+
+No navegador (viewport 362×623): splash com `background-size: contain`, `position: 50% 50%` e `no-repeat`; coleção no modo deck com cards 68×123 px (iguais aos do deck) e barra de ações de 68×103 px logo abaixo, sem ícones inline; no Modo Foco o timer não existia ao abrir e apareceu com `00:30 DESCANSO` depois de marcar a série 1, sem a linha de peso sugerido e com `max-height: 260px` no GIF; o Detalhes da coleção abriu o modal do exercício. A Ficha abriu sem o seletor de ficha no cabeçalho.
+
 ## [v4.72.1] - 2026-11-08
 
 **PWA confiável sem internet (o login deixou de tomar a tela), splash sem o reescalonamento da arte, calculadora de 1RM redesenhada, Sequências acessível pelo Início com transições suaves, Ficha com entrada/saída mais suave e Minha coleção no modo deck igual ao deck no celular.**

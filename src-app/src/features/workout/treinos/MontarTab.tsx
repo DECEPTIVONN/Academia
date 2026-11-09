@@ -964,6 +964,7 @@ export const MontarTab: React.FC<MontarTabProps> = ({
                 onEdit={onEdit}
                 onDel={onDelete}
                 onDetails={onOpenCR}
+                onMaestria={(e) => useMaestriaUi.getState().openMaestriaEx(e.id)}
                 onCardClick={onCollectionClick}
               />
             ))}

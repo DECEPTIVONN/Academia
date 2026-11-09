@@ -69,9 +69,10 @@
   width: 100%;
 }
 
-/* GIF um pouco mais compacto: abre espaço para o timer entre ele e as séries */
+/* v4.72.2 — GIF um pouco maior na vertical (o `object-fit: contain` do
+   legado continua garantindo a proporção). */
 .focus-main .focus-visual img {
-  max-height: 44vh;
+  max-height: 56vh;
 }
 
 .focus-main .f-timer-display {
@@ -158,8 +159,11 @@
 }
 
 @media (max-width: 768px) {
+  /* v4.72.2 — no celular o GIF ficava preso em 200px: a figura aparecia
+     pequena dentro da moldura branca. 260px libera a largura como limite
+     (sem esticar a imagem). */
   .focus-main .focus-visual img {
-    max-height: 200px;
+    max-height: 260px;
   }
   .focus-main .f-timer-val {
     font-size: 1.3rem;
