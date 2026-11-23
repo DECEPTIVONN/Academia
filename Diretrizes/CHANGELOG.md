@@ -2,6 +2,21 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.80.0] - 2026-11-23
+
+**Legacy V1 voltou a carregar o CSS e os GIFs dos exercícios em servidor case-sensitive (deploy/APK).**
+
+### Fixed
+
+- **`src-app/public/legacy-v1/treino.html`** e **`sw.js`**: os três `Style/*.css` passaram a `style/*.css` — a pasta no repositório é `style/` (minúscula), então em Linux o CSS dava 404 e a página abria sem estilização (no Windows funcionava por o sistema de arquivos não diferenciar maiúsculas).
+- **`src-app/public/legacy-v1/JS/treino.js`**: os caminhos dos GIFs passaram de `Assets/exerciciosgif/` para `Assets/Exerciciosgif/`, que é o nome real da pasta.
+
+### Changed
+
+- **`android/app/build.gradle`**: `versionCode 2` / `versionName "1.0.1"` para a release com o Legacy V1 corrigido.
+
+---
+
 ## [v4.79.0] - 2026-11-23
 
 **O step "Read app version" do workflow passou a ler `versionName`/`versionCode` sem exigir o `=`.**

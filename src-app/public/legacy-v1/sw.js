@@ -1,9 +1,9 @@
 const CACHE_NAME = 'academia-treino-v1';
 const ASSETS_TO_CACHE = [
   './treino.html',
-  './Style/main.css',
-  './Style/footer.css',
-  './Style/treino.css',
+  './style/main.css',
+  './style/footer.css',
+  './style/treino.css',
   './componentes/thememanager.js',
   './componentes/theme-integration.js',
   './componentes/footer.js',
