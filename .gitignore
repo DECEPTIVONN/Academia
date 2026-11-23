@@ -1,5 +1,11 @@
 # Android build files
-android/
+# v4.75.0 — o projeto Android passou a ser VERSIONADO (o workflow do GitHub
+# Actions precisa dele para gerar o APK). Só saídas de build/caches ficam fora.
+android/.gradle/
+android/build/
+android/app/build/
+android/.idea/
+android/local.properties
 
 # Node modules
 node_modules/
@@ -65,6 +71,9 @@ build/Release
 # OS
 .DS_Store
 Thumbs.db
+
+# Token de release (PAT usado para gravar o secret RELEASE_TOKEN no GitHub)
+.release-token
 
 # Capacitor
 android/app/build/

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Academia Workout Tracker</string>
+    <string name="title_activity_main">Academia Workout Tracker</string>
+    <string name="package_name">com.academia.workout</string>
+    <string name="custom_url_scheme">com.academia.workout</string>
+</resources>
