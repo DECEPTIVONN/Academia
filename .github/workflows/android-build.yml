@@ -89,10 +89,17 @@ jobs:
         working-directory: android
         run: |
           set -euo pipefail
-          VERSION=$(grep -E 'versionName[[:space:]]*=' app/build.gradle | head -1 | sed -E 's/.*"(.*)".*/\1/')
-          CODE=$(grep -E 'versionCode[[:space:]]*=' app/build.gradle | head -1 | tr -dc '0-9')
-          echo "name=${VERSION:-unknown}" >> "$GITHUB_OUTPUT"
-          echo "code=${CODE:-0}" >> "$GITHUB_OUTPUT"
+          # Aceita `versionName "1.0.0"` e `versionName = "1.0.0"` (e o mesmo
+          # para versionCode). Linhas de comentário não casam (o padrão exige
+          # que o atributo comece a linha).
+          VERSION=$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=?[[:space:]]*"([^"]+)".*/\1/p' app/build.gradle | head -1)
+          CODE=$(sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=?[[:space:]]*([0-9]+).*/\1/p' app/build.gradle | head -1)
+          if [ -z "$VERSION" ] || [ -z "$CODE" ]; then
+            echo "::error::nao consegui ler versionName/versionCode de android/app/build.gradle"
+            exit 1
+          fi
+          echo "name=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
           echo "versao ${VERSION} (versionCode ${CODE})"
 
       - name: Build debug APK

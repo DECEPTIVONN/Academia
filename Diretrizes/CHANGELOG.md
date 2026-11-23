@@ -2,6 +2,16 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.79.0] - 2026-11-23
+
+**O step "Read app version" do workflow passou a ler `versionName`/`versionCode` sem exigir o `=`.**
+
+### Fixed
+
+- **`.github/workflows/android-build.yml`**: a extração usava `grep 'versionName[[:space:]]*='`, mas o `android/app/build.gradle` declara `versionName "1.0.0"` (sem `=`), então o `grep` falhava e, sob `set -euo pipefail`, o step abortava antes do Gradle (run 45206814016). Agora é `sed` tolerante a `=` opcional, com erro explícito se a leitura vier vazia.
+
+---
+
 ## [v4.78.0] - 2026-11-23
 
 **Publicação da release passou a usar o secret `EVOFIT_RELEASES`, o nome criado em Settings → Secrets → Actions.**
