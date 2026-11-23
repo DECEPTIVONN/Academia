@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.74.0",
-  "last_updated": "2026-11-09",
+  "version": "4.78.0",
+  "last_updated": "2026-11-23",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
   "entry_points": {
@@ -1078,7 +1078,7 @@
       "modal_de_ciclos": "[ATUAL] src-app/src/features/dashboard/CycleModal.tsx (lista 0–30 + detalhe) + src-app/src/features/dashboard/cycle-modal.css + src-app/src/core/db/queries.ts (getCycleTimeline/CycleTimelineItem)",
       "previa_ficha_do_dia": "[ATUAL] src-app/src/features/dashboard/FichaDeck.tsx (grid, mini-deck, stats, cardio) + src-app/src/legacy-style/treino/secoes/dashboard.css (.card-Peito/.card-Costas/… = cor do grupo muscular)",
       "seletor_de_fichas": "[ATUAL] src-app/src/features/dashboard/SheetSelectorModal.tsx + src-app/src/features/dashboard/FichaDeck.tsx + src-app/src/features/dashboard/DashboardFeature.tsx (seletor da barra: letra do treino + contagem) + src-app/src/legacy-style/treino/secoes/dashboard.css (.dash-workout-exercise-card, #dashWorkoutLetter, #dashWkDetail)",
-      "menu_do_inicio_e_fit_id": "[ATUAL] src-app/src/features/dashboard/InicioMenuModal.tsx (itens + TELA CHEIA + Fit ID) + src-app/src/features/dashboard/FitIdOverlay.tsx + src-app/src/features/dashboard/inicio-menu.css",
+      "menu_do_inicio_e_fit_id": "[ATUAL] src-app/src/features/dashboard/InicioMenuModal.tsx (itens + TELA CHEIA + Fit ID + item Versão Legacy que navega para /legacy-v1/treino.html) + src-app/src/features/dashboard/FitIdOverlay.tsx + src-app/src/features/dashboard/inicio-menu.css",
       "ficha_e_hero": "[ATUAL] src-app/src/features/workout/FichaFeature.tsx (hero: EVO FIT, contagem da ficha aberta, chama Material Symbol) + src-app/src/legacy-style/treino/1-core.css (.h-stat*, .h-stat-fire) + src-app/src/legacy-style/treino/secoes/ficha-overlay.css",
       "modais_de_treino": "[ATUAL] src-app/src/features/workout/treinos/TreinosModals.tsx (ExercicioFormModal, CustomizacaoTabs) + src-app/src/legacy-style/treino/secoes/{deck-builder,cards,tabs-subnav}.css",
       "barra_inferior": "[ATUAL] src-app/src/components/BottomNav.tsx + src-app/src/components/nav-section-items.tsx + src-app/src/legacy-style/treino/7-nav-icons.css (.bnav-icon--fill halteres FA solid) + src-app/src/styles/shell.css (.side-hud-icon--fill)",
@@ -1101,7 +1101,9 @@
       "animacoes_e_motion": "[ATUAL] src-app/src/lib/animations.ts + src-app/src/lib/motion-presets.ts + src-app/src/hooks/useModalPresence.ts + src-app/src/styles/modal-motion.css (.is-closing)",
       "servicos_do_shell": "[ATUAL] src-app/src/lib/ (fullscreen.ts, auto-fullscreen.ts, pwa-install.ts, native-share.ts, background-music.ts, toast.ts, suggested-load.ts, app-prefs.ts)",
       "padrao_overlays_portal": "[ATUAL] src-app/src/App.tsx (createPortal para overlays) + src-app/src/features/dashboard/MissionsOverlay.tsx + src-app/src/features/news/NewsOverlay.tsx + src-app/src/features/dashboard/InicioMenuModal.tsx | CSS: src-app/src/styles/shell.css (.section-strip {will-change:transform} = containing block do fixed)",
-      "build_preview_deploy": "[ATUAL] package.json (raiz: build/dev/lint:docs; src-app: build/preview/lint) + src-app/vite.config.ts (PWA/precache) + vercel.json (raiz -> Academia/dist; src-app -> src-app) + src-app/vercel.json (Root Directory = src-app)"
+      "build_preview_deploy": "[ATUAL] package.json (raiz: build/dev/lint:docs; src-app: build/preview/lint) + src-app/vite.config.ts (PWA/precache) + vercel.json (raiz -> Academia/dist; src-app -> src-app) + src-app/vercel.json (Root Directory = src-app)",
+      "apk_e_atualizacao": "[ATUAL] .github/workflows/android-build.yml (build + release) + android/app/build.gradle (versionCode/versionName + signingConfig debugConfig) + debug.keystore(.base64) na raiz + android/app/src/main/java/com/academia/workout/AppUpdaterPlugin.java + src-app/src/lib/app-updater.ts (RELEASE_REPO = DECEPTIVONN/EvoFit-releases) + src-app/src/features/settings/UpdateCard.tsx (tile \"Sobre e Atualizações\" em SettingsFeature, só no APK)",
+      "versao_legacy_v1": "[ATUAL] src-app/public/legacy-v1/ (treino.html + JS/treino.js + style/*.css + componentes/*.js — app V1 congelado em HTML/CSS/JS puro; a opção \"Voltar para a versão mais recente\" fica no card Versão do Aplicativo da aba MONTAR) + src-app/src/features/dashboard/InicioMenuModal.tsx (item Versão Legacy) + src-app/vite.config.ts (globIgnores + navigateFallbackDenylist de /legacy-v1/)"
     },
     "legado_referencia": {
       "edit_color_variable": "[LEGADO] Legacy/style/treino/1-core.css -> bloco :root",

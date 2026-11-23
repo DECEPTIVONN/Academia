@@ -128,6 +128,9 @@ import { useAuth } from '@/core/auth/use-auth';
 import { supabase, isSupabaseConfigured } from '@/core/supabase';
 import { isSyncConfigured, getSyncKey } from '@/core/sync/supabase-client';
 import { ProfileEmblem } from '@/components/ProfileEmblem';
+/* v4.75.0 — auto-update do APK: a tela "Sobre" só existe no app Android nativo */
+import { isNativeAndroid } from '@/lib/app-updater';
+import { UpdateCard } from './UpdateCard';
 import './settings.css';
 
 export interface SettingsGroupProps {
@@ -1379,6 +1382,22 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
     },
     /* v4.10.0 — nuvem movida para dentro de Sua Conta (ProfileFeature);
        telas movida para dentro de Esquema de Cores (abaixo) */
+    /* v4.75.0 — "Sobre" com a versão instalada e o verificador de updates.
+       Só no APK Android: na web o tile não existe. */
+    ...(isNativeAndroid()
+      ? [
+          {
+            id: 'sobre',
+            title: 'Sobre e Atualizações',
+            desc: 'Versão instalada do APK e verificação de novas versões',
+            icon: SvgDownload20,
+            keywords: [
+              'sobre', 'versao', 'versão', 'atualizacao', 'atualização',
+              'update', 'apk', 'instalar', 'download', 'release', 'app',
+            ],
+          },
+        ]
+      : []),
   ];
 
   const toggleItemsInteraction = [
@@ -1438,6 +1457,16 @@ export function useSettingsGroup({ devMode, onToggleDevMode }: SettingsGroupProp
   );
 
   const screens: Record<string, HubScreen> = {
+    /* v4.75.0 — APK Android: versão instalada + verificar/baixar atualização */
+    ...(isNativeAndroid()
+      ? {
+          sobre: {
+            eyebrow: 'ACADEMIA • SOBRE',
+            title: 'Sobre o App',
+            content: <UpdateCard />,
+          },
+        }
+      : {}),
     /* ================= SUA CONTA (GRUPO) ================= */
     conta: {
       eyebrow: 'ACADEMIA • CONTA',

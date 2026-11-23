@@ -1,0 +1,21 @@
+{
+  "name": "Academia - Fichas de Treino",
+  "short_name": "Treino",
+  "description": "Sistema de fichas de treino para academia. Gerencie exercícios, acompanhe progresso diário e receba confirmação ao concluir o treino.",
+  "start_url": "./treino.html",
+  "display": "standalone",
+  "background_color": "#0F0F0F",
+  "theme_color": "#8b5cf6",
+  "icons": [
+    {
+      "src": "./Assets/Images/LogoItens/D.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "./Assets/Images/LogoItens/D.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

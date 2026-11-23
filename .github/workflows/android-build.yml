@@ -1,0 +1,193 @@
+name: Build Android APK
+
+# v4.75.0 — APK automático + atualização automática (Capacitor / React)
+#
+# Fluxo: checkou o repo → setup Node/JDK/Android SDK → build web (src-app) →
+# `cap sync android` → gradle assembleDebug → valida o APK → publica numa
+# release do repo PÚBLICO de releases (APK + latest.json consumido pelo app).
+#
+# Secrets necessários (repo de código, Settings → Secrets → Actions):
+#   EVOFIT_RELEASES (ou RELEASE_TOKEN) — PAT fine-grained com `contents: write`
+#                   em REPO_RELEASES (repo PÚBLICO DECEPTIVONN/EvoFit-releases).
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'Diretrizes/**'
+      - 'Planos/**'
+      - 'Referências/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+env:
+  APP_NAME: EvoFit
+  OWNER: DECEPTIVONN
+  REPO_CODE: Academia
+  REPO_RELEASES: EvoFit-releases
+  JDK_VERSION: '21'
+  NODE_VERSION: '22'
+  COMPILE_SDK: '36'          # espelha android/variables.gradle (compileSdkVersion)
+  BUILD_TOOLS: '36.0.0'
+
+jobs:
+  build:
+    name: assembleDebug
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            src-app/package-lock.json
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JDK_VERSION }}
+
+      - name: Ensure Android SDK
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          test -d "$SDK"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          SDKMANAGER="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          [ -x "$SDKMANAGER" ] || SDKMANAGER=$(command -v sdkmanager)
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" --install "platforms;android-${COMPILE_SDK}" "build-tools;${BUILD_TOOLS}"
+          echo "$SDK/platform-tools" >> "$GITHUB_PATH"
+
+      - name: Install deps (raiz + src-app)
+        run: |
+          set -euo pipefail
+          npm ci
+          npm ci --prefix src-app
+
+      - name: Build web
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Read app version
+        id: version
+        working-directory: android
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -E 'versionName[[:space:]]*=' app/build.gradle | head -1 | sed -E 's/.*"(.*)".*/\1/')
+          CODE=$(grep -E 'versionCode[[:space:]]*=' app/build.gradle | head -1 | tr -dc '0-9')
+          echo "name=${VERSION:-unknown}" >> "$GITHUB_OUTPUT"
+          echo "code=${CODE:-0}" >> "$GITHUB_OUTPUT"
+          echo "versao ${VERSION} (versionCode ${CODE})"
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Verify APK
+        working-directory: android
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          test -f "$APK"
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          BADGING=$("$BT/aapt2" dump badging "$APK")
+          echo "$BADGING" | head -1
+          case "$BADGING" in
+            *"versionCode='${{ steps.version.outputs.code }}'"*) echo "versionCode confere" ;;
+            *) echo "::error::APK nao tem o versionCode esperado"; exit 1 ;;
+          esac
+
+      - name: Upload APK artifact (best-effort)
+        id: upload
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ steps.version.outputs.name }}-vc${{ steps.version.outputs.code }}-${{ github.sha }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+
+      - name: Publish to public releases repo
+        env:
+          GH_TOKEN: ${{ secrets.EVOFIT_RELEASES || secrets.RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::warning::EVOFIT_RELEASES/RELEASE_TOKEN nao configurado; pulando publicacao."
+            exit 0
+          fi
+
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          test -f "$APK"
+          VERSION="${{ steps.version.outputs.name }}"
+          CODE="${{ steps.version.outputs.code }}"
+          SHA="$GITHUB_SHA"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          SAFE_VERSION=$(printf '%s' "$VERSION" | tr -c 'A-Za-z0-9._-' '-')
+          TAG="v${SAFE_VERSION}-vc${CODE}-${SHORT_SHA}"
+          ASSET="${APP_NAME}-${SAFE_VERSION}-vc${CODE}-${SHA}.apk"
+          OUT="android/app/build/outputs/apk/debug"
+          cp "$APK" "$OUT/${ASSET}"
+
+          # Notas da release: primeira secao "## " do CHANGELOG (se existir)
+          NOTES="Atualizacao do ${APP_NAME}."
+          if [ -f Diretrizes/CHANGELOG.md ]; then
+            EXTRACTED=$(awk 'f && /^## /{exit} /^## /{f=1;next} f' Diretrizes/CHANGELOG.md | head -n 120)
+            [ -n "$(printf '%s' "$EXTRACTED" | tr -d '[:space:]')" ] && NOTES="$EXTRACTED"
+          fi
+
+          SIZE=$(stat -c%s "$OUT/${ASSET}")
+          CHECKSUM=$(sha256sum "$OUT/${ASSET}" | awk '{print $1}')
+
+          jq -n \
+            --arg version "$VERSION" \
+            --arg code "$CODE" \
+            --arg commit "$SHA" \
+            --arg asset "$ASSET" \
+            --arg size "$SIZE" \
+            --arg sha256 "$CHECKSUM" \
+            --arg notes "$NOTES" \
+            --arg name "$APP_NAME" \
+            --arg owner "$OWNER" \
+            --arg repo "$REPO_RELEASES" \
+            '{
+              versionName: $version,
+              versionCode: ($code | tonumber),
+              commit: $commit,
+              releaseName: ($name + " " + $version),
+              apkName: $asset,
+              apkUrl: ("https://github.com/" + $owner + "/" + $repo + "/releases/latest/download/" + $asset),
+              size: ($size | tonumber),
+              sha256: $sha256,
+              notes: $notes
+            }' > "$OUT/latest.json"
+
+          if gh release view "$TAG" --repo "${OWNER}/${REPO_RELEASES}" >/dev/null 2>&1; then
+            echo "Release $TAG ja existe, pulando."
+          else
+            gh release create "$TAG" \
+              "$OUT/${ASSET}#${ASSET}" \
+              "$OUT/latest.json#latest.json" \
+              --repo "${OWNER}/${REPO_RELEASES}" \
+              --title "${APP_NAME} ${VERSION} (versionCode ${CODE})" \
+              --notes "$NOTES" \
+              --latest
+          fi

@@ -114,11 +114,12 @@ export default defineConfig({
            qualquer falha de casamento de URL derrubava a instalação INTEIRA
            do service worker — sem SW não existe offline. */
         globPatterns: ['**/*.{js,css,html,svg,ico,woff2,png}'],
-        globIgnores: ['**/assets/exerciciosgif/**', '**/assets/sounds/**'],
+        globIgnores: ['**/assets/exerciciosgif/**', '**/assets/sounds/**', '**/legacy-v1/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/index.html',
-        // Rotas de API nunca caem no index.html (previews/offline).
-        navigateFallbackDenylist: [/^\/api\//],
+        // Rotas de API e a interface Legacy V1 nunca caem no index.html
+        // (previews/offline): /legacy-v1/treino.html é um documento estático.
+        navigateFallbackDenylist: [/^\/api\//, /^\/legacy-v1\//],
         runtimeCaching: [
           // Material Symbols (CDN): depois do 1º carregamento a fonte e o CSS
           // passam a vir do cache, então os ícones continuam funcionando offline.

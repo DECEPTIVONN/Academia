@@ -2,6 +2,82 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.78.0] - 2026-11-23
+
+**Publicação da release passou a usar o secret `EVOFIT_RELEASES`, o nome criado em Settings → Secrets → Actions.**
+
+### Changed
+
+- **`GH_TOKEN` do workflow** (`.github/workflows/android-build.yml`) usa `secrets.EVOFIT_RELEASES` com `secrets.RELEASE_TOKEN` como alternativa; comentário de cabeçalho, aviso de secret ausente e **`Diretrizes/README.md`** atualizados com o nome correto.
+
+---
+
+## [v4.77.0] - 2026-11-23
+
+**Repo público de releases passou a `DECEPTIVONN/EvoFit-releases` e o projeto Android + keystore de debug entraram no versionamento.**
+
+### Changed
+
+- **`REPO_RELEASES` no workflow** (`.github/workflows/android-build.yml`) e **`RELEASE_REPO`** (`src-app/src/lib/app-updater.ts`) apontam para `DECEPTIVONN/EvoFit-releases`, o repo público criado para hospedar o APK e o `latest.json`; **`Diretrizes/README.md`** atualizado (seção APK).
+- **`.gitignore`**: `.release-token` passa a ficar de fora do versionamento (arquivo local usado para gravar o `RELEASE_TOKEN` no GitHub).
+
+### Added
+
+- **Commit do projeto `android/`** (Gradle, `AndroidManifest.xml`, `MainActivity`, `AppUpdaterPlugin`, `res/xml/file_paths.xml`) e do **keystore de debug** (`debug.keystore` + `debug.keystore.base64`): sem eles o CI não gera o APK e o APK novo não instala por cima do antigo.
+
+### Notas
+
+- O secret `RELEASE_TOKEN` é do repo de código (`DECEPTIVONN/Academia`, Settings → Secrets → Actions) e precisa de `contents: write` **apenas** em `EvoFit-releases`.
+
+---
+
+## [v4.76.0] - 2026-11-23
+
+**Interface Legacy V1 servida pelo app, com troca nos dois sentidos: item "Versão Legacy" no menu do Início e opção de voltar para a versão mais recente dentro do Legacy V1.**
+
+### Added
+
+- **`src-app/public/legacy-v1/`**: a pasta `Evo Fit Legacy V1` foi movida para dentro de `public/`, então a interface V1 (HTML/CSS/JS puro, sem modernização) passou a ser servida junto do app em `/legacy-v1/treino.html` — no `npm run dev`, no preview e no deploy.
+- **Item "Versão Legacy" no menu do Início** (`InicioMenuModal.tsx`, grupo próprio no fim, ícone SVG stroke `currentColor` de camadas): fecha o menu e navega para `/legacy-v1/treino.html`.
+- **Card "Versão do Aplicativo" na aba MONTAR do Legacy V1** (junto de Cronômetro, Tema e Backup): botão `#btnVoltarVersaoAtual` que volta para a versão mais recente (`../`, ou seja, a raiz do app).
+
+### Changed
+
+- **`src-app/vite.config.ts`**: `/legacy-v1/` entrou no `navigateFallbackDenylist` do Workbox (sem isso o service worker do app responderia a navegação com o `index.html` e a interface V1 nunca abriria) e no `globIgnores` do precache (o Legacy V1 não entra no cache do app shell).
+
+### Notas
+
+- O Legacy V1 não foi alterado além do card de retorno: continua em HTML/CSS/JS puro, com o próprio `sw.js` (escopo `/legacy-v1/`).
+- Referências de caixa alta (`Style/…`) seguem como estavam no V1; funcionam no Windows e em servidores case-insensitive, mas não em hospedagem Linux.
+
+---
+
+## [v4.75.0] - 2026-11-23
+
+**APK automático no GitHub Actions e atualização automática dentro do app (Capacitor): build web → sync → gradle → release pública com APK + `latest.json`, e uma tela "Sobre e Atualizações" no APK que verifica, baixa com progresso e abre o instalador do Android.**
+
+### Added
+
+- **Workflow `.github/workflows/android-build.yml`**: roda em push na `main` (e `workflow_dispatch`), instala Node 22 + JDK 21 + Android SDK 36, faz `npm ci` na raiz e no `src-app`, `npm run build`, `npx cap sync android`, `:app:assembleDebug`, valida o `versionCode` do APK com `aapt2`, sobe o artefato (best-effort) e publica a release `v<versão>-vc<code>-<sha>` no repo público `DECEPTIVONN/Academia-releases` com o APK, o `latest.json` (versionName/versionCode, commit, apkUrl, size, sha256 e notas) e as notas extraídas da primeira seção deste CHANGELOG. Exige o secret `RELEASE_TOKEN` (`contents: write` no repo de releases).
+- **Plugin nativo `AppUpdaterPlugin.java`** (`@CapacitorPlugin(name = "AppUpdater")`, registrado em `MainActivity`): `getVersionInfo`, `fetchManifest` (o download de release assets do GitHub não responde CORS, então a leitura do `latest.json` também é nativa), `downloadApk` (cacheDir/updates + eventos `downloadProgress` + conferência de `sha256`), `installApk` (FileProvider `${applicationId}.fileprovider`), `canInstallPackages` e `openInstallSettings`.
+- **`src-app/src/lib/app-updater.ts`**: `isNativeAndroid()`, `getInstalledVersion()`, `checkForUpdate()` (compara `versionCode`), `downloadAndInstall()` (baixa, pede a permissão de instalar apps desconhecidos e abre o instalador) e `formatBytes()`.
+- **`UpdateCard.tsx` + `update-card.css`**: card "Atualizações do App" com versão instalada, verificação automática ao abrir, versão publicada (nome, tamanho, commit), notas da release, barra de download e os botões Verificar / Baixar e instalar. Novo tile **"Sobre e Atualizações"** no grupo Configurações, montado apenas quando `isNativeAndroid()`.
+- **`debug.keystore` + `debug.keystore.base64` na raiz** (`androiddebugkey`, senha `android`): a MESMA chave em todos os builds, sem a qual o APK novo não instala por cima do antigo.
+
+### Changed
+
+- **`android/app/build.gradle`**: `versionName` passou a `1.0.0` (semver) + `signingConfigs.debugConfig` usando o keystore versionado (`rootProject.file("../debug.keystore")`) no buildType `debug`.
+- **`.gitignore`**: o projeto `android/` deixou de ser ignorado (o CI precisa dele); só saídas de build/cache ficam fora (`android/app/build/`, `android/build/`, `android/.gradle/`, `android/.idea/`, `local.properties`).
+- **`AndroidManifest.xml`**: `REQUEST_INSTALL_PACKAGES`; **`res/xml/file_paths.xml`**: `cache-path` `updates/` para o APK baixado.
+- **Documentação**: `Diretrizes/README.md` ganhou a seção **APK e atualização automática** (variáveis, build local, publicação, regra de subir `versionCode`/`versionName`); `system_map.json` foi para 4.75.0 com o atalho `apk_e_atualizacao`.
+
+### Notas
+
+- O `versionCode` é a única comparação de versão considerada pelo app; suba-o (e o `versionName`) no mesmo commit de qualquer mudança publicável.
+- Na web nada muda: sem APK Android, a tela de atualização não é montada.
+
+---
+
 ## [v4.74.0] - 2026-11-09
 
 **Emblema com moldura Diamante e foto no fim do Ícone Legado, fundo único em Cartões/Barras/Emblema, convites reais de ofensiva, Progressão/Destaque/Medalhas com interface, Ajuda standalone redesenhada, Cronograma repaginado, Ofensivas AMOLED, crest da Maestria e timer do Foco sem duplicação.**

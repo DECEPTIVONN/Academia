@@ -19,7 +19,8 @@
  * Itens, de cima para baixo: Configurações (hub do Perfil) · Tela cheia
  * (entrar/sair, v4.33.0 — mesmo hook do shell) · Registro de Treinos ·
  * Rankings (interface de ranking) · Mensagens (caixa de mensagens) · Ajuda ·
- * Fit ID.
+ * Fit ID · Versão Legacy (alterna para a interface antiga em HTML/CSS/JS puro,
+ * servida em `public/legacy-v1/treino.html`).
  *
  * Portal para document.body: o .section-strip tem transform/will-change e
  * passaria a ser o containing block do position:fixed (mesma causa-raiz dos
@@ -34,6 +35,9 @@ import { useInbox } from '@/features/notifications/useInbox';
 import './inicio-menu.css';
 
 const toBody = (node: React.ReactNode) => createPortal(node, document.body);
+
+/** Interface Legacy V1 (HTML/CSS/JS puro) copiada de `public/legacy-v1/`. */
+const LEGACY_V1_URL = '/legacy-v1/treino.html';
 
 /* ── Ícones próprios do menu (SVG stroke 24/currentColor — Ícones.md §2)
    17px/traço 2: vive dentro do quadrado de 30px do item, mesmo desenho dos
@@ -113,6 +117,16 @@ const IcoFitId = (
   <svg {...ICON_PROPS}>
     <path d="M12 2l8 3v6c0 5-3.4 8.4-8 11-4.6-2.6-8-6-8-11V5l8-3z" />
     <path d="M9 12l2 2 4-4" />
+  </svg>
+);
+
+/* VERSÃO LEGACY (camadas): alterna para a interface antiga, que é um site
+   estático separado (HTML/CSS/JS puro) servido em /legacy-v1/treino.html. */
+const IcoLegacy = (
+  <svg {...ICON_PROPS}>
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
   </svg>
 );
 
@@ -273,6 +287,20 @@ export const InicioMenuModal: React.FC<InicioMenuModalProps> = ({
         action: () => {
           onClose();
           onOpenFitId();
+        },
+      },
+    ],
+    [
+      {
+        key: 'legacy',
+        label: 'Versão Legacy',
+        icon: IcoLegacy,
+        action: () => {
+          /* Navegação de verdade (não é rota da SPA): a interface Legacy V1 é
+             um documento estático dentro de public/legacy-v1/. Lá existe a
+             opção de voltar para esta versão. */
+          onClose();
+          window.location.href = LEGACY_V1_URL;
         },
       },
     ],

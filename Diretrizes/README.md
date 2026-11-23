@@ -47,8 +47,39 @@ Agrupados e carregados via `@import` no `treino.css` raiz, preservando a especif
 - **JavaScript Vanilla (ES Modules)** — Sem frameworks nem bundlers; módulos carregados via `<script type="module">`.
 - **localStorage** — Persistência de dados (100% client-side, sem backend).
 - **Service Worker** — Cache offline interceptativo (`sw.js`).
-- **Capacitor** — Embute o PWA no Android (`capacitor.config.json`, pasta `android/` ignorada pelo Git).
+- **Capacitor** — Embute o app no Android (`capacitor.config.json`, projeto em `android/`, **versionado** desde a v4.75.0 para o build do APK no CI).
+- **APK automático** — `.github/workflows/android-build.yml` gera o APK a cada push na `main` e publica numa release do repo público `DECEPTIVONN/EvoFit-releases` com o `latest.json` consumido pelo auto-update do app (ver seção **APK** abaixo).
 - **Fonte:** Rajdhani servida localmente (`Assets/FONTS/`) — pesos 300–900, para funcionamento offline. `Inter`/`Outfit` apenas em textos de formulário.
+
+### 📦 APK e atualização automática (v4.75.0)
+
+| Variável | Valor no projeto |
+| --- | --- |
+| `APP_NAME` | `EvoFit` |
+| `PACKAGE_ID` | `com.academia.workout` (nunca mude após publicar) |
+| `OWNER` / `REPO_CODE` | `DECEPTIVONN` / `Academia` (repo privado do código) |
+| `REPO_RELEASES` | `DECEPTIVONN/EvoFit-releases` (repo **público** que hospeda APK + `latest.json`) |
+| `MAIN_BRANCH` | `main` |
+| `WRAPPER` | Capacitor 8 (`@capacitor/cli` na raiz de `package.json`) |
+
+**Build local do APK**
+
+```bash
+npm ci && npm ci --prefix src-app
+npm run build
+npx cap sync android
+cd android && ./gradlew :app:assembleDebug
+# saída: android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+**Publicação** — qualquer push na `main` roda `.github/workflows/android-build.yml`, valida o `versionCode` do APK com `aapt2` e publica a release `v<versão>-vc<code>-<sha>` no `REPO_RELEASES` com o APK, o `latest.json` e as notas da primeira seção do `CHANGELOG.md`. Requer o secret `EVOFIT_RELEASES` (PAT fine-grained com `contents: write` no repo de releases); `RELEASE_TOKEN` também é aceito como alternativa.
+
+**Regras**
+
+- Toda mudança publicável sobe `versionCode` (inteiro, só sobe) e `versionName` (semver) em `android/app/build.gradle`, no mesmo commit. É o `versionCode` que decide se há atualização.
+- Todos os builds (local e CI) assinam com o `debug.keystore` **versionado na raiz** (`alias androiddebugkey`, senha `android`) e o `debug.keystore.base64` é a cópia para repositórios/segredos. Sem a mesma chave o APK novo não instala por cima do antigo.
+- O FileProvider `${applicationId}.fileprovider` + `res/xml/file_paths.xml` (`cache-path` `updates/`) e a permissão `REQUEST_INSTALL_PACKAGES` são obrigatórios para instalar o APK baixado.
+- A UI de atualização vive em **Ajustes → Sobre e Atualizações** e só é montada no APK Android (`isNativeAndroid()`); na web nada aparece.
 
 ### 🗂️ Estrutura de Diretórios
 ```

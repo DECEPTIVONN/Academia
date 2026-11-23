@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fichas de Treino — Academia</title>
+    <meta name="description" content="Sistema de fichas de treino para academia. Gerencie exercícios, acompanhe progresso diário e receba confirmação ao concluir o treino.">
+    <link rel="icon" type="image/x-icon" href="./Assets/Images/LogoItens/D.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="Style/main.css">
+    <link rel="stylesheet" href="Style/footer.css">
+    <link rel="stylesheet" href="Style/treino.css">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#8b5cf6">
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <main class="treino-page">
+
+        <!-- ====== HERO ====== -->
+        <section class="treino-hero">
+            <div class="hero-orb orb-1"></div>
+            <div class="hero-orb orb-2"></div>
+            <div class="treino-hero-content">
+                <div class="treino-badge-label">🏋️ ACADEMIA</div>
+                <h1 class="treino-hero-title">Fichas de <span class="gradient-text">Treino</span></h1>
+                <p class="treino-hero-sub">Treine com foco. Marque seus exercícios. Evolua todo dia.</p>
+                <div class="treino-hero-stats">
+                    <div class="h-stat">
+                        <div class="h-stat-val" id="statTotalEx">0</div>
+                        <div class="h-stat-lbl">Exercícios</div>
+                    </div>
+                    <div class="h-stat-div"></div>
+                    <div class="h-stat">
+                        <div class="h-stat-val" id="statFichas">A + B</div>
+                        <div class="h-stat-lbl">Fichas</div>
+                    </div>
+                    <div class="h-stat-div"></div>
+                    <div class="h-stat">
+                        <div class="h-stat-val" id="statStreak">0🔥</div>
+                        <div class="h-stat-lbl">Dias Seguidos</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== NAVEGAÇÃO DE ABAS ====== -->
+        <section class="treino-tabs-section">
+            <div class="treino-container">
+                <nav class="treino-tab-nav" role="tablist">
+                    <button class="t-tab-btn active" data-tab="ficha" role="tab" aria-selected="true" id="tabBtnFicha">
+                        <span>📋</span> FICHA DO DIA
+                    </button>
+                    <button class="t-tab-btn" data-tab="exercicios" role="tab" aria-selected="false" id="tabBtnExercicios">
+                        <span>🏋️</span> EXERCÍCIOS
+                    </button>
+                    <button class="t-tab-btn" data-tab="progresso" role="tab" aria-selected="false" id="tabBtnProgresso">
+                        <span>🏆</span> PROGRESSO
+                    </button>
+                    <button class="t-tab-btn" data-tab="montar" role="tab" aria-selected="false" id="tabBtnMontar">
+                        <span>⚙️</span> MONTAR FICHA
+                    </button>
+                </nav>
+            </div>
+        </section>
+
+        <!-- ====== CONTEÚDO PRINCIPAL ====== -->
+        <section class="treino-content">
+            <div class="treino-container">
+
+                <!-- ========== TAB: FICHA DO DIA ========== -->
+                <div id="tab-ficha" class="t-tab active" role="tabpanel">
+
+                    <div class="ficha-header-bar">
+                        <div class="ficha-left">
+                            <div class="ficha-treino-badge" id="fichaTreinoBadge">TREINO A</div>
+                            <div class="ficha-date" id="fichaDate">Carregando...</div>
+                        </div>
+                        <div class="ficha-right">
+                            <div class="view-selector">
+                                <button class="view-btn active" data-view="table" id="viewBtnTable" title="Visualização em Tabela">📊</button>
+                                <button class="view-btn" data-view="grid" id="viewBtnGrid" title="Visualização em Grid">📱</button>
+                            </div>
+                            <div class="v-divider"></div>
+                            <span class="switch-label">Treino:</span>
+                            <div class="treino-selector">
+                                <button class="sel-btn active" data-treino="A" id="selBtnA">A</button>
+                                <button class="sel-btn" data-treino="B" id="selBtnB">B</button>
+                                <button class="sel-btn" data-treino="C" id="selBtnC">C</button>
+                                <button class="sel-btn" data-treino="D" id="selBtnD">D</button>
+                                <button class="sel-btn" data-treino="E" id="selBtnE">E</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ficha-suggestion" id="fichaSuggestion" style="display:none">
+                        <div class="suggestion-content">
+                            <span class="suggestion-icon">💡</span>
+                            <span id="suggestionText">Último treino: A (10/05). Hoje sugerimos o Treino B.</span>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Progresso -->
+                    <div class="progress-wrapper">
+                        <div class="progress-meta">
+                            <span class="progress-label">Progresso do treino</span>
+                            <span class="progress-nums">
+                                <span id="progressDone">0</span> / <span id="progressTotal">0</span> exercícios
+                            </span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Floating Action Button: Iniciar Treino Foco -->
+                    <button class="fab-focus" id="btnStartFocus" title="Iniciar Treino Foco">
+                        <div class="fab-icon">🚀</div>
+                        <div class="fab-text">FOCO</div>
+                    </button>
+
+                    <!-- Tabela de Treino -->
+                    <div class="table-scroll-wrap">
+                        <table class="workout-table" id="workoutTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-n">#</th>
+                                    <th class="col-ex">Exercício / Aparelho</th>
+                                    <th class="col-img">Imagem</th>
+                                    <th class="col-grp">Grupo</th>
+                                    <th class="col-vol">Volume</th>
+                                    <th class="col-chk">✓</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workoutTableBody">
+                                <!-- Preenchido pelo JS -->
+                            </tbody>
+                        </table>
+                        <div class="table-empty-state" id="tableEmpty" style="display:none">
+                            <div class="empty-icon">🏋️</div>
+                            <p>Nenhum exercício nesta ficha ainda.</p>
+                            <p>Vá em <strong>Montar Ficha</strong> para adicionar exercícios.</p>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Treino (Novo Modo) -->
+                    <div id="workoutGrid" class="exercicios-grid" style="display:none">
+                        <!-- Preenchido pelo JS -->
+                    </div>
+
+                    <div class="ficha-actions" id="fichaDoneActions" style="display:none; margin-top: 30px;">
+                        <button class="btn btn-primary" style="width: 100%; padding: 16px; font-weight: 800; letter-spacing: 1px;" onclick="openShareCard(loadDB())">
+                            <span>📤</span> ÚLTIMO TREINO 
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- ========== TAB: EXERCÍCIOS ========== -->
+                <div id="tab-exercicios" class="t-tab" role="tabpanel">
+
+                    <div class="ex-toolbar">
+                        <div class="ex-search-box">
+                            <span class="ex-search-icon">🔍</span>
+                            <input type="text" id="searchInput" placeholder="Buscar exercício ou grupo muscular..." class="ex-search-input" autocomplete="off">
+                        </div>
+                        <button class="btn-novo-ex" id="btnNovoExercicio">
+                            ＋ NOVO EXERCÍCIO
+                        </button>
+                    </div>
+
+                    <div class="grupo-filters" id="grupoFilters">
+                        <button class="g-chip active" data-grupo="all">Todos</button>
+                        <button class="g-chip" data-grupo="Peito">💪 Peito</button>
+                        <button class="g-chip" data-grupo="Costas">🏋️ Costas</button>
+                        <button class="g-chip" data-grupo="Pernas">🦵 Pernas</button>
+                        <button class="g-chip" data-grupo="Ombros">🙆 Ombros</button>
+                        <button class="g-chip" data-grupo="Bíceps">💪 Bíceps</button>
+                        <button class="g-chip" data-grupo="Tríceps">🔱 Tríceps</button>
+                        <button class="g-chip" data-grupo="Core">🔥 Core</button>
+                    </div>
+
+                    <div class="exercicios-grid" id="exerciciosGrid">
+                        <!-- Preenchido pelo JS -->
+                    </div>
+
+                    <div class="ex-empty-state" id="exEmpty" style="display:none">
+                        <div class="empty-icon">🔍</div>
+                        <p>Nenhum exercício encontrado.</p>
+                    </div>
+
+                </div>
+
+                <!-- ========== TAB: PROGRESSO ========== -->
+                <div id="tab-progresso" class="t-tab" role="tabpanel">
+
+                    <!-- Novo: Ciclo de Treino / XP Bar -->
+                    <div class="p-card cycle-card">
+                        <div class="p-card-header">
+                            <h3>Ciclo de Treino Atual</h3>
+                            <span class="p-card-meta">Objetivo: 30 Treinos</span>
+                        </div>
+                        <div class="cycle-progress-wrap">
+                            <div class="cycle-info">
+                                <div class="cycle-count">
+                                    <span id="cycleDone">0</span><small>/30</small>
+                                </div>
+                                <div class="cycle-status" id="cycleStatus">EM ANDAMENTO</div>
+                            </div>
+                            <div class="cycle-xp-bar">
+                                <div class="cycle-xp-fill" id="cycleFill"></div>
+                                <div class="cycle-xp-glow"></div>
+                            </div>
+                            <div class="cycle-breakdown" id="cycleBreakdown">
+                                <!-- Preenchido pelo JS: A: 0 | B: 0 ... -->
+                            </div>
+                            <p class="cycle-msg">Complete 30 treinos para finalizar este ciclo, arquivar sua ficha atual e ganhar uma insígnia de mestre.</p>
+                        </div>
+                    </div>
+
+                    <div class="progresso-grid">
+                        
+                        <!-- Streak Banner -->
+                        <div class="p-card streak-card">
+                            <div class="streak-icon">🔥</div>
+                            <div class="streak-info">
+                                <h3><span id="progStreakVal">0</span> Dias Seguidos!</h3>
+                                <p>Continue treinando para não perder sua ofensiva. Cada dia conta na sua evolução.</p>
+                            </div>
+                        </div>
+
+                        <!-- Novo: Sua Semana Progress -->
+                        <div class="p-card weekly-summary-card">
+                            <div class="ws-header">
+                                <h3>Sua Semana</h3>
+                                <div class="ws-badge"><span id="weekTrainedCount">0</span> dias treinados</div>
+                            </div>
+                            <div class="ws-days" id="weekDaysGrid">
+                                <!-- Preenchido pelo JS: Seg, Ter, Qua... -->
+                            </div>
+                        </div>
+
+                        <!-- Calendar View Selector -->
+                        <div class="calendar-view-toggle">
+                            <button class="cal-toggle-btn active" data-view="monthly" id="btnMonthlyView">Mensal (Grid)</button>
+                            <button class="cal-toggle-btn" data-view="weekly" id="btnWeeklyView">Semanal (Planner)</button>
+                        </div>
+
+                        <!-- Monthly Calendar -->
+                        <div class="p-card month-calendar-card" id="monthlyCalendarCard">
+                            <div class="month-header">
+                                <button class="cal-nav-btn" id="prevMonth" aria-label="Mês anterior">❮</button>
+                                <h3 id="calendarMonthName">MÊS</h3>
+                                <button class="cal-nav-btn" id="nextMonth" aria-label="Próximo mês">❯</button>
+                            </div>
+                            <div class="month-grid-header">
+                                <span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span>
+                            </div>
+                            <div class="month-grid" id="monthCalendar">
+                                <!-- Preenchido via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Weekly Planner -->
+                        <div class="p-card weekly-planner-card" id="weeklyPlannerCard" style="display:none">
+                            <div class="planner-header">
+                                <button class="cal-nav-btn" id="prevWeekMonth" aria-label="Mês anterior">❮</button>
+                                <h3 id="plannerMonthName">MAIO</h3>
+                                <button class="cal-nav-btn" id="nextWeekMonth" aria-label="Próximo mês">❯</button>
+                            </div>
+                            <div class="planner-weeks" id="weeklyPlanner">
+                                <!-- Preenchido via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Level / XP -->
+                        <div class="p-card xp-card">
+                            <div class="p-card-header">
+                                <h3>Seu Nível: <span class="gradient-text" id="progNivelName">Iniciante</span></h3>
+                                <span class="p-card-meta">Nível <span id="progNivelVal">1</span></span>
+                            </div>
+                            <div class="xp-bar-wrap">
+                                <div class="xp-bar-fill" id="progXpFill" style="width: 0%"></div>
+                            </div>
+                            <div class="xp-details">
+                                <span><span id="progXpAtual">0</span> XP</span>
+                                <span>Próximo Nível: <span id="progXpNext">100</span> XP</span>
+                            </div>
+                        </div>
+
+                        <!-- Total Stats -->
+                        <div class="p-card stats-card">
+                            <div class="stat-item">
+                                <div class="stat-icon">💪</div>
+                                <div class="stat-texts">
+                                    <h4>Total de Treinos</h4>
+                                    <span id="progTotalTreinos">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">📅</div>
+                                <div class="stat-texts">
+                                    <h4>Treinos no Mês</h4>
+                                    <span id="progMesTreinos">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Weekly Volume -->
+                        <div class="p-card volume-card">
+                            <div class="p-card-header">
+                                <h3>Volume de Carga Semanal</h3>
+                                <span class="p-card-meta">Últimos 7 dias</span>
+                            </div>
+                            <div class="volume-chart" id="volumeChart">
+                                <!-- Preenchido via JS -->
+                            </div>
+                            <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 15px; text-align: center;">Total kg levantados por grupo muscular.</p>
+                        </div>
+
+                        <!-- Atributos Radar -->
+                        <div class="p-card radar-card">
+                            <div class="p-card-header">
+                                <h3>Atributos de Performance</h3>
+                                <span class="p-card-meta">Radar Fit</span>
+                            </div>
+                            <div id="radarChartContainer" style="width: 100%; min-height: 300px; display: flex; align-items: center; justify-content: center; margin-top: 20px;">
+                                <!-- JS populated SVG -->
+                            </div>
+                            <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 15px; text-align: center;">Baseado na variedade, intensidade e consistência do seu treino.</p>
+                        </div>
+
+                        <!-- Achievements / Badges -->
+                        <div class="p-card achievements-card">
+                            <div class="p-card-header">
+                                <h3>Suas Conquistas</h3>
+                                <span class="p-card-meta">Medalhas</span>
+                            </div>
+                            <div class="badges-grid" id="badgesGrid">
+                                <!-- Preenchido via JS -->
+                            </div>
+                        </div>
+
+                        <!-- 1RM Calculator -->
+                        <div class="p-card calculator-card">
+                            <div class="p-card-header">
+                                <h3>Calculadora de 1RM</h3>
+                                <span class="p-card-meta">Estimativa</span>
+                            </div>
+                            <p style="font-size: 0.85rem; margin-bottom: 15px;">Calcule o peso máximo que você conseguiria levantar para 1 repetição.</p>
+                            <div class="calc-row">
+                                <div class="form-group">
+                                    <label>Carga (kg)</label>
+                                    <input type="number" id="calcWeight" placeholder="Ex: 80">
+                                </div>
+                                <div class="form-group">
+                                    <label>Reps</label>
+                                    <input type="number" id="calcReps" placeholder="Ex: 10">
+                                </div>
+                            </div>
+                            <div class="calc-result" id="calcResult">
+                                <div class="res-val">--</div>
+                                <div class="res-lbl">kg Estimados</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ========== TAB: MONTAR FICHA ========== -->
+                <div id="tab-montar" class="t-tab" role="tabpanel">
+
+                    <div class="timer-settings">
+                        <h3>Templates de Fichas Prontas</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-tertiary); margin-bottom: 12px;">Escolha um modelo para substituir suas fichas atuais rapidamente.</p>
+                        <div class="templates-grid" id="templatesGrid">
+                            <button class="btn-template" data-template="hipertrofia_iniciante">💎 Hipertrofia (Iniciante)</button>
+                            <button class="btn-template" data-template="perda_ponderal">⚡ Perda Ponderal</button>
+                            <button class="btn-template" data-template="sup_inf">💪 Superior / 🦵 Inferior</button>
+                            <button class="btn-template" data-template="push_pull">🔥 Push / Pull</button>
+                        </div>
+                    </div>
+
+                    <div class="timer-settings">
+                        <h3>Configurações do Cronômetro</h3>
+                        <div class="timer-options">
+                            <label class="timer-option">
+                                <input type="radio" name="timerStyle" value="radar" checked>
+                                <span class="to-card">
+                                    <span class="to-icon">⏱️</span>
+                                    <span class="to-lbl">Radar</span>
+                                </span>
+                            </label>
+                            <label class="timer-option">
+                                <input type="radio" name="timerStyle" value="hourglass">
+                                <span class="to-card">
+                                    <span class="to-icon">⏳</span>
+                                    <span class="to-lbl">Ampulheta</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="timer-settings">
+                        <h3>Cor de Energia (Tema)</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-tertiary); margin-bottom: 12px;">Personalize a cor principal do seu aplicativo.</p>
+                        <div class="theme-colors" id="themeColors">
+                            <button class="t-color active" data-theme="purple" style="--c: #8b5cf6;"></button>
+                            <button class="t-color" data-theme="green" style="--c: #22c55e;"></button>
+                            <button class="t-color" data-theme="blue" style="--c: #3b82f6;"></button>
+                            <button class="t-color" data-theme="orange" style="--c: #f97316;"></button>
+                            <button class="t-color" data-theme="red" style="--c: #ef4444;"></button>
+                            <button class="t-color" data-theme="cyan" style="--c: #06b6d4;"></button>
+                        </div>
+                    </div>
+
+                    <div class="montar-grid">
+
+                        <!-- Treino A -->
+                        <div class="montar-col">
+                            <div class="montar-col-header montar-col-a">
+                                <h3>TREINO A</h3>
+                                <span class="montar-count" id="countA">0 exercícios</span>
+                            </div>
+                            <div class="montar-list" id="montarListA">
+                                <!-- Preenchido pelo JS -->
+                            </div>
+                            <button class="btn-add-to-ficha" data-treino="A" id="btnAddA">
+                                ＋ Adicionar Exercício
+                            </button>
+                            <div class="montar-aerobico-wrap">
+                                <div class="ae-header"><span>🏃 Aeróbico</span></div>
+                                <div class="ae-controls">
+                                    <select class="ae-tipo" data-treino="A">
+                                        <option value="">Nenhum</option>
+                                        <option value="Bicicleta">Bicicleta</option>
+                                        <option value="Esteira">Esteira</option>
+                                        <option value="Remo Indoor">Remo Indoor</option>
+                                        <option value="Escada">Escada</option>
+                                        <option value="Airbike">Airbike</option>
+                                    </select>
+                                    <div class="ae-row">
+                                        <input type="text" class="ae-vel" data-treino="A" placeholder="Vel (km/h)">
+                                        <input type="text" class="ae-tempo" data-treino="A" placeholder="Tempo (min)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Treino B -->
+                        <div class="montar-col">
+                            <div class="montar-col-header montar-col-b">
+                                <h3>TREINO B</h3>
+                                <span class="montar-count" id="countB">0 exercícios</span>
+                            </div>
+                            <div class="montar-list" id="montarListB">
+                                <!-- Preenchido pelo JS -->
+                            </div>
+                            <button class="btn-add-to-ficha" data-treino="B" id="btnAddB">
+                                ＋ Adicionar Exercício
+                            </button>
+                            <div class="montar-aerobico-wrap">
+                                <div class="ae-header"><span>🏃 Aeróbico</span></div>
+                                <div class="ae-controls">
+                                    <select class="ae-tipo" data-treino="B">
+                                        <option value="">Nenhum</option>
+                                        <option value="Bicicleta">Bicicleta</option>
+                                        <option value="Esteira">Esteira</option>
+                                        <option value="Remo Indoor">Remo Indoor</option>
+                                        <option value="Escada">Escada</option>
+                                        <option value="Airbike">Airbike</option>
+                                    </select>
+                                    <div class="ae-row">
+                                        <input type="text" class="ae-vel" data-treino="B" placeholder="Vel (km/h)">
+                                        <input type="text" class="ae-tempo" data-treino="B" placeholder="Tempo (min)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Treino C -->
+                        <div class="montar-col">
+                            <div class="montar-col-header montar-col-c">
+                                <h3>TREINO C</h3>
+                                <span class="montar-count" id="countC">0 exercícios</span>
+                            </div>
+                            <div class="montar-list" id="montarListC"></div>
+                            <button class="btn-add-to-ficha" data-treino="C" id="btnAddC">＋ Adicionar</button>
+                            <div class="montar-aerobico-wrap">
+                                <div class="ae-header"><span>🏃 Aeróbico</span></div>
+                                <div class="ae-controls">
+                                    <select class="ae-tipo" data-treino="C">
+                                        <option value="">Nenhum</option>
+                                        <option value="Bicicleta">Bicicleta</option>
+                                        <option value="Esteira">Esteira</option>
+                                        <option value="Remo Indoor">Remo Indoor</option>
+                                        <option value="Escada">Escada</option>
+                                        <option value="Airbike">Airbike</option>
+                                    </select>
+                                    <div class="ae-row">
+                                        <input type="text" class="ae-vel" data-treino="C" placeholder="Vel (km/h)">
+                                        <input type="text" class="ae-tempo" data-treino="C" placeholder="Tempo (min)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Treino D -->
+                        <div class="montar-col">
+                            <div class="montar-col-header montar-col-d">
+                                <h3>TREINO D</h3>
+                                <span class="montar-count" id="countD">0 exercícios</span>
+                            </div>
+                            <div class="montar-list" id="montarListD"></div>
+                            <button class="btn-add-to-ficha" data-treino="D" id="btnAddD">＋ Adicionar</button>
+                            <div class="montar-aerobico-wrap">
+                                <div class="ae-header"><span>🏃 Aeróbico</span></div>
+                                <div class="ae-controls">
+                                    <select class="ae-tipo" data-treino="D">
+                                        <option value="">Nenhum</option>
+                                        <option value="Bicicleta">Bicicleta</option>
+                                        <option value="Esteira">Esteira</option>
+                                        <option value="Remo Indoor">Remo Indoor</option>
+                                        <option value="Escada">Escada</option>
+                                        <option value="Airbike">Airbike</option>
+                                    </select>
+                                    <div class="ae-row">
+                                        <input type="text" class="ae-vel" data-treino="D" placeholder="Vel (km/h)">
+                                        <input type="text" class="ae-tempo" data-treino="D" placeholder="Tempo (min)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Treino E -->
+                        <div class="montar-col">
+                            <div class="montar-col-header montar-col-e">
+                                <h3>TREINO E</h3>
+                                <span class="montar-count" id="countE">0 exercícios</span>
+                            </div>
+                            <div class="montar-list" id="montarListE"></div>
+                            <button class="btn-add-to-ficha" data-treino="E" id="btnAddE">＋ Adicionar</button>
+                            <div class="montar-aerobico-wrap">
+                                <div class="ae-header"><span>🏃 Aeróbico</span></div>
+                                <div class="ae-controls">
+                                    <select class="ae-tipo" data-treino="E">
+                                        <option value="">Nenhum</option>
+                                        <option value="Bicicleta">Bicicleta</option>
+                                        <option value="Esteira">Esteira</option>
+                                        <option value="Remo Indoor">Remo Indoor</option>
+                                        <option value="Escada">Escada</option>
+                                        <option value="Airbike">Airbike</option>
+                                    </select>
+                                    <div class="ae-row">
+                                        <input type="text" class="ae-vel" data-treino="E" placeholder="Vel (km/h)">
+                                        <input type="text" class="ae-tempo" data-treino="E" placeholder="Tempo (min)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="montar-actions" style="margin-bottom: 24px; gap: 12px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" id="btnSalvarFicha">💾 SALVAR FICHAS</button>
+                    </div>
+
+                    <div class="timer-settings">
+                        <h3>Versão do Aplicativo</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-tertiary); margin-bottom: 16px;">Você está usando a versão Legacy V1. Quando quiser, volte para a versão mais recente do app.</p>
+                        <button class="btn btn-primary" id="btnVoltarVersaoAtual" style="width: 100%;">↩ VOLTAR PARA A VERSÃO MAIS RECENTE</button>
+                    </div>
+
+                    <div class="timer-settings">
+                        <h3>Backup e Dados</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-tertiary); margin-bottom: 16px;">Exporte seus treinos e histórico para um arquivo ou importe dados de outro dispositivo.</p>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-secondary" id="btnExportarDados" style="flex: 1; min-width: 160px;">📤 EXPORTAR DADOS</button>
+                            <button class="btn btn-secondary" id="btnImportarDados" style="flex: 1; min-width: 160px;">📥 IMPORTAR DADOS</button>
+                            <input type="file" id="inputImportarJSON" style="display: none;" accept=".json">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <!-- ====== MODAL: CONCLUSÃO DE TREINO ====== -->
+    <div class="modal-overlay" id="modalConclusao" style="display:none">
+        <div class="modal-conclusao">
+            <div class="conclusao-confetti" id="confettiContainer"></div>
+            <div class="conclusao-trophy">🏆</div>
+            <h2 class="conclusao-title">TREINO CONCLUÍDO!</h2>
+            <p class="conclusao-sub" id="conclusaoSub">Você completou todos os exercícios hoje!</p>
+            <div class="conclusao-stats" id="conclusaoStats">
+                <!-- Preenchido pelo JS -->
+            </div>
+            <div class="conclusao-actions" style="display:flex; flex-direction:column; gap:10px; margin-top:20px; width: 100%;">
+                <button class="btn btn-primary conclusao-btn" id="btnShareWorkoutModal" onclick="openShareCard(loadDB())">
+                    <span>📤</span> COMPARTILHAR TREINO
+                </button>
+                <button class="btn btn-secondary conclusao-btn" id="btnFecharConclusao">INCRÍVEL! 💪</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: NOVO EXERCÍCIO ====== -->
+    <div class="modal-overlay" id="modalExercicio" style="display:none">
+        <div class="modal-form">
+            <div class="modal-form-header">
+                <h3 id="modalExTitulo">Novo Exercício</h3>
+                <button class="modal-close-btn" id="btnFecharExercicio" aria-label="Fechar">✕</button>
+            </div>
+            <form id="formExercicio" novalidate>
+                <!-- Upload de imagem -->
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="uploadInput" accept="image/*" style="display:none">
+                    <div class="upload-placeholder" id="uploadPlaceholder">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">Clique para adicionar foto do aparelho</div>
+                        <div class="upload-hint">JPG, PNG ou WEBP — máx. 2MB</div>
+                    </div>
+                    <img id="uploadPreview" class="upload-preview" src="" alt="Preview" style="display:none">
+                    <button type="button" class="upload-remove" id="btnRemoveImg" style="display:none">✕ Remover foto</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputNome">Nome do Exercício *</label>
+                    <input type="text" id="inputNome" placeholder="Ex: Supino Articulado" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputGrupo">Grupo Muscular *</label>
+                    <select id="inputGrupo" required>
+                        <option value="">Selecione...</option>
+                        <option value="Peito">💪 Peito</option>
+                        <option value="Costas">🏋️ Costas</option>
+                        <option value="Pernas">🦵 Pernas</option>
+                        <option value="Ombros">🙆 Ombros</option>
+                        <option value="Bíceps">💪 Bíceps</option>
+                        <option value="Tríceps">🔱 Tríceps</option>
+                        <option value="Core">🔥 Core</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inputSeries">Séries</label>
+                        <input type="number" id="inputSeries" value="3" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputReps">Repetições</label>
+                        <input type="text" id="inputReps" value="10" placeholder="Ex: 10 ou 8-12">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputCarga">Carga</label>
+                        <input type="text" id="inputCarga" placeholder="Ex: 40kg">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputDescanso">Descanso (s)</label>
+                        <input type="number" id="inputDescanso" value="30" min="0" max="300" placeholder="0 = desativado">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputAnotacoes">Anotações e Dicas de Execução</label>
+                    <textarea id="inputAnotacoes" rows="3" placeholder="Ex: Altura do banco, tipo de pegada, ajuste do aparelho..."></textarea>
+                    <div class="note-quick-tags">
+                        <button type="button" class="q-tag" data-tag="[BANCO] ">💺 Banco</button>
+                        <button type="button" class="q-tag" data-tag="[PEGADA] ">👐 Pegada</button>
+                        <button type="button" class="q-tag" data-tag="[DICA] ">💡 Dica</button>
+                    </div>
+                </div>
+
+                <!-- Evolução de Força (Carga) -->
+                <div class="ex-chart-container" id="exChartContainer" style="display:none;">
+                    <h4>📈 Evolução de Força (Carga)</h4>
+                    <div class="ex-chart" id="exChart">
+                        <!-- Gerado via JS -->
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="btnCancelarEx">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSalvarEx">Salvar Exercício</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: SELETOR DE EXERCÍCIOS (Montar Ficha) ====== -->
+    <div class="modal-overlay" id="modalPicker" style="display:none">
+        <div class="modal-picker">
+            <div class="modal-form-header">
+                <h3>Adicionar ao Treino <span id="pickerLabel">A</span></h3>
+                <button class="modal-close-btn" id="btnFecharPicker" aria-label="Fechar">✕</button>
+            </div>
+            <div class="picker-search-wrap">
+                <input type="text" id="pickerSearch" placeholder="Buscar exercício..." class="ex-search-input" autocomplete="off">
+            </div>
+            <div class="picker-list" id="pickerList">
+                <!-- Preenchido pelo JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: CONFIRMAR EXCLUSÃO ====== -->
+    <div class="modal-overlay" id="modalConfirm" style="display:none">
+        <div class="modal-confirm">
+            <div class="confirm-icon">⚠️</div>
+            <h3 id="confirmTitle">Confirmar exclusão?</h3>
+            <p id="confirmMsg">Esta ação não pode ser desfeita.</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" id="btnConfirmNo">Cancelar</button>
+                <button class="btn btn-danger" id="btnConfirmYes">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: VISUALIZAR IMAGEM ====== -->
+    <div class="modal-overlay" id="modalImage" style="display:none">
+        <div class="modal-image-container">
+            <button class="modal-close-btn image-close-btn" id="btnFecharImage" aria-label="Fechar">✕</button>
+            <img id="enlargedImage" src="" alt="Ampliada" class="enlarged-img">
+        </div>
+    </div>
+
+    <!-- ====== MODAL: HISTÓRICO DO DIA ====== -->
+    <div class="modal-overlay" id="modalDayHist" style="display:none">
+        <div class="modal-form" style="max-width:400px; padding:24px;">
+            <div class="modal-form-header" style="margin-bottom:16px;">
+                <h3 id="dayHistTitle">Treinos do Dia</h3>
+                <button class="modal-close-btn" id="btnFecharDayHist" aria-label="Fechar">✕</button>
+            </div>
+            <div id="dayHistContent" style="color:var(--text-secondary); font-size:0.95rem; line-height:1.5; max-height: 50vh; overflow-y: auto;">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Cronômetro Flutuante -->
+    <div class="rest-timer" id="restTimer" style="display: none;">
+        <button class="rt-close" id="rtClose" aria-label="Fechar Cronômetro">✕</button>
+        <div class="rt-visuals" id="rtVisuals">
+            <!-- Preenchido via JS -->
+        </div>
+        <div class="rt-time" id="rtTime">01:00</div>
+    </div>
+
+    <!-- Toast de notificação -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ====== MODAL: TREINO FOCO ====== -->
+    <div class="modal-overlay" id="modalFocus" style="display:none">
+        <div class="focus-container">
+            <button class="focus-close-btn" id="btnCloseFocus">✕ Sair do Modo Foco</button>
+            
+            <div class="focus-header">
+                <div class="focus-progress-step" id="focusStep">EXERCÍCIO 1 / 8</div>
+                <h2 class="focus-ex-name" id="focusExName">Supino Articulado</h2>
+                <div class="focus-ex-badge" id="focusExBadge">PEITO</div>
+            </div>
+
+            <div class="focus-main">
+                <div class="focus-visual">
+                    <img id="focusImg" src="" alt="Execução">
+                </div>
+                
+                <div class="focus-info">
+                    <div class="focus-vol">
+                        <div class="f-vol-item">
+                            <span class="f-vol-val" id="focusSeries">3</span>
+                            <span class="f-vol-lbl">SÉRIES</span>
+                        </div>
+                        <div class="f-vol-item">
+                            <span class="f-vol-val" id="focusReps">10</span>
+                            <span class="f-vol-lbl">REPS</span>
+                        </div>
+                        <div class="f-vol-item">
+                            <span class="f-vol-val" id="focusCarga">40kg</span>
+                            <span class="f-vol-lbl">CARGA</span>
+                        </div>
+                    </div>
+
+                    <div class="focus-notes" id="focusNotes">
+                        <!-- Anotações aqui -->
+                    </div>
+
+                    <div class="focus-timer-area">
+                        <div class="f-timer-display" id="focusTimerVal">DESCANSAR</div>
+                        <button class="btn btn-primary f-btn-check" id="btnFocusCheck">CONCLUIR EXERCÍCIO ✓</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="focus-footer">
+                <button class="f-nav-btn" id="btnFocusPrev">⬅ Anterior</button>
+                <div class="focus-next-info">
+                    <span class="f-next-lbl">PRÓXIMO:</span>
+                    <span class="f-next-name" id="focusNextName">Fly Máquina</span>
+                </div>
+                <button class="f-nav-btn" id="btnFocusNext">Próximo ➡</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ====== MODAL: SHARE CARD ====== -->
+    <div class="modal-overlay" id="modalShare" style="display:none">
+        <div class="share-modal-container">
+            <div class="share-card" id="shareCard">
+                <div class="share-card-header">
+                    <div class="share-app-name">ACADEMIA<span>PRO</span></div>
+                    <div class="share-date" id="shareDate">10 DE MAIO, 2024</div>
+                </div>
+                
+                <div class="share-card-main">
+                    <div class="share-badge">TREINO CONCLUÍDO!</div>
+                    <h2 class="share-title" id="shareTitle">TREINO A: PEITO E OMBRO</h2>
+                    
+                    <div class="share-stats-grid">
+                        <div class="s-stat-item">
+                            <span class="s-stat-val" id="shareExCount">8</span>
+                            <span class="s-stat-lbl">EXERCÍCIOS</span>
+                        </div>
+                        <div class="s-stat-item">
+                            <span class="s-stat-val" id="shareVol">12.450</span>
+                            <span class="s-stat-lbl">KG TOTAIS</span>
+                        </div>
+                        <div class="s-stat-item">
+                            <span class="s-stat-val" id="shareStreak">15🔥</span>
+                            <span class="s-stat-lbl">OFENSIVA</span>
+                        </div>
+                    </div>
+
+                    <div class="share-highlights">
+                        <div class="sh-title">DESTAQUES DO DIA</div>
+                        <div class="sh-list" id="shareHighlightsList">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="share-card-footer">
+                    <p class="share-quote">"O único treino ruim é aquele que não aconteceu."</p>
+                </div>
+            </div>
+
+            <!-- Card para Conquistas -->
+            <div class="share-card share-card-achievement" id="shareCardBadge" style="display:none; flex-direction: column; justify-content: space-between;">
+                <div class="share-card-header">
+                    <div class="share-app-name">ACADEMIA<span>PRO</span></div>
+                    <div class="share-date" id="shareBadgeDate">10 DE MAIO, 2024</div>
+                </div>
+                <div class="share-card-main" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; flex: 1;">
+                    <div class="share-badge">NOVA CONQUISTA!</div>
+                    <div class="share-badge-icon" id="shareBadgeIcon" style="font-size: 8rem; margin: 20px 0; filter: drop-shadow(0 0 20px var(--primary));">🏆</div>
+                    <h2 class="share-title" id="shareBadgeName" style="font-size: 2.2rem; margin-bottom: 10px; line-height: 1.1;">VETERANO</h2>
+                    <p class="share-badge-desc" id="shareBadgeDesc" style="color: var(--text-secondary); font-size: 1.1rem; max-width: 80%; line-height: 1.4;">30 treinos concluídos com sucesso!</p>
+                </div>
+                <div class="share-card-footer">
+                    <p class="share-quote">"O sucesso é a soma de pequenos esforços repetidos dia após dia."</p>
+                </div>
+            </div>
+
+            <div class="share-actions" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 350px;">
+                <button class="btn btn-primary" id="btnDownloadImage">
+                    <span>📸</span> COMPARTILHAR
+                </button>
+                <button class="btn btn-secondary" id="btnCopyShare">COPIAR TEXTO</button>
+                <button class="btn btn-secondary" style="background: transparent; border: none; opacity: 0.6;" id="btnFecharShare">FECHAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="componentes/thememanager.js"></script>
+    <script src="componentes/theme-integration.js"></script>
+    <script src="componentes/footer.js"></script>
+    <script src="componentes/scroll-animations.js"></script>
+    <script src="JS/treino.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker registrado com sucesso!'))
+                .catch(err => console.error('Erro ao registrar Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
