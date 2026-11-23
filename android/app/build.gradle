@@ -11,8 +11,8 @@ android {
            sobe) e o versionName (semver) no mesmo commit de uma mudança
            publicável. O app compara o versionCode instalado com o do
            latest.json para decidir se há atualização. */
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.0.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     /* v4.75.0 — TODOS os builds (local e CI) assinam com o MESMO keystore de

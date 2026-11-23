@@ -54,7 +54,12 @@ import { AuthModal } from '@/features/auth/AuthModal';
 import { RemoteSyncToast } from '@/features/sync/RemoteSyncToast';
 import { OfflineSyncBanner } from '@/features/sync/OfflineSyncBanner';
 import { isEngineRunning, startSyncEngine, stopSyncEngine, restartSyncEngine } from '@/core/sync/sync-manager';
-import { getSyncKey, setSyncKey, deriveSyncKeyForUser } from '@/core/sync/supabase-client';
+import {
+  getSyncKey,
+  setSyncKey,
+  deriveSyncKeyForUser,
+  isSyncKeyLinked,
+} from '@/core/sync/supabase-client';
 import { AuthScreen } from '@/features/auth/AuthScreen';
 import { PairingAuthorizeDialog } from '@/features/auth/PairingAuthorizeDialog';
 import { RealEventsFeed } from '@/features/notifications/RealEventsFeed';
@@ -138,6 +143,10 @@ function AppShell() {
   useEffect(() => {
     if (!user || isTestMode) return;
     try {
+      /* Chave vinculada manualmente (login → Vincular Chave) tem prioridade:
+         sem isso o login sobrescrevia a chave colada pela chave da conta e a
+         sincronização daquela chave simplesmente não acontecia. */
+      if (isSyncKeyLinked()) return;
       const derived = deriveSyncKeyForUser(user.id, user.email);
       const current = getSyncKey();
       if (current !== derived) {

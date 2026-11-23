@@ -52,7 +52,8 @@ import {
   registerPairingCode,
 } from './qr-pairing';
 import { isUsernameAvailable } from '@/core/auth/profiles';
-import { setSyncKey } from '@/core/sync/supabase-client';
+import { markSyncKeyLinked, setSyncKey } from '@/core/sync/supabase-client';
+import { isEngineRunning, restartSyncEngine } from '@/core/sync/sync-manager';
 import { showToast } from '@/lib/toast';
 import { useAuthModalStore } from './auth-modal-store';
 import './auth-screen.css';
@@ -422,9 +423,28 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
     if (!k) return;
     try {
       setSyncKey(k);
+      /* A chave escolhida pelo usuário tem prioridade sobre a chave derivada
+         da conta (App.tsx respeita esta marca ao logar). */
+      markSyncKeyLinked(true);
+      if (isEngineRunning()) restartSyncEngine();
     } catch {
       /* localStorage indisponível */
     }
+  }
+
+  /* Botão do gaveta "Vincular Chave": antes nada acontecia ao colar a chave
+     (ella só era aplicada no login e sem nenhum retorno visual). */
+  function handleLinkKey() {
+    const k = linkKey.trim();
+    setErrorMsg(null);
+    setInfoMsg(null);
+    if (!k) {
+      setErrorMsg('Cole a chave de sincronização antes de vincular.');
+      return;
+    }
+    applyLinkKey();
+    setInfoMsg(`Chave vinculada a este aparelho: ${k.toUpperCase()}`);
+    showToast('Chave de sincronização vinculada.', 'success');
   }
 
   function goWelcome() {
@@ -798,8 +818,18 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
                           className="w-full h-10 px-3 bg-zinc-950 border border-zinc-700/80 rounded-xl text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500 font-mono transition-colors"
                         />
                         <p className="text-[11px] text-zinc-500 leading-tight">
-                          Ao entrar com o Google, os dados associados a esta chave serão conectados à sua conta.
+                          A chave é aplicada na hora neste aparelho. Ao entrar com o Google, os dados dessa chave
+                          passam a ser conectados à sua conta.
                         </p>
+                        <button
+                          type="button"
+                          onClick={handleLinkKey}
+                          disabled={!linkKey.trim()}
+                          className="w-full h-10 bg-cyan-500/15 hover:bg-cyan-500/25 active:bg-cyan-500/10 border border-cyan-500/50 hover:border-cyan-400 text-cyan-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <Link2 className="w-3.5 h-3.5" />
+                          <span>Vincular chave a este aparelho</span>
+                        </button>
                       </div>
                     </motion.div>
                   )}

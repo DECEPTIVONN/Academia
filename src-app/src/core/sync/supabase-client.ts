@@ -121,6 +121,30 @@ export function setSyncKey(key: string): void {
 }
 
 /**
+ * Chave vinculada manualmente pelo usuário (login → "Vincular Chave").
+ * Enquanto estiver marcada, o App NÃO troca a chave pela derivada da conta
+ * ao entrar — do contrário a chave colada era descartada silenciosamente.
+ */
+export const SYNC_KEY_LINKED_KEY = 'mbc_sync_key_linked';
+
+export function isSyncKeyLinked(): boolean {
+  try {
+    return localStorage.getItem(SYNC_KEY_LINKED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markSyncKeyLinked(linked = true): void {
+  try {
+    if (linked) localStorage.setItem(SYNC_KEY_LINKED_KEY, '1');
+    else localStorage.removeItem(SYNC_KEY_LINKED_KEY);
+  } catch {
+    /* storage indisponível */
+  }
+}
+
+/**
  * Deriva uma chave de sincronização estável a partir da identidade da conta
  * autenticada (Supabase Auth). Garante que dispositivos logados com a mesma
  * conta Google/e-mail compartilhem automaticamente os mesmos dados

@@ -79,6 +79,11 @@ jobs:
           npm ci --prefix src-app
 
       - name: Build web
+        env:
+          # O .env.local nao esta no repositorio: sem estas variaveis o APK
+          # sobe sem Supabase e o login/sincronizacao nao funcionam.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - name: Sync Capacitor
@@ -122,6 +127,13 @@ jobs:
             *"versionCode='${{ steps.version.outputs.code }}'"*) echo "versionCode confere" ;;
             *) echo "::error::APK nao tem o versionCode esperado"; exit 1 ;;
           esac
+          # Nome exibido no launcher (strings.xml app_name)
+          LABEL=$(echo "$BADGING" | sed -n "s/^application-label:'\(.*\)'$/\1/p")
+          echo "application-label: '$LABEL'"
+          if [ "$LABEL" != "Evo Fit" ]; then
+            echo "::error::APK com nome antigo ('$LABEL') — confira res/values/strings.xml"
+            exit 1
+          fi
 
       - name: Upload APK artifact (best-effort)
         id: upload

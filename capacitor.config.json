@@ -1,6 +1,6 @@
 {
   "appId": "com.academia.workout",
-  "appName": "Academia Workout Tracker",
+  "appName": "Evo Fit",
   "webDir": "src-app/dist",
   "server": {
     "androidScheme": "https",

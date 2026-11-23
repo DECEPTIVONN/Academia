@@ -16,6 +16,7 @@ import {
   isSyncRevoked,
   getSyncKey,
   setSyncKey,
+  markSyncKeyLinked,
   saveSupabaseCredentials,
   testSupabaseConnection,
   lastSyncedAt,
@@ -137,6 +138,8 @@ export function SyncSettingsPanel() {
     window.setTimeout(() => {
       const next = keyInput.trim().toUpperCase();
       setSyncKey(next);
+      // Chave escolhida aqui é do usuário: o login não deve sobrescrevê-la.
+      markSyncKeyLinked(true);
       setSyncKeyState(next);
       setKeyInput('');
       setConnecting(false);

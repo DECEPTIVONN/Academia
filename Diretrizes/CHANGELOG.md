@@ -2,6 +2,24 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.81.0] - 2026-11-23
+
+**APK com nome/ícone atuais e login por chave de sincronização funcionando.**
+
+### Fixed
+
+- **Nome do app**: `android/app/src/main/res/values/strings.xml` e `capacitor.config.json` passaram de "Academia Workout Tracker" para **"Evo Fit"** (o rótulo do launcher vinha do `app_name` antigo).
+- **Ícone e splash nativos**: `mipmap-*/ic_launcher.png`, `ic_launcher_round.png`, `ic_launcher_foreground.png` e `drawable-*/splash.png` foram regerados a partir de `public/assets/icons/logo-512.png` (logo atual do Evo Fit); `ic_launcher_background` agora é `#131313` (era branco, tema do Capacitor).
+- **Chave de sincronização no login**: o gaveta "Vincular Chave" só guardava o texto e não tinha ação — agora tem o botão **"Vincular chave a este aparelho"**, que aplica a chave (`mbc_sync_key`), reinicia o motor de sync e confirma na tela.
+- **Chave colada era descartada**: ao entrar, `App.tsx` sobrescrevia a chave do usuário pela chave derivada da conta (`deriveSyncKeyForUser`). Foi criada a marca `mbc_sync_key_linked` (`isSyncKeyLinked`/`markSyncKeyLinked` em `core/sync/supabase-client.ts`): chave vinculada manualmente tem prioridade e não é trocada.
+- **Login/sync sem Supabase no APK**: o workflow não passava as credenciais do `.env.local` (não versionado), então o APK saía sem Supabase e o login não completava. O step `Build web` agora recebe `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` dos secrets do repositório.
+
+### Changed
+
+- **`android/app/build.gradle`**: `versionCode 3` / `versionName "1.0.2"`.
+
+---
+
 ## [v4.80.0] - 2026-11-23
 
 **Legacy V1 voltou a carregar o CSS e os GIFs dos exercícios em servidor case-sensitive (deploy/APK).**
