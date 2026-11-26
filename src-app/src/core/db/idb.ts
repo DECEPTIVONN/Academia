@@ -19,6 +19,15 @@ import type {
   BodyMeasurement,
   BodyPhoto,
 } from './schema';
+import type {
+  PtAlert,
+  PtMessage,
+  PtNote,
+  PtProfile,
+  PtSession,
+  PtSheet,
+  PtStudent,
+} from '@/features/personal/personal-types';
 
 class AcademiaDB extends Dexie {
   exercises!:        Table<Exercise>;
@@ -32,6 +41,15 @@ class AcademiaDB extends Dexie {
   profileState!:     Table<ProfileState>;
   bodyMeasurements!: Table<BodyMeasurement>;
   bodyPhotos!:       Table<BodyPhoto>;
+  /* v4.82.0 — Painel do Personal (CRM do treinador). Tabelas próprias: nenhum
+     dado do aluno é alterado por elas; a ponte é explícita (personal-bridge). */
+  ptProfiles!:       Table<PtProfile>;
+  ptStudents!:       Table<PtStudent>;
+  ptSheets!:         Table<PtSheet>;
+  ptSessions!:       Table<PtSession>;
+  ptAlerts!:         Table<PtAlert>;
+  ptNotes!:          Table<PtNote>;
+  ptMessages!:       Table<PtMessage>;
 
   constructor() {
     super('academia-v4');
@@ -61,6 +79,18 @@ class AcademiaDB extends Dexie {
     this.version(4).stores({
       bodyMeasurements: 'date',
       bodyPhotos: 'slot',
+    });
+
+    // v4.82.0 — Painel do Personal (CRM): perfil do treinador, alunos, fichas,
+    // sessões, avisos, notas e mensagens. Mesmo banco, namespaces separados.
+    this.version(5).stores({
+      ptProfiles: 'id',
+      ptStudents: 'id, name, status, plan, linkedDevice',
+      ptSheets: 'id, studentId, status, letter, createdAt',
+      ptSessions: 'id, studentId, date',
+      ptAlerts: 'id, studentId, type, dedupeKey, createdAt, read',
+      ptNotes: 'id, studentId, createdAt',
+      ptMessages: 'id, studentId, createdAt',
     });
   }
 }

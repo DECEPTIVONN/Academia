@@ -61,6 +61,8 @@ import {
   isSyncKeyLinked,
 } from '@/core/sync/supabase-client';
 import { AuthScreen } from '@/features/auth/AuthScreen';
+import { usePersonalSession } from '@/features/personal/personal-auth';
+import { PersonalApp } from '@/features/personal/PersonalApp';
 import { PairingAuthorizeDialog } from '@/features/auth/PairingAuthorizeDialog';
 import { RealEventsFeed } from '@/features/notifications/RealEventsFeed';
 import { startPushSync } from '@/features/notifications/push';
@@ -100,11 +102,13 @@ export function App() {
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
+  const personalSession = usePersonalSession();
   /* v4.72.1 — durante a checagem da sessão NÃO mostramos a tela de login: ela
      exige rede e, no modo offline, o usuário ficava preso ali (o refresh do
      token pode levar até ~30 s sem sinal). Uma tela de carregamento ocupa esse
      intervalo; o login só aparece quando a sessão é realmente inexistente. */
   if (authLoading) return <BootLoading label="Verificando sua conta" />;
+  if (personalSession) return <PersonalApp />;
   if (!user) return <AuthScreen />;
   return <AppShell />;
 }

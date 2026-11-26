@@ -57,6 +57,7 @@ import { isEngineRunning, restartSyncEngine } from '@/core/sync/sync-manager';
 import { showToast } from '@/lib/toast';
 import { useAuthModalStore } from './auth-modal-store';
 import './auth-screen.css';
+import { PersonalLoginPanel } from '@/features/personal/PersonalLoginPanel';
 
 type Mode = 'welcome' | 'login' | 'signup' | 'forgot' | 'qrcode';
 type Legal = 'terms' | 'privacy' | null;
@@ -312,6 +313,7 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
   const close = useAuthModalStore((s) => s.closeModal);
 
   const [mode, setMode] = useState<Mode>('welcome');
+  const [showPersonal, setShowPersonal] = useState(false);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -680,6 +682,10 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
     </button>
   );
 
+  if (showPersonal) {
+    return <PersonalLoginPanel onBack={() => setShowPersonal(false)} />;
+  }
+
   return (
     <div
       className={`auth-screen fixed inset-0 z-[1150] w-full h-full flex flex-col bg-black overflow-y-auto no-scrollbar select-none text-white${closing ? ' auth-screen--closing' : ''}`}
@@ -793,6 +799,17 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
                   >
                     <Link2 className="w-3.5 h-3.5 text-cyan-400" />
                     <span>Vincular Chave</span>
+                  </button>
+                </div>
+
+                {/* Entrada do painel do personal (separada do aluno) */}
+                <div className="w-full flex items-center justify-center mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPersonal(true)}
+                    className="text-xs text-zinc-500 hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline"
+                  >
+                    Sou personal trainer — acessar painel
                   </button>
                 </div>
 

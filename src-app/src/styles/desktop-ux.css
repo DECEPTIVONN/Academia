@@ -1,0 +1,13 @@
+/* desktop-ux.css — Melhorias aditivas para telas >= 1024px.
+   Nenhuma regra afeta o mobile (tudo sob @media). */
+@media (min-width: 1024px) {
+  .treino-page .treino-container {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .section-slide .treino-container {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+}

@@ -2,6 +2,28 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.82.0] - 2026-11-26
+
+**Painel do personal trainer (CRM) opcional, separado do aluno pelo login, com fichas, avisos de ficha terminando, sugestão da próxima ficha e ajustes de desktop.**
+
+### Added
+
+- **Login do personal**: a tela de entrada do aluno ganhou o link discreto **"Sou personal trainer — acessar painel"**; ele abre o `PersonalLoginPanel` (criar conta/entrar, senha em SHA-256 via Web Crypto, sessão em `localStorage`). A interface do aluno continua idêntica.
+- **Painel CRM (`src-app/src/features/personal/`)**: experiência própria (tema lime/teal, classes `.pt-*`) com Visão geral, Alunos, Detalhe do aluno, Fichas, Agenda semanal, Avisos e Configurações, além do editor de ficha em tela cheia e do modal de novo aluno.
+- **Dados próprios**: tabelas `ptProfiles/ptStudents/ptSheets/ptSessions/ptAlerts/ptNotes/ptMessages` na v5 do Dexie, sem tocar nas tabelas do aluno. Carteira de demonstração (`origin: 'demo'`) pode ser resetada em Configurações.
+- **Integração com o app do aluno**: aluno marcado como vinculado a este aparelho (`linkedDevice`) recebe fichas publicadas em `workoutSheets` (com `academia:db-ready`) e envia o histórico real para o CRM; o painel lê o treino em andamento e cria aviso quando a ficha passa de ~75% concluída.
+- **Sugestão da próxima ficha**: `suggestNextSheet` monta a ficha seguinte a partir do histórico, foco e nível do aluno, com progressão de carga; o editor abre já preenchido.
+- **Desktop do app do aluno**: `src-app/src/styles/desktop-ux.css`, aditivo em `@media (min-width: 1024px)` (mobile inalterado).
+
+### Changed
+
+- `src-app/src/core/db/idb.ts` — Dexie v5 com as tabelas `pt*`.
+- `src-app/src/App.tsx` — `AppContent` renderiza `PersonalApp` quando há sessão de personal.
+- `src-app/src/features/auth/AuthScreen.tsx` — entrada para o painel do personal.
+- `android/app/build.gradle` — `versionCode 4` / `versionName "1.0.3"`.
+
+---
+
 ## [v4.81.0] - 2026-11-23
 
 **APK com nome/ícone atuais e login por chave de sincronização funcionando.**

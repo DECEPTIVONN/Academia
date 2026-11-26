@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "project_name": "Academia Workout Tracker (PWA)",
-  "version": "4.81.0",
-  "last_updated": "2026-11-23",
+  "version": "4.82.0",
+  "last_updated": "2026-11-26",
   "architecture_pattern": "Client-Side SPA / Swipe Viewport + Modular HTML Fragments & CSS Modules (No Bundlers)",
   "how_to_update": "Ao adicionar/remover/renomear qualquer arquivo do projeto, atualize este JSON. Adicione/edite a entrada correspondente na seção adequada (system_modules, html_fragments, components, styling_manifest, assets, documentation ou plans). Incremente o campo 'version' e atualize 'last_updated'. REGRA OBRIGATÓRIA: SEMPRE REGISTRE AS ALTERAÇÕES FEITAS em Diretrizes/CHANGELOG.md, imediatamente após concluí-las — sem exceção, incluindo alterações de código, documentação, diretrizes e deste próprio arquivo. Nunca finalize uma sessão com mudanças não documentadas no Changelog. CONVENÇÃO (anti-duplicação): mantenha cada \"purpose\" CURTO e atemporal (\"o que é / onde mexer\"). NÃO acumule cadeias \"vX.Y: …\" — o histórico pertence EXCLUSIVAMENTE ao Diretrizes/CHANGELOG.md.",
   "entry_points": {
@@ -593,6 +593,10 @@
       {
         "file": "src-app/src/features/social/share-invite.ts",
         "purpose": "Convite de amigo compartilhado pelos cards de ofensiva/atividade (shareFriendInvite): monta o texto com o nome de usuário e usa lib/native-share (share do APK/web com fallback de cópia); ponto único para mudar a mensagem de convite."
+      },
+      {
+        "file": "src-app/src/features/personal/",
+        "purpose": "Painel opcional do PERSONAL TRAINER (CRM) no mesmo bundle, separado do aluno pelo login: `PersonalLoginPanel` (criar conta/entrar, senha em SHA-256 via Web Crypto) é aberto pelo link 'Sou personal trainer' da AuthScreen e a sessão local (localStorage) faz AppContent renderizar `PersonalApp` em vez do app do aluno. Tabelas próprias `pt*` na v5 do Dexie (ptProfiles/ptStudents/ptSheets/ptSessions/ptAlerts/ptNotes/ptMessages) não tocam nas do aluno. Views em views/ (Overview, Students, StudentDetail, Sheets, Agenda, Alerts, Settings) + PersonalSheetEditor e NewStudentModal; engine com métricas/aderência/receita/suggestNextSheet/buildAlerts; bridge lê o progresso real do aparelho (workout_start_time/workout_sheet_key) para avisar 'está terminando a ficha' e publica fichas no app do aluno quando há aluno vinculado (linkedDevice). CSS próprio .pt-* em personal.css/personal-views.css/personal-views-2.css."
       },
       {
         "file": "src-app/src/features/training/OfensivasOverlay.tsx",

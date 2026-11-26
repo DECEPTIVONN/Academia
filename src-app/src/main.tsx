@@ -11,6 +11,7 @@ import './styles/modal-motion.css';
 // v4.68.0 — ajuste fino para telas estreitas (A54/Poco F7): precisa ser o
 // ÚLTIMO CSS para vencer a cascata legada sem espalhar !important.
 import './styles/mobile-fit.css';
+import './styles/desktop-ux.css';
 import App from './App.tsx';
 import { bootstrap } from '@/core/db/bootstrap';
 import { initAutoFullscreen } from '@/lib/auto-fullscreen';
