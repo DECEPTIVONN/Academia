@@ -87,6 +87,13 @@ interface PtStore {
   refreshProfile: () => Promise<void>;
 }
 
+/* Single-flight: o React StrictMode (e qualquer chamada concorrente) monta o
+   painel duas vezes; sem esta guarda o seed e a geração de alertas rodavam em
+   paralelo e o `upsertAlert` inseria o mesmo aviso duas vezes (a checagem de
+   `dedupeKey` acontecia antes do primeiro put). */
+let loadInFlight: Promise<void> | null = null;
+let alertsInFlight: Promise<number> | null = null;
+
 async function reloadLists(): Promise<Pick<PtStore, 'students' | 'sheets' | 'sessions' | 'alerts' | 'notes' | 'messages'>> {
   const [students, sheets, sessions, alerts, notes, messages] = await Promise.all([
     db.listStudents(),
@@ -112,20 +119,26 @@ export const usePtStore = create<PtStore>((set, get) => ({
   lastLiveAlertKey: null,
 
   load: async () => {
-    set({ loading: true });
-    const exercises = await ensureExerciseLibrary();
-    let profile = await getPtProfile();
-    if (profile && !profile.seeded) {
-      /* Primeiro acesso de uma conta recém-criada: carteira de exemplo para o
-         painel já nascer demonstrável (pode ser apagada em Configurações). */
-      await seedDemoData();
-      profile = { ...profile, seeded: true };
-      await db.saveProfile(profile);
-    }
-    const lists = await reloadLists();
-    set({ profile, exercises, ...lists, loading: false });
-    await get().syncLinked();
-    await get().refreshDerivedAlerts();
+    if (loadInFlight) return loadInFlight;
+    loadInFlight = (async () => {
+      set({ loading: true });
+      const exercises = await ensureExerciseLibrary();
+      let profile = await getPtProfile();
+      if (profile && !profile.seeded) {
+        /* Primeiro acesso de uma conta recém-criada: carteira de exemplo para o
+           painel já nascer demonstrável (pode ser apagada em Configurações). */
+        await seedDemoData();
+        profile = { ...profile, seeded: true };
+        await db.saveProfile(profile);
+      }
+      const lists = await reloadLists();
+      set({ profile, exercises, ...lists, loading: false });
+      await get().syncLinked();
+      await get().refreshDerivedAlerts();
+    })().finally(() => {
+      loadInFlight = null;
+    });
+    return loadInFlight;
   },
 
   addStudent: async (input) => {
@@ -284,29 +297,35 @@ export const usePtStore = create<PtStore>((set, get) => ({
   },
 
   refreshDerivedAlerts: async () => {
-    const { students, sheets, sessions, exercises } = get();
-    const drafts = buildAlerts(
-      students.filter((s) => !s.archived),
-      sheets,
-      sessions,
-      exercises
-    );
-    let created = 0;
-    for (const draft of drafts) {
-      const inserted = await upsertAlert({
-        id: ptId('alert'),
-        type: draft.type,
-        studentId: draft.studentId,
-        title: draft.title,
-        body: draft.body,
-        dedupeKey: draft.dedupeKey,
-        createdAt: Date.now(),
-        read: false,
-      });
-      if (inserted) created += 1;
-    }
-    if (created) set({ alerts: await db.listAlerts() });
-    return created;
+    if (alertsInFlight) return alertsInFlight;
+    alertsInFlight = (async () => {
+      const { students, sheets, sessions, exercises } = get();
+      const drafts = buildAlerts(
+        students.filter((s) => !s.archived),
+        sheets,
+        sessions,
+        exercises
+      );
+      let created = 0;
+      for (const draft of drafts) {
+        const inserted = await upsertAlert({
+          id: ptId('alert'),
+          type: draft.type,
+          studentId: draft.studentId,
+          title: draft.title,
+          body: draft.body,
+          dedupeKey: draft.dedupeKey,
+          createdAt: Date.now(),
+          read: false,
+        });
+        if (inserted) created += 1;
+      }
+      if (created) set({ alerts: await db.listAlerts() });
+      return created;
+    })().finally(() => {
+      alertsInFlight = null;
+    });
+    return alertsInFlight;
   },
 
   syncLinked: async () => {

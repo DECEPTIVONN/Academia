@@ -22,6 +22,11 @@
 - `src-app/src/features/auth/AuthScreen.tsx` — entrada para o painel do personal.
 - `android/app/build.gradle` — `versionCode 4` / `versionName "1.0.3"`.
 
+### Fixed
+
+- **Avisos duplicados na primeira entrada**: com o React StrictMode o painel monta duas vezes e o `load()`/`refreshDerivedAlerts()` rodavam em paralelo; a checagem de `dedupeKey` do `upsertAlert` acontecia antes do primeiro `put`, então o mesmo aviso era inserido duas vezes. `personal-store.ts` agora usa single-flight (`loadInFlight`/`alertsInFlight`), uma execução por vez.
+- **Plurais do tempo relativo**: `relativeDay` mostrava “há 2 semana(s)”; agora escreve “há 2 semanas”, “há 1 mês”, “há 3 meses”.
+
 ---
 
 ## [v4.81.0] - 2026-11-23

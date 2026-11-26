@@ -37,9 +37,13 @@ export function relativeDay(iso: string | null): string {
   const diff = Math.round((today.getTime() - target.getTime()) / 86400000);
   if (diff <= 0) return 'hoje';
   if (diff === 1) return 'ontem';
-  if (diff < 7) return `há ${diff} dias`;
-  if (diff < 30) return `há ${Math.floor(diff / 7)} semana(s)`;
-  return `há ${Math.floor(diff / 30)} mês(es)`;
+  if (diff < 7) return `há ${diff} dia${diff === 1 ? '' : 's'}`;
+  if (diff < 30) {
+    const weeks = Math.floor(diff / 7);
+    return `há ${weeks} semana${weeks === 1 ? '' : 's'}`;
+  }
+  const months = Math.floor(diff / 30);
+  return `há ${months} ${months === 1 ? 'mês' : 'meses'}`;
 }
 
 /* ── Avatar com identidade por matiz ── */
