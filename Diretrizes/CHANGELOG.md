@@ -2,6 +2,20 @@
 
 > **📋 INSTRUÇÃO OBRIGATÓRIA PARA AGENTES DE IA:** Toda alteração deve ser registrada neste arquivo. Use formato [vX.X.X] - YYYY-MM-DD e tags [Added], [Changed], [Fixed].
 
+## [v4.82.1] - 2026-11-26
+
+**Login com Google oculto no APK (evita redirect OAuth que falha por DNS) e uso de e-mail/senha + modo teste no app nativo.**
+
+### Fixed
+
+- **`src-app/src/features/auth/AuthScreen.tsx`**: detecta plataforma nativa (Capacitor) e oculta o botão "Continuar com Google" no APK, oferecendo e-mail/senha e modo teste (o OAuth por redirect dependia de DNS/rede e resultava em `ERR_NAME_NOT_RESOLVED` em alguns aparelhos/rede). A versão web mantém o login com Google.
+
+### Verificação
+
+`npx tsc -b` OK.
+
+---
+
 ## [v4.82.0] - 2026-11-26
 
 **Painel do personal trainer (CRM) opcional, separado do aluno pelo login, com fichas, avisos de ficha terminando, sugestão da próxima ficha e ajustes de desktop.**

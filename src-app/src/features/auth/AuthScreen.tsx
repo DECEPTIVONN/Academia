@@ -344,6 +344,13 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState(false);
 
+  /* Plataforma nativa (APK/Capacitor): o login com Google usa redirect OAuth
+     que depende de DNS/rede e pode falhar (ERR_NAME_NOT_RESOLVED). No APK
+     oferecemos apenas e-mail/senha + modo teste. */
+  const isNativeApp = Boolean(
+    (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()
+  );
+
   const busy = loading !== null;
 
   /* Auto-fecha quando a sessão chega (login, retorno do Google ou cadastro
@@ -723,20 +730,29 @@ export function AuthScreen({ closing }: { closing?: boolean } = {}) {
                 {errorMsg && <ErrorBanner msg={errorMsg} />}
                 {infoMsg && <InfoBanner msg={infoMsg} />}
 
-                {/* PÍLULA 1: Continuar com Google */}
-                <button
-                  type="button"
-                  onClick={handleGoogle}
-                  disabled={busy}
-                  className="w-full h-13 sm:h-14 bg-[#18181c]/90 hover:bg-[#222228] active:bg-[#121215] border border-[#2b2b36] hover:border-[#3f3f4e] rounded-full text-white font-medium text-[15px] sm:text-base flex items-center justify-center gap-3 transition-all duration-200 shadow-sm active:scale-[0.985] cursor-pointer disabled:opacity-60"
-                >
-                  {loading === 'google' ? (
-                    <Loader2 className="w-[18px] h-[18px] animate-spin" />
-                  ) : (
-                    GoogleGIcon
-                  )}
-                  <span className="font-normal text-zinc-100">Continuar com Google</span>
-                </button>
+                {/* PÍLULA 1: Continuar com Google (apenas na web — no APK o
+                    redirect OAuth depende de rede/DNS e pode falhar) */}
+                {!isNativeApp && (
+                  <button
+                    type="button"
+                    onClick={handleGoogle}
+                    disabled={busy}
+                    className="w-full h-13 sm:h-14 bg-[#18181c]/90 hover:bg-[#222228] active:bg-[#121215] border border-[#2b2b36] hover:border-[#3f3f4e] rounded-full text-white font-medium text-[15px] sm:text-base flex items-center justify-center gap-3 transition-all duration-200 shadow-sm active:scale-[0.985] cursor-pointer disabled:opacity-60"
+                  >
+                    {loading === 'google' ? (
+                      <Loader2 className="w-[18px] h-[18px] animate-spin" />
+                    ) : (
+                      GoogleGIcon
+                    )}
+                    <span className="font-normal text-zinc-100">Continuar com Google</span>
+                  </button>
+                )}
+                {isNativeApp && (
+                  <p className="w-full text-center text-[11px] text-zinc-500 leading-tight px-2">
+                    No aplicativo, entre com e-mail e senha (ou use o modo teste).
+                    O login com Google fica disponível na versão web.
+                  </p>
+                )}
 
                 {/* PÍLULA 2: Continuar com e-mail */}
                 <button
